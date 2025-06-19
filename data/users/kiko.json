@@ -1,0 +1,19 @@
+{
+  "username": "kiko",
+  "createdAt": "2025-06-19T11:55:11.025Z",
+  "profileCompleted": true,
+  "positions": [],
+  "transactions": [],
+  "profile": {
+    "instrumentsUsed": [
+      "Bonds"
+    ],
+    "knowledgeLevels": {
+      "Bonds": "Low"
+    },
+    "holdingPeriod": "<1 year",
+    "ageGroup": "30-40",
+    "riskAppetite": "Balanced",
+    "investmentAmount": 1000
+  }
+}

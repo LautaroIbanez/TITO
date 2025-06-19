@@ -1,0 +1,75 @@
+{
+  "username": "koko",
+  "createdAt": "2025-06-18T13:18:32.032Z",
+  "profileCompleted": true,
+  "positions": [
+    {
+      "symbol": "MSFT",
+      "quantity": 1,
+      "averagePrice": 478.0400085449219
+    }
+  ],
+  "transactions": [
+    {
+      "date": "2025-06-18T19:15:19.508Z",
+      "type": "Buy",
+      "symbol": "AAPL",
+      "quantity": 1,
+      "price": 195.63999938964844
+    },
+    {
+      "date": "2025-06-18T19:29:17.426Z",
+      "type": "Sell",
+      "symbol": "AAPL",
+      "quantity": 1,
+      "price": 195.63999938964844
+    },
+    {
+      "date": "2025-06-18T19:30:03.488Z",
+      "type": "Buy",
+      "symbol": "AAPL",
+      "quantity": 1,
+      "price": 195.63999938964844
+    },
+    {
+      "date": "2025-06-18T19:30:05.952Z",
+      "type": "Buy",
+      "symbol": "MSFT",
+      "quantity": 1,
+      "price": 478.0400085449219
+    },
+    {
+      "date": "2025-06-18T19:30:38.693Z",
+      "type": "Sell",
+      "symbol": "AAPL",
+      "quantity": 1,
+      "price": 195.63999938964844
+    },
+    {
+      "date": "2025-06-18T20:01:19.857Z",
+      "type": "Sell",
+      "symbol": "MSFT",
+      "quantity": 1,
+      "price": 478.0400085449219
+    },
+    {
+      "date": "2025-06-18T20:01:45.547Z",
+      "type": "Buy",
+      "symbol": "MSFT",
+      "quantity": 1,
+      "price": 478.0400085449219
+    }
+  ],
+  "profile": {
+    "instrumentsUsed": [
+      "Bonds"
+    ],
+    "knowledgeLevels": {
+      "Bonds": "Low"
+    },
+    "holdingPeriod": "1-5 years",
+    "ageGroup": "30-40",
+    "riskAppetite": "Balanced",
+    "netWorthPercentage": "10-30%"
+  }
+}

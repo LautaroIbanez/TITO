@@ -1,0 +1,21 @@
+{
+  "username": "opo",
+  "createdAt": "2025-06-18T14:24:36.994Z",
+  "profileCompleted": true,
+  "portfolio": [],
+  "profile": {
+    "instrumentsUsed": [
+      "Bonds",
+      "Stocks"
+    ],
+    "knowledgeLevels": {
+      "Bonds": "Low",
+      "Stocks": "Low"
+    },
+    "holdingPeriod": "",
+    "ageGroup": "",
+    "riskAppetite": "Balanced",
+    "netWorthPercentage": "",
+    "investmentAmount": 40000
+  }
+}

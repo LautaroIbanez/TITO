@@ -1,0 +1,19 @@
+{
+  "username": "lolo",
+  "createdAt": "2025-06-18T20:14:53.355Z",
+  "profileCompleted": true,
+  "positions": [],
+  "transactions": [],
+  "profile": {
+    "instrumentsUsed": [
+      "Bonds"
+    ],
+    "knowledgeLevels": {
+      "Bonds": "Low"
+    },
+    "holdingPeriod": "1-5 years",
+    "ageGroup": "<30",
+    "riskAppetite": "Balanced",
+    "investmentAmount": 10000
+  }
+}

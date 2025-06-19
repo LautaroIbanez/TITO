@@ -1,0 +1,34 @@
+{
+  "username": "lala",
+  "createdAt": "2025-06-18T20:23:24.789Z",
+  "profileCompleted": true,
+  "positions": [],
+  "transactions": [
+    {
+      "date": "2025-06-18T20:29:42.492Z",
+      "type": "Buy",
+      "symbol": "AAPL",
+      "quantity": 1,
+      "price": 195.63999938964844
+    },
+    {
+      "date": "2025-06-18T20:29:59.009Z",
+      "type": "Sell",
+      "symbol": "AAPL",
+      "quantity": 1,
+      "price": 195.63999938964844
+    }
+  ],
+  "profile": {
+    "instrumentsUsed": [
+      "Bonds"
+    ],
+    "knowledgeLevels": {
+      "Bonds": "Low"
+    },
+    "holdingPeriod": "1-5 years",
+    "ageGroup": "<30",
+    "riskAppetite": "Balanced",
+    "investmentAmount": 10000
+  }
+}
