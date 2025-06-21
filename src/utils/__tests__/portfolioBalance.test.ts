@@ -28,11 +28,13 @@ const createMockRequest = (body: any): NextRequest => {
 describe('Portfolio Balance API', () => {
   beforeEach(() => {
     // Reset mocks before each test
-    (fs.readFile as jest.Mock).mockResolvedValue(JSON.stringify(mockUser));
+    // Create a deep copy to avoid modifications between tests
+    const userCopy = JSON.parse(JSON.stringify(mockUser));
+    (fs.readFile as jest.Mock).mockResolvedValue(JSON.stringify(userCopy));
     (fs.writeFile as jest.Mock).mockClear();
   });
 
-  it('should increase availableCash on deposit', async () => {
+  it('should increase availableCash and add a deposit transaction', async () => {
     const req = createMockRequest({ username: 'testuser', amount: 500 });
     const response = await depositHandler(req);
     const body = await response.json();
@@ -43,6 +45,12 @@ describe('Portfolio Balance API', () => {
     // Verify that the file was written with the updated data
     const writtenData = JSON.parse((fs.writeFile as jest.Mock).mock.calls[0][1]);
     expect(writtenData.availableCash).toBe(1500);
+    
+    // Check for the new deposit transaction
+    expect(writtenData.transactions).toHaveLength(mockUser.transactions.length + 1);
+    const newTransaction = writtenData.transactions[writtenData.transactions.length - 1];
+    expect(newTransaction.type).toBe('Deposit');
+    expect(newTransaction.amount).toBe(500);
   });
 
   it('should fail to buy if cash is insufficient', async () => {

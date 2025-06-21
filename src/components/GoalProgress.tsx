@@ -2,7 +2,7 @@ import React from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler } from 'chart.js';
 import Link from 'next/link';
-import { InvestmentGoal } from '@/types';
+import { InvestmentGoal, PortfolioTransaction, DepositTransaction } from '@/types';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
@@ -10,9 +10,10 @@ interface Props {
   goal: InvestmentGoal | null;
   valueHistory: { date: string; value: number }[];
   currentValue: number;
+  transactions: PortfolioTransaction[];
 }
 
-export default function GoalProgress({ goal, valueHistory, currentValue }: Props) {
+export default function GoalProgress({ goal, valueHistory, currentValue, transactions }: Props) {
   if (!goal) {
     return (
       <div className="bg-white rounded-lg shadow p-6 mb-8">
@@ -30,8 +31,13 @@ export default function GoalProgress({ goal, valueHistory, currentValue }: Props
     );
   }
 
-  const progressPercentage = Math.min((currentValue / goal.targetAmount) * 100, 100);
-  const remainingAmount = Math.max(goal.targetAmount - currentValue, 0);
+  const totalDeposits = transactions
+    .filter((t): t is DepositTransaction => t.type === 'Deposit')
+    .reduce((sum, t) => sum + t.amount, 0);
+  
+  const portfolioGains = Math.max(0, currentValue - totalDeposits);
+  const progressPercentage = Math.min((portfolioGains / goal.targetAmount) * 100, 100);
+  const remainingAmount = Math.max(goal.targetAmount - portfolioGains, 0);
   
   // Calculate projected value based on monthly contributions
   const projectedData = valueHistory.map((point, index) => {
@@ -112,8 +118,8 @@ export default function GoalProgress({ goal, valueHistory, currentValue }: Props
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="text-center p-4 bg-gray-50 rounded-lg">
-          <div className="text-2xl font-bold text-gray-900">${currentValue.toLocaleString()}</div>
-          <div className="text-sm text-gray-600">Current Value</div>
+          <div className="text-2xl font-bold text-gray-900">${portfolioGains.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+          <div className="text-sm text-gray-600">Portfolio Gains</div>
         </div>
         <div className="text-center p-4 bg-gray-50 rounded-lg">
           <div className="text-2xl font-bold text-gray-900">{progressPercentage.toFixed(1)}%</div>

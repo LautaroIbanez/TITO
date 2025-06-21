@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { UserData } from '@/types';
+import { UserData, DepositTransaction } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,9 +29,21 @@ export async function POST(request: NextRequest) {
     if (typeof user.availableCash !== 'number') {
       user.availableCash = 0;
     }
+    
+    if (!user.transactions) {
+        user.transactions = [];
+    }
 
     // Add the deposit amount
     user.availableCash += amount;
+    
+    const newTransaction: DepositTransaction = {
+        type: 'Deposit',
+        date: new Date().toISOString(),
+        amount,
+    };
+    
+    user.transactions.push(newTransaction);
 
     try {
       await fs.writeFile(userFile, JSON.stringify(user, null, 2));

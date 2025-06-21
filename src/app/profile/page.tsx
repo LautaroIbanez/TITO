@@ -101,6 +101,10 @@ export default function ProfilePage() {
         throw new Error(data.error || 'Error al guardar el perfil');
       }
 
+      // Add firstTime flag to session
+      const updatedSession = { ...JSON.parse(sessionData), firstTime: true };
+      localStorage.setItem('session', JSON.stringify(updatedSession));
+
       // Clear saved form data
       localStorage.removeItem('profileForm');
       

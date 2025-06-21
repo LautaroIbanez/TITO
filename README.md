@@ -70,3 +70,7 @@ Para ejecutar los tests, usa el siguiente comando:
 ```bash
 npm test
 ```
+
+## Descargo de Responsabilidad
+
+TITO es un proyecto con fines exclusivamente educativos y de demostración. La información y las recomendaciones proporcionadas por esta aplicación no deben considerarse como asesoramiento financiero profesional. Realiza tu propia investigación y/o consulta a un asesor financiero calificado antes de tomar cualquier decisión de inversión.

@@ -30,13 +30,22 @@ export interface PortfolioPosition {
   averagePrice: number;
 }
 
-export interface PortfolioTransaction {
+export interface TradeTransaction {
   date: string; // ISO string
   type: 'Buy' | 'Sell';
-  symbol: string;
+  symbol:string;
   quantity: number;
   price: number;
 }
+
+export interface DepositTransaction {
+  date: string; // ISO string
+  type: 'Deposit';
+  amount: number;
+}
+
+export type PortfolioTransaction = TradeTransaction | DepositTransaction;
+
 
 export interface UserData {
   username: string;

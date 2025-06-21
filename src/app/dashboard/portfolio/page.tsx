@@ -131,7 +131,7 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
         {depositError && <div className="text-red-600 text-sm mt-1">{depositError}</div>}
         {depositSuccess && <div className="text-green-600 text-sm mt-1">{depositSuccess}</div>}
       </div>
-      <GoalProgress goal={firstGoal} valueHistory={valueHistory} currentValue={currentValue} />
+      <GoalProgress goal={firstGoal} valueHistory={valueHistory} currentValue={currentValue} transactions={transactions}/>
       <PortfolioHistoryChart valueHistory={valueHistory} />
       <PortfolioTransactions transactions={transactions} />
       {comparison && <ReturnComparison data={comparison} />}
