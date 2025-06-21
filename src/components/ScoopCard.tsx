@@ -12,7 +12,7 @@ import {
 } from 'chart.js';
 import { Fundamentals, getRatioColor, Technicals } from '../types/finance';
 import { getTradeSignal, TradeSignal } from '@/utils/tradeSignal';
-import TradeModal from './TradeModal';
+import TradeModal, { TradeModalProps } from './TradeModal';
 import TechnicalDisplay from './TechnicalDisplay';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
@@ -159,17 +159,24 @@ export default function ScoopCard({
     maintainAspectRatio: false,
   };
 
-  const handleBuy = async (quantity: number) => {
+  const handleBuy: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier) => {
     const session = localStorage.getItem('session');
     if (!session) return;
     const username = JSON.parse(session).username;
     const res = await fetch('/api/portfolio/buy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, symbol: stockData.symbol, quantity, price: currentPrice }),
+      body: JSON.stringify({
+        username,
+        assetType: assetType, // This will be 'Stock'
+        symbol: identifier, // This will be the stock symbol
+        quantity,
+        price: currentPrice,
+      }),
     });
     if (res.ok) {
       onTrade(); // Refresh data
+      setIsModalOpen(false);
     } else {
       const data = await res.json();
       alert(`Error: ${data.error}`);
@@ -183,7 +190,9 @@ export default function ScoopCard({
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleBuy}
         tradeType="Buy"
-        symbol={stockData.symbol}
+        assetName={stockData.symbol}
+        assetType="Stock"
+        identifier={stockData.symbol}
         price={currentPrice}
         availableCash={availableCash}
       />

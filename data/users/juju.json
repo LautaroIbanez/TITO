@@ -1,0 +1,75 @@
+{
+  "username": "juju",
+  "createdAt": "2025-06-21T22:57:02.407Z",
+  "profileCompleted": true,
+  "positions": [
+    {
+      "type": "Stock",
+      "symbol": "JPM",
+      "quantity": 1,
+      "averagePrice": 275
+    },
+    {
+      "type": "Bond",
+      "ticker": "GD30",
+      "quantity": 3,
+      "averagePrice": 55
+    },
+    {
+      "type": "FixedTermDeposit",
+      "id": "ftd-1750546825958",
+      "provider": "Banco Galicia",
+      "amount": 500,
+      "annualRate": 75,
+      "startDate": "2025-06-21T23:00:25.958Z",
+      "maturityDate": "2025-07-21T23:00:25.958Z"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "1750546725478",
+      "date": "2025-06-21T22:58:45.478Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "JPM",
+      "quantity": 1,
+      "price": 275
+    },
+    {
+      "id": "1750546779496",
+      "date": "2025-06-21T22:59:39.496Z",
+      "type": "Buy",
+      "assetType": "Bond",
+      "ticker": "GD30",
+      "quantity": 3,
+      "price": 55
+    },
+    {
+      "id": "1750546825958",
+      "date": "2025-06-21T23:00:25.958Z",
+      "type": "Create",
+      "assetType": "FixedTermDeposit",
+      "provider": "Banco Galicia",
+      "amount": 500,
+      "annualRate": 75,
+      "termDays": 30,
+      "maturityDate": "2025-07-21T23:00:25.958Z"
+    }
+  ],
+  "goals": [],
+  "availableCash": 2060,
+  "profile": {
+    "instrumentsUsed": [
+      "Plazo Fijo",
+      "Fondos Comunes de Inversión"
+    ],
+    "knowledgeLevels": {
+      "Plazo Fijo": "Bajo",
+      "Fondos Comunes de Inversión": "Bajo"
+    },
+    "holdingPeriod": "1 a 5 años",
+    "ageGroup": "30 a 40",
+    "riskAppetite": "Balanceado",
+    "investmentAmount": 3000
+  }
+}
