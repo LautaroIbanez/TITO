@@ -34,13 +34,15 @@ export function calculatePortfolioReturn(
 
 export function compareWithBenchmarks(
   portfolioReturn: number,
-  benchmarks = { fixedDeposit: 7, realEstate: 5, usTreasury: 4.3 }
+  benchmarks = { fixedDeposit: 7, realEstate: 5, usTreasury: 4.3, sp500: 10, gold: 6 }
 ) {
   return {
     portfolioReturn,
     fixedDeposit: benchmarks.fixedDeposit,
     realEstate: benchmarks.realEstate,
     usTreasury: benchmarks.usTreasury,
+    sp500: benchmarks.sp500,
+    gold: benchmarks.gold,
   };
 }
 

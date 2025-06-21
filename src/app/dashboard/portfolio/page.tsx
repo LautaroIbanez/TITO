@@ -7,7 +7,9 @@ import PortfolioTable from '@/components/PortfolioTable';
 import PortfolioPieChart from '@/components/PortfolioPieChart';
 import PortfolioHistoryChart from '@/components/PortfolioHistoryChart';
 import PortfolioTransactions from '@/components/PortfolioTransactions';
+import GoalProgress from '@/components/GoalProgress';
 import { calculatePortfolioValueHistory } from '@/utils/calculatePortfolioValue';
+import { InvestmentGoal } from '@/types';
 
 export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange?: () => void }) {
   const [positions, setPositions] = useState<any[]>([]);
@@ -18,6 +20,8 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
   const [comparison, setComparison] = useState<any>(null);
   const [fundamentals, setFundamentals] = useState<Record<string, any>>({});
   const [technicals, setTechnicals] = useState<Record<string, any>>({});
+  const [goals, setGoals] = useState<InvestmentGoal[]>([]);
+  const [currentValue, setCurrentValue] = useState(0);
 
   useEffect(() => {
     async function fetchPortfolio() {
@@ -25,14 +29,29 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
       const session = localStorage.getItem('session');
       if (!session) return;
       const username = JSON.parse(session).username;
+      
+      // Fetch portfolio data
       const res = await fetch(`/api/portfolio/data?username=${username}`);
       const data = await res.json();
       setPositions(data.positions || []);
       setTransactions(data.transactions || []);
       setPrices(data.historicalPrices || {});
-      setValueHistory(calculatePortfolioValueHistory(data.transactions || [], data.historicalPrices || {}, 90));
+      setValueHistory(calculatePortfolioValueHistory(data.transactions || [], data.historicalPrices || {}, { days: 90 }));
       setFundamentals(data.fundamentals || {});
       setTechnicals(data.technicals || {});
+      
+      // Calculate current portfolio value
+      const currentPortfolioValue = calculatePortfolioValueHistory(data.transactions || [], data.historicalPrices || {}, { days: 1 });
+      const latestValue = currentPortfolioValue.length > 0 ? currentPortfolioValue[currentPortfolioValue.length - 1].value : 0;
+      setCurrentValue(latestValue);
+      
+      // Fetch goals
+      const goalsRes = await fetch(`/api/goals?username=${username}`);
+      if (goalsRes.ok) {
+        const goalsData = await goalsRes.json();
+        setGoals(goalsData);
+      }
+      
       // Calculate returns
       const prices: Record<string, any[]> = {};
       Object.entries(data.historicalPrices || {}).forEach(([symbol, arr]) => {
@@ -60,8 +79,12 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
     }
   };
 
+  // Get the first active goal (assuming goals are ordered by priority)
+  const firstGoal = goals.length > 0 ? goals[0] : null;
+
   return (
     <div className="space-y-8">
+      <GoalProgress goal={firstGoal} valueHistory={valueHistory} currentValue={currentValue} />
       <PortfolioHistoryChart valueHistory={valueHistory} />
       <PortfolioTransactions transactions={transactions} />
       {comparison && <ReturnComparison data={comparison} />}

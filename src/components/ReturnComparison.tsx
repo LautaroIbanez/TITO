@@ -8,11 +8,13 @@ interface Props {
 export default function ReturnComparison({ data }: Props) {
   const items = [
     { label: 'Your portfolio', value: data.portfolioReturn },
+    { label: 'S&P 500', value: data.sp500 },
+    { label: 'Gold', value: data.gold },
     { label: 'Fixed-term', value: data.fixedDeposit },
     { label: 'Real estate', value: data.realEstate },
     { label: 'US bond', value: data.usTreasury },
   ];
-  const best = Math.max(...items.map(i => i.value));
+  const best = Math.max(...items.map(i => Math.abs(i.value)));
   return (
     <div className="mb-8">
       <h3 className="text-lg font-bold mb-2 text-gray-900">Annualized Return Comparison</h3>
@@ -26,7 +28,7 @@ export default function ReturnComparison({ data }: Props) {
             <div className="flex-1 h-2 ml-2 bg-gray-200 rounded">
               <div
                 className={`h-2 rounded ${item.value === best ? 'bg-green-400' : 'bg-gray-400'}`}
-                style={{ width: `${Math.max(0, (item.value / best) * 100)}%` }}
+                style={{ width: `${best > 0 ? Math.max(0, (item.value / best) * 100) : 0}%` }}
               />
             </div>
           </div>

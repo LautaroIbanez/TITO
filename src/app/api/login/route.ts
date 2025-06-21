@@ -7,18 +7,55 @@ export async function POST(request: Request) {
   try {
     const { username } = await request.json();
 
-    if (!username) {
+    if (!username || typeof username !== 'string') {
       return NextResponse.json(
-        { error: 'Username is required' },
+        { error: 'Username is required and must be a string' },
         { status: 400 }
       );
     }
 
-    // Ensure data directory exists
-    const dataDir = path.join(process.cwd(), 'data', 'users');
+    // Validate username length
+    if (username.length < 3 || username.length > 20) {
+      return NextResponse.json(
+        { error: 'Username must be between 3 and 20 characters' },
+        { status: 400 }
+      );
+    }
+
+    // Sanitize username to prevent path traversal attacks
+    // Only allow alphanumeric characters, hyphens, and underscores
+    const sanitizedUsername = username.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    
+    if (sanitizedUsername !== username.toLowerCase() || sanitizedUsername.length === 0) {
+      return NextResponse.json(
+        { error: 'Invalid username format. Only letters, numbers, hyphens, and underscores are allowed.' },
+        { status: 400 }
+      );
+    }
+
+    // Ensure data directory exists and is within the expected path
+    const dataDir = path.resolve(process.cwd(), 'data', 'users');
+    const expectedPrefix = path.resolve(process.cwd(), 'data');
+    
+    if (!dataDir.startsWith(expectedPrefix)) {
+      return NextResponse.json(
+        { error: 'Invalid data directory path' },
+        { status: 500 }
+      );
+    }
+
     await fs.mkdir(dataDir, { recursive: true });
 
-    const userFilePath = path.join(dataDir, `${username}.json`);
+    const userFilePath = path.join(dataDir, `${sanitizedUsername}.json`);
+    
+    // Verify the constructed path is still within the data directory
+    if (!path.resolve(userFilePath).startsWith(dataDir)) {
+      return NextResponse.json(
+        { error: 'Invalid file path' },
+        { status: 500 }
+      );
+    }
+
     let userData: UserData;
 
     try {
@@ -28,11 +65,12 @@ export async function POST(request: Request) {
     } catch (error) {
       // If file doesn't exist, create new user data
       userData = {
-        username,
+        username: sanitizedUsername,
         createdAt: new Date().toISOString(),
         profileCompleted: false,
         positions: [],
-        transactions: []
+        transactions: [],
+        goals: []
       };
 
       // Save the new user data

@@ -44,7 +44,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
                 <td className="px-4 py-2 text-right">${value.toFixed(2)}</td>
                 <td className={`px-4 py-2 text-right font-semibold ${gain > 0 ? 'text-green-600' : gain < 0 ? 'text-red-600' : 'text-gray-700'}`}>{gain >= 0 ? '+' : ''}{gain.toFixed(2)}%</td>
                 <td className="px-4 py-2 text-right">{f?.peRatio ?? '-'}</td>
-                <td className="px-4 py-2 text-right">{t?.rsi ?? '-'}</td>
+                <td className="px-4 py-2 text-right">{t?.RSI ?? '-'}</td>
               </tr>
             );
           })}

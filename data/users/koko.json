@@ -4,9 +4,9 @@
   "profileCompleted": true,
   "positions": [
     {
-      "symbol": "MSFT",
+      "symbol": "NVDA",
       "quantity": 1,
-      "averagePrice": 478.0400085449219
+      "averagePrice": 145.47999572753906
     }
   ],
   "transactions": [
@@ -58,6 +58,20 @@
       "symbol": "MSFT",
       "quantity": 1,
       "price": 478.0400085449219
+    },
+    {
+      "date": "2025-06-20T22:15:23.274Z",
+      "type": "Buy",
+      "symbol": "NVDA",
+      "quantity": 1,
+      "price": 145.47999572753906
+    },
+    {
+      "date": "2025-06-21T12:25:31.212Z",
+      "type": "Sell",
+      "symbol": "MSFT",
+      "quantity": 1,
+      "price": 480.239990234375
     }
   ],
   "profile": {
@@ -71,5 +85,23 @@
     "ageGroup": "30-40",
     "riskAppetite": "Balanced",
     "netWorthPercentage": "10-30%"
-  }
+  },
+  "goals": [
+    {
+      "name": "Dentadura ",
+      "targetAmount": 3000,
+      "targetDate": "2025-08-20",
+      "initialDeposit": 1000,
+      "monthlyContribution": 100,
+      "id": "1750436173752"
+    },
+    {
+      "name": "Casa Propia ",
+      "targetAmount": 10000,
+      "targetDate": "2025-11-21",
+      "initialDeposit": 1000,
+      "monthlyContribution": 100,
+      "id": "1750508691406"
+    }
+  ]
 }

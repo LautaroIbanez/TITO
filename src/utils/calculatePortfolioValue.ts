@@ -4,26 +4,45 @@ import dayjs from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 dayjs.extend(isSameOrBefore);
 
+export interface PortfolioValueOptions {
+  days?: number; // If provided, calculate last N days. If not, calculate from first transaction to today
+}
+
 export function calculatePortfolioValueHistory(
   transactions: PortfolioTransaction[],
   priceHistory: Record<string, PriceData[]>,
-  days: number = 90
+  options: PortfolioValueOptions = {}
 ): { date: string; value: number }[] {
   if (!transactions.length) return [];
+  
   // Sort transactions by date
   const txs = [...transactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const firstDate = dayjs(txs[0].date).startOf('day');
   const lastDate = dayjs().startOf('day');
+  
+  // Determine date range
+  let startDate: dayjs.Dayjs;
+  if (options.days) {
+    // Calculate last N days
+    startDate = lastDate.subtract(options.days - 1, 'day');
+  } else {
+    // Calculate from first transaction to today
+    startDate = firstDate;
+  }
+  
+  // Generate date array
   const allDates: string[] = [];
-  let d = lastDate.subtract(days - 1, 'day');
+  let d = startDate;
   while (!d.isAfter(lastDate)) {
     allDates.push(d.format('YYYY-MM-DD'));
     d = d.add(1, 'day');
   }
+  
   // For each day, build position map and compute value
   let prevPos: Record<string, number> = {};
   let prevValue = 0;
   const result: { date: string; value: number }[] = [];
+  
   for (const date of allDates) {
     // Build position map up to this date
     const pos: Record<string, number> = { ...prevPos };
@@ -32,13 +51,16 @@ export function calculatePortfolioValueHistory(
       if (tx.type === 'Buy') pos[tx.symbol] = (pos[tx.symbol] || 0) + tx.quantity;
       if (tx.type === 'Sell') pos[tx.symbol] = (pos[tx.symbol] || 0) - tx.quantity;
     }
+    
     // Remove zero or negative positions
     Object.keys(pos).forEach((s) => { if (pos[s] <= 0) delete pos[s]; });
+    
     // Compute value
     let value = 0;
     for (const symbol in pos) {
       const ph = priceHistory[symbol];
       if (!ph) continue;
+      
       // Find price for this date (or previous available)
       let price = 0;
       for (let i = ph.length - 1; i >= 0; i--) {
@@ -49,11 +71,22 @@ export function calculatePortfolioValueHistory(
       }
       value += pos[symbol] * price;
     }
+    
     // If no price data, use previous value
     if (value === 0 && prevValue > 0) value = prevValue;
+    
     result.push({ date, value });
     prevPos = pos;
     prevValue = value;
   }
+  
   return result;
+}
+
+// Backward compatibility functions
+export function getDailyPortfolioValue(
+  transactions: PortfolioTransaction[],
+  priceHistory: Record<string, PriceData[]>
+): { date: string; value: number }[] {
+  return calculatePortfolioValueHistory(transactions, priceHistory, {});
 } 

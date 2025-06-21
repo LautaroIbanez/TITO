@@ -2,21 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { InvestorProfile, KnowledgeLevel } from '@/types';
+import { InvestorProfile, KnowledgeLevel, RiskAppetite } from '@/types';
 
 const INSTRUMENTS = [
-  'Fixed Deposit',
-  'Mutual Funds',
-  'Bonds',
-  'Stocks',
-  'Options',
-  'Futures'
+  'Plazo Fijo',
+  'Fondos Comunes de Inversión',
+  'Bonos',
+  'Acciones',
+  'Opciones',
+  'Futuros'
 ];
 
-const KNOWLEDGE_LEVELS: KnowledgeLevel[] = ['Low', 'Medium', 'High'];
-const HOLDING_PERIODS = ['<1 year', '1-5 years', '>5 years'];
-const AGE_GROUPS = ['<30', '30-40', '41-50', '>50'];
-const RISK_APPETITES = ['Conservative', 'Balanced', 'Aggressive'];
+const KNOWLEDGE_LEVELS: KnowledgeLevel[] = ['Bajo', 'Medio', 'Alto'];
+const HOLDING_PERIODS = ['Menos de 1 año', '1 a 5 años', 'Más de 5 años'];
+const AGE_GROUPS = ['Menos de 30', '30 a 40', '41 a 50', 'Más de 50'];
+const RISK_APPETITES: RiskAppetite[] = ['Conservador', 'Balanceado', 'Agresivo'];
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -28,7 +28,7 @@ export default function ProfilePage() {
     knowledgeLevels: {},
     holdingPeriod: '',
     ageGroup: '',
-    riskAppetite: 'Balanced',
+    riskAppetite: 'Balanceado',
     investmentAmount: 0
   });
 
@@ -52,7 +52,7 @@ export default function ProfilePage() {
         ? [...prev.instrumentsUsed, instrument]
         : prev.instrumentsUsed.filter(i => i !== instrument),
       knowledgeLevels: checked
-        ? { ...prev.knowledgeLevels, [instrument]: 'Low' }
+        ? { ...prev.knowledgeLevels, [instrument]: 'Bajo' }
         : Object.fromEntries(
             Object.entries(prev.knowledgeLevels).filter(([key]) => key !== instrument)
           )
@@ -65,13 +65,13 @@ export default function ProfilePage() {
     setIsLoading(true);
 
     if (formData.instrumentsUsed.length === 0) {
-      setError('Please select at least one investment instrument');
+      setError('Por favor, selecciona al menos un instrumento de inversión.');
       setIsLoading(false);
       return;
     }
 
     if (formData.investmentAmount <= 0) {
-      setError('Please enter a valid investment amount');
+      setError('Por favor, ingresa un monto de inversión válido.');
       setIsLoading(false);
       return;
     }
@@ -98,7 +98,7 @@ export default function ProfilePage() {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to save profile');
+        throw new Error(data.error || 'Error al guardar el perfil');
       }
 
       // Clear saved form data
@@ -118,15 +118,18 @@ export default function ProfilePage() {
       <div className="max-w-3xl mx-auto">
         <div className="bg-white shadow rounded-lg p-6 sm:p-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-8 text-center">
-            Complete Your Investment Profile
+            Completa tu Perfil de Inversor
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Investment Experience Section */}
             <div className="space-y-4">
               <h2 className="text-xl font-semibold text-gray-800">
-                1. Investment Experience
+                1. Experiencia de Inversión
               </h2>
+              <p className="text-sm text-gray-600">
+                Selecciona los instrumentos financieros que has utilizado.
+              </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {INSTRUMENTS.map(instrument => (
                   <div key={instrument} className="flex items-start">
@@ -151,8 +154,11 @@ export default function ProfilePage() {
             {/* Knowledge Level Section */}
             <div className="space-y-4">
               <h2 className="text-xl font-semibold text-gray-800">
-                2. Knowledge Level
+                2. Nivel de Conocimiento
               </h2>
+              <p className="text-sm text-gray-600">
+                Indica tu nivel de conocimiento para cada instrumento seleccionado.
+              </p>
               <div className="grid gap-4">
                 {formData.instrumentsUsed.map(instrument => (
                   <div key={instrument} className="flex items-center gap-4">
@@ -189,13 +195,13 @@ export default function ProfilePage() {
             {/* Investment Preferences Section */}
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-gray-800">
-                3. Investment Preferences
+                3. Preferencias de Inversión
               </h2>
               
               {/* Holding Period */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">
-                  Max Holding Period
+                  Horizonte de Inversión
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {HOLDING_PERIODS.map(period => (
@@ -226,7 +232,7 @@ export default function ProfilePage() {
               {/* Age Group */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">
-                  Age Group
+                  Rango de Edad
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {AGE_GROUPS.map(age => (
@@ -257,7 +263,7 @@ export default function ProfilePage() {
               {/* Risk Appetite */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">
-                  Risk Appetite
+                  Apetito de Riesgo
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {RISK_APPETITES.map(risk => (
@@ -288,7 +294,7 @@ export default function ProfilePage() {
               {/* Investment Amount */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">
-                  Investment Amount ($)
+                  Monto de Inversión (USD)
                 </label>
                 <div className="relative mt-1 rounded-md shadow-sm">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -314,7 +320,7 @@ export default function ProfilePage() {
             </div>
 
             {error && (
-              <div className="text-red-600 text-sm mt-2">
+              <div className="text-red-600 text-sm mt-2 text-center">
                 {error}
               </div>
             )}
@@ -325,7 +331,7 @@ export default function ProfilePage() {
                 disabled={isLoading}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Saving...' : 'Complete Profile'}
+                {isLoading ? 'Guardando...' : 'Completar Perfil'}
               </button>
             </div>
           </form>

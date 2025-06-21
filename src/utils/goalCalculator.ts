@@ -106,4 +106,44 @@ export function formatCurrency(amount: number): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   }).format(amount);
+}
+
+/**
+ * Calculate the required annual return to reach a goal.
+ * This is a complex calculation that often requires iteration.
+ * Formula for Future Value: FV = P(1+r)^n + A * [((1+r)^n - 1) / r]
+ * where r is the monthly rate. We need to solve for r.
+ */
+export function calculateRequiredReturn(
+  targetAmount: number,
+  years: number,
+  initialAmount: number,
+  monthlyContribution: number
+): number {
+  const months = years * 12;
+  if (initialAmount + monthlyContribution * months >= targetAmount) {
+    return 0; // No return needed if contributions are enough
+  }
+
+  // Iterative approach to find the rate (e.g., Newton-Raphson or bisection)
+  // For simplicity, we'll use a bisection method here.
+  let low = 0;
+  let high = 1; // 100% annual return
+  let annualRate = 0;
+
+  for (let i = 0; i < 100; i++) { // 100 iterations for precision
+    const mid = (low + high) / 2;
+    const monthlyRate = mid / 12;
+    const futureValue = initialAmount * Math.pow(1 + monthlyRate, months) +
+      monthlyContribution * (Math.pow(1 + monthlyRate, months) - 1) / monthlyRate;
+
+    if (futureValue > targetAmount) {
+      high = mid;
+    } else {
+      low = mid;
+    }
+  }
+
+  annualRate = (low + high) / 2;
+  return annualRate * 100; // Return as a percentage
 } 

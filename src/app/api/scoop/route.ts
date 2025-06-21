@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import path from 'path';
 import { promises as fs } from 'fs';
-import { getHistoricalPrices, getFundamentals } from '@/utils/financeData';
+import { getHistoricalPrices, getFundamentals, getTechnicals } from '@/utils/financeData';
 
 export async function GET() {
   const listPath = path.join(process.cwd(), 'data', 'stocks-list.json');
@@ -15,14 +15,16 @@ export async function GET() {
 
   const results = await Promise.all(
     symbols.map(async (symbol) => {
-      const [prices, fundamentals] = await Promise.all([
+      const [prices, fundamentals, technicals] = await Promise.all([
         getHistoricalPrices(symbol),
         getFundamentals(symbol),
+        getTechnicals(symbol),
       ]);
       return {
         symbol,
         prices,
         fundamentals,
+        technicals,
       };
     })
   );

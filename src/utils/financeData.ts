@@ -2,7 +2,14 @@ import yahooFinance from 'yahoo-finance2';
 import dayjs from 'dayjs';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { PriceData, Fundamentals } from '@/types/finance';
+import { PriceData, Fundamentals, Technicals } from '@/types/finance';
+import {
+  RSI,
+  MACD,
+  SMA,
+  EMA,
+  ADX,
+} from 'technicalindicators';
 
 // Helper: Read JSON file safely
 async function readJsonSafe(filePath: string) {
@@ -142,11 +149,21 @@ export async function getFundamentals(symbol: string): Promise<Fundamentals | nu
   }
   try {
     const summary: any = await yahooFinance.quoteSummary(symbol, { 
-      modules: ['defaultKeyStatistics', 'financialData', 'summaryDetail'] 
+      modules: [
+        'defaultKeyStatistics', 
+        'financialData', 
+        'summaryDetail',
+        'incomeStatementHistory',
+        'earningsTrend',
+        'summaryProfile',
+      ] 
     });
     const stats = summary?.defaultKeyStatistics || {};
     const fin = summary?.financialData || {};
     const detail = summary?.summaryDetail || {};
+    const income = summary?.incomeStatementHistory?.incomeStatementHistory?.[0] || {};
+    const trend = summary?.earningsTrend?.trend?.[3] || {}; // 0=current q, 1=next q, 2=current year, 3=next year
+    const profile = summary?.summaryProfile || {};
 
     fundamentals = {
       peRatio: fin?.trailingPE ?? stats?.trailingPE ?? null,
@@ -159,6 +176,11 @@ export async function getFundamentals(symbol: string): Promise<Fundamentals | nu
       netMargin: fin?.profitMargins ?? null,
       freeCashFlow: fin?.freeCashflow ?? null,
       priceToFCF: fin?.freeCashflow && detail?.marketCap ? (detail.marketCap / fin.freeCashflow) : null,
+      ebitda: fin?.ebitda ?? income?.ebitda?.raw ?? null,
+      revenueGrowth: fin?.revenueGrowth ?? null, // Quarterly
+      epsGrowth: trend?.earningsEstimate?.growth?.raw ?? null, // Next year
+      sector: profile?.sector ?? null,
+      industry: profile?.industry ?? null,
       updatedAt: dayjs().toISOString(),
     };
     await writeJson(filePath, fundamentals);
@@ -167,5 +189,78 @@ export async function getFundamentals(symbol: string): Promise<Fundamentals | nu
   } catch (err) {
     console.error(`[${symbol}] Error fetching fundamentals:`, err);
     return fundamentals;
+  }
+}
+
+export async function getTechnicals(symbol: string): Promise<Technicals | null> {
+  const filePath = path.join(process.cwd(), 'data', 'technicals', `${symbol}.json`);
+  let technicals: Technicals | null = null;
+
+  // Check for recent file first
+  try {
+    const fileContent = await readJsonSafe(filePath);
+    if (fileContent && dayjs().diff(dayjs(fileContent.updatedAt), 'day') < 1) {
+      return fileContent;
+    }
+  } catch {}
+
+  // If not recent, calculate
+  const prices = await getHistoricalPrices(symbol);
+  if (!prices || prices.length < 200) { // Need enough data for SMA 200
+    console.log(`[${symbol}] Not enough price data to calculate technicals.`);
+    return null;
+  }
+
+  const closePrices = prices.map(p => p.close);
+  const highPrices = prices.map(p => p.high);
+  const lowPrices = prices.map(p => p.low);
+
+  try {
+    // RSI
+    const rsiResult = RSI.calculate({ values: closePrices, period: 14 });
+    // MACD
+    const macdResult = MACD.calculate({
+      values: closePrices,
+      fastPeriod: 12,
+      slowPeriod: 26,
+      signalPeriod: 9,
+      SimpleMAOscillator: false,
+      SimpleMASignal: false,
+    });
+    // SMA
+    const sma200Result = SMA.calculate({ values: closePrices, period: 200 });
+    // EMA
+    const ema12Result = EMA.calculate({ values: closePrices, period: 12 });
+    const ema26Result = EMA.calculate({ values: closePrices, period: 26 });
+    const ema50Result = EMA.calculate({ values: closePrices, period: 50 });
+    // DMI / ADX
+    const adxResult = ADX.calculate({
+      close: closePrices,
+      high: highPrices,
+      low: lowPrices,
+      period: 14,
+    });
+
+    const lastAdx = adxResult[adxResult.length - 1];
+
+    technicals = {
+      rsi: rsiResult[rsiResult.length - 1] || null,
+      macd: macdResult[macdResult.length - 1]?.MACD || null,
+      sma200: sma200Result[sma200Result.length - 1] || null,
+      ema12: ema12Result[ema12Result.length - 1] || null,
+      ema26: ema26Result[ema26Result.length - 1] || null,
+      ema50: ema50Result[ema50Result.length - 1] || null,
+      adx: lastAdx?.adx || null,
+      pdi: lastAdx?.pdi || null,
+      mdi: lastAdx?.mdi || null,
+      updatedAt: dayjs().toISOString(),
+    };
+
+    await writeJson(filePath, technicals);
+    console.log(`[${symbol}] Calculated and saved technicals.`);
+    return technicals;
+  } catch (err) {
+    console.error(`[${symbol}] Error calculating technicals:`, err);
+    return null;
   }
 } 

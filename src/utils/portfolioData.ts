@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import { PortfolioPosition } from '@/types';
 
 export async function getPortfolioData(username: string) {
   const userFile = path.join(process.cwd(), 'data', 'users', `${username}.json`);
@@ -10,15 +11,22 @@ export async function getPortfolioData(username: string) {
   } catch {
     return [];
   }
-  const portfolio = Array.isArray(user.portfolio) ? user.portfolio : [];
+  const positions = Array.isArray(user.positions) ? user.positions : [];
   const results = await Promise.all(
-    portfolio.map(async (symbol: string) => {
+    positions.map(async (position: PortfolioPosition) => {
       const [prices, fundamentals, technicals] = await Promise.all([
-        readJsonSafe(path.join(process.cwd(), 'data', 'stocks', `${symbol}.json`)),
-        readJsonSafe(path.join(process.cwd(), 'data', 'fundamentals', `${symbol}.json`)),
-        readJsonSafe(path.join(process.cwd(), 'data', 'technicals', `${symbol}.json`)),
+        readJsonSafe(path.join(process.cwd(), 'data', 'stocks', `${position.symbol}.json`)),
+        readJsonSafe(path.join(process.cwd(), 'data', 'fundamentals', `${position.symbol}.json`)),
+        readJsonSafe(path.join(process.cwd(), 'data', 'technicals', `${position.symbol}.json`)),
       ]);
-      return { symbol, prices, fundamentals, technicals };
+      return { 
+        symbol: position.symbol, 
+        quantity: position.quantity,
+        averagePrice: position.averagePrice,
+        prices, 
+        fundamentals, 
+        technicals 
+      };
     })
   );
   return results;

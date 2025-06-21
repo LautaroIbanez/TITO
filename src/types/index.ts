@@ -3,8 +3,8 @@ export interface PortfolioItem {
   id: string;
 }
 
-export type KnowledgeLevel = 'Low' | 'Medium' | 'High';
-export type RiskAppetite = 'Conservative' | 'Balanced' | 'Aggressive';
+export type KnowledgeLevel = 'Bajo' | 'Medio' | 'Alto';
+export type RiskAppetite = 'Conservador' | 'Balanceado' | 'Agresivo';
 
 export interface InvestorProfile {
   instrumentsUsed: string[];
@@ -13,6 +13,15 @@ export interface InvestorProfile {
   ageGroup: string;
   riskAppetite: RiskAppetite;
   investmentAmount: number;
+}
+
+export interface InvestmentGoal {
+  id: string;
+  name: string;
+  targetAmount: number;
+  targetDate: string;
+  initialDeposit: number;
+  monthlyContribution: number;
 }
 
 export interface PortfolioPosition {
@@ -36,4 +45,5 @@ export interface UserData {
   profile?: InvestorProfile;
   positions: PortfolioPosition[];
   transactions: PortfolioTransaction[];
+  goals: InvestmentGoal[];
 } 
