@@ -1,0 +1,30 @@
+[
+  {
+    "id": "banco-nacion-30",
+    "provider": "Banco Nación",
+    "termDays": 30,
+    "annualRate": 75.0,
+    "currency": "ARS"
+  },
+  {
+    "id": "banco-galicia-30",
+    "provider": "Banco Galicia",
+    "termDays": 30,
+    "annualRate": 75.0,
+    "currency": "ARS"
+  },
+  {
+    "id": "banco-icbc-90",
+    "provider": "ICBC",
+    "termDays": 90,
+    "annualRate": 78.5,
+    "currency": "ARS"
+  },
+  {
+    "id": "banco-nacion-usd-365",
+    "provider": "Banco Nación",
+    "termDays": 365,
+    "annualRate": 1.5,
+    "currency": "USD"
+  }
+] 

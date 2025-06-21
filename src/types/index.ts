@@ -24,27 +24,74 @@ export interface InvestmentGoal {
   monthlyContribution: number;
 }
 
-export interface PortfolioPosition {
+// -- Portfolio Positions --
+export interface StockPosition {
+  type: 'Stock';
   symbol: string;
   quantity: number;
   averagePrice: number;
 }
 
-export interface TradeTransaction {
+export interface BondPosition {
+  type: 'Bond';
+  ticker: string;
+  quantity: number;
+  averagePrice: number;
+}
+
+export interface FixedTermDepositPosition {
+  type: 'FixedTermDeposit';
+  id: string; // Unique ID for this specific deposit
+  provider: string;
+  amount: number;
+  annualRate: number;
+  startDate: string;
+  maturityDate: string;
+}
+
+export type PortfolioPosition = StockPosition | BondPosition | FixedTermDepositPosition;
+
+// -- Portfolio Transactions --
+export interface StockTradeTransaction {
+  id: string;
   date: string; // ISO string
   type: 'Buy' | 'Sell';
+  assetType: 'Stock';
   symbol:string;
   quantity: number;
   price: number;
 }
 
+export interface BondTradeTransaction {
+  id: string;
+  date: string; // ISO string
+  type: 'Buy' | 'Sell';
+  assetType: 'Bond';
+  ticker: string;
+  quantity: number;
+  price: number;
+}
+
 export interface DepositTransaction {
+  id: string;
   date: string; // ISO string
   type: 'Deposit';
   amount: number;
 }
 
-export type PortfolioTransaction = TradeTransaction | DepositTransaction;
+export interface FixedTermDepositCreationTransaction {
+  id: string;
+  date: string; // ISO string
+  type: 'Create';
+  assetType: 'FixedTermDeposit';
+  provider: string;
+  amount: number;
+  annualRate: number;
+  termDays: number;
+  maturityDate: string;
+}
+
+export type PortfolioTransaction = StockTradeTransaction | BondTradeTransaction | DepositTransaction | FixedTermDepositCreationTransaction;
 
 
 export interface UserData {

@@ -85,4 +85,23 @@ export interface Technicals {
   pdi: number | null;
   mdi: number | null;
   updatedAt: string;
+}
+
+export interface Bond {
+  id: string;
+  ticker: string;
+  name: string;
+  issuer: string;
+  maturityDate: string;
+  couponRate: number; // Annual coupon rate in percentage
+  price: number; // Clean price
+  currency: 'ARS' | 'USD';
+}
+
+export interface FixedTermDeposit {
+  id: string;
+  provider: string; // Bank or financial institution
+  termDays: number;
+  annualRate: number; // TNA in percentage
+  currency: 'ARS' | 'USD';
 } 

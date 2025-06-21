@@ -42,4 +42,31 @@ export function getTradeSignal(tech: Technicals | null | undefined): TradeSignal
 
   // 3. Default to 'hold' if no clear signal
   return 'hold';
+}
+
+export function getTechnicalColor(indicator: string, value: number, currentPrice?: number): string {
+  const name = indicator.toUpperCase();
+
+  if (name.includes('RSI')) {
+    if (value > 70) return 'text-red-600'; // Sobrecompra
+    if (value < 30) return 'text-green-600'; // Sobreventa
+  }
+
+  if (name.includes('MACD')) {
+    if (value > 0) return 'text-green-600'; // Alcista
+    if (value < 0) return 'text-red-600'; // Bajista
+  }
+
+  if (name.includes('SMA') || name.includes('EMA')) {
+    if (currentPrice) {
+      if (currentPrice > value) return 'text-green-600'; // Precio por encima de la media
+      if (currentPrice < value) return 'text-red-600'; // Precio por debajo de la media
+    }
+  }
+
+  if (name.includes('ADX')) {
+    if (value > 25) return 'text-green-600'; // Tendencia fuerte
+  }
+
+  return 'text-gray-600'; // Neutral
 } 

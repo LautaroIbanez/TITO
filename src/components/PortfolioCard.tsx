@@ -213,10 +213,12 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
         {/* Technicals */}
         <div>
           <h3 className="text-sm font-semibold text-gray-900 mb-2">Técnicos</h3>
-          <div className="flex flex-wrap gap-4 text-xs text-gray-700">
+          <div className="grid grid-cols-2 gap-x-4 text-xs text-gray-700">
             <TechnicalDisplay label="RSI" indicatorKey="RSI" value={technicals?.rsi} />
             <TechnicalDisplay label="MACD" indicatorKey="MACD" value={technicals?.macd} />
-            <TechnicalDisplay label="SMA 200" indicatorKey="SMA" value={technicals?.sma200} />
+            <TechnicalDisplay label="SMA 200" indicatorKey="SMA" value={technicals?.sma200} currentPrice={currentPrice} />
+            <TechnicalDisplay label="EMA 50" indicatorKey="EMA" value={technicals?.ema50} currentPrice={currentPrice} />
+            <TechnicalDisplay label="ADX" indicatorKey="ADX" value={technicals?.adx} />
           </div>
         </div>
       </div>

@@ -8,6 +8,8 @@ const navItems = [
   { label: "🚀 Cómo empezar", href: "/dashboard/start" },
   { label: "📊 Portfolio", href: "/dashboard/portfolio" },
   { label: "🕵️ Scoop", href: "/dashboard/scoop" },
+  { label: "📜 Bonos", href: "/dashboard/bonds" },
+  { label: "⏳ Plazos Fijos", href: "/dashboard/deposits" },
   { label: "🧾 Impuestos", href: "/dashboard/taxes" },
   { label: "🎯 Metas", href: "/dashboard/goals" },
 ];

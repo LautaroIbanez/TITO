@@ -260,8 +260,8 @@ export default function ScoopCard({
           <div className="grid grid-cols-2 gap-x-4 text-xs text-gray-700">
             <TechnicalDisplay label="RSI" indicatorKey="RSI" value={technicals?.rsi} />
             <TechnicalDisplay label="MACD" indicatorKey="MACD" value={technicals?.macd} />
-            <TechnicalDisplay label="SMA 200" indicatorKey="SMA" value={technicals?.sma200} />
-            <TechnicalDisplay label="EMA 50" indicatorKey="EMA" value={technicals?.ema50} />
+            <TechnicalDisplay label="SMA 200" indicatorKey="SMA" value={technicals?.sma200} currentPrice={currentPrice} />
+            <TechnicalDisplay label="EMA 50" indicatorKey="EMA" value={technicals?.ema50} currentPrice={currentPrice} />
             <TechnicalDisplay label="ADX" indicatorKey="ADX" value={technicals?.adx} />
           </div>
         </div>

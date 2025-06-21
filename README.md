@@ -71,6 +71,26 @@ Para ejecutar los tests, usa el siguiente comando:
 npm test
 ```
 
+## Actualización de Datos
+
+La aplicación utiliza datos de mercado (precios históricos, fundamentales y técnicos) que se guardan localmente en el directorio `/data`. Para mantener esta información actualizada, se incluye un script que se puede ejecutar manualmente.
+
+```bash
+npm run update-data
+```
+
+Este comando iterará sobre la lista de acciones definida en `data/stocks-list.json` y descargará los últimos datos para cada una.
+
+### Automatización (Ejemplo con Cron)
+
+Para mantener los datos actualizados de forma automática, puedes configurar una tarea programada (cron job) en tu servidor. Por ejemplo, para ejecutar el script todos los días a medianoche, puedes añadir la siguiente línea a tu crontab:
+
+```cron
+0 0 * * * cd /ruta/completa/hacia/el/proyecto/TITO && npm run update-data >> /var/log/tito-updates.log 2>&1
+```
+
+Asegúrate de reemplazar `/ruta/completa/hacia/el/proyecto/TITO` con la ruta real a tu proyecto.
+
 ## Descargo de Responsabilidad
 
 TITO es un proyecto con fines exclusivamente educativos y de demostración. La información y las recomendaciones proporcionadas por esta aplicación no deben considerarse como asesoramiento financiero profesional. Realiza tu propia investigación y/o consulta a un asesor financiero calificado antes de tomar cualquier decisión de inversión.

@@ -1,4 +1,5 @@
 import React from 'react';
+import { getTechnicalColor } from '@/utils/tradeSignal';
 
 type TechnicalIndicatorKey = 'RSI' | 'MACD' | 'SMA' | 'EMA' | 'ADX';
 
@@ -29,15 +30,20 @@ interface TechnicalDisplayProps {
   label: string;
   indicatorKey: TechnicalIndicatorKey;
   value: number | null | undefined;
+  currentPrice?: number;
 }
 
-const TechnicalDisplay = ({ label, indicatorKey, value }: TechnicalDisplayProps) => {
+const TechnicalDisplay = ({ label, indicatorKey, value, currentPrice }: TechnicalDisplayProps) => {
   const tooltip = TECHNICAL_TOOLTIPS[indicatorKey];
+  const colorClass = value != null ? getTechnicalColor(label, value, currentPrice) : 'text-gray-600';
+  
   return (
     <div className="group relative">
       <div className="flex items-center gap-1">
           <span className='font-medium'>{label}:</span>
-          <span className="font-mono">{value?.toFixed(2) ?? '—'}</span>
+          <span className={`font-mono ${colorClass}`}>
+            {value?.toFixed(2) ?? '—'}
+          </span>
       </div>
       <div className="hidden group-hover:block absolute z-20 bg-gray-800 text-white text-xs p-2 rounded shadow-lg bottom-full mb-2 left-1/2 -translate-x-1/2 w-64 text-left">
         <p className='font-bold mb-1'>{tooltip.title}</p>
