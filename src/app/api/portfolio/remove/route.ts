@@ -17,6 +17,12 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
+    
+    // Initialize availableCash if it doesn't exist (for backward compatibility)
+    if (typeof user.availableCash !== 'number') {
+      user.availableCash = 0;
+    }
+    
     if (!Array.isArray(user.positions)) user.positions = [];
     if (!Array.isArray(user.transactions)) user.transactions = [];
     let pos = user.positions.find((p) => p.symbol === symbol);
@@ -34,6 +40,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No price data for symbol' }, { status: 400 });
     }
     // Sell all shares at current price
+    const totalProceeds = pos.quantity * price;
     const tx: PortfolioTransaction = {
       date: new Date().toISOString(),
       type: 'Sell',
@@ -43,13 +50,21 @@ export async function POST(request: NextRequest) {
     };
     user.transactions.push(tx);
     user.positions = user.positions.filter((p) => p.symbol !== symbol);
+    
+    // Add the sale proceeds to available cash
+    user.availableCash += totalProceeds;
+    
     try {
       await fs.writeFile(userFile, JSON.stringify(user, null, 2));
     } catch (err) {
       console.error('Error writing user file:', err);
       return NextResponse.json({ error: 'Failed to update portfolio' }, { status: 500 });
     }
-    return NextResponse.json({ positions: user.positions, transactions: user.transactions });
+    return NextResponse.json({ 
+      positions: user.positions, 
+      transactions: user.transactions,
+      availableCash: user.availableCash
+    });
   } catch (err) {
     console.error('Portfolio remove error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

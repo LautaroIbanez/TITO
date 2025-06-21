@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -10,17 +10,20 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import { Fundamentals, getRatioColor } from '../types/finance';
+import { Fundamentals, getRatioColor, Technicals } from '../types/finance';
+import { getTradeSignal, TradeSignal } from '@/utils/tradeSignal';
+import TradeModal from './TradeModal';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
 interface ScoopCardProps {
   stockData: any;
-  fundamentals: any;
-  technicals: any;
+  fundamentals: Fundamentals;
+  technicals: Technicals | null;
   isSuggested: boolean;
   inPortfolio: boolean;
-  onAddToPortfolio?: () => void;
+  onTrade: () => void; // Renamed from onAddToPortfolio
+  availableCash: number;
 }
 
 const RATIO_TOOLTIPS: Record<keyof Omit<Fundamentals, 'updatedAt' | 'sector' | 'industry'>, string> = {
@@ -93,16 +96,33 @@ const StockBadges = ({ fundamentals }: { fundamentals: Fundamentals }) => {
   );
 };
 
+const SignalBadge = ({ signal }: { signal: TradeSignal }) => {
+  const badgeStyles: Record<TradeSignal, string> = {
+    buy: 'bg-green-100 text-green-700',
+    sell: 'bg-red-100 text-red-700',
+    hold: 'bg-gray-100 text-gray-700',
+  };
+  return (
+    <span className={`px-2 py-1 rounded text-xs font-semibold capitalize ${badgeStyles[signal]}`}>
+      {signal}
+    </span>
+  );
+};
+
 export default function ScoopCard({
   stockData,
   fundamentals,
   technicals,
   isSuggested,
   inPortfolio,
-  onAddToPortfolio,
+  onTrade,
+  availableCash,
 }: ScoopCardProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const signal = getTradeSignal(technicals);
   // Prepare chart data
   const prices = stockData?.prices || [];
+  const currentPrice = prices.length > 0 ? prices[prices.length - 1].close : 0;
   const chartData = {
     labels: prices.map((p: any) => p.date),
     datasets: [
@@ -133,99 +153,129 @@ export default function ScoopCard({
     maintainAspectRatio: false,
   };
 
+  const handleBuy = async (quantity: number) => {
+    const session = localStorage.getItem('session');
+    if (!session) return;
+    const username = JSON.parse(session).username;
+    const res = await fetch('/api/portfolio/buy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, symbol: stockData.symbol, quantity, price: currentPrice }),
+    });
+    if (res.ok) {
+      onTrade(); // Refresh data
+    } else {
+      const data = await res.json();
+      alert(`Error: ${data.error}`);
+    }
+  };
+
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col gap-4 relative">
-      <div className="flex items-center gap-2">
-        <h2 className="text-xl font-bold text-gray-900">
-          {stockData?.companyName || stockData?.symbol || '—'}
-        </h2>
-        <span className="text-sm font-mono text-gray-900">{stockData?.symbol}</span>
-        {isSuggested && (
-          <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-semibold">
-            Suggested
-          </span>
-        )}
-      </div>
-      
-      {fundamentals?.sector && (
-        <div className="text-xs text-gray-500 -mt-3">
-          {fundamentals.sector} / {fundamentals.industry}
-        </div>
-      )}
-
-      <StockBadges fundamentals={fundamentals} />
-      
-      {/* Price Chart */}
-      <div className="h-32 flex items-center justify-center bg-gray-50 rounded">
-        {prices.length > 0 ? (
-          <Line data={chartData} options={chartOptions} height={100} />
-        ) : (
-          <span className="text-gray-900 text-sm">[Price Chart]</span>
-        )}
-      </div>
-
-      {/* Fundamentals Sections */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-        {/* Valuation */}
-        <div>
-          <h3 className="text-sm font-semibold text-gray-800 mb-1">Valoración</h3>
-          <div className="text-xs text-gray-700">
-            <RatioRow label="PE Ratio" value={fundamentals.peRatio} metric="peRatio" />
-            <RatioRow label="PB Ratio" value={fundamentals.pbRatio} metric="pbRatio" />
-            <RatioRow label="EV/EBITDA" value={fundamentals.evToEbitda} metric="evToEbitda" />
-            <RatioRow label="Price/FCF" value={fundamentals.priceToFCF} metric="priceToFCF" />
-          </div>
+    <>
+      <TradeModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleBuy}
+        tradeType="Buy"
+        symbol={stockData.symbol}
+        price={currentPrice}
+        availableCash={availableCash}
+      />
+      <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col gap-4 relative">
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-bold text-gray-900">
+            {stockData?.companyName || stockData?.symbol || '—'}
+          </h2>
+          <span className="text-sm font-mono text-gray-900">{stockData?.symbol}</span>
+          <SignalBadge signal={signal} />
+          {isSuggested && (
+            <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-semibold">
+              Suggested
+            </span>
+          )}
         </div>
         
-        {/* Profitability */}
-        <div>
-          <h3 className="text-sm font-semibold text-gray-800 mb-1">Rentabilidad</h3>
-          <div className="text-xs text-gray-700">
-            <RatioRow label="ROE" value={fundamentals.roe} metric="roe" format="percent" />
-            <RatioRow label="ROA" value={fundamentals.roa} metric="roa" format="percent" />
-            <RatioRow label="Net Margin" value={fundamentals.netMargin} metric="netMargin" format="percent" />
-            <RatioRow label="Deuda/EBITDA" value={fundamentals.debtToEbitda} metric="debtToEbitda" />
+        {fundamentals?.sector && (
+          <div className="text-xs text-gray-500 -mt-3">
+            {fundamentals.sector} / {fundamentals.industry}
           </div>
-        </div>
-
-        {/* Growth */}
-        <div>
-          <h3 className="text-sm font-semibold text-gray-800 mb-1">Crecimiento</h3>
-          <div className="text-xs text-gray-700">
-            <RatioRow label="EBITDA" value={fundamentals.ebitda} metric="ebitda" format="currency" />
-            <RatioRow label="FCF" value={fundamentals.freeCashFlow} metric="freeCashFlow" format="currency" />
-            <RatioRow label="Crec. Ingresos" value={fundamentals.revenueGrowth} metric="revenueGrowth" format="percent" />
-            <RatioRow label="Crec. BPA Est." value={fundamentals.epsGrowth} metric="epsGrowth" format="percent" />
-          </div>
-        </div>
-      </div>
-
-      {/* Technicals */}
-      <div>
-        <h3 className="text-sm font-semibold text-gray-800 mb-1">Análisis Técnico</h3>
-        <div className="grid grid-cols-2 gap-x-4 text-xs text-gray-700">
-          <div>RSI (14): <span className="font-mono">{technicals?.rsi?.toFixed(2) ?? '—'}</span></div>
-          <div>MACD: <span className="font-mono">{technicals?.macd?.toFixed(2) ?? '—'}</span></div>
-          <div>SMA 200: <span className="font-mono">{technicals?.sma200?.toFixed(2) ?? '—'}</span></div>
-          <div>EMA 50: <span className="font-mono">{technicals?.ema50?.toFixed(2) ?? '—'}</span></div>
-          <div>ADX (14): <span className="font-mono">{technicals?.adx?.toFixed(2) ?? '—'}</span></div>
-          <div>+DI: <span className="font-mono">{technicals?.pdi?.toFixed(2) ?? '—'}</span></div>
-        </div>
-      </div>
-
-      <div className="mt-2 flex-grow flex items-end">
-        {inPortfolio ? (
-          <span className="text-xs text-gray-500 font-medium">✓ En tu portafolio</span>
-        ) : (
-          <button
-            className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={onAddToPortfolio}
-            disabled={inPortfolio}
-          >
-            + Agregar al Portafolio
-          </button>
         )}
+
+        <StockBadges fundamentals={fundamentals} />
+        
+        {/* Price Chart */}
+        <div className="h-32 flex items-center justify-center bg-gray-50 rounded">
+          {prices.length > 0 ? (
+            <Line data={chartData} options={chartOptions} height={100} />
+          ) : (
+            <span className="text-gray-900 text-sm">[Price Chart]</span>
+          )}
+        </div>
+
+        {/* Fundamentals Sections */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+          {/* Valuation */}
+          <div>
+            <h3 className="text-sm font-semibold text-gray-800 mb-1">Valoración</h3>
+            <div className="text-xs text-gray-700">
+              <RatioRow label="PE Ratio" value={fundamentals.peRatio} metric="peRatio" />
+              <RatioRow label="PB Ratio" value={fundamentals.pbRatio} metric="pbRatio" />
+              <RatioRow label="EV/EBITDA" value={fundamentals.evToEbitda} metric="evToEbitda" />
+              <RatioRow label="Price/FCF" value={fundamentals.priceToFCF} metric="priceToFCF" />
+            </div>
+          </div>
+          
+          {/* Profitability */}
+          <div>
+            <h3 className="text-sm font-semibold text-gray-800 mb-1">Rentabilidad</h3>
+            <div className="text-xs text-gray-700">
+              <RatioRow label="ROE" value={fundamentals.roe} metric="roe" format="percent" />
+              <RatioRow label="ROA" value={fundamentals.roa} metric="roa" format="percent" />
+              <RatioRow label="Net Margin" value={fundamentals.netMargin} metric="netMargin" format="percent" />
+              <RatioRow label="Deuda/EBITDA" value={fundamentals.debtToEbitda} metric="debtToEbitda" />
+            </div>
+          </div>
+
+          {/* Growth */}
+          <div>
+            <h3 className="text-sm font-semibold text-gray-800 mb-1">Crecimiento</h3>
+            <div className="text-xs text-gray-700">
+              <RatioRow label="EBITDA" value={fundamentals.ebitda} metric="ebitda" format="currency" />
+              <RatioRow label="FCF" value={fundamentals.freeCashFlow} metric="freeCashFlow" format="currency" />
+              <RatioRow label="Crec. Ingresos" value={fundamentals.revenueGrowth} metric="revenueGrowth" format="percent" />
+              <RatioRow label="Crec. BPA Est." value={fundamentals.epsGrowth} metric="epsGrowth" format="percent" />
+            </div>
+          </div>
+        </div>
+
+        {/* Technicals */}
+        <div>
+          <h3 className="text-sm font-semibold text-gray-800 mb-1">Análisis Técnico</h3>
+          <div className="grid grid-cols-2 gap-x-4 text-xs text-gray-700">
+            <div>RSI (14): <span className="font-mono">{technicals?.rsi?.toFixed(2) ?? '—'}</span></div>
+            <div>MACD: <span className="font-mono">{technicals?.macd?.toFixed(2) ?? '—'}</span></div>
+            <div>SMA 200: <span className="font-mono">{technicals?.sma200?.toFixed(2) ?? '—'}</span></div>
+            <div>EMA 50: <span className="font-mono">{technicals?.ema50?.toFixed(2) ?? '—'}</span></div>
+            <div>ADX (14): <span className="font-mono">{technicals?.adx?.toFixed(2) ?? '—'}</span></div>
+            <div>+DI: <span className="font-mono">{technicals?.pdi?.toFixed(2) ?? '—'}</span></div>
+          </div>
+        </div>
+
+        <div className="flex gap-2 mt-2">
+          {!inPortfolio && (
+            <button
+              className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              onClick={() => setIsModalOpen(true)}
+              disabled={currentPrice > availableCash}
+            >
+              Buy
+            </button>
+          )}
+          {inPortfolio && (
+            <span className="px-4 py-1 bg-gray-200 text-gray-600 rounded text-xs">In Portfolio</span>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 } 

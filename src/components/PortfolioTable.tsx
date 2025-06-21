@@ -5,6 +5,7 @@ interface Props {
   prices: Record<string, any[]>;
   fundamentals: Record<string, any>;
   technicals: Record<string, any>;
+  availableCash: number;
 }
 
 function getCurrentPrice(prices: any[]) {
@@ -12,7 +13,7 @@ function getCurrentPrice(prices: any[]) {
   return prices[prices.length - 1].close;
 }
 
-export default function PortfolioTable({ positions, prices, fundamentals, technicals }: Props) {
+export default function PortfolioTable({ positions, prices, fundamentals, technicals, availableCash }: Props) {
   return (
     <div className="overflow-x-auto rounded-lg shadow mb-8">
       <table className="min-w-full bg-white text-gray-900 text-sm">
@@ -44,7 +45,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
                 <td className="px-4 py-2 text-right">${value.toFixed(2)}</td>
                 <td className={`px-4 py-2 text-right font-semibold ${gain > 0 ? 'text-green-600' : gain < 0 ? 'text-red-600' : 'text-gray-700'}`}>{gain >= 0 ? '+' : ''}{gain.toFixed(2)}%</td>
                 <td className="px-4 py-2 text-right">{f?.peRatio ?? '-'}</td>
-                <td className="px-4 py-2 text-right">{t?.RSI ?? '-'}</td>
+                <td className="px-4 py-2 text-right">{t?.rsi?.toFixed(2) ?? '-'}</td>
               </tr>
             );
           })}

@@ -1,0 +1,62 @@
+{
+  "username": "tito",
+  "createdAt": "2025-06-21T13:04:47.449Z",
+  "profileCompleted": true,
+  "positions": [
+    {
+      "symbol": "MSFT",
+      "quantity": 2,
+      "averagePrice": 477.3999938964844
+    }
+  ],
+  "transactions": [
+    {
+      "date": "2025-06-21T13:06:56.049Z",
+      "type": "Buy",
+      "symbol": "AAPL",
+      "quantity": 1,
+      "price": 201
+    },
+    {
+      "date": "2025-06-21T15:02:00.731Z",
+      "type": "Buy",
+      "symbol": "MSFT",
+      "quantity": 2,
+      "price": 477.3999938964844
+    },
+    {
+      "date": "2025-06-21T15:03:50.284Z",
+      "type": "Sell",
+      "symbol": "AAPL",
+      "quantity": 1,
+      "price": 201
+    }
+  ],
+  "goals": [
+    {
+      "name": "Departamento ",
+      "targetAmount": 10000,
+      "targetDate": "2025-08-21",
+      "initialDeposit": 1000,
+      "monthlyContribution": 0,
+      "id": "1750512657191"
+    }
+  ],
+  "availableCash": 1045.2000122070312,
+  "profile": {
+    "instrumentsUsed": [
+      "Plazo Fijo",
+      "Acciones",
+      "Futuros"
+    ],
+    "knowledgeLevels": {
+      "Plazo Fijo": "Medio",
+      "Acciones": "Medio",
+      "Futuros": "Bajo"
+    },
+    "holdingPeriod": "1 a 5 años",
+    "ageGroup": "30 a 40",
+    "riskAppetite": "Agresivo",
+    "investmentAmount": 1000
+  }
+}

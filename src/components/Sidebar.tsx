@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
+  { label: "🏠 Resumen", href: "/dashboard" },
   { label: "🚀 Cómo empezar", href: "/dashboard/start" },
   { label: "📊 Portfolio", href: "/dashboard/portfolio" },
   { label: "🕵️ Scoop", href: "/dashboard/scoop" },

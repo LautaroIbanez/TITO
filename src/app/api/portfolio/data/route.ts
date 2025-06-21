@@ -26,6 +26,12 @@ export async function GET(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
+  
+  // Initialize availableCash if it doesn't exist (for backward compatibility)
+  if (typeof user.availableCash !== 'number') {
+    user.availableCash = 0;
+  }
+  
   const positions = user.positions || [];
   const transactions = user.transactions || [];
   const historicalPrices: Record<string, any[]> = {};
@@ -41,5 +47,13 @@ export async function GET(req: NextRequest) {
         (await readJsonSafe(path.join(process.cwd(), 'data', 'technicals', `${pos.symbol}.json`))) || null;
     })
   );
-  return NextResponse.json({ positions, transactions, historicalPrices, fundamentals, technicals, profile: user.profile });
+  return NextResponse.json({ 
+    positions, 
+    transactions, 
+    historicalPrices, 
+    fundamentals, 
+    technicals, 
+    profile: user.profile,
+    availableCash: user.availableCash
+  });
 } 

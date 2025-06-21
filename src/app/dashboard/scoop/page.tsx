@@ -52,6 +52,7 @@ export default function ScoopPage() {
   const [portfolioSymbols, setPortfolioSymbols] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [requiredReturn, setRequiredReturn] = useState(0);
+  const [availableCash, setAvailableCash] = useState(0);
 
   // Load portfolio symbols and scoop data
   const loadData = async () => {
@@ -62,6 +63,7 @@ export default function ScoopPage() {
     // Fetch user profile and portfolio
     let userProfile = null;
     let userPositions: string[] = [];
+    let userAvailableCash = 0;
     try {
       const res = await fetch(`/api/portfolio/data?username=${username}`);
       const data = await res.json();
@@ -69,6 +71,8 @@ export default function ScoopPage() {
       userPositions = (data.positions || []).map((p: any) => p.symbol);
       setPortfolioSymbols(userPositions);
       setProfile(userProfile);
+      userAvailableCash = data.availableCash ?? 0;
+      setAvailableCash(userAvailableCash);
 
       const goalsRes = await fetch(`/api/goals?username=${username}`);
       const goals: InvestmentGoal[] = await goalsRes.json();
@@ -99,22 +103,6 @@ export default function ScoopPage() {
     loadData();
   }, [requiredReturn]); // Reload if requiredReturn changes
 
-  const handleAddToPortfolio = async (symbol: string) => {
-    const session = localStorage.getItem('session');
-    if (!session) return;
-    const username = JSON.parse(session).username;
-    try {
-      const res = await fetch('/api/portfolio/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, symbol }),
-      });
-      if (res.ok) {
-        await loadData(); // reload to sync scoop/portfolio
-      }
-    } catch {}
-  };
-
   return (
     <div>
       {requiredReturn > 0 && (
@@ -135,7 +123,8 @@ export default function ScoopPage() {
               technicals={stock.technicals}
               isSuggested={stock.isSuggested}
               inPortfolio={portfolioSymbols.includes(stock.symbol)}
-              onAddToPortfolio={() => handleAddToPortfolio(stock.symbol)}
+              onTrade={loadData}
+              availableCash={availableCash}
             />
           ))
         )}

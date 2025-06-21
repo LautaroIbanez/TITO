@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import DashboardSummary from "@/components/DashboardSummary";
 
 export default function DashboardRoot() {
-  redirect('/dashboard/portfolio');
+    return <DashboardSummary />;
 } 

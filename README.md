@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TITO - Tu Asistente de Inversiones
 
-## Getting Started
+TITO es una aplicación web construida con Next.js diseñada para ayudarte a gestionar tu portafolio de inversiones, analizar nuevas oportunidades y mantenerte alineado con tus metas financieras.
 
-First, run the development server:
+## Características Principales
+
+- **Gestión de Portafolio**: Visualiza tus posiciones, su valor actual y su rendimiento histórico.
+- **Análisis "Scoop"**: Recibe recomendaciones de acciones personalizadas según tu perfil de riesgo.
+- **Metas Financieras**: Define metas de inversión y sigue tu progreso para alcanzarlas.
+- **Simulador de Impuestos**: Estima el impacto fiscal de tus ganancias de capital.
+- **Manejo de Efectivo**: Deposita fondos y úsalos para comprar activos.
+
+## Cómo Empezar
+
+Sigue estos pasos para levantar el entorno de desarrollo local.
+
+### 1. Instalación
+
+Primero, instala las dependencias del proyecto:
+
+```bash
+npm install
+```
+
+### 2. Ejecutar la Aplicación
+
+Una vez instaladas las dependencias, inicia el servidor de desarrollo:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre [http://localhost:3000](http://localhost:3000) en tu navegador para ver la aplicación en funcionamiento.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Flujo de la Aplicación
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Iniciar Sesión
 
-## Learn More
+Para comenzar, simplemente ingresa un nombre de usuario en la página de login. Si el usuario no existe, se creará uno nuevo automáticamente.
 
-To learn more about Next.js, take a look at the following resources:
+### 2. Completar el Perfil de Inversor
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Antes de recibir recomendaciones, debes completar tu perfil de inversor.
+- **Ruta**: `/profile`
+- **Acción**: Responde el cuestionario para definir tu tolerancia al riesgo, horizonte de inversión y conocimiento del mercado. El **monto de inversión** que ingreses aquí se establecerá como tu capital inicial disponible.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 3. Depositar Fondos
 
-## Deploy on Vercel
+Puedes agregar más fondos a tu cuenta en cualquier momento desde el dashboard de tu portafolio.
+- **Ruta**: `/dashboard/portfolio`
+- **Acción**: Ingresa un monto en el campo de depósito y haz clic en "Deposit". Tu saldo de `availableCash` se actualizará.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 4. Revisar Recomendaciones "Scoop"
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+La sección "Scoop" analiza acciones y te sugiere las que mejor se alinean con tu perfil y tus metas financieras.
+- **Ruta**: `/dashboard/scoop`
+- **Funcionalidad**: Puedes comprar acciones directamente desde las tarjetas de recomendación. El botón de compra se desactivará si no tienes suficiente efectivo (`availableCash`) para la operación.
+
+### 5. Monitorear Metas e Impuestos
+
+- **Metas**: En `/dashboard/goals`, puedes crear metas de inversión (ej. "Comprar un auto") y visualizar cómo tu portafolio actual te ayuda a progresar hacia ellas.
+- **Impuestos**: En `/dashboard/taxes`, puedes simular la venta de tus posiciones para estimar el impuesto a las ganancias de capital que tendrías que pagar.
+
+## Ejecutar Tests
+
+El proyecto incluye tests unitarios para verificar la lógica de negocio crítica, como el manejo de depósitos, compras y ventas.
+
+Para ejecutar los tests, usa el siguiente comando:
+
+```bash
+npm test
+```

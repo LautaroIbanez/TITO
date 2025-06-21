@@ -40,7 +40,8 @@ export async function POST(request: Request) {
       const updatedUserData: UserData = {
         ...userData,
         profileCompleted: true,
-        profile
+        profile,
+        availableCash: profile.investmentAmount,
       };
 
       // Save updated user data

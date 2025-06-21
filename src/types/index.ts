@@ -46,4 +46,5 @@ export interface UserData {
   positions: PortfolioPosition[];
   transactions: PortfolioTransaction[];
   goals: InvestmentGoal[];
+  availableCash: number;
 } 

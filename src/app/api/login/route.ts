@@ -70,7 +70,8 @@ export async function POST(request: Request) {
         profileCompleted: false,
         positions: [],
         transactions: [],
-        goals: []
+        goals: [],
+        availableCash: 0
       };
 
       // Save the new user data

@@ -1,0 +1,47 @@
+{
+  "username": "lulu",
+  "createdAt": "2025-06-21T13:33:42.259Z",
+  "profileCompleted": true,
+  "positions": [
+    {
+      "symbol": "AAPL",
+      "quantity": 1,
+      "averagePrice": 201
+    },
+    {
+      "symbol": "MSFT",
+      "quantity": 1,
+      "averagePrice": 477.3999938964844
+    }
+  ],
+  "transactions": [
+    {
+      "date": "2025-06-21T13:34:36.373Z",
+      "type": "Buy",
+      "symbol": "AAPL",
+      "quantity": 1,
+      "price": 201
+    },
+    {
+      "date": "2025-06-21T13:34:41.948Z",
+      "type": "Buy",
+      "symbol": "MSFT",
+      "quantity": 1,
+      "price": 477.3999938964844
+    }
+  ],
+  "goals": [],
+  "availableCash": 4321.600006103516,
+  "profile": {
+    "instrumentsUsed": [
+      "Plazo Fijo"
+    ],
+    "knowledgeLevels": {
+      "Plazo Fijo": "Bajo"
+    },
+    "holdingPeriod": "Menos de 1 año",
+    "ageGroup": "30 a 40",
+    "riskAppetite": "Balanceado",
+    "investmentAmount": 5000
+  }
+}
