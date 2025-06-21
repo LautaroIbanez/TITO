@@ -30,6 +30,7 @@ export default function TradeModal({
   const [loading, setLoading] = useState(false);
   
   const totalCost = quantity * price;
+  const tradeTypeText = tradeType === 'Buy' ? 'Compra' : 'Venta';
 
   useEffect(() => {
     // Reset state when modal opens
@@ -44,11 +45,11 @@ export default function TradeModal({
     // Validate quantity
     setError('');
     if (quantity <= 0) {
-      setError('Quantity must be positive.');
+      setError('La cantidad debe ser mayor a cero.');
     } else if (tradeType === 'Buy' && totalCost > availableCash) {
-      setError('Insufficient funds.');
+      setError('Fondos insuficientes.');
     } else if (tradeType === 'Sell' && quantity > maxShares) {
-      setError(`You can only sell up to ${maxShares} shares.`);
+      setError(`Solo puedes vender hasta ${maxShares} acciones.`);
     }
   }, [quantity, totalCost, availableCash, maxShares, tradeType]);
 
@@ -68,13 +69,13 @@ export default function TradeModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-900">{tradeType} {symbol}</h2>
+          <h2 className="text-xl font-bold text-gray-900">{tradeTypeText} {symbol}</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800">&times;</button>
         </div>
         
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">Quantity</label>
+            <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">Cantidad</label>
             <input
               id="quantity"
               type="number"
@@ -88,9 +89,9 @@ export default function TradeModal({
           </div>
 
           <div className="text-sm text-gray-700 space-y-1 mb-4">
-            <p>Current Price: <span className="font-semibold text-gray-900">${price.toFixed(2)}</span></p>
-            <p>Total {tradeType === 'Buy' ? 'Cost' : 'Proceeds'}: <span className="font-semibold text-gray-900">${totalCost.toFixed(2)}</span></p>
-            {tradeType === 'Buy' && <p>Available Cash: <span className="font-semibold text-gray-900">${availableCash.toFixed(2)}</span></p>}
+            <p>Precio Actual: <span className="font-semibold text-gray-900">${price.toFixed(2)}</span></p>
+            <p>{tradeType === 'Buy' ? 'Costo Total' : 'Ingreso Total'}: <span className="font-semibold text-gray-900">${totalCost.toFixed(2)}</span></p>
+            {tradeType === 'Buy' && <p>Efectivo Disponible: <span className="font-semibold text-gray-900">${availableCash.toFixed(2)}</span></p>}
           </div>
 
           {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
@@ -101,7 +102,7 @@ export default function TradeModal({
               onClick={onClose}
               className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
             >
-              Cancel
+              Cancelar
             </button>
             <button
               type="submit"
@@ -110,7 +111,7 @@ export default function TradeModal({
                 tradeType === 'Buy' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700'
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              {loading ? 'Processing...' : `Confirm ${tradeType}`}
+              {loading ? 'Procesando...' : `Confirmar ${tradeTypeText}`}
             </button>
           </div>
         </form>

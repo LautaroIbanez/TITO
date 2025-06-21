@@ -13,6 +13,7 @@ import {
 import { Fundamentals, getRatioColor, Technicals } from '../types/finance';
 import { getTradeSignal, TradeSignal } from '@/utils/tradeSignal';
 import TradeModal from './TradeModal';
+import TechnicalDisplay from './TechnicalDisplay';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
@@ -102,9 +103,14 @@ const SignalBadge = ({ signal }: { signal: TradeSignal }) => {
     sell: 'bg-red-100 text-red-700',
     hold: 'bg-gray-100 text-gray-700',
   };
+  const signalText: Record<TradeSignal, string> = {
+    buy: 'Comprar',
+    sell: 'Vender',
+    hold: 'Mantener',
+  };
   return (
     <span className={`px-2 py-1 rounded text-xs font-semibold capitalize ${badgeStyles[signal]}`}>
-      {signal}
+      {signalText[signal]}
     </span>
   );
 };
@@ -190,13 +196,13 @@ export default function ScoopCard({
           <SignalBadge signal={signal} />
           {isSuggested && (
             <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-semibold">
-              Suggested
+              Sugerido
             </span>
           )}
         </div>
         
         {fundamentals?.sector && (
-          <div className="text-xs text-gray-500 -mt-3">
+          <div className="text-xs text-gray-700 -mt-3">
             {fundamentals.sector} / {fundamentals.industry}
           </div>
         )}
@@ -208,7 +214,7 @@ export default function ScoopCard({
           {prices.length > 0 ? (
             <Line data={chartData} options={chartOptions} height={100} />
           ) : (
-            <span className="text-gray-900 text-sm">[Price Chart]</span>
+            <span className="text-gray-900 text-sm">[Gráfico de Precios]</span>
           )}
         </div>
 
@@ -216,7 +222,7 @@ export default function ScoopCard({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
           {/* Valuation */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-800 mb-1">Valoración</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-1">Valoración</h3>
             <div className="text-xs text-gray-700">
               <RatioRow label="PE Ratio" value={fundamentals.peRatio} metric="peRatio" />
               <RatioRow label="PB Ratio" value={fundamentals.pbRatio} metric="pbRatio" />
@@ -227,7 +233,7 @@ export default function ScoopCard({
           
           {/* Profitability */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-800 mb-1">Rentabilidad</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-1">Rentabilidad</h3>
             <div className="text-xs text-gray-700">
               <RatioRow label="ROE" value={fundamentals.roe} metric="roe" format="percent" />
               <RatioRow label="ROA" value={fundamentals.roa} metric="roa" format="percent" />
@@ -238,7 +244,7 @@ export default function ScoopCard({
 
           {/* Growth */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-800 mb-1">Crecimiento</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-1">Crecimiento</h3>
             <div className="text-xs text-gray-700">
               <RatioRow label="EBITDA" value={fundamentals.ebitda} metric="ebitda" format="currency" />
               <RatioRow label="FCF" value={fundamentals.freeCashFlow} metric="freeCashFlow" format="currency" />
@@ -250,14 +256,13 @@ export default function ScoopCard({
 
         {/* Technicals */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-800 mb-1">Análisis Técnico</h3>
+          <h3 className="text-sm font-semibold text-gray-900 mb-2">Análisis Técnico</h3>
           <div className="grid grid-cols-2 gap-x-4 text-xs text-gray-700">
-            <div>RSI (14): <span className="font-mono">{technicals?.rsi?.toFixed(2) ?? '—'}</span></div>
-            <div>MACD: <span className="font-mono">{technicals?.macd?.toFixed(2) ?? '—'}</span></div>
-            <div>SMA 200: <span className="font-mono">{technicals?.sma200?.toFixed(2) ?? '—'}</span></div>
-            <div>EMA 50: <span className="font-mono">{technicals?.ema50?.toFixed(2) ?? '—'}</span></div>
-            <div>ADX (14): <span className="font-mono">{technicals?.adx?.toFixed(2) ?? '—'}</span></div>
-            <div>+DI: <span className="font-mono">{technicals?.pdi?.toFixed(2) ?? '—'}</span></div>
+            <TechnicalDisplay label="RSI" indicatorKey="RSI" value={technicals?.rsi} />
+            <TechnicalDisplay label="MACD" indicatorKey="MACD" value={technicals?.macd} />
+            <TechnicalDisplay label="SMA 200" indicatorKey="SMA" value={technicals?.sma200} />
+            <TechnicalDisplay label="EMA 50" indicatorKey="EMA" value={technicals?.ema50} />
+            <TechnicalDisplay label="ADX" indicatorKey="ADX" value={technicals?.adx} />
           </div>
         </div>
 

@@ -18,9 +18,9 @@ const TaxAlert = () => (
         <span className="text-yellow-400 text-xl">⚠️</span>
       </div>
       <div className="ml-3">
-        <p className="text-sm text-yellow-700">
+        <p className="text-sm text-yellow-800">
           Esta información es solo una guía general. Para decisiones importantes,
-          consultá con un profesional impositivo calificado.
+          consulta con un profesional impositivo calificado.
         </p>
       </div>
     </div>
@@ -139,7 +139,7 @@ const TaxSimulator = ({ portfolioReturn = 10 }: { portfolioReturn?: number }) =>
       const fileName = `simulacion-impositiva-${new Date().toISOString().split('T')[0]}.pdf`;
       pdf.save(fileName);
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      console.error('Error al generar el PDF:', error);
       alert('Error al generar el PDF. Inténtalo de nuevo.');
     } finally {
       setIsExporting(false);
@@ -148,17 +148,17 @@ const TaxSimulator = ({ portfolioReturn = 10 }: { portfolioReturn?: number }) =>
 
   return (
     <div ref={simulatorRef} className="bg-white rounded-lg shadow-sm p-6">
-      <h2 className="text-xl font-semibold mb-4">Simulador de Impacto Impositivo</h2>
+      <h2 className="text-xl font-semibold mb-4 text-gray-900">Simulador de Impacto Impositivo</h2>
       
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="text-sm text-gray-600 mb-1">Rentabilidad Bruta</div>
+            <div className="text-sm text-gray-700 mb-1">Rentabilidad Bruta</div>
             <div className="text-2xl font-semibold text-gray-900">{portfolioReturn.toFixed(2)}%</div>
           </div>
           
           <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="text-sm text-gray-600 mb-1">Alícuota Impositiva</div>
+            <div className="text-sm text-gray-700 mb-1">Alícuota Impositiva</div>
             <div className="flex items-center gap-2">
               <input
                 type="number"
@@ -171,7 +171,7 @@ const TaxSimulator = ({ portfolioReturn = 10 }: { portfolioReturn?: number }) =>
           </div>
           
           <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="text-sm text-gray-600 mb-1">Rentabilidad Neta</div>
+            <div className="text-sm text-gray-700 mb-1">Rentabilidad Neta</div>
             <div className="text-2xl font-semibold text-blue-600">{netReturn.toFixed(2)}%</div>
           </div>
         </div>
@@ -186,10 +186,10 @@ const TaxSimulator = ({ portfolioReturn = 10 }: { portfolioReturn?: number }) =>
         <button
           onClick={handleExportPDF}
           disabled={isExporting}
-          className="mt-4 px-4 py-2 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="mt-4 px-4 py-2 bg-blue-50 text-blue-800 rounded hover:bg-blue-100 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span>{isExporting ? '⏳' : '📄'}</span> 
-          {isExporting ? 'Generando PDF...' : 'Descargar informe PDF'}
+          {isExporting ? 'Generando PDF...' : 'Descargar Informe'}
         </button>
       </div>
     </div>

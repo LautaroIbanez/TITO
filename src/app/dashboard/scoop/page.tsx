@@ -103,32 +103,72 @@ export default function ScoopPage() {
     loadData();
   }, [requiredReturn]); // Reload if requiredReturn changes
 
+  const suggestedStocks = stocks.filter(s => s.isSuggested);
+  const otherStocks = stocks.filter(s => !s.isSuggested);
+
   return (
-    <div>
+    <div className="space-y-8">
       {requiredReturn > 0 && (
         <div className="mb-4 p-3 bg-blue-100 border border-blue-200 rounded-lg text-sm text-blue-800">
-          To meet your goals, you need an estimated annual return of <strong>{requiredReturn.toFixed(2)}%</strong>.
-          Suggestions are filtered based on this requirement.
+          Para alcanzar tus metas, necesitas un retorno anual estimado de <strong>{requiredReturn.toFixed(2)}%</strong>.
+          Las sugerencias se filtran según este requisito.
         </div>
       )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {loading ? (
-          <div className="col-span-full text-center text-gray-500">Loading...</div>
-        ) : (
-          stocks.map((stock) => (
-            <ScoopCard
-              key={stock.symbol}
-              stockData={stock}
-              fundamentals={stock.fundamentals}
-              technicals={stock.technicals}
-              isSuggested={stock.isSuggested}
-              inPortfolio={portfolioSymbols.includes(stock.symbol)}
-              onTrade={loadData}
-              availableCash={availableCash}
-            />
-          ))
-        )}
-      </div>
+
+      {loading ? (
+        <div className="text-center text-gray-700 py-10">Cargando Oportunidades...</div>
+      ) : (
+        <>
+          {/* Suggested Stocks */}
+          {suggestedStocks.length > 0 && (
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Sugerencias para ti</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {suggestedStocks.map((stock) => (
+                  <ScoopCard
+                    key={stock.symbol}
+                    stockData={stock}
+                    fundamentals={stock.fundamentals}
+                    technicals={stock.technicals}
+                    isSuggested={stock.isSuggested}
+                    inPortfolio={portfolioSymbols.includes(stock.symbol)}
+                    onTrade={loadData}
+                    availableCash={availableCash}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Other Stocks */}
+          {otherStocks.length > 0 && (
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 mt-10">Otras Oportunidades</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {otherStocks.map((stock) => (
+                  <ScoopCard
+                    key={stock.symbol}
+                    stockData={stock}
+                    fundamentals={stock.fundamentals}
+                    technicals={stock.technicals}
+                    isSuggested={stock.isSuggested}
+                    inPortfolio={portfolioSymbols.includes(stock.symbol)}
+                    onTrade={loadData}
+                    availableCash={availableCash}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!stocks.length && (
+            <div className="text-center text-gray-700 py-10">
+              <h3 className="text-xl font-semibold">No hay nuevas sugerencias por ahora.</h3>
+              <p>Todas las acciones analizadas ya están en tu portafolio.</p>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 } 

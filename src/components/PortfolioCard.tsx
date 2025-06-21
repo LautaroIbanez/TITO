@@ -13,6 +13,7 @@ import {
 import { Fundamentals, getRatioColor, Technicals } from '../types/finance';
 import { getTradeSignal, TradeSignal } from '@/utils/tradeSignal';
 import TradeModal, { TradeType } from './TradeModal';
+import TechnicalDisplay from './TechnicalDisplay';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
@@ -91,9 +92,14 @@ const SignalBadge = ({ signal }: { signal: TradeSignal }) => {
     sell: 'bg-red-100 text-red-700',
     hold: 'bg-gray-100 text-gray-700',
   };
+  const signalText: Record<TradeSignal, string> = {
+    buy: 'Comprar',
+    sell: 'Vender',
+    hold: 'Mantener',
+  };
   return (
     <span className={`px-2 py-1 rounded text-xs font-semibold capitalize ${badgeStyles[signal]}`}>
-      {signal}
+      {signalText[signal]}
     </span>
   );
 };
@@ -171,8 +177,8 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
             <SignalBadge signal={signal} />
           </div>
           <div className="flex gap-2">
-            <button onClick={() => openModal('Buy')} className="px-3 py-1 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-700">Buy</button>
-            <button onClick={() => openModal('Sell')} className="px-3 py-1 bg-red-600 text-white rounded text-xs font-semibold hover:bg-red-700">Sell</button>
+            <button onClick={() => openModal('Buy')} className="px-3 py-1 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-700">Comprar</button>
+            <button onClick={() => openModal('Sell')} className="px-3 py-1 bg-red-600 text-white rounded text-xs font-semibold hover:bg-red-700">Vender</button>
           </div>
         </div>
 
@@ -183,14 +189,14 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
           {last90.length > 0 ? (
             <Line data={chartData} options={chartOptions} height={80} />
           ) : (
-            <span className="text-gray-900 text-sm">[Price Chart]</span>
+            <span className="text-gray-900 text-sm">[Gráfico de Precios]</span>
           )}
         </div>
 
         {/* Fundamentals */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-900 mb-2">Fundamentals</h3>
-          <div className="grid grid-cols-2 gap-x-4 text-xs text-gray-900">
+          <h3 className="text-sm font-semibold text-gray-900 mb-2">Fundamentales</h3>
+          <div className="grid grid-cols-2 gap-x-4 text-xs text-gray-700">
             <RatioRow label="PE" value={fundamentals?.peRatio} metric="peRatio" />
             <RatioRow label="PB" value={fundamentals?.pbRatio} metric="pbRatio" />
             <RatioRow label="EV/EBITDA" value={fundamentals?.evToEbitda} metric="evToEbitda" />
@@ -206,11 +212,11 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
 
         {/* Technicals */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-900 mb-2">Technicals</h3>
-          <div className="flex flex-wrap gap-4 text-xs text-gray-900">
-            <div>RSI: <span className="font-mono">{technicals?.rsi?.toFixed(2) ?? '—'}</span></div>
-            <div>MACD: <span className="font-mono">{technicals?.macd?.toFixed(2) ?? '—'}</span></div>
-            <div>SMA 200: <span className="font-mono">{technicals?.sma200?.toFixed(2) ?? '—'}</span></div>
+          <h3 className="text-sm font-semibold text-gray-900 mb-2">Técnicos</h3>
+          <div className="flex flex-wrap gap-4 text-xs text-gray-700">
+            <TechnicalDisplay label="RSI" indicatorKey="RSI" value={technicals?.rsi} />
+            <TechnicalDisplay label="MACD" indicatorKey="MACD" value={technicals?.macd} />
+            <TechnicalDisplay label="SMA 200" indicatorKey="SMA" value={technicals?.sma200} />
           </div>
         </div>
       </div>

@@ -13,7 +13,7 @@ export default function PortfolioHistoryChart({ valueHistory }: Props) {
     labels: valueHistory.map((d) => d.date),
     datasets: [
       {
-        label: 'Portfolio Value',
+        label: 'Valor del Portafolio',
         data: valueHistory.map((d) => d.value),
         fill: true,
         borderColor: '#2563eb',
@@ -32,11 +32,11 @@ export default function PortfolioHistoryChart({ valueHistory }: Props) {
   };
   return (
     <div className="bg-white rounded-lg shadow p-4 mb-8 max-w-2xl mx-auto">
-      <h3 className="text-sm font-bold text-gray-900 mb-2">Portfolio Value Over Time</h3>
+      <h3 className="text-sm font-bold text-gray-900 mb-2">Evolución del Valor del Portafolio</h3>
       {valueHistory.length > 0 ? (
         <div className="h-48"><Line data={chartData} options={chartOptions} height={180} /></div>
       ) : (
-        <div className="text-gray-500 text-center py-8">No data</div>
+        <div className="text-gray-700 text-center py-8">No hay datos disponibles</div>
       )}
     </div>
   );

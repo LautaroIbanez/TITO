@@ -7,6 +7,11 @@
       "symbol": "MSFT",
       "quantity": 2,
       "averagePrice": 477.3999938964844
+    },
+    {
+      "symbol": "AMZN",
+      "quantity": 1,
+      "averagePrice": 209.69000244140625
     }
   ],
   "transactions": [
@@ -30,6 +35,13 @@
       "symbol": "AAPL",
       "quantity": 1,
       "price": 201
+    },
+    {
+      "date": "2025-06-21T18:46:17.583Z",
+      "type": "Buy",
+      "symbol": "AMZN",
+      "quantity": 1,
+      "price": 209.69000244140625
     }
   ],
   "goals": [
@@ -42,7 +54,7 @@
       "id": "1750512657191"
     }
   ],
-  "availableCash": 1045.2000122070312,
+  "availableCash": 835.510009765625,
   "profile": {
     "instrumentsUsed": [
       "Plazo Fijo",

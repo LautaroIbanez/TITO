@@ -117,30 +117,15 @@ export default function StartPage() {
           🧾 Tené en cuenta los impuestos
         </h2>
         <div className="bg-white rounded-lg p-6 shadow-sm">
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-xl font-medium text-gray-800 mb-2">
-                En Argentina:
-              </h3>
-              <p className="text-gray-600">
-                Las ganancias por venta de acciones pagan impuesto si no cotizan 
-                en mercados locales. Las acciones que cotizan en BYMA están exentas 
-                del impuesto a las ganancias.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-xl font-medium text-gray-800 mb-2">
-                En Estados Unidos:
-              </h3>
-              <p className="text-gray-600">
-                Existen dos tipos principales de impuestos:
-              </p>
-              <ul className="list-disc list-inside mt-2 text-gray-600">
-                <li>Impuesto sobre dividendos (generalmente 30% para no residentes)</li>
-                <li>Impuesto sobre ganancias de capital (aplicable en la venta)</li>
-              </ul>
-            </div>
-          </div>
+          <p className="text-gray-600 mb-4">
+            Recordá que las ganancias de tus inversiones pueden estar sujetas a impuestos. La regulación varía según el país y el tipo de activo. Nuestra aplicación incluye un simulador para ayudarte a estimar el impacto fiscal de tus operaciones.
+          </p>
+          <a
+            href="/dashboard/taxes"
+            className="inline-block bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Ir al Simulador de Impuestos
+          </a>
         </div>
       </section>
 

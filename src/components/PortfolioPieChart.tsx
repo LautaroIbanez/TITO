@@ -28,11 +28,11 @@ export default function PortfolioPieChart({ positions, prices }: Props) {
   };
   return (
     <div className="bg-white rounded-lg shadow p-4 mb-8 max-w-md mx-auto">
-      <h3 className="text-sm font-bold text-gray-900 mb-2">Asset Allocation</h3>
+      <h3 className="text-sm font-bold text-gray-900 mb-2">Distribución de Activos</h3>
       {total > 0 ? (
         <Pie data={chartData} />
       ) : (
-        <div className="text-gray-500 text-center py-8">No data</div>
+        <div className="text-gray-700 text-center py-8">No hay datos disponibles</div>
       )}
     </div>
   );

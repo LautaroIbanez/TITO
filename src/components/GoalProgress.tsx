@@ -18,13 +18,13 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
     return (
       <div className="bg-white rounded-lg shadow p-6 mb-8">
         <div className="text-center">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Investment Goals Set</h3>
-          <p className="text-gray-600 mb-4">Create your first investment goal to track your portfolio progress.</p>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No tienes metas de inversión</h3>
+          <p className="text-gray-700 mb-4">Crea tu primera meta para seguir el progreso de tu portafolio.</p>
           <Link 
             href="/dashboard/goals" 
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
-            Create Goal
+            Crear Meta
           </Link>
         </div>
       </div>
@@ -50,7 +50,7 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
     labels: valueHistory.map((d) => d.date),
     datasets: [
       {
-        label: 'Portfolio Value',
+        label: 'Valor del Portafolio',
         data: valueHistory.map((d) => d.value),
         fill: false,
         borderColor: '#2563eb',
@@ -59,7 +59,7 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
         tension: 0.2,
       },
       {
-        label: 'Target Amount',
+        label: 'Monto Objetivo',
         data: valueHistory.map(() => goal.targetAmount),
         fill: false,
         borderColor: '#dc2626',
@@ -69,7 +69,7 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
         tension: 0,
       },
       {
-        label: 'Projected Value',
+        label: 'Valor Proyectado',
         data: projectedData,
         fill: false,
         borderColor: '#059669',
@@ -105,35 +105,35 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
     <div className="bg-white rounded-lg shadow p-6 mb-8">
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">Goal Progress: {goal.name}</h3>
-          <p className="text-sm text-gray-600">Target: ${goal.targetAmount.toLocaleString()}</p>
+          <h3 className="text-lg font-semibold text-gray-900 mb-1">Progreso de Meta: {goal.name}</h3>
+          <p className="text-sm text-gray-700">Objetivo: ${goal.targetAmount.toLocaleString()}</p>
         </div>
         <Link 
           href="/dashboard/goals" 
           className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
         >
-          Manage Goals
+          Gestionar Metas
         </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="text-center p-4 bg-gray-50 rounded-lg">
           <div className="text-2xl font-bold text-gray-900">${portfolioGains.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-          <div className="text-sm text-gray-600">Portfolio Gains</div>
+          <div className="text-sm text-gray-700">Ganancias del Portafolio</div>
         </div>
         <div className="text-center p-4 bg-gray-50 rounded-lg">
           <div className="text-2xl font-bold text-gray-900">{progressPercentage.toFixed(1)}%</div>
-          <div className="text-sm text-gray-600">Progress</div>
+          <div className="text-sm text-gray-700">Progreso</div>
         </div>
         <div className="text-center p-4 bg-gray-50 rounded-lg">
           <div className="text-2xl font-bold text-gray-900">${remainingAmount.toLocaleString()}</div>
-          <div className="text-sm text-gray-600">Remaining</div>
+          <div className="text-sm text-gray-700">Restante</div>
         </div>
       </div>
 
       <div className="mb-4">
-        <div className="flex justify-between text-sm text-gray-600 mb-1">
-          <span>Progress</span>
+        <div className="flex justify-between text-sm text-gray-700 mb-1">
+          <span>Progreso</span>
           <span>{progressPercentage.toFixed(1)}%</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">

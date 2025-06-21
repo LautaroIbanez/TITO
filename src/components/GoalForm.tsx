@@ -1,27 +1,40 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { InvestmentGoal } from '@/types';
+import { calculateMonthlyInvestment, formatCurrency } from '@/utils/goalCalculator';
 
 interface Props {
-  onSubmit: (goal: Omit<InvestmentGoal, 'id'>) => void;
+  onSubmit: (goal: Omit<InvestmentGoal, 'id' | 'monthlyContribution'>) => void;
 }
 
 export default function GoalForm({ onSubmit }: Props) {
   const [name, setName] = useState('');
-  const [targetAmount, setTargetAmount] = useState(10000);
-  const [targetDate, setTargetDate] = useState(new Date().toISOString().split('T')[0]);
-  const [initialDeposit, setInitialDeposit] = useState(1000);
-  const [monthlyContribution, setMonthlyContribution] = useState(100);
+  const [targetAmount, setTargetAmount] = useState(1000000);
+  const [targetDate, setTargetDate] = useState(new Date(new Date().setFullYear(new Date().getFullYear() + 5)).toISOString().split('T')[0]);
+  const [initialDeposit, setInitialDeposit] = useState(50000);
+  const [suggestedContribution, setSuggestedContribution] = useState(0);
+
+  useEffect(() => {
+    const years = (new Date(targetDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 365);
+    if (targetAmount > 0 && years > 0) {
+      // Assuming an average annual return of 8% for the suggestion
+      const contribution = calculateMonthlyInvestment(targetAmount, years, 8, initialDeposit);
+      setSuggestedContribution(contribution);
+    } else {
+      setSuggestedContribution(0);
+    }
+  }, [targetAmount, targetDate, initialDeposit]);
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
+    const goalData: Omit<InvestmentGoal, 'id' | 'monthlyContribution'> = {
       name,
       targetAmount,
       targetDate,
       initialDeposit,
-      monthlyContribution,
-    });
+    };
+    onSubmit(goalData);
     setName('');
   };
 
@@ -83,20 +96,18 @@ export default function GoalForm({ onSubmit }: Props) {
             className="p-2 border rounded text-gray-900 placeholder:text-gray-500 w-full"
           />
         </div>
-        <div>
-          <label htmlFor="monthlyContribution" className="block text-sm font-medium text-gray-700 mb-1">
-            Aporte Mensual
-          </label>
-          <input
-            id="monthlyContribution"
-            type="number"
-            value={monthlyContribution}
-            onChange={(e) => setMonthlyContribution(Number(e.target.value))}
-            placeholder="100"
-            className="p-2 border rounded text-gray-900 placeholder:text-gray-500 w-full"
-          />
-        </div>
       </div>
+      {suggestedContribution > 0 && (
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+          <p className="text-sm text-blue-800">
+            Para alcanzar tu meta, te sugerimos un aporte mensual de aproximadamente{' '}
+            <span className="font-bold">{formatCurrency(suggestedContribution)}</span>.
+          </p>
+          <p className="text-xs text-blue-600 mt-1">
+            *Cálculo basado en un rendimiento anual estimado del 8%.
+          </p>
+        </div>
+      )}
       <button type="submit" className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
         Agregar Meta
       </button>

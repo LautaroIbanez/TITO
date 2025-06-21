@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { InvestmentGoal, UserData, DepositTransaction } from '@/types';
 import { calculatePortfolioValueHistory } from '@/utils/calculatePortfolioValue';
 import GoalProgress from './GoalProgress';
-import PortfolioHistoryChart from './PortfolioHistoryChart';
 
 export default function DashboardSummary() {
   const [loading, setLoading] = useState(true);
@@ -89,24 +88,25 @@ export default function DashboardSummary() {
 
   return (
     <div className="space-y-8">
+       {/* Onboarding Banner */}
        {showOnboarding && (
-        <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-lg shadow-md relative">
+        <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-800 p-4 rounded-lg shadow-md relative">
           <button
             onClick={handleDismissOnboarding}
-            className="absolute top-2 right-2 text-blue-500 hover:text-blue-700"
+            className="absolute top-2 right-2 text-blue-600 hover:text-blue-800"
           >
             &times;
           </button>
           <h4 className="font-bold mb-2">¡Bienvenido a TITO!</h4>
           <p className="mb-4">Tu perfil está completo. Aquí tienes algunos pasos para empezar:</p>
           <div className="flex flex-wrap gap-4">
-            <Link href="/dashboard/portfolio" className="text-sm font-semibold bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors">
+            <Link href="/dashboard/portfolio" className="text-sm font-semibold bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors">
               Deposita Fondos
             </Link>
-            <Link href="/dashboard/scoop" className="text-sm font-semibold bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors">
+            <Link href="/dashboard/scoop" className="text-sm font-semibold bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors">
               Revisa Recomendaciones
             </Link>
-            <Link href="/dashboard/goals" className="text-sm font-semibold bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors">
+            <Link href="/dashboard/goals" className="text-sm font-semibold bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors">
               Define tus Metas
             </Link>
           </div>
@@ -115,23 +115,23 @@ export default function DashboardSummary() {
       {/* Portfolio Snapshot */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500">Portfolio Value</h3>
+          <h3 className="text-sm font-medium text-gray-700">Valor del Portafolio</h3>
           <p className="text-2xl font-semibold text-gray-900">${portfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500">Invested Capital</h3>
+          <h3 className="text-sm font-medium text-gray-700">Capital Invertido</h3>
           <p className="text-2xl font-semibold text-gray-900">${investedCapital.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500">Net Gains/Losses</h3>
+          <h3 className="text-sm font-medium text-gray-700">Ganancias / Pérdidas</h3>
           <p className={`text-2xl font-semibold ${gainsColor}`}>
             {netGains >= 0 ? '+' : ''}${netGains.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500">Available Cash</h3>
+          <h3 className="text-sm font-medium text-gray-700">Efectivo Disponible</h3>
           <p className="text-2xl font-semibold text-blue-600">${user.availableCash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-          <p className="text-xs text-gray-500">Ready to invest</p>
+          <p className="text-xs text-gray-700">Listo para invertir</p>
         </div>
       </div>
 
@@ -139,15 +139,14 @@ export default function DashboardSummary() {
         <GoalProgress goal={firstGoal} valueHistory={valueHistory} currentValue={portfolioValue} transactions={user.transactions} />
       ) : (
         <div className="bg-white p-6 rounded-lg shadow text-center">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Goals Yet</h3>
-            <p className="text-gray-600 mb-4">Set an investment goal to start tracking your progress.</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Aún no tienes metas</h3>
+            <p className="text-gray-700 mb-4">Define una meta de inversión para empezar a seguir tu progreso.</p>
             <Link href="/dashboard/goals" className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
-                Create a Goal
+                Crear Meta
             </Link>
         </div>
       )}
       
-      <PortfolioHistoryChart valueHistory={valueHistory} />
     </div>
   );
 } 

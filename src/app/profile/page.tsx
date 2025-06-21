@@ -22,6 +22,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [step, setStep] = useState(1);
   
   const [formData, setFormData] = useState<InvestorProfile>({
     instrumentsUsed: [],
@@ -57,6 +58,19 @@ export default function ProfilePage() {
             Object.entries(prev.knowledgeLevels).filter(([key]) => key !== instrument)
           )
     }));
+  };
+
+  const handleNext = () => {
+    if (step === 1 && formData.instrumentsUsed.length === 0) {
+      setError('Por favor, selecciona al menos un instrumento para continuar.');
+      return;
+    }
+    setError('');
+    setStep(s => s + 1);
+  };
+
+  const handleBack = () => {
+    setStep(s => s - 1);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -126,217 +140,234 @@ export default function ProfilePage() {
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Investment Experience Section */}
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-800">
-                1. Experiencia de Inversión
-              </h2>
-              <p className="text-sm text-gray-600">
-                Selecciona los instrumentos financieros que has utilizado.
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {INSTRUMENTS.map(instrument => (
-                  <div key={instrument} className="flex items-start">
-                    <input
-                      type="checkbox"
-                      id={`instrument-${instrument}`}
-                      checked={formData.instrumentsUsed.includes(instrument)}
-                      onChange={(e) => handleInstrumentChange(instrument, e.target.checked)}
-                      className="mt-1 h-4 w-4 text-blue-600 rounded"
-                    />
-                    <label
-                      htmlFor={`instrument-${instrument}`}
-                      className="ml-2 text-sm text-gray-700"
-                    >
-                      {instrument}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
 
-            {/* Knowledge Level Section */}
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-800">
-                2. Nivel de Conocimiento
-              </h2>
-              <p className="text-sm text-gray-600">
-                Indica tu nivel de conocimiento para cada instrumento seleccionado.
-              </p>
-              <div className="grid gap-4">
-                {formData.instrumentsUsed.map(instrument => (
-                  <div key={instrument} className="flex items-center gap-4">
-                    <span className="w-32 text-sm font-medium text-gray-700">{instrument}:</span>
-                    <div className="relative flex-1">
-                      <select
-                        value={formData.knowledgeLevels[instrument]}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          knowledgeLevels: {
-                            ...prev.knowledgeLevels,
-                            [instrument]: e.target.value as KnowledgeLevel
-                          }
-                        }))}
-                        className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-white appearance-none cursor-pointer hover:border-gray-400 text-gray-900"
+            {/* Step 1: Investment Experience */}
+            {step === 1 && (
+              <div className="space-y-4 animate-fade-in">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  Paso 1: Experiencia de Inversión
+                </h2>
+                <p className="text-sm text-gray-600">
+                  Selecciona los instrumentos financieros que has utilizado.
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {INSTRUMENTS.map(instrument => (
+                    <div key={instrument} className="flex items-start">
+                      <input
+                        type="checkbox"
+                        id={`instrument-${instrument}`}
+                        checked={formData.instrumentsUsed.includes(instrument)}
+                        onChange={(e) => handleInstrumentChange(instrument, e.target.checked)}
+                        className="mt-1 h-4 w-4 text-blue-600 rounded"
+                      />
+                      <label
+                        htmlFor={`instrument-${instrument}`}
+                        className="ml-2 text-sm text-gray-700"
                       >
-                        {KNOWLEDGE_LEVELS.map(level => (
-                          <option key={level} value={level} className="text-gray-900">
-                            {level}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        {instrument}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Knowledge Level */}
+            {step === 2 && (
+              <div className="space-y-4 animate-fade-in">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  Paso 2: Nivel de Conocimiento
+                </h2>
+                <p className="text-sm text-gray-600">
+                  Indica tu nivel de conocimiento para cada instrumento seleccionado.
+                </p>
+                <div className="grid gap-4">
+                  {formData.instrumentsUsed.map(instrument => (
+                    <div key={instrument} className="flex items-center gap-4">
+                      <span className="w-32 text-sm font-medium text-gray-700">{instrument}:</span>
+                      <div className="relative flex-1">
+                        <select
+                          value={formData.knowledgeLevels[instrument] || 'Bajo'}
+                          onChange={(e) => setFormData(prev => ({
+                            ...prev,
+                            knowledgeLevels: {
+                              ...prev.knowledgeLevels,
+                              [instrument]: e.target.value as KnowledgeLevel
+                            }
+                          }))}
+                          className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-white appearance-none cursor-pointer hover:border-gray-400 text-gray-900"
+                        >
+                          {KNOWLEDGE_LEVELS.map(level => (
+                            <option key={level} value={level} className="text-gray-900">
+                              {level}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
                       </div>
                     </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Investment Preferences */}
+            {step === 3 && (
+              <div className="space-y-6 animate-fade-in">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  Paso 3: Preferencias y Metas
+                </h2>
+                
+                {/* Holding Period */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Horizonte de Inversión
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {HOLDING_PERIODS.map(period => (
+                      <div key={period} className="flex items-center">
+                        <input
+                          type="radio"
+                          id={`period-${period}`}
+                          name="holdingPeriod"
+                          value={period}
+                          checked={formData.holdingPeriod === period}
+                          onChange={(e) => setFormData(prev => ({
+                            ...prev,
+                            holdingPeriod: e.target.value
+                          }))}
+                          className="h-4 w-4 text-blue-600"
+                        />
+                        <label
+                          htmlFor={`period-${period}`}
+                          className="ml-2 text-sm text-gray-700"
+                        >
+                          {period}
+                        </label>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Investment Preferences Section */}
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-gray-800">
-                3. Preferencias de Inversión
-              </h2>
-              
-              {/* Holding Period */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Horizonte de Inversión
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {HOLDING_PERIODS.map(period => (
-                    <div key={period} className="flex items-center">
-                      <input
-                        type="radio"
-                        id={`period-${period}`}
-                        name="holdingPeriod"
-                        value={period}
-                        checked={formData.holdingPeriod === period}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          holdingPeriod: e.target.value
-                        }))}
-                        className="h-4 w-4 text-blue-600"
-                      />
-                      <label
-                        htmlFor={`period-${period}`}
-                        className="ml-2 text-sm text-gray-700"
-                      >
-                        {period}
-                      </label>
-                    </div>
-                  ))}
                 </div>
-              </div>
 
-              {/* Age Group */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Rango de Edad
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {AGE_GROUPS.map(age => (
-                    <div key={age} className="flex items-center">
-                      <input
-                        type="radio"
-                        id={`age-${age}`}
-                        name="ageGroup"
-                        value={age}
-                        checked={formData.ageGroup === age}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          ageGroup: e.target.value
-                        }))}
-                        className="h-4 w-4 text-blue-600"
-                      />
-                      <label
-                        htmlFor={`age-${age}`}
-                        className="ml-2 text-sm text-gray-700"
-                      >
-                        {age}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Risk Appetite */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Apetito de Riesgo
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {RISK_APPETITES.map(risk => (
-                    <div key={risk} className="flex items-center">
-                      <input
-                        type="radio"
-                        id={`risk-${risk}`}
-                        name="riskAppetite"
-                        value={risk}
-                        checked={formData.riskAppetite === risk}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          riskAppetite: e.target.value as typeof prev.riskAppetite
-                        }))}
-                        className="h-4 w-4 text-blue-600"
-                      />
-                      <label
-                        htmlFor={`risk-${risk}`}
-                        className="ml-2 text-sm text-gray-700"
-                      >
-                        {risk}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Investment Amount */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Monto de Inversión (USD)
-                </label>
-                <div className="relative mt-1 rounded-md shadow-sm">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <span className="text-gray-500 sm:text-sm">$</span>
+                {/* Age Group */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Rango de Edad
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {AGE_GROUPS.map(age => (
+                      <div key={age} className="flex items-center">
+                        <input
+                          type="radio"
+                          id={`age-${age}`}
+                          name="ageGroup"
+                          value={age}
+                          checked={formData.ageGroup === age}
+                          onChange={(e) => setFormData(prev => ({
+                            ...prev,
+                            ageGroup: e.target.value
+                          }))}
+                          className="h-4 w-4 text-blue-600"
+                        />
+                        <label
+                          htmlFor={`age-${age}`}
+                          className="ml-2 text-sm text-gray-700"
+                        >
+                          {age}
+                        </label>
+                      </div>
+                    ))}
                   </div>
+                </div>
+
+                {/* Risk Appetite */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Apetito de Riesgo
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {RISK_APPETITES.map(appetite => (
+                      <div key={appetite} className="flex items-center">
+                        <input
+                          type="radio"
+                          id={`risk-${appetite}`}
+                          name="riskAppetite"
+                          value={appetite}
+                          checked={formData.riskAppetite === appetite}
+                          onChange={(e) => setFormData(prev => ({
+                            ...prev,
+                            riskAppetite: e.target.value as RiskAppetite
+                          }))}
+                          className="h-4 w-4 text-blue-600"
+                        />
+                        <label
+                          htmlFor={`risk-${appetite}`}
+                          className="ml-2 text-sm text-gray-700"
+                        >
+                          {appetite}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Investment Amount */}
+                <div className="space-y-2">
+                  <label htmlFor="investmentAmount" className="text-sm font-medium text-gray-700">
+                    Monto de Inversión Inicial (ARS)
+                  </label>
                   <input
                     type="number"
-                    min="0"
-                    step="1"
+                    id="investmentAmount"
                     value={formData.investmentAmount}
                     onChange={(e) => setFormData(prev => ({
                       ...prev,
                       investmentAmount: Number(e.target.value)
                     }))}
-                    className="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-blue-500 focus:ring-blue-500 sm:text-sm text-gray-900"
-                    placeholder="0.00"
+                    className="p-2 border rounded text-gray-900 placeholder:text-gray-500 w-full"
+                    placeholder="50000"
                   />
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                    <span className="text-gray-500 sm:text-sm">USD</span>
-                  </div>
                 </div>
               </div>
-            </div>
-
-            {error && (
-              <div className="text-red-600 text-sm mt-2 text-center">
-                {error}
-              </div>
             )}
+            
+            {error && <div className="text-red-600 text-sm mt-2 text-center">{error}</div>}
 
-            <div className="pt-4">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? 'Guardando...' : 'Completar Perfil'}
-              </button>
+            {/* Navigation Buttons */}
+            <div className="flex justify-between pt-4">
+              {step > 1 ? (
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+                >
+                  Anterior
+                </button>
+              ) : (
+                <div /> // Placeholder for alignment
+              )}
+
+              {step < 3 ? (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Siguiente
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-green-300"
+                >
+                  {isLoading ? 'Guardando...' : 'Guardar Perfil'}
+                </button>
+              )}
             </div>
           </form>
         </div>

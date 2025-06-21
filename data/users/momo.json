@@ -1,0 +1,44 @@
+{
+  "username": "momo",
+  "createdAt": "2025-06-21T20:33:45.643Z",
+  "profileCompleted": true,
+  "positions": [
+    {
+      "symbol": "MSFT",
+      "quantity": 1,
+      "averagePrice": 477.3999938964844
+    }
+  ],
+  "transactions": [
+    {
+      "date": "2025-06-21T20:35:31.751Z",
+      "type": "Buy",
+      "symbol": "MSFT",
+      "quantity": 1,
+      "price": 477.3999938964844
+    }
+  ],
+  "goals": [
+    {
+      "name": "Viaje",
+      "targetAmount": 5000,
+      "targetDate": "2030-08-21",
+      "initialDeposit": 1000,
+      "monthlyContribution": 46,
+      "id": "1750538190694"
+    }
+  ],
+  "availableCash": 522.6000061035156,
+  "profile": {
+    "instrumentsUsed": [
+      "Acciones"
+    ],
+    "knowledgeLevels": {
+      "Acciones": "Bajo"
+    },
+    "holdingPeriod": "Menos de 1 año",
+    "ageGroup": "30 a 40",
+    "riskAppetite": "Balanceado",
+    "investmentAmount": 1000
+  }
+}
