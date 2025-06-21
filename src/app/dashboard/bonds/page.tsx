@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Bond } from '@/types/finance';
-import TradeModal from '@/components/TradeModal';
+import TradeModal, { TradeModalProps } from '@/components/TradeModal';
 
 export default function BondsPage() {
   const [bonds, setBonds] = useState<Bond[]>([]);
@@ -47,7 +47,7 @@ export default function BondsPage() {
     setIsModalOpen(true);
   };
 
-  const handleBuyBond = async (quantity: number) => {
+  const handleBuyBond: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier) => {
     if (!selectedBond) return;
     
     const session = localStorage.getItem('session');
@@ -56,8 +56,8 @@ export default function BondsPage() {
 
     const body = {
       username,
-      assetType: 'Bond',
-      ticker: selectedBond.ticker,
+      assetType,
+      ticker: identifier,
       quantity,
       price: selectedBond.price,
     };
@@ -92,6 +92,8 @@ export default function BondsPage() {
           onSubmit={handleBuyBond}
           tradeType="Buy"
           assetName={selectedBond.ticker}
+          assetType="Bond"
+          identifier={selectedBond.ticker}
           price={selectedBond.price}
           availableCash={availableCash}
         />

@@ -27,6 +27,8 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
     "@types/html2canvas": "^1.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^20",
@@ -35,6 +37,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
     "jest": "^30.0.2",
+    "jest-environment-jsdom": "^30.0.2",
     "tailwindcss": "^4",
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",

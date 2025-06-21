@@ -48,8 +48,14 @@ export function calculatePortfolioValueHistory(
     const pos: Record<string, number> = { ...prevPos };
     for (const tx of txs) {
       if (dayjs(tx.date).isAfter(date)) break;
-      if (tx.type === 'Buy') pos[tx.symbol] = (pos[tx.symbol] || 0) + tx.quantity;
-      if (tx.type === 'Sell') pos[tx.symbol] = (pos[tx.symbol] || 0) - tx.quantity;
+      if (tx.type === 'Buy' || tx.type === 'Sell') {
+        // Use type guard to access correct property
+        const identifier = tx.assetType === 'Stock' ? tx.symbol : tx.assetType === 'Bond' ? tx.ticker : null;
+        if (identifier) {
+          if (tx.type === 'Buy') pos[identifier] = (pos[identifier] || 0) + tx.quantity;
+          if (tx.type === 'Sell') pos[identifier] = (pos[identifier] || 0) - tx.quantity;
+        }
+      }
     }
     
     // Remove zero or negative positions

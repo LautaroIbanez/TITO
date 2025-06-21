@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { FixedTermDeposit } from '@/types/finance';
-import TradeModal from '@/components/TradeModal';
+import TradeModal, { TradeModalProps } from '@/components/TradeModal';
 
 export default function DepositsPage() {
   const [deposits, setDeposits] = useState<FixedTermDeposit[]>([]);
@@ -47,7 +47,7 @@ export default function DepositsPage() {
     setIsModalOpen(true);
   };
 
-  const handleCreateDeposit = async (amount: number) => {
+  const handleCreateDeposit: TradeModalProps['onSubmit'] = async (amount, assetType, identifier) => {
     if (!selectedDeposit) return;
     
     const session = localStorage.getItem('session');
@@ -56,7 +56,7 @@ export default function DepositsPage() {
 
     const body = {
       username,
-      assetType: 'FixedTermDeposit',
+      assetType,
       provider: selectedDeposit.provider,
       amount,
       annualRate: selectedDeposit.annualRate,
@@ -92,6 +92,8 @@ export default function DepositsPage() {
           onSubmit={handleCreateDeposit}
           tradeType="Invest"
           assetName={`${selectedDeposit.provider} ${selectedDeposit.termDays} días`}
+          assetType="FixedTermDeposit"
+          identifier={selectedDeposit.id}
           availableCash={availableCash}
           isAmountBased={true}
         />

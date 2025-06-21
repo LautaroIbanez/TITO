@@ -6,6 +6,7 @@ import { calculatePortfolioReturn, compareWithBenchmarks } from '@/utils/returnC
 import PortfolioTable from '@/components/PortfolioTable';
 import PortfolioPieChart from '@/components/PortfolioPieChart';
 import PortfolioTransactions from '@/components/PortfolioTransactions';
+import { StockPosition } from '@/types';
 
 export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange?: () => void }) {
   const [positions, setPositions] = useState<any[]>([]);
@@ -49,6 +50,9 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
   useEffect(() => {
     fetchPortfolio();
   }, []);
+
+  // Filter positions to only include stocks for the card grid
+  const stockPositions = positions.filter((pos): pos is StockPosition => pos.type === 'Stock');
 
   // handleRemove is no longer needed as sell action is in the modal
   
@@ -118,16 +122,23 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
 
       <PortfolioTransactions transactions={transactions} />
       {comparison && <ReturnComparison data={comparison} />}
-      <PortfolioTable positions={positions} prices={prices} fundamentals={fundamentals} technicals={technicals} availableCash={availableCash} />
+      <PortfolioTable 
+        positions={positions} 
+        prices={prices} 
+        fundamentals={fundamentals} 
+        technicals={technicals} 
+        availableCash={availableCash}
+        onPortfolioUpdate={fetchPortfolio}
+      />
       
-      {/* Stock Cards */}
+      {/* Stock Cards - Only show stock positions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
           <div className="col-span-full text-center text-gray-700">Cargando...</div>
-        ) : positions.length === 0 ? (
+        ) : stockPositions.length === 0 ? (
           <div className="col-span-full text-center text-gray-700">No hay acciones en tu portafolio.</div>
         ) : (
-          positions.map((stock) => (
+          stockPositions.map((stock) => (
             <PortfolioCard
               key={stock.symbol}
               symbol={stock.symbol}

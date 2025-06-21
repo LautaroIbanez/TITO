@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PortfolioPosition, StockPosition, BondPosition, FixedTermDepositPosition } from '@/types';
+import TradeModal, { TradeType } from './TradeModal';
+import type { TradeModalProps } from './TradeModal';
 
 interface Props {
   positions: PortfolioPosition[];
@@ -7,102 +9,195 @@ interface Props {
   fundamentals: Record<string, any>;
   technicals: Record<string, any>;
   availableCash: number;
+  onPortfolioUpdate: () => void;
 }
 
-function getCurrentPrice(prices: any[]) {
+function getCurrentPrice(prices: any[]): number {
   if (!prices || prices.length === 0) return 0;
-  return prices[prices.length - 1].close;
+  return prices[prices.length - 1]?.close || 0;
 }
 
-const renderStockRow = (pos: StockPosition, prices: Record<string, any[]>, fundamentals: Record<string, any>, technicals: Record<string, any>) => {
-  const currPrice = getCurrentPrice(prices[pos.symbol]);
-  const value = pos.quantity * currPrice;
-  const gain = currPrice && pos.averagePrice ? ((currPrice - pos.averagePrice) / pos.averagePrice) * 100 : 0;
-  const f = fundamentals[pos.symbol];
-  const t = technicals[pos.symbol];
+export default function PortfolioTable({ positions, prices, fundamentals, technicals, availableCash, onPortfolioUpdate }: Props) {
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    tradeType: TradeType;
+    asset: PortfolioPosition | null;
+  }>({ isOpen: false, tradeType: 'Sell', asset: null });
+
+  const handleSellSubmit: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier) => {
+    const session = localStorage.getItem('session');
+    if (!session) throw new Error("Session not found");
+    const username = JSON.parse(session).username;
+
+    let currentPrice = 0;
+    if (assetType === 'Stock') {
+      currentPrice = getCurrentPrice(prices[identifier]);
+    } else if (assetType === 'Bond' && modalState.asset?.type === 'Bond') {
+      currentPrice = modalState.asset.averagePrice;
+    }
+    
+    const res = await fetch('/api/portfolio/sell', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, assetType, identifier, quantity, price: currentPrice }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'La venta falló');
+    }
+    onPortfolioUpdate();
+    setModalState({ isOpen: false, tradeType: 'Sell', asset: null });
+  };
+
+  const handleRemove = async (asset: PortfolioPosition) => {
+    const assetName = asset.type === 'Stock' ? asset.symbol : asset.type === 'Bond' ? asset.ticker : asset.id;
+    if (!confirm(`¿Estás seguro que quieres eliminar la posición ${assetName}?`)) return;
+    
+    const session = localStorage.getItem('session');
+    if (!session) return;
+    const username = JSON.parse(session).username;
+    
+    const identifier = 'symbol' in asset ? asset.symbol : 'ticker' in asset ? asset.ticker : asset.id;
+
+    const res = await fetch('/api/portfolio/remove', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, assetType: asset.type, identifier }),
+    });
+
+    if (res.ok) {
+      onPortfolioUpdate();
+    } else {
+      const data = await res.json();
+      alert(`Error: ${data.error || 'No se pudo eliminar la posición.'}`);
+    }
+  };
+  
+  const openSellModal = (asset: StockPosition | BondPosition) => {
+    setModalState({ isOpen: true, tradeType: 'Sell', asset });
+  };
+
+  const renderStockRow = (pos: StockPosition) => {
+    const currPrice = getCurrentPrice(prices[pos.symbol]);
+    const value = pos.quantity * currPrice;
+    const gain = currPrice && pos.averagePrice ? ((currPrice - pos.averagePrice) / pos.averagePrice) * 100 : 0;
+    const f = fundamentals[pos.symbol];
+    const t = technicals[pos.symbol];
+
+    return (
+      <tr key={pos.symbol} className="even:bg-gray-50">
+        <td className="px-4 py-2 font-mono text-gray-900">{pos.symbol}</td>
+        <td className="px-4 py-2 text-gray-700">Acción</td>
+        <td className="px-4 py-2 text-right text-gray-900">{pos.quantity}</td>
+        <td className="px-4 py-2 text-right text-gray-900">${pos.averagePrice.toFixed(2)}</td>
+        <td className="px-4 py-2 text-right text-gray-900">${currPrice.toFixed(2)}</td>
+        <td className="px-4 py-2 text-right text-gray-900">${value.toFixed(2)}</td>
+        <td className={`px-4 py-2 text-right font-semibold ${gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>{gain.toFixed(2)}%</td>
+        <td className="px-4 py-2 text-right text-gray-900">{f?.peRatio?.toFixed(2) ?? '-'}</td>
+        <td className="px-4 py-2 text-right text-gray-900">{t?.rsi?.toFixed(2) ?? '-'}</td>
+        <td className="px-4 py-2 text-center">
+          <button onClick={() => openSellModal(pos)} className="text-red-600 hover:text-red-800 text-xs font-semibold">Vender</button>
+        </td>
+      </tr>
+    );
+  };
+
+  const renderBondRow = (pos: BondPosition) => {
+    const value = pos.quantity * pos.averagePrice;
+    return (
+      <tr key={pos.ticker} className="even:bg-gray-50">
+        <td className="px-4 py-2 font-mono text-gray-900">{pos.ticker}</td>
+        <td className="px-4 py-2 text-gray-700">Bono</td>
+        <td className="px-4 py-2 text-right text-gray-900">{pos.quantity}</td>
+        <td className="px-4 py-2 text-right text-gray-900">${pos.averagePrice.toFixed(2)}</td>
+        <td className="px-4 py-2 text-right text-gray-700">-</td>
+        <td className="px-4 py-2 text-right text-gray-900">${value.toFixed(2)}</td>
+        <td className="px-4 py-2 text-right text-gray-700">-</td>
+        <td className="px-4 py-2 text-right text-gray-700">-</td>
+        <td className="px-4 py-2 text-right text-gray-700">-</td>
+        <td className="px-4 py-2 text-center">
+          <button onClick={() => openSellModal(pos)} className="text-red-600 hover:text-red-800 text-xs font-semibold">Vender</button>
+        </td>
+      </tr>
+    );
+  };
+
+  const renderDepositRow = (pos: FixedTermDepositPosition) => {
+    return (
+      <tr key={pos.id} className="even:bg-gray-50">
+        <td className="px-4 py-2 font-medium text-gray-900">{pos.provider}</td>
+        <td className="px-4 py-2 text-gray-700">Plazo Fijo</td>
+        <td className="px-4 py-2 text-right text-gray-700">-</td>
+        <td className="px-4 py-2 text-right text-gray-700">-</td>
+        <td className="px-4 py-2 text-right text-gray-700">-</td>
+        <td className="px-4 py-2 text-right text-gray-900">${pos.amount.toFixed(2)}</td>
+        <td className="px-4 py-2 text-right text-green-600">{pos.annualRate.toFixed(2)}%</td>
+        <td className="px-4 py-2 text-right text-gray-700">{new Date(pos.maturityDate).toLocaleDateString()}</td>
+        <td className="px-4 py-2 text-right text-gray-700">-</td>
+        <td className="px-4 py-2 text-center">
+          <button onClick={() => handleRemove(pos)} className="text-red-600 hover:text-red-800 text-xs font-semibold">Eliminar</button>
+        </td>
+      </tr>
+    );
+  };
+  
+  const getModalInfo = () => {
+    if (!modalState.asset) return { assetName: '', identifier: '', price: 0, maxShares: 0, assetType: 'Stock' as const };
+    const { asset } = modalState;
+    if (asset.type === 'Stock') {
+      return { assetName: asset.symbol, identifier: asset.symbol, price: getCurrentPrice(prices[asset.symbol]), maxShares: asset.quantity, assetType: asset.type };
+    }
+    if (asset.type === 'Bond') {
+      return { assetName: asset.ticker, identifier: asset.ticker, price: asset.averagePrice, maxShares: asset.quantity, assetType: asset.type };
+    }
+    return { assetName: '', identifier: '', price: 0, maxShares: 0, assetType: 'Stock' as const };
+  };
+
+  const modalInfo = getModalInfo();
 
   return (
-    <tr key={pos.symbol} className="even:bg-gray-50">
-      <td className="px-4 py-2 font-mono text-gray-900">{pos.symbol}</td>
-      <td className="px-4 py-2 text-gray-700">Acción</td>
-      <td className="px-4 py-2 text-right text-gray-900">{pos.quantity}</td>
-      <td className="px-4 py-2 text-right text-gray-900">${pos.averagePrice.toFixed(2)}</td>
-      <td className="px-4 py-2 text-right text-gray-900">${currPrice.toFixed(2)}</td>
-      <td className="px-4 py-2 text-right text-gray-900">${value.toFixed(2)}</td>
-      <td className={`px-4 py-2 text-right font-semibold ${gain > 0 ? 'text-green-600' : gain < 0 ? 'text-red-600' : 'text-gray-900'}`}>{gain >= 0 ? '+' : ''}{gain.toFixed(2)}%</td>
-      <td className="px-4 py-2 text-right text-gray-900">{f?.peRatio?.toFixed(2) ?? '-'}</td>
-      <td className="px-4 py-2 text-right text-gray-900">{t?.rsi?.toFixed(2) ?? '-'}</td>
-    </tr>
-  );
-};
-
-const renderBondRow = (pos: BondPosition) => {
-  // Bond prices are static for now, so gain/loss is not calculated.
-  // This could be extended by fetching bond market prices.
-  const value = pos.quantity * pos.averagePrice;
-  return (
-    <tr key={pos.ticker} className="even:bg-gray-50">
-      <td className="px-4 py-2 font-mono text-gray-900">{pos.ticker}</td>
-      <td className="px-4 py-2 text-gray-700">Bono</td>
-      <td className="px-4 py-2 text-right text-gray-900">{pos.quantity}</td>
-      <td className="px-4 py-2 text-right text-gray-900">${pos.averagePrice.toFixed(2)}</td>
-      <td className="px-4 py-2 text-right text-gray-700">-</td>
-      <td className="px-4 py-2 text-right text-gray-900">${value.toFixed(2)}</td>
-      <td className="px-4 py-2 text-right text-gray-700">-</td>
-      <td className="px-4 py-2 text-right text-gray-700">-</td>
-      <td className="px-4 py-2 text-right text-gray-700">-</td>
-    </tr>
-  );
-};
-
-const renderDepositRow = (pos: FixedTermDepositPosition) => {
-  return (
-    <tr key={pos.id} className="even:bg-gray-50">
-      <td className="px-4 py-2 font-medium text-gray-900">{pos.provider}</td>
-      <td className="px-4 py-2 text-gray-700">Plazo Fijo</td>
-      <td className="px-4 py-2 text-right text-gray-700">-</td>
-      <td className="px-4 py-2 text-right text-gray-700">-</td>
-      <td className="px-4 py-2 text-right text-gray-700">-</td>
-      <td className="px-4 py-2 text-right text-gray-900">${pos.amount.toFixed(2)}</td>
-      <td className="px-4 py-2 text-right text-green-600">{pos.annualRate.toFixed(2)}%</td>
-      <td className="px-4 py-2 text-right text-gray-700">{new Date(pos.maturityDate).toLocaleDateString()}</td>
-      <td className="px-4 py-2 text-right text-gray-700">-</td>
-    </tr>
-  );
-};
-
-export default function PortfolioTable({ positions, prices, fundamentals, technicals, availableCash }: Props) {
-  return (
-    <div className="overflow-x-auto rounded-lg shadow mb-8">
-      <table className="min-w-full bg-white text-gray-900 text-sm">
-        <thead>
-          <tr className="bg-gray-100 text-gray-700">
-            <th className="px-4 py-2 text-left">Activo</th>
-            <th className="px-4 py-2 text-left">Tipo</th>
-            <th className="px-4 py-2 text-right">Cantidad</th>
-            <th className="px-4 py-2 text-right">Precio Prom.</th>
-            <th className="px-4 py-2 text-right">Precio Actual</th>
-            <th className="px-4 py-2 text-right">Valor Total</th>
-            <th className="px-4 py-2 text-right">Gan/Pérd % / TNA</th>
-            <th className="px-4 py-2 text-right">P/E / Vencimiento</th>
-            <th className="px-4 py-2 text-right">RSI</th>
-          </tr>
-        </thead>
-        <tbody>
-          {positions.map((pos) => {
-            switch (pos.type) {
-              case 'Stock':
-                return renderStockRow(pos, prices, fundamentals, technicals);
-              case 'Bond':
-                return renderBondRow(pos);
-              case 'FixedTermDeposit':
-                return renderDepositRow(pos);
-              default:
-                return null;
-            }
-          })}
-        </tbody>
-      </table>
-    </div>
+    <>
+      {modalState.isOpen && modalState.asset && modalState.asset.type !== 'FixedTermDeposit' && (
+        <TradeModal
+          isOpen={modalState.isOpen}
+          onClose={() => setModalState({ isOpen: false, tradeType: 'Sell', asset: null })}
+          onSubmit={handleSellSubmit}
+          tradeType={modalState.tradeType}
+          assetName={modalInfo.assetName}
+          assetType={modalInfo.assetType}
+          identifier={modalInfo.identifier}
+          price={modalInfo.price}
+          availableCash={availableCash}
+          maxShares={modalInfo.maxShares}
+        />
+      )}
+      <div className="overflow-x-auto rounded-lg shadow mb-8">
+        <table className="min-w-full bg-white text-gray-900 text-sm">
+          <thead>
+            <tr className="bg-gray-100 text-gray-700">
+              <th className="px-4 py-2 text-left">Activo</th>
+              <th className="px-4 py-2 text-left">Tipo</th>
+              <th className="px-4 py-2 text-right">Cantidad</th>
+              <th className="px-4 py-2 text-right">Precio Prom.</th>
+              <th className="px-4 py-2 text-right">Precio Actual</th>
+              <th className="px-4 py-2 text-right">Valor Total</th>
+              <th className="px-4 py-2 text-right">Gan/Pérd % / TNA</th>
+              <th className="px-4 py-2 text-right">P/E / Vencimiento</th>
+              <th className="px-4 py-2 text-right">RSI</th>
+              <th className="px-4 py-2 text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {positions.map((pos) => {
+              if (pos.type === 'Stock') return renderStockRow(pos);
+              if (pos.type === 'Bond') return renderBondRow(pos);
+              if (pos.type === 'FixedTermDeposit') return renderDepositRow(pos);
+              return null;
+            })}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 } 

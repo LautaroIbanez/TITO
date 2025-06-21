@@ -13,6 +13,7 @@ import {
 import { Fundamentals, getRatioColor, Technicals } from '../types/finance';
 import { getTradeSignal, TradeSignal } from '@/utils/tradeSignal';
 import TradeModal, { TradeType } from './TradeModal';
+import type { TradeModalProps } from './TradeModal';
 import TechnicalDisplay from './TechnicalDisplay';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
@@ -110,23 +111,31 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
   const signal = getTradeSignal(technicals);
   const currentPrice = prices.length > 0 ? prices[prices.length - 1].close : 0;
 
-  const handleTrade = async (quantity: number) => {
+  const handleTrade: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier) => {
     const session = localStorage.getItem('session');
     if (!session) return;
     const username = JSON.parse(session).username;
+    
     const endpoint = modalState.tradeType === 'Buy' ? '/api/portfolio/buy' : '/api/portfolio/sell';
 
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, symbol, quantity, price: currentPrice }),
+      body: JSON.stringify({ 
+        username, 
+        assetType, 
+        symbol: identifier, 
+        quantity, 
+        price: currentPrice 
+      }),
     });
 
     if (res.ok) {
       onTrade();
     } else {
       const data = await res.json();
-      alert(`Error: ${data.error}`);
+      // Use a more user-friendly notification if available
+      alert(`Error: ${data.error || 'Ocurrió un error en la transacción.'}`);
     }
   };
   
@@ -165,7 +174,9 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
         onClose={() => setModalState({ ...modalState, isOpen: false })}
         onSubmit={handleTrade}
         tradeType={modalState.tradeType}
-        symbol={symbol}
+        assetName={symbol}
+        assetType={'Stock'}
+        identifier={symbol}
         price={currentPrice}
         availableCash={availableCash}
         maxShares={position.quantity}

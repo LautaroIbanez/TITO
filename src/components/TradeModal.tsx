@@ -1,15 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { PortfolioPosition } from '@/types'; // Import main types
 
 export type TradeType = 'Buy' | 'Sell' | 'Invest';
 
-interface TradeModalProps {
+export interface TradeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (value: number) => Promise<void>;
+  onSubmit: (value: number, assetType: PortfolioPosition['type'], identifier: string) => Promise<void>;
   tradeType: TradeType;
   assetName: string;
+  assetType: PortfolioPosition['type']; // 'Stock', 'Bond', 'FixedTermDeposit'
+  identifier: string; // symbol, ticker, or id
   price?: number; // Optional for amount-based trades like deposits
   maxShares?: number; // For selling
   availableCash?: number; // For buying/investing
@@ -22,6 +25,8 @@ export default function TradeModal({
   onSubmit,
   tradeType,
   assetName,
+  assetType,
+  identifier,
   price = 1, // Default to 1 for amount-based trades
   maxShares = Infinity,
   availableCash = Infinity,
@@ -64,7 +69,7 @@ export default function TradeModal({
 
     setLoading(true);
     try {
-      await onSubmit(value);
+      await onSubmit(value, assetType, identifier);
       onClose();
     } catch (err: any) {
       setError(err.message || 'Ocurrió un error.');

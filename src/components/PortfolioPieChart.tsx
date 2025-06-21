@@ -1,22 +1,31 @@
 import React from 'react';
 import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { PortfolioPosition, StockPosition, BondPosition, FixedTermDepositPosition } from '@/types';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface Props {
-  positions: any[];
+  positions: PortfolioPosition[];
   prices: Record<string, any[]>;
 }
 
 export default function PortfolioPieChart({ positions, prices }: Props) {
   const dataArr = positions.map((pos) => {
-    const currPrice = prices[pos.symbol]?.[prices[pos.symbol].length - 1]?.close || 0;
-    return { symbol: pos.symbol, value: pos.quantity * currPrice };
+    if (pos.type === 'Stock') {
+      const currPrice = prices[pos.symbol]?.[prices[pos.symbol].length - 1]?.close || 0;
+      return { label: pos.symbol, value: pos.quantity * currPrice };
+    } else if (pos.type === 'Bond') {
+      return { label: pos.ticker, value: pos.quantity * pos.averagePrice };
+    } else if (pos.type === 'FixedTermDeposit') {
+      return { label: pos.provider, value: pos.amount };
+    } else {
+      return { label: 'Otro', value: 0 };
+    }
   });
   const total = dataArr.reduce((a, b) => a + b.value, 0);
   const chartData = {
-    labels: dataArr.map((d) => d.symbol),
+    labels: dataArr.map((d) => d.label),
     datasets: [
       {
         data: dataArr.map((d) => d.value),
