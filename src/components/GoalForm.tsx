@@ -1,29 +1,35 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { InvestmentGoal } from '@/types';
-import { calculateMonthlyInvestment, formatCurrency } from '@/utils/goalCalculator';
+import { InvestmentGoal, PortfolioPosition } from '@/types';
+import { Bond } from '@/types/finance';
+import { calculateMonthlyInvestment, formatCurrency, calculateEffectiveYield } from '@/utils/goalCalculator';
 
 interface Props {
   onSubmit: (goal: Omit<InvestmentGoal, 'id' | 'monthlyContribution'>) => void;
+  positions: PortfolioPosition[];
+  bonds: Bond[];
 }
 
-export default function GoalForm({ onSubmit }: Props) {
+export default function GoalForm({ onSubmit, positions, bonds }: Props) {
   const [name, setName] = useState('');
   const [targetAmount, setTargetAmount] = useState(1000000);
   const [targetDate, setTargetDate] = useState(new Date(new Date().setFullYear(new Date().getFullYear() + 5)).toISOString().split('T')[0]);
   const [initialDeposit, setInitialDeposit] = useState(50000);
   const [suggestedContribution, setSuggestedContribution] = useState(0);
+  const [effectiveYield, setEffectiveYield] = useState(8);
 
   useEffect(() => {
+    const yieldRate = calculateEffectiveYield(positions, bonds);
+    setEffectiveYield(yieldRate);
+
     const years = (new Date(targetDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 365);
     if (targetAmount > 0 && years > 0) {
-      // Assuming an average annual return of 8% for the suggestion
-      const contribution = calculateMonthlyInvestment(targetAmount, years, 8, initialDeposit);
+      const contribution = calculateMonthlyInvestment(targetAmount, years, yieldRate, initialDeposit);
       setSuggestedContribution(contribution);
     } else {
       setSuggestedContribution(0);
     }
-  }, [targetAmount, targetDate, initialDeposit]);
+  }, [targetAmount, targetDate, initialDeposit, positions, bonds]);
 
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -104,7 +110,7 @@ export default function GoalForm({ onSubmit }: Props) {
             <span className="font-bold">{formatCurrency(suggestedContribution)}</span>.
           </p>
           <p className="text-xs text-blue-600 mt-1">
-            *Cálculo basado en un rendimiento anual estimado del 8%.
+            *Cálculo basado en un rendimiento anual estimado del {effectiveYield.toFixed(2)}% según tu cartera actual.
           </p>
         </div>
       )}

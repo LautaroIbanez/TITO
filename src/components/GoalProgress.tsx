@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler } from 'chart.js';
 import Link from 'next/link';
-import { InvestmentGoal, PortfolioTransaction, DepositTransaction } from '@/types';
+import { InvestmentGoal, PortfolioTransaction, DepositTransaction, PortfolioPosition } from '@/types';
+import { Bond } from '@/types/finance';
+import { projectFixedIncome } from '@/utils/fixedIncomeProjection';
+import { calculateEffectiveYield, projectGoalPlan } from '@/utils/goalCalculator';
+import dayjs from 'dayjs';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
@@ -11,9 +15,23 @@ interface Props {
   valueHistory: { date: string; value: number }[];
   currentValue: number;
   transactions: PortfolioTransaction[];
+  positions: PortfolioPosition[];
+  bonds: Bond[];
 }
 
-export default function GoalProgress({ goal, valueHistory, currentValue, transactions }: Props) {
+export default function GoalProgress({ goal, valueHistory, currentValue, transactions, positions, bonds }: Props) {
+  const fixedIncomeProjection = useMemo(() => {
+    if (!goal || !positions || !bonds) return [];
+    return projectFixedIncome(currentValue, positions, bonds, [goal]);
+  }, [currentValue, positions, bonds, goal]);
+
+  const goalPlanProjection = useMemo(() => {
+    if (!goal || valueHistory.length === 0) return [];
+    const annualReturn = calculateEffectiveYield(positions, bonds);
+    const dates = valueHistory.map(p => p.date);
+    return projectGoalPlan(goal, dates, annualReturn);
+  }, [goal, valueHistory, positions, bonds]);
+
   if (!goal) {
     return (
       <div className="bg-white rounded-lg shadow p-6 mb-8">
@@ -39,20 +57,13 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
   const progressPercentage = Math.min((portfolioGains / goal.targetAmount) * 100, 100);
   const remainingAmount = Math.max(goal.targetAmount - portfolioGains, 0);
   
-  // Calculate projected value based on monthly contributions
-  const projectedData = valueHistory.map((point, index) => {
-    const monthsFromStart = index / 30; // Assuming daily data points
-    const projectedValue = goal.initialDeposit + (goal.monthlyContribution * monthsFromStart);
-    return projectedValue;
-  });
-
   const chartData = {
     labels: valueHistory.map((d) => d.date),
     datasets: [
       {
         label: 'Valor del Portafolio',
         data: valueHistory.map((d) => d.value),
-        fill: false,
+        fill: true,
         borderColor: '#2563eb',
         backgroundColor: 'rgba(37,99,235,0.1)',
         pointRadius: 0,
@@ -60,7 +71,7 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
       },
       {
         label: 'Monto Objetivo',
-        data: valueHistory.map(() => goal.targetAmount),
+        data: Array(valueHistory.length).fill(goal.targetAmount),
         fill: false,
         borderColor: '#dc2626',
         backgroundColor: 'rgba(220,38,38,0.1)',
@@ -69,12 +80,22 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
         tension: 0,
       },
       {
-        label: 'Valor Proyectado',
-        data: projectedData,
+        label: 'Proyección (Ingresos Pasivos)',
+        data: fixedIncomeProjection.map(p => p.value),
         fill: false,
         borderColor: '#059669',
         backgroundColor: 'rgba(5,150,105,0.1)',
         borderDash: [3, 3],
+        pointRadius: 0,
+        tension: 0.2,
+      },
+      {
+        label: 'Proyección (Plan de Aportes)',
+        data: goalPlanProjection.map(p => p.value),
+        fill: false,
+        borderColor: '#f59e0b',
+        backgroundColor: 'rgba(245,158,11,0.1)',
+        borderDash: [4, 4],
         pointRadius: 0,
         tension: 0.2,
       },
@@ -91,7 +112,11 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
       tooltip: { enabled: true } 
     },
     scales: { 
-      x: { display: false }, 
+      x: { 
+        type: 'category' as const,
+        labels: valueHistory.map(p => p.date),
+        display: false 
+      }, 
       y: { 
         display: true,
         beginAtZero: true,

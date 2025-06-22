@@ -1,4 +1,4 @@
-import { PortfolioTransaction } from '@/types';
+import { PortfolioTransaction, FixedTermDepositCreationTransaction } from '@/types';
 import { PriceData } from '@/types/finance';
 import dayjs from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
@@ -6,6 +6,10 @@ dayjs.extend(isSameOrBefore);
 
 export interface PortfolioValueOptions {
   days?: number; // If provided, calculate last N days. If not, calculate from first transaction to today
+}
+
+interface ActiveFixedTermDeposit extends FixedTermDepositCreationTransaction {
+  isMatured?: boolean;
 }
 
 export function calculatePortfolioValueHistory(
@@ -44,6 +48,7 @@ export function calculatePortfolioValueHistory(
   }
   
   const positions: Record<string, number> = {};
+  const activeDeposits: ActiveFixedTermDeposit[] = [];
   
   // Initialize positions up to the start date
   for (const tx of txs) {
@@ -60,6 +65,8 @@ export function calculatePortfolioValueHistory(
           positions[identifier] = (positions[identifier] || 0) - tx.quantity;
         }
       }
+    } else if (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit') {
+      activeDeposits.push(tx as ActiveFixedTermDeposit);
     }
   }
 
@@ -67,6 +74,7 @@ export function calculatePortfolioValueHistory(
   let lastKnownValue = 0;
 
   for (const dateStr of allDates) {
+    const today = dayjs(dateStr);
     const dailyTxs = transactionsByDate.get(dateStr) || [];
     for (const tx of dailyTxs) {
       if (tx.type === 'Buy' || tx.type === 'Sell') {
@@ -78,10 +86,13 @@ export function calculatePortfolioValueHistory(
             positions[identifier] = (positions[identifier] || 0) - tx.quantity;
           }
         }
+      } else if (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit') {
+        activeDeposits.push(tx as ActiveFixedTermDeposit);
       }
     }
 
     let dailyValue = 0;
+    // Stocks and Bonds
     for (const symbol in positions) {
       if (positions[symbol] <= 0) continue;
       
@@ -97,7 +108,30 @@ export function calculatePortfolioValueHistory(
       dailyValue += positions[symbol] * price;
     }
     
-    if (dailyValue === 0 && Object.keys(positions).length > 0) {
+    // Fixed-Term Deposits
+    for (const deposit of activeDeposits) {
+      const startDate = dayjs(deposit.date);
+      const maturityDate = dayjs(deposit.maturityDate);
+
+      if (today.isBefore(startDate)) continue;
+
+      if (today.isAfter(maturityDate) && !deposit.isMatured) {
+        deposit.isMatured = true;
+      }
+
+      if (deposit.isMatured) continue; // Once matured, it's considered cash, not a growing asset
+
+      let value = deposit.amount;
+      if (today.isAfter(startDate)) {
+        const daysActive = today.diff(startDate, 'day');
+        const dailyRate = deposit.annualRate / 100 / 365;
+        const interest = deposit.amount * dailyRate * daysActive;
+        value += interest;
+      }
+      dailyValue += value;
+    }
+    
+    if (dailyValue === 0 && (Object.keys(positions).length > 0 || activeDeposits.length > 0)) {
       dailyValue = lastKnownValue;
     }
     

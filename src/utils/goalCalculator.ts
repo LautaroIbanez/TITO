@@ -1,3 +1,7 @@
+import { PortfolioPosition, InvestmentGoal } from '@/types';
+import { Bond } from '@/types/finance';
+import dayjs from 'dayjs';
+
 interface MonthlyProjection {
   date: string;
   value: number;
@@ -146,4 +150,80 @@ export function calculateRequiredReturn(
 
   annualRate = (low + high) / 2;
   return annualRate * 100; // Return as a percentage
+}
+
+/**
+ * Calculate the effective annual yield from bond and deposit positions.
+ * @param positions - The user's portfolio positions.
+ * @param bonds - A list of available bonds with their details.
+ * @returns The weighted average annual yield as a percentage.
+ */
+export function calculateEffectiveYield(positions: PortfolioPosition[], bonds: Bond[]): number {
+  let totalValue = 0;
+  let weightedYield = 0;
+
+  positions.forEach(pos => {
+    if (pos.type === 'FixedTermDeposit') {
+      const value = pos.amount;
+      totalValue += value;
+      weightedYield += value * (pos.annualRate / 100);
+    } else if (pos.type === 'Bond') {
+      const bondInfo = bonds.find(b => b.ticker === pos.ticker);
+      if (bondInfo) {
+        const value = pos.quantity * pos.averagePrice;
+        totalValue += value;
+        weightedYield += value * (bondInfo.couponRate / 100);
+      }
+    }
+  });
+
+  if (totalValue === 0) {
+    // Default to a conservative estimate if no fixed income positions are held
+    return 8; 
+  }
+
+  const effectiveYield = (weightedYield / totalValue) * 100;
+  return effectiveYield;
+}
+
+/**
+ * Projects the value of a goal based on its contribution plan and an annual return rate.
+ * @param goal - The investment goal to project.
+ * @param dates - An array of date strings for which to calculate the projection.
+ * @param annualReturn - The estimated annual return rate.
+ * @returns An array of { date: string, value: number } for the projection.
+ */
+export function projectGoalPlan(
+  goal: InvestmentGoal,
+  dates: string[],
+  annualReturn: number,
+): { date: string, value: number }[] {
+  if (dates.length === 0) return [];
+  
+  const startDate = dayjs(dates[0]);
+  const monthlyRate = annualReturn / 12 / 100;
+  
+  // Handle case where return rate is zero to avoid division by zero
+  if (monthlyRate === 0) {
+    return dates.map(date => {
+      const months = dayjs(date).diff(startDate, 'month', true);
+      return {
+        date: date,
+        value: goal.initialDeposit + (goal.monthlyContribution * (months > 0 ? months : 0))
+      };
+    });
+  }
+
+  return dates.map(date => {
+    const months = dayjs(date).diff(startDate, 'month', true);
+    if (months < 0) return { date: date, value: goal.initialDeposit };
+    
+    const fvInitial = goal.initialDeposit * Math.pow(1 + monthlyRate, months);
+    const fvContributions = goal.monthlyContribution * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate);
+    
+    return {
+      date: date,
+      value: fvInitial + fvContributions,
+    };
+  });
 } 

@@ -147,12 +147,12 @@
   ],
   "goals": [
     {
-      "name": "Dentadura",
-      "targetAmount": 4000,
+      "name": "Vacaciones ",
+      "targetAmount": 100000,
       "targetDate": "2030-07-22",
       "initialDeposit": 0,
-      "monthlyContribution": 53,
-      "id": "1750597174218"
+      "monthlyContribution": 1522,
+      "id": "1750635388567"
     }
   ],
   "availableCash": 1982.3823181304933,
@@ -173,8 +173,8 @@
     "investmentAmount": 2000
   },
   "investmentStrategy": {
-    "id": "strategy-ab3e66fe-c8cc-4666-88ad-1d3754ee92fd",
-    "createdAt": "2025-06-22T21:41:40.045Z",
+    "id": "strategy-95cfefee-77bc-416d-8d3b-65c90777f2e8",
+    "createdAt": "2025-06-22T23:34:01.755Z",
     "targetAllocation": {
       "stocks": 60,
       "bonds": 30,
@@ -183,15 +183,23 @@
     },
     "recommendations": [
       {
-        "id": "alloc-b1a27562-fce1-4c82-badc-06012969c7a3",
+        "id": "alloc-2abb28cf-dbc7-42b3-97c1-f5d696eda5c9",
         "action": "increase",
         "assetClass": "stocks",
-        "reason": "Tu portafolio tiene 41.2% en acciones, pero tu estrategia objetivo es 60%",
+        "reason": "Tu portafolio tiene 23.5% en acciones, pero tu estrategia objetivo es 60%",
         "priority": "high",
         "expectedImpact": "positive"
       },
       {
-        "id": "cash-49913c08-ae59-4b2e-9ef2-4eb57d6b4a92",
+        "id": "alloc-a305cd07-1d81-41cf-b918-f910e7d02ca3",
+        "action": "increase",
+        "assetClass": "bonds",
+        "reason": "Tu portafolio tiene 19.8% en bonos, pero tu estrategia objetivo es 30%",
+        "priority": "high",
+        "expectedImpact": "positive"
+      },
+      {
+        "id": "cash-c3128691-6248-45ba-a0b5-7040929dde71",
         "action": "decrease",
         "assetClass": "cash",
         "reason": "Tienes mucho efectivo disponible. Considera invertirlo según tu estrategia",

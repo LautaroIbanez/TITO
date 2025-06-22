@@ -1,20 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { InvestmentGoal } from '@/types';
+import { InvestmentGoal, PortfolioPosition } from '@/types';
+import { Bond } from '@/types/finance';
 import GoalForm from '../../../components/GoalForm';
 import GoalList from '../../../components/GoalList';
 import EditGoalModal from '../../../components/EditGoalModal';
-import { calculateMonthlyInvestment } from '@/utils/goalCalculator';
+import { calculateMonthlyInvestment, calculateEffectiveYield } from '@/utils/goalCalculator';
 
 export default function GoalsPage() {
   const [goals, setGoals] = useState<InvestmentGoal[]>([]);
+  const [positions, setPositions] = useState<PortfolioPosition[]>([]);
+  const [bonds, setBonds] = useState<Bond[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<InvestmentGoal | null>(null);
 
-  const fetchGoals = async () => {
+  const fetchData = async () => {
     const session = localStorage.getItem('session');
     if (!session) {
       setError('You must be logged in to see your goals.');
@@ -24,12 +27,25 @@ export default function GoalsPage() {
     const username = JSON.parse(session).username;
 
     try {
-      const res = await fetch(`/api/goals?username=${username}`);
-      if (!res.ok) {
-        throw new Error('Failed to fetch goals.');
+      const [goalsRes, portfolioRes, bondsRes] = await Promise.all([
+        fetch(`/api/goals?username=${username}`),
+        fetch(`/api/portfolio/data?username=${username}`),
+        fetch('/api/bonds'),
+      ]);
+
+      if (!goalsRes.ok) throw new Error('Failed to fetch goals.');
+      const goalsData = await goalsRes.json();
+      setGoals(goalsData);
+
+      if (portfolioRes.ok) {
+        const portfolioData = await portfolioRes.json();
+        setPositions(portfolioData.positions || []);
       }
-      const data = await res.json();
-      setGoals(data);
+      
+      if (bondsRes.ok) {
+        const bondsData = await bondsRes.json();
+        setBonds(bondsData);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -38,22 +54,22 @@ export default function GoalsPage() {
   };
 
   useEffect(() => {
-    fetchGoals();
+    fetchData();
   }, []);
 
   const handleAddGoal = async (goal: Omit<InvestmentGoal, 'id' | 'monthlyContribution'>) => {
     const session = localStorage.getItem('session');
     if (!session) return;
     const username = JSON.parse(session).username;
-
+    
+    const effectiveYield = calculateEffectiveYield(positions, bonds);
     const years = (new Date(goal.targetDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 365);
-    const monthlyContribution = calculateMonthlyInvestment(goal.targetAmount, years > 0 ? years : 1, 8, goal.initialDeposit);
+    const monthlyContribution = calculateMonthlyInvestment(goal.targetAmount, years > 0 ? years : 1, effectiveYield, goal.initialDeposit);
 
     const fullGoal: Omit<InvestmentGoal, 'id'> = {
       ...goal,
       monthlyContribution: Math.round(monthlyContribution),
     };
-
 
     try {
       const res = await fetch('/api/goals', {
@@ -64,7 +80,7 @@ export default function GoalsPage() {
       if (!res.ok) {
         throw new Error('Failed to save goal.');
       }
-      await fetchGoals(); // Refresh list after adding
+      await fetchData(); // Refresh list after adding
     } catch (err: any) {
       setError(err.message);
     }
@@ -88,7 +104,7 @@ export default function GoalsPage() {
       });
       if (!res.ok) throw new Error('Failed to update goal.');
       
-      await fetchGoals();
+      await fetchData();
       setIsEditModalOpen(false);
       setEditingGoal(null);
     } catch (err: any) {
@@ -109,7 +125,7 @@ export default function GoalsPage() {
       });
       if (!res.ok) throw new Error('Failed to delete goal.');
 
-      await fetchGoals();
+      await fetchData();
     } catch (err: any) {
       setError(err.message);
     }
@@ -119,7 +135,11 @@ export default function GoalsPage() {
     <div className="space-y-8">
       <h1 className="text-2xl font-bold text-gray-900">Metas de Inversión</h1>
       
-      <GoalForm onSubmit={handleAddGoal} />
+      <GoalForm 
+        onSubmit={handleAddGoal} 
+        positions={positions}
+        bonds={bonds}
+      />
 
       <div className="mt-8">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Tus Metas</h2>
@@ -144,6 +164,8 @@ export default function GoalsPage() {
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           onUpdate={handleUpdateGoal}
+          positions={positions}
+          bonds={bonds}
         />
       )}
     </div>

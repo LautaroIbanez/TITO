@@ -1,34 +1,41 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { InvestmentGoal } from '@/types';
-import { calculateMonthlyInvestment, formatCurrency } from '@/utils/goalCalculator';
+import { InvestmentGoal, PortfolioPosition } from '@/types';
+import { Bond } from '@/types/finance';
+import { calculateMonthlyInvestment, formatCurrency, calculateEffectiveYield } from '@/utils/goalCalculator';
 
 interface Props {
   goal: InvestmentGoal;
   isOpen: boolean;
   onClose: () => void;
   onUpdate: (goal: InvestmentGoal) => void;
+  positions: PortfolioPosition[];
+  bonds: Bond[];
 }
 
-export default function EditGoalModal({ goal, isOpen, onClose, onUpdate }: Props) {
+export default function EditGoalModal({ goal, isOpen, onClose, onUpdate, positions, bonds }: Props) {
   const [formData, setFormData] = useState<InvestmentGoal>(goal);
   const [suggestedContribution, setSuggestedContribution] = useState(goal.monthlyContribution);
+  const [effectiveYield, setEffectiveYield] = useState(8);
 
   useEffect(() => {
     setFormData(goal);
-    setSuggestedContribution(goal.monthlyContribution);
   }, [goal]);
 
   useEffect(() => {
     if (!formData) return;
+    
+    const yieldRate = calculateEffectiveYield(positions, bonds);
+    setEffectiveYield(yieldRate);
+
     const years = (new Date(formData.targetDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 365);
     if (formData.targetAmount > 0 && years > 0) {
-      const contribution = calculateMonthlyInvestment(formData.targetAmount, years, 8, formData.initialDeposit);
+      const contribution = calculateMonthlyInvestment(formData.targetAmount, years, yieldRate, formData.initialDeposit);
       setSuggestedContribution(contribution);
     } else {
       setSuggestedContribution(0);
     }
-  }, [formData?.targetAmount, formData?.targetDate, formData?.initialDeposit]);
+  }, [formData, positions, bonds]);
 
   if (!isOpen) return null;
 
@@ -68,6 +75,9 @@ export default function EditGoalModal({ goal, isOpen, onClose, onUpdate }: Props
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
               <p className="text-sm text-blue-800">
                 Aporte mensual sugerido: <span className="font-bold">{formatCurrency(suggestedContribution)}</span>
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                *Cálculo basado en un rendimiento anual estimado del {effectiveYield.toFixed(2)}% según tu cartera actual.
               </p>
             </div>
           )}

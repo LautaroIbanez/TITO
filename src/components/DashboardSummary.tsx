@@ -1,7 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { InvestmentGoal, DepositTransaction, StrategyRecommendation } from '@/types';
+import { InvestmentGoal, DepositTransaction, StrategyRecommendation, PortfolioPosition } from '@/types';
+import { Bond } from '@/types/finance';
 import { calculatePortfolioValueHistory } from '@/utils/calculatePortfolioValue';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import GoalProgress from './GoalProgress';
@@ -11,11 +12,12 @@ export default function DashboardSummary() {
   const [portfolioValue, setPortfolioValue] = useState(0);
   const [firstGoal, setFirstGoal] = useState<InvestmentGoal | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [bonds, setBonds] = useState<Bond[]>([]);
   
   const { portfolioData, strategy, loading, error, portfolioVersion } = usePortfolio();
 
   useEffect(() => {
-    async function fetchGoals() {
+    async function fetchData() {
       const session = localStorage.getItem('session');
       if (!session) return;
       const sessionData = JSON.parse(session);
@@ -25,12 +27,21 @@ export default function DashboardSummary() {
         setShowOnboarding(true);
       }
 
-      const goalsRes = await fetch(`/api/goals?username=${username}`);
+      const [goalsRes, bondsRes] = await Promise.all([
+        fetch(`/api/goals?username=${username}`),
+        fetch('/api/bonds')
+      ]);
+
       if (goalsRes.ok) {
         const goals = await goalsRes.json();
         if (goals.length > 0) {
           setFirstGoal(goals[0]);
         }
+      }
+
+      if (bondsRes.ok) {
+        const bondsData = await bondsRes.json();
+        setBonds(bondsData);
       }
     }
 
@@ -47,7 +58,7 @@ export default function DashboardSummary() {
       setPortfolioValue(latestValue);
     }
 
-    fetchGoals();
+    fetchData();
   }, [portfolioData, portfolioVersion]);
 
   const handleDismissOnboarding = () => {
@@ -191,7 +202,14 @@ export default function DashboardSummary() {
       </div>
 
       {firstGoal && portfolioData ? (
-        <GoalProgress goal={firstGoal} valueHistory={valueHistory} currentValue={portfolioValue} transactions={portfolioData.transactions} />
+        <GoalProgress 
+          goal={firstGoal} 
+          valueHistory={valueHistory} 
+          currentValue={portfolioValue} 
+          transactions={portfolioData.transactions}
+          positions={portfolioData.positions}
+          bonds={bonds}
+        />
       ) : (
         <div className="bg-white p-6 rounded-lg shadow text-center">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Aún no tienes metas</h3>
