@@ -73,7 +73,9 @@ npm test
 
 ## Actualización de Datos
 
-La aplicación utiliza datos de mercado (precios históricos, fundamentales y técnicos) que se guardan localmente en el directorio `/data`. Para mantener esta información actualizada, se incluye un script que se puede ejecutar manualmente.
+La aplicación utiliza datos de mercado (precios históricos, fundamentales y técnicos) que se guardan localmente en el directorio `/data`. Para mantener esta información actualizada, se incluyen scripts que se pueden ejecutar manualmente.
+
+### Actualización de Datos de Acciones
 
 ```bash
 npm run update-data
@@ -81,15 +83,49 @@ npm run update-data
 
 Este comando iterará sobre la lista de acciones definida en `data/stocks-list.json` y descargará los últimos datos para cada una.
 
+### Actualización de Datos de Benchmarks
+
+```bash
+npm run update-benchmarks
+```
+
+Este comando descarga los rendimientos de 1 año de varios benchmarks importantes:
+- **S&P 500** (`^GSPC`)
+- **Gold** (`GC=F`)
+- **US 10-Year Treasury** (`^TNX`)
+- **NASDAQ** (`^IXIC`)
+- **Dow Jones** (`^DJI`)
+- **Russell 2000** (`^RUT`)
+- **VIX** (`^VIX`)
+- **Bitcoin** (`BTC-USD`)
+- **Ethereum** (`ETH-USD`)
+- **US Dollar Index** (`DX-Y.NYB`)
+
+Los datos se guardan en `data/benchmarks.json` con un timestamp y se utilizan para comparar el rendimiento de tu portafolio con estos benchmarks. Si los datos son más antiguos de 1 semana, el sistema automáticamente usará valores por defecto.
+
 ### Automatización (Ejemplo con Cron)
 
-Para mantener los datos actualizados de forma automática, puedes configurar una tarea programada (cron job) en tu servidor. Por ejemplo, para ejecutar el script todos los días a medianoche, puedes añadir la siguiente línea a tu crontab:
+Para mantener los datos actualizados de forma automática, puedes configurar tareas programadas (cron jobs) en tu servidor:
 
+#### Actualización Diaria de Datos de Acciones
 ```cron
 0 0 * * * cd /ruta/completa/hacia/el/proyecto/TITO && npm run update-data >> /var/log/tito-updates.log 2>&1
 ```
 
+#### Actualización Semanal de Benchmarks
+```cron
+0 0 * * 0 cd /ruta/completa/hacia/el/proyecto/TITO && npm run update-benchmarks >> /var/log/tito-benchmarks.log 2>&1
+```
+
 Asegúrate de reemplazar `/ruta/completa/hacia/el/proyecto/TITO` con la ruta real a tu proyecto.
+
+### Características de los Scripts
+
+- **Control de Concurrencia**: Los scripts utilizan `p-limit` para evitar sobrecargar las APIs
+- **Manejo de Errores**: Errores individuales no detienen el proceso completo
+- **Logging Detallado**: Progreso en tiempo real y resumen final
+- **Reintentos Automáticos**: Sistema de reintentos para operaciones fallidas
+- **Interrupción Graceful**: Manejo correcto de Ctrl+C y terminación del proceso
 
 ## Live Data Fetching and Caching
 

@@ -134,10 +134,10 @@ export default function ScoopCard({
   availableCash,
 }: ScoopCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const signal = getTradeSignal(technicals);
   // Prepare chart data
   const prices = stockData?.prices || [];
   const currentPrice = prices.length > 0 ? prices[prices.length - 1].close : 0;
+  const signal = getTradeSignal(technicals, currentPrice);
   
   // Compute last price date
   const lastPriceDate = prices.length > 0 ? prices[prices.length - 1].date : null;
@@ -250,15 +250,27 @@ export default function ScoopCard({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
           {/* Valuation */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-1">Valoración</h3>
-            <div className="text-xs text-gray-700">
-              <RatioRow label="PE Ratio" value={fundamentals.peRatio} metric="peRatio" />
-              <RatioRow label="PB Ratio" value={fundamentals.pbRatio} metric="pbRatio" />
-              <RatioRow label="EV/EBITDA" value={fundamentals.evToEbitda} metric="evToEbitda" />
-              <RatioRow label="Price/FCF" value={fundamentals.priceToFCF} metric="priceToFCF" />
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Valoración</h3>
+            <div className="grid grid-cols-1 text-xs text-gray-700">
+              <RatioRow label="PE" value={fundamentals?.peRatio} metric="peRatio" />
+              <RatioRow label="PB" value={fundamentals?.pbRatio} metric="pbRatio" />
+              <RatioRow label="EV/EBITDA" value={fundamentals?.evToEbitda} metric="evToEbitda" />
+              <RatioRow label="P/FCF" value={fundamentals?.priceToFCF} metric="priceToFCF" />
             </div>
           </div>
           
+          {/* Technicals */}
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Técnicos</h3>
+            <div className="grid grid-cols-1 text-xs text-gray-700">
+              <TechnicalDisplay label="RSI" indicatorKey="RSI" value={technicals?.rsi} />
+              <TechnicalDisplay label="MACD" indicatorKey="MACD" value={technicals?.macd} />
+              <TechnicalDisplay label="SMA 200" indicatorKey="SMA" value={technicals?.sma200} currentPrice={currentPrice} />
+              <TechnicalDisplay label="EMA 50" indicatorKey="EMA" value={technicals?.ema50} currentPrice={currentPrice} />
+              <TechnicalDisplay label="ADX" indicatorKey="ADX" value={technicals?.adx} />
+            </div>
+          </div>
+
           {/* Profitability */}
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-1">Rentabilidad</h3>

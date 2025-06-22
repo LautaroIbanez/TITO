@@ -5,16 +5,38 @@ interface Props {
   data: ComparisonResult;
 }
 
+const benchmarkLabels: Record<string, string> = {
+  'S&P 500': 'S&P 500',
+  'Gold': 'Oro',
+  'US 10-Year Treasury': 'Bono USA 10 años',
+  'NASDAQ': 'NASDAQ',
+  'Dow Jones': 'Dow Jones',
+  'Russell 2000': 'Russell 2000',
+  'VIX': 'VIX',
+  'Bitcoin': 'Bitcoin',
+  'Ethereum': 'Ethereum',
+  'US Dollar Index': 'Índice Dólar USA',
+  'fixedDeposit': 'Plazo Fijo',
+  'realEstate': 'Bienes Raíces',
+  'usTreasury': 'Bono USA',
+  'sp500': 'S&P 500',
+  'gold': 'Oro'
+};
+
 export default function ReturnComparison({ data }: Props) {
+  // Extract portfolio return and create items for other benchmarks
+  const { portfolioReturn, ...benchmarks } = data;
+  
   const items = [
-    { label: 'Tu Portafolio', value: data.portfolioReturn },
-    { label: 'S&P 500', value: data.sp500 },
-    { label: 'Oro', value: data.gold },
-    { label: 'Plazo Fijo', value: data.fixedDeposit },
-    { label: 'Bienes Raíces', value: data.realEstate },
-    { label: 'Bono USA', value: data.usTreasury },
+    { label: 'Tu Portafolio', value: portfolioReturn },
+    ...Object.entries(benchmarks).map(([key, value]) => ({
+      label: benchmarkLabels[key] || key,
+      value: value as number
+    }))
   ];
+
   const best = Math.max(...items.map(i => Math.abs(i.value)));
+  
   return (
     <div className="mb-8 bg-white p-6 rounded-lg shadow">
       <h3 className="text-lg font-bold mb-4 text-gray-900">Comparación de Retorno Anualizado</h3>

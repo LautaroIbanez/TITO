@@ -21,7 +21,16 @@
       "price": 477.3999938964844
     }
   ],
-  "goals": [],
+  "goals": [
+    {
+      "name": "Dentadura",
+      "targetAmount": 4000,
+      "targetDate": "2030-07-22",
+      "initialDeposit": 0,
+      "monthlyContribution": 53,
+      "id": "1750597174218"
+    }
+  ],
   "availableCash": 1522.6000061035156,
   "profile": {
     "instrumentsUsed": [

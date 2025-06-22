@@ -32,17 +32,26 @@ export function calculatePortfolioReturn(
   return returns.reduce((a, b) => a + b, 0) / returns.length;
 }
 
+export const DEFAULT_BENCHMARKS = {
+  'S&P 500': 10,
+  'Gold': 6,
+  'US 10-Year Treasury': 4.3,
+  'NASDAQ': 12,
+  'Dow Jones': 8,
+  'Russell 2000': 9,
+  'VIX': -5,
+  'Bitcoin': 15,
+  'Ethereum': 18,
+  'US Dollar Index': 2
+};
+
 export function compareWithBenchmarks(
   portfolioReturn: number,
-  benchmarks = { fixedDeposit: 7, realEstate: 5, usTreasury: 4.3, sp500: 10, gold: 6 }
+  benchmarks: Record<string, number> = DEFAULT_BENCHMARKS
 ) {
   return {
     portfolioReturn,
-    fixedDeposit: benchmarks.fixedDeposit,
-    realEstate: benchmarks.realEstate,
-    usTreasury: benchmarks.usTreasury,
-    sp500: benchmarks.sp500,
-    gold: benchmarks.gold,
+    ...benchmarks,
   };
 }
 

@@ -3,44 +3,69 @@ import { Technicals } from '@/types/finance';
 export type TradeSignal = 'buy' | 'sell' | 'hold';
 
 /**
- * Determines a trade signal based on common technical indicators.
+ * Determines a trade signal by scoring multiple technical indicators.
+ * Each indicator contributes to a total score, which then determines the final signal.
+ * - Score > +2: Strong Buy
+ * - Score < -2: Strong Sell
+ * - Otherwise: Hold
  *
- * The logic is prioritized as follows:
- * 1. Strong RSI signals (overbought/oversold) take precedence.
- * 2. If RSI is neutral, EMA crossover (golden/death cross) determines the signal.
- * 3. If no clear signal is found, it defaults to 'hold'.
- *
- * @param tech - The technical indicators for a stock.
+ * @param technicals The technical indicators for a stock.
+ * @param currentPrice The current price of the stock, used for SMA/EMA comparison.
  * @returns A trade signal: 'buy', 'sell', or 'hold'.
  */
-export function getTradeSignal(tech: Technicals | null | undefined): TradeSignal {
-  if (!tech) {
+export function getTradeSignal(
+  technicals: Technicals | null | undefined,
+  currentPrice: number | null | undefined
+): TradeSignal {
+  if (!technicals || currentPrice == null) {
     return 'hold';
   }
 
-  const { rsi, ema12, ema26 } = tech;
+  let score = 0;
+  const { rsi, macd, sma200, ema50, ema12, ema26, adx, pdi, mdi } = technicals;
 
-  // 1. Check for strong overbought/oversold signals from RSI
-  if (rsi !== null) {
-    if (rsi > 70) {
-      return 'sell'; // Overbought
-    }
-    if (rsi < 30) {
-      return 'buy'; // Oversold
+  // 1. RSI
+  if (rsi != null) {
+    if (rsi < 30) score++; // Oversold, buy signal
+    if (rsi > 70) score--; // Overbought, sell signal
+  }
+
+  // 2. MACD
+  if (macd != null) {
+    if (typeof macd === 'object' && macd !== null && 'MACD' in macd) {
+      const macdValue = (macd as any).MACD;
+      if (typeof macdValue === 'number') {
+        if (macdValue > 0) score++; // Bullish
+        if (macdValue < 0) score--; // Bearish
+      }
+    } else if (typeof macd === 'number') {
+      if (macd > 0) score++; // Bullish
+      if (macd < 0) score--; // Bearish
     }
   }
 
-  // 2. Check for EMA crossover signals if RSI is neutral
-  if (ema12 !== null && ema26 !== null) {
-    if (ema12 > ema26) {
-      return 'buy'; // Golden cross
-    }
-    if (ema12 < ema26) {
-      return 'sell'; // Death cross
-    }
+  // 3. Moving Averages
+  if (sma200 != null && currentPrice > sma200) score++; // Bullish trend
+  if (sma200 != null && currentPrice < sma200) score--; // Bearish trend
+  
+  if (ema50 != null && currentPrice > ema50) score++; // Bullish trend
+  if (ema50 != null && currentPrice < ema50) score--; // Bearish trend
+
+  // 4. EMA Crossover
+  if (ema12 != null && ema26 != null) {
+    if (ema12 > ema26) score++; // Golden cross
+    if (ema12 < ema26) score--; // Death cross
   }
 
-  // 3. Default to 'hold' if no clear signal
+  // 5. ADX + PDI/MDI
+  if (adx != null && adx > 25 && pdi != null && mdi != null) {
+    if (pdi > mdi) score++; // Strong uptrend
+    if (mdi > pdi) score--; // Strong downtrend
+  }
+
+  // Final decision based on score
+  if (score >= 2) return 'buy';
+  if (score <= -2) return 'sell';
   return 'hold';
 }
 

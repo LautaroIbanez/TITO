@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
-    "update-data": "ts-node scripts/update-data.ts"
+    "update-data": "ts-node scripts/update-data.ts",
+    "update-benchmarks": "ts-node scripts/update-benchmarks.ts"
   },
   "dependencies": {
     "@types/recharts": "^2.0.1",
@@ -18,6 +19,7 @@
     "jspdf": "^3.0.1",
     "next": "15.3.3",
     "node-cache": "^5.1.2",
+    "p-limit": "^6.2.0",
     "react": "^19.0.0",
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.0.0",

@@ -1,0 +1,85 @@
+{
+  "timestamp": "2025-06-22T13:22:05.056Z",
+  "benchmarks": {
+    "S&P 500": {
+      "symbol": "^GSPC",
+      "name": "S&P 500",
+      "oneYearReturn": 9.54,
+      "currentPrice": 5967.84,
+      "previousPrice": 5447.87,
+      "lastUpdated": "2025-06-22T13:21:49.012Z"
+    },
+    "Gold": {
+      "symbol": "GC=F",
+      "name": "Gold",
+      "oneYearReturn": 45.25,
+      "currentPrice": 3384.4,
+      "previousPrice": 2330,
+      "lastUpdated": "2025-06-22T13:21:50.504Z"
+    },
+    "US 10-Year Treasury": {
+      "symbol": "^TNX",
+      "name": "US 10-Year Treasury",
+      "oneYearReturn": 2.99,
+      "currentPrice": 4.38,
+      "previousPrice": 4.25,
+      "lastUpdated": "2025-06-22T13:21:52.505Z"
+    },
+    "NASDAQ": {
+      "symbol": "^IXIC",
+      "name": "NASDAQ",
+      "oneYearReturn": 11.15,
+      "currentPrice": 19447.41,
+      "previousPrice": 17496.82,
+      "lastUpdated": "2025-06-22T13:21:53.993Z"
+    },
+    "Dow Jones": {
+      "symbol": "^DJI",
+      "name": "Dow Jones",
+      "oneYearReturn": 7.09,
+      "currentPrice": 42206.82,
+      "previousPrice": 39411.21,
+      "lastUpdated": "2025-06-22T13:21:55.566Z"
+    },
+    "Russell 2000": {
+      "symbol": "^RUT",
+      "name": "Russell 2000",
+      "oneYearReturn": 3.86,
+      "currentPrice": 2109.27,
+      "previousPrice": 2030.81,
+      "lastUpdated": "2025-06-22T13:21:57.203Z"
+    },
+    "VIX": {
+      "symbol": "^VIX",
+      "name": "VIX",
+      "oneYearReturn": 54.69,
+      "currentPrice": 20.62,
+      "previousPrice": 13.33,
+      "lastUpdated": "2025-06-22T13:21:58.840Z"
+    },
+    "Bitcoin": {
+      "symbol": "BTC-USD",
+      "name": "Bitcoin",
+      "oneYearReturn": 58.84,
+      "currentPrice": 102056.48,
+      "previousPrice": 64252.58,
+      "lastUpdated": "2025-06-22T13:22:00.685Z"
+    },
+    "Ethereum": {
+      "symbol": "ETH-USD",
+      "name": "Ethereum",
+      "oneYearReturn": -35.6,
+      "currentPrice": 2250.57,
+      "previousPrice": 3494.81,
+      "lastUpdated": "2025-06-22T13:22:02.401Z"
+    },
+    "US Dollar Index": {
+      "symbol": "DX-Y.NYB",
+      "name": "US Dollar Index",
+      "oneYearReturn": -6.35,
+      "currentPrice": 98.77,
+      "previousPrice": 105.47,
+      "lastUpdated": "2025-06-22T13:22:04.045Z"
+    }
+  }
+}

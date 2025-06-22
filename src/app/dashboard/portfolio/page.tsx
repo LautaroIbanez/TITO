@@ -20,14 +20,33 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
 
   // Calculate returns when portfolio data changes
   useEffect(() => {
-    if (portfolioData?.historicalPrices) {
-      const prices: Record<string, any[]> = {};
-      Object.entries(portfolioData.historicalPrices).forEach(([symbol, arr]) => {
-        prices[symbol] = arr as any[];
-      });
-      const portReturn = calculatePortfolioReturn(prices, '1y');
-      setComparison(compareWithBenchmarks(portReturn));
+    async function calculateComparison() {
+      if (portfolioData?.historicalPrices) {
+        try {
+          // Fetch benchmarks from API
+          const benchmarksResponse = await fetch('/api/benchmarks');
+          const benchmarks = await benchmarksResponse.json();
+          
+          const prices: Record<string, any[]> = {};
+          Object.entries(portfolioData.historicalPrices).forEach(([symbol, arr]) => {
+            prices[symbol] = arr as any[];
+          });
+          const portReturn = calculatePortfolioReturn(prices, '1y');
+          setComparison(compareWithBenchmarks(portReturn, benchmarks));
+        } catch (error) {
+          console.error('Error fetching benchmarks:', error);
+          // Fallback to default benchmarks
+          const prices: Record<string, any[]> = {};
+          Object.entries(portfolioData.historicalPrices).forEach(([symbol, arr]) => {
+            prices[symbol] = arr as any[];
+          });
+          const portReturn = calculatePortfolioReturn(prices, '1y');
+          setComparison(compareWithBenchmarks(portReturn));
+        }
+      }
     }
+    
+    calculateComparison();
   }, [portfolioData]);
 
   // Filter positions to only include stocks for the card grid

@@ -7,8 +7,11 @@ export const dynamic = 'force-dynamic';
 
 const cache = new NodeCache({ stdTTL: 600 }); // 10-minute cache
 
-export async function GET(req: NextRequest, context: { params: { symbol: string } }) {
-  const symbol = context.params.symbol;
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ symbol: string }> }
+) {
+  const { symbol } = await params;
   const dataType = req.nextUrl.searchParams.get('type');
 
   if (!symbol) {

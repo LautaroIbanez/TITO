@@ -116,8 +116,8 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
   
   const { refreshPortfolio } = usePortfolio();
   
-  const signal = getTradeSignal(technicals);
   const currentPrice = prices.length > 0 ? prices[prices.length - 1].close : 0;
+  const signal = getTradeSignal(technicals, currentPrice);
 
   // Compute last price date
   const lastPriceDate = prices.length > 0 ? prices[prices.length - 1].date : null;
