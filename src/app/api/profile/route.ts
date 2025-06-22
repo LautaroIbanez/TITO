@@ -1,7 +1,39 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { UserData, InvestorProfile } from '@/types';
+
+async function getUserData(username: string): Promise<UserData | null> {
+  const userFilePath = path.join(process.cwd(), 'data', 'users', `${username}.json`);
+  try {
+    const fileContent = await fs.readFile(userFilePath, 'utf-8');
+    return JSON.parse(fileContent);
+  } catch (error) {
+    return null;
+  }
+}
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const username = searchParams.get('username');
+
+  if (!username) {
+    return NextResponse.json({ error: 'Username is required' }, { status: 400 });
+  }
+
+  try {
+    const userData = await getUserData(username);
+    if (!userData) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+    if (!userData.profile) {
+      return NextResponse.json({ error: 'Profile not completed' }, { status: 404 });
+    }
+    return NextResponse.json(userData.profile);
+  } catch (error) {
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
 
 export async function POST(request: Request) {
   try {
