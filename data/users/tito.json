@@ -5,12 +5,6 @@
   "positions": [
     {
       "type": "Stock",
-      "symbol": "MSFT",
-      "quantity": 1,
-      "averagePrice": 477.3999938964844
-    },
-    {
-      "type": "Stock",
       "symbol": "GOOGL",
       "quantity": 3,
       "averagePrice": 166.63999938964844
@@ -89,6 +83,15 @@
       "symbol": "GOOGL",
       "quantity": 1,
       "price": 166.63999938964844
+    },
+    {
+      "id": "txn_1750619945608",
+      "date": "2025-06-22T19:19:05.608Z",
+      "type": "Sell",
+      "assetType": "Stock",
+      "symbol": "MSFT",
+      "quantity": 1,
+      "price": 477.3999938964844
     }
   ],
   "goals": [
@@ -101,7 +104,7 @@
       "id": "1750597174218"
     }
   ],
-  "availableCash": 441.6800079345703,
+  "availableCash": 919.0800018310547,
   "profile": {
     "instrumentsUsed": [
       "Plazo Fijo",
@@ -119,8 +122,8 @@
     "investmentAmount": 2000
   },
   "investmentStrategy": {
-    "id": "strategy-1750617786329",
-    "createdAt": "2025-06-22T18:43:06.329Z",
+    "id": "strategy-c3394dfe-dd9b-4d5c-b5d4-4f024950de95",
+    "createdAt": "2025-06-22T19:32:16.832Z",
     "targetAllocation": {
       "stocks": 60,
       "bonds": 30,
@@ -129,15 +132,15 @@
     },
     "recommendations": [
       {
-        "id": "alloc-1750617786328-1",
+        "id": "alloc-9c7fdb98-c059-4f03-a789-1e0113d26baa",
         "action": "increase",
         "assetClass": "stocks",
-        "reason": "Tu portafolio tiene 48.9% en acciones, pero tu estrategia objetivo es 60%",
+        "reason": "Tu portafolio tiene 25.0% en acciones, pero tu estrategia objetivo es 60%",
         "priority": "high",
         "expectedImpact": "positive"
       },
       {
-        "id": "cash-1750617786328-1",
+        "id": "cash-9fa5a10c-bc26-4b3a-be25-b006e3ac593f",
         "action": "decrease",
         "assetClass": "cash",
         "reason": "Tienes mucho efectivo disponible. Considera invertirlo según tu estrategia",

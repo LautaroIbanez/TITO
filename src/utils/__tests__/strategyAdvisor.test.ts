@@ -1,5 +1,6 @@
 import { generateInvestmentStrategy } from '../strategyAdvisor';
 import { InvestorProfile, InvestmentGoal, PortfolioPosition } from '@/types';
+import dayjs from 'dayjs';
 
 describe('strategyAdvisor', () => {
   const mockProfile: InvestorProfile = {
@@ -16,7 +17,7 @@ describe('strategyAdvisor', () => {
       id: '1',
       name: 'Vacaciones',
       targetAmount: 5000,
-      targetDate: '2025-06-01',
+      targetDate: dayjs().add(1, 'year').format('YYYY-MM-DD'),
       initialDeposit: 1000,
       monthlyContribution: 200
     }
@@ -94,8 +95,81 @@ describe('strategyAdvisor', () => {
         availableCash: 1000
       });
 
-      expect(strategy.targetAllocation.stocks).toBeGreaterThan(60);
-      expect(strategy.targetAllocation.bonds).toBeLessThan(30);
+      expect(strategy.targetAllocation.stocks).toBeGreaterThanOrEqual(70);
+      expect(strategy.targetAllocation.bonds).toBeLessThanOrEqual(20);
+    });
+
+    it('should keep stock allocation high for aggressive profile with short-term goals', () => {
+      const aggressiveProfile = { ...mockProfile, riskAppetite: 'Agresivo' as const };
+      const shortTermGoals: InvestmentGoal[] = [
+        {
+          id: '1',
+          name: 'Car',
+          targetAmount: 10000,
+          targetDate: dayjs().add(1, 'year').format('YYYY-MM-DD'),
+          initialDeposit: 1000,
+          monthlyContribution: 200
+        }
+      ];
+      
+      const strategy = generateInvestmentStrategy({
+        profile: aggressiveProfile,
+        goals: shortTermGoals,
+        positions: mockPositions,
+        availableCash: 1000
+      });
+
+      expect(strategy.targetAllocation.stocks).toBeGreaterThanOrEqual(70);
+      expect(strategy.targetAllocation.bonds).toBeLessThan(25);
+      
+      const totalAllocation = strategy.targetAllocation.stocks + 
+                             strategy.targetAllocation.bonds + 
+                             strategy.targetAllocation.deposits + 
+                             strategy.targetAllocation.cash;
+      expect(totalAllocation).toBe(100);
+    });
+
+    it('should ensure allocation totals exactly 100 for long-term aggressive profile with high knowledge', () => {
+      const aggressiveHighKnowledgeProfile = { 
+        ...mockProfile, 
+        riskAppetite: 'Agresivo' as const,
+        knowledgeLevels: { stocks: 'Alto' as const }
+      };
+      
+      const longTermGoals: InvestmentGoal[] = [
+        {
+          id: '1',
+          name: 'Retirement',
+          targetAmount: 1000000,
+          targetDate: dayjs().add(15, 'years').format('YYYY-MM-DD'),
+          initialDeposit: 50000,
+          monthlyContribution: 2000
+        }
+      ];
+      
+      const strategy = generateInvestmentStrategy({
+        profile: aggressiveHighKnowledgeProfile,
+        goals: longTermGoals,
+        positions: mockPositions,
+        availableCash: 1000
+      });
+
+      // Verify high stock allocation for aggressive + long-term + high knowledge
+      expect(strategy.targetAllocation.stocks).toBeGreaterThan(80);
+      expect(strategy.targetAllocation.bonds).toBeLessThan(15);
+      
+      // Verify exact 100% total
+      const totalAllocation = strategy.targetAllocation.stocks + 
+                             strategy.targetAllocation.bonds + 
+                             strategy.targetAllocation.deposits + 
+                             strategy.targetAllocation.cash;
+      expect(totalAllocation).toBe(100);
+      
+      // Verify all components are non-negative
+      expect(strategy.targetAllocation.stocks).toBeGreaterThanOrEqual(0);
+      expect(strategy.targetAllocation.bonds).toBeGreaterThanOrEqual(0);
+      expect(strategy.targetAllocation.deposits).toBeGreaterThanOrEqual(0);
+      expect(strategy.targetAllocation.cash).toBeGreaterThanOrEqual(0);
     });
 
     it('should adjust allocation based on knowledge level', () => {
@@ -199,7 +273,7 @@ describe('strategyAdvisor', () => {
           id: '1',
           name: 'Emergencia',
           targetAmount: 3000,
-          targetDate: '2024-06-01', // Less than 1 year
+          targetDate: dayjs().add(6, 'months').format('YYYY-MM-DD'),
           initialDeposit: 1000,
           monthlyContribution: 200
         }
@@ -234,6 +308,49 @@ describe('strategyAdvisor', () => {
 
       expect(tslaRecommendations.length).toBeGreaterThan(0);
       expect(tslaRecommendations[0].priority).toBe('high');
+    });
+
+    it('should always normalize allocation to exactly 100% total', () => {
+      // Test multiple profile combinations to ensure normalization works
+      const testCases = [
+        {
+          profile: { ...mockProfile, riskAppetite: 'Conservador' as const },
+          goals: [],
+          description: 'Conservative profile with no goals'
+        },
+        {
+          profile: { ...mockProfile, riskAppetite: 'Agresivo' as const, knowledgeLevels: { stocks: 'Alto' as const } },
+          goals: [],
+          description: 'Aggressive profile with high knowledge'
+        },
+        {
+          profile: { ...mockProfile, riskAppetite: 'Balanceado' as const, knowledgeLevels: { stocks: 'Bajo' as const } },
+          goals: [],
+          description: 'Balanced profile with low knowledge'
+        }
+      ];
+
+      testCases.forEach(({ profile, goals, description }) => {
+        const strategy = generateInvestmentStrategy({
+          profile,
+          goals,
+          positions: mockPositions,
+          availableCash: 1000
+        });
+
+        const totalAllocation = strategy.targetAllocation.stocks + 
+                               strategy.targetAllocation.bonds + 
+                               strategy.targetAllocation.deposits + 
+                               strategy.targetAllocation.cash;
+        
+        expect(totalAllocation).toBe(100);
+        
+        // Also verify all components are non-negative
+        expect(strategy.targetAllocation.stocks).toBeGreaterThanOrEqual(0);
+        expect(strategy.targetAllocation.bonds).toBeGreaterThanOrEqual(0);
+        expect(strategy.targetAllocation.deposits).toBeGreaterThanOrEqual(0);
+        expect(strategy.targetAllocation.cash).toBeGreaterThanOrEqual(0);
+      });
     });
   });
 }); 

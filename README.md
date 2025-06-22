@@ -9,6 +9,61 @@ TITO es una aplicación web construida con Next.js diseñada para ayudarte a ges
 - **Metas Financieras**: Define metas de inversión y sigue tu progreso para alcanzarlas.
 - **Simulador de Impuestos**: Estima el impacto fiscal de tus ganancias de capital.
 - **Manejo de Efectivo**: Deposita fondos y úsalos para comprar activos.
+- **Estrategia de Inversión Personalizada**: Recibe una estrategia de asignación de activos y recomendaciones de rebalanceo según tu perfil y metas (ver más abajo).
+
+## Estrategia de Inversión y Recomendaciones
+
+TITO genera automáticamente una **estrategia de inversión personalizada** para cada usuario, basada en su perfil de riesgo, horizonte de inversión, nivel de conocimiento y metas financieras.
+
+- La estrategia incluye una **asignación objetivo** de activos (acciones, bonos, depósitos, efectivo) y una lista de **recomendaciones accionables** (por ejemplo: aumentar exposición a acciones, diversificar sectores, mantener más liquidez, etc).
+- Estas recomendaciones se muestran en la tarjeta de **Resumen** del dashboard principal (`/dashboard`), junto con un **descargo de responsabilidad** aclarando que no constituyen asesoramiento financiero profesional.
+- El sistema ajusta dinámicamente la estrategia si cambias tu perfil, tus metas o tu portafolio.
+
+### Descargo de Responsabilidad en el Dashboard
+
+> Las recomendaciones de estrategia son generadas automáticamente y no constituyen asesoramiento financiero profesional. Consulta siempre con un asesor calificado antes de tomar decisiones de inversión.
+
+## API: Endpoint de Estrategia de Inversión
+
+- **`GET /api/strategy?username={username}`**
+
+Este endpoint calcula y devuelve la estrategia de inversión personalizada para el usuario especificado. La respuesta incluye:
+
+- `targetAllocation`: Porcentaje objetivo para cada clase de activo (acciones, bonos, depósitos, efectivo), siempre sumando exactamente 100%.
+- `recommendations`: Lista de recomendaciones accionables para rebalancear o mejorar el portafolio.
+- `riskLevel`: Nivel de riesgo del usuario.
+- `timeHorizon`: Horizonte de inversión calculado a partir de las metas.
+- `notes`: Notas explicativas sobre la estrategia generada.
+
+**Ejemplo de respuesta:**
+
+```json
+{
+  "id": "strategy-1680000000000",
+  "createdAt": "2024-04-01T12:00:00.000Z",
+  "targetAllocation": {
+    "stocks": 75,
+    "bonds": 15,
+    "deposits": 5,
+    "cash": 5
+  },
+  "recommendations": [
+    {
+      "id": "alloc-1680000000000-1",
+      "action": "increase",
+      "assetClass": "stocks",
+      "reason": "Tu portafolio tiene 60% en acciones, pero tu estrategia objetivo es 75%",
+      "priority": "high",
+      "expectedImpact": "positive"
+    }
+  ],
+  "riskLevel": "Agresivo",
+  "timeHorizon": "Largo plazo (> 7 años)",
+  "notes": "Estrategia agresiva: busca maximizar retornos asumiendo mayor riesgo. Estrategia alineada con 2 meta(s) de inversión."
+}
+```
+
+Puedes consultar este endpoint directamente o dejar que el frontend lo consuma automáticamente al cargar el dashboard.
 
 ## Cómo Empezar
 

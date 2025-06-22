@@ -1,5 +1,6 @@
 import { InvestorProfile, InvestmentGoal, InvestmentStrategy, StrategyRecommendation, RiskAppetite, PortfolioPosition } from '@/types';
 import dayjs from 'dayjs';
+import crypto from 'crypto';
 
 // Popular stock symbols for rotation suggestions
 const POPULAR_STOCKS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META', 'NFLX', 'JPM', 'JNJ'];
@@ -27,7 +28,7 @@ export function generateInvestmentStrategy(input: StrategyInput): InvestmentStra
   const timeHorizon = calculateTimeHorizon(goals);
   
   return {
-    id: `strategy-${Date.now()}`,
+    id: `strategy-${crypto.randomUUID()}`,
     createdAt: new Date().toISOString(),
     targetAllocation,
     recommendations,
@@ -73,13 +74,20 @@ function calculateTargetAllocation(profile: InvestorProfile, goals: InvestmentGo
   
   if (avgYearsToGoal < 3) {
     // Short-term: more conservative
-    stocks = Math.max(20, stocks - 20);
-    bonds = Math.min(60, bonds + 15);
-    deposits = Math.min(15, deposits + 5);
+    if (profile.riskAppetite === 'Agresivo') {
+      // For aggressive profiles, reduce stock allocation less and set a floor
+      stocks = Math.max(70, stocks - 10); // Floor at 70%
+      bonds = Math.min(20, bonds + 5);
+      deposits = Math.min(5, deposits + 2);
+    } else {
+      stocks = Math.max(20, stocks - 20);
+      bonds = Math.min(60, bonds + 15);
+      deposits = Math.min(15, deposits + 5);
+    }
   } else if (avgYearsToGoal > 10) {
     // Long-term: more aggressive
-    stocks = Math.min(90, stocks + 15);
-    bonds = Math.max(5, bonds - 10);
+    stocks = Math.min(90, stocks + 10); // Slightly less aggressive increase
+    bonds = Math.max(5, bonds - 8);
     deposits = Math.max(2, deposits - 2);
   }
   
@@ -92,6 +100,66 @@ function calculateTargetAllocation(profile: InvestorProfile, goals: InvestmentGo
     stocks = Math.max(30, stocks - 10);
     bonds = Math.min(50, bonds + 5);
     deposits = Math.min(15, deposits + 5);
+  }
+
+  // Ensure aggressive profiles maintain minimum stock allocation for short-term goals
+  if (profile.riskAppetite === 'Agresivo' && avgYearsToGoal < 3) {
+    stocks = Math.max(stocks, 70);
+  }
+
+  // Normalize to exactly 100%
+  let total = stocks + bonds + deposits + cash;
+  
+  if (total !== 100) {
+    const diff = 100 - total;
+    
+    // If total is less than 100, add to cash
+    if (diff > 0) {
+      cash += diff;
+    } else {
+      // If total is more than 100, reduce cash proportionally
+      // but ensure cash doesn't go below 1%
+      const excess = Math.abs(diff);
+      if (cash > excess + 1) {
+        cash -= excess;
+      } else {
+        // If cash reduction isn't enough, distribute excess proportionally
+        const remainingExcess = excess - (cash - 1);
+        cash = 1;
+        
+        // Distribute remaining excess proportionally among other assets
+        const otherAssets = stocks + bonds + deposits;
+        if (otherAssets > 0) {
+          const stocksRatio = stocks / otherAssets;
+          const bondsRatio = bonds / otherAssets;
+          const depositsRatio = deposits / otherAssets;
+          
+          stocks -= remainingExcess * stocksRatio;
+          bonds -= remainingExcess * bondsRatio;
+          deposits -= remainingExcess * depositsRatio;
+        }
+      }
+    }
+  }
+  
+  // Final verification and rounding to ensure exact 100%
+  stocks = Math.round(stocks * 100) / 100;
+  bonds = Math.round(bonds * 100) / 100;
+  deposits = Math.round(deposits * 100) / 100;
+  cash = Math.round(cash * 100) / 100;
+  
+  // Ensure cash is at least 1%
+  if (cash < 1) {
+    cash = 1;
+    // Reduce stocks slightly to compensate
+    stocks = Math.max(0, stocks - 1);
+  }
+  
+  // Final total should be exactly 100
+  const finalTotal = stocks + bonds + deposits + cash;
+  if (Math.abs(finalTotal - 100) > 0.01) {
+    // Last resort: adjust cash to make total exactly 100
+    cash = Math.max(0, cash + (100 - finalTotal));
   }
   
   return { stocks, bonds, deposits, cash };
@@ -113,7 +181,7 @@ function generateRecommendations(
   // Asset allocation recommendations
   if (currentAllocation.stocks < targetAllocation.stocks - 5) {
     recommendations.push({
-      id: `alloc-${Date.now()}-1`,
+      id: `alloc-${crypto.randomUUID()}`,
       action: 'increase',
       assetClass: 'stocks',
       reason: `Tu portafolio tiene ${currentAllocation.stocks.toFixed(1)}% en acciones, pero tu estrategia objetivo es ${targetAllocation.stocks}%`,
@@ -122,7 +190,7 @@ function generateRecommendations(
     });
   } else if (currentAllocation.stocks > targetAllocation.stocks + 5) {
     recommendations.push({
-      id: `alloc-${Date.now()}-2`,
+      id: `alloc-${crypto.randomUUID()}`,
       action: 'decrease',
       assetClass: 'stocks',
       reason: `Tu portafolio tiene ${currentAllocation.stocks.toFixed(1)}% en acciones, pero tu estrategia objetivo es ${targetAllocation.stocks}%`,
@@ -133,7 +201,7 @@ function generateRecommendations(
   
   if (currentAllocation.bonds < targetAllocation.bonds - 5) {
     recommendations.push({
-      id: `alloc-${Date.now()}-3`,
+      id: `alloc-${crypto.randomUUID()}`,
       action: 'increase',
       assetClass: 'bonds',
       reason: `Tu portafolio tiene ${currentAllocation.bonds.toFixed(1)}% en bonos, pero tu estrategia objetivo es ${targetAllocation.bonds}%`,
@@ -154,7 +222,7 @@ function generateRecommendations(
       const nonTechAlternatives = POPULAR_STOCKS.filter(s => !symbols.includes(s) && !['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META'].includes(s));
       if (nonTechAlternatives.length > 0) {
         recommendations.push({
-          id: `rotate-${Date.now()}-1`,
+          id: `rotate-${crypto.randomUUID()}`,
           action: 'rotate',
           symbol: techStocks[0],
           targetSymbol: nonTechAlternatives[0],
@@ -168,7 +236,7 @@ function generateRecommendations(
     // Suggest rotation based on risk profile
     if (profile.riskAppetite === 'Conservador' && symbols.includes('TSLA')) {
       recommendations.push({
-        id: `rotate-${Date.now()}-2`,
+        id: `rotate-${crypto.randomUUID()}`,
         action: 'rotate',
         symbol: 'TSLA',
         targetSymbol: 'JNJ',
@@ -182,7 +250,7 @@ function generateRecommendations(
   // Cash management recommendations
   if (availableCash > totalValue * 0.15) {
     recommendations.push({
-      id: `cash-${Date.now()}-1`,
+      id: `cash-${crypto.randomUUID()}`,
       action: 'decrease',
       assetClass: 'cash',
       reason: 'Tienes mucho efectivo disponible. Considera invertirlo según tu estrategia',
@@ -191,7 +259,7 @@ function generateRecommendations(
     });
   } else if (availableCash < totalValue * 0.02) {
     recommendations.push({
-      id: `cash-${Date.now()}-2`,
+      id: `cash-${crypto.randomUUID()}`,
       action: 'increase',
       assetClass: 'cash',
       reason: 'Tu efectivo disponible es bajo. Considera mantener más liquidez',
@@ -205,7 +273,7 @@ function generateRecommendations(
     const shortTermGoals = goals.filter(g => dayjs(g.targetDate).diff(dayjs(), 'year') < 3);
     if (shortTermGoals.length > 0 && currentAllocation.stocks > 70) {
       recommendations.push({
-        id: `goal-${Date.now()}-1`,
+        id: `goal-${crypto.randomUUID()}`,
         action: 'decrease',
         assetClass: 'stocks',
         reason: 'Tienes metas a corto plazo. Considera reducir la exposición a acciones',

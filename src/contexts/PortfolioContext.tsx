@@ -18,6 +18,8 @@ interface PortfolioContextType {
   refreshPortfolio: () => Promise<void>;
   refreshStrategy: () => Promise<void>;
   triggerPortfolioUpdate: () => void;
+  strategyLoading: boolean;
+  strategyError: string | null;
 }
 
 const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
@@ -28,6 +30,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [portfolioVersion, setPortfolioVersion] = useState(0);
+  const [strategyLoading, setStrategyLoading] = useState(false);
+  const [strategyError, setStrategyError] = useState<string | null>(null);
 
   const fetchPortfolioData = useCallback(async () => {
     setLoading(true);
@@ -59,21 +63,29 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const fetchStrategy = useCallback(async () => {
+    setStrategyLoading(true);
+    setStrategyError(null);
     try {
       const session = localStorage.getItem('session');
-      if (!session) return;
+      if (!session) {
+        setStrategyLoading(false);
+        return;
+      }
       
       const sessionData = JSON.parse(session);
       const username = sessionData.username;
       
       const response = await fetch(`/api/strategy?username=${username}`);
       
-      if (response.ok) {
-        const strategyData = await response.json();
-        setStrategy(strategyData);
+      if (!response.ok) {
+        throw new Error('Failed to fetch strategy');
       }
-    } catch (err) {
-      console.error('Error fetching strategy:', err);
+      const strategyData = await response.json();
+      setStrategy(strategyData);
+    } catch (err: any) {
+      setStrategyError(err.message || 'Error fetching strategy');
+    } finally {
+      setStrategyLoading(false);
     }
   }, []);
 
@@ -105,7 +117,9 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       portfolioVersion, 
       refreshPortfolio, 
       refreshStrategy,
-      triggerPortfolioUpdate 
+      triggerPortfolioUpdate,
+      strategyLoading,
+      strategyError
     }}>
       {children}
     </PortfolioContext.Provider>
