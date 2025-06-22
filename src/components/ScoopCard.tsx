@@ -99,7 +99,7 @@ export default function ScoopCard({
     maintainAspectRatio: false,
   };
 
-  const handleBuy: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier) => {
+  const handleBuy: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier, commissionPct, purchaseFeePct) => {
     const session = localStorage.getItem('session');
     if (!session) return;
     const username = JSON.parse(session).username;
@@ -112,6 +112,8 @@ export default function ScoopCard({
         symbol: stockData.symbol,
         quantity,
         price: currentPrice,
+        commissionPct,
+        purchaseFeePct,
       }),
     });
     if (res.ok) {

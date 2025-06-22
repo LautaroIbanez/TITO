@@ -16,7 +16,9 @@ export default function PortfolioTransactions({ transactions }: Props) {
           quantity: tx.quantity,
           price: tx.price,
           typeLabel: tx.type === 'Buy' ? 'Compra' : 'Venta',
-          typeColor: tx.type === 'Buy' ? 'text-green-600' : 'text-red-600'
+          typeColor: tx.type === 'Buy' ? 'text-green-600' : 'text-red-600',
+          commissionPct: tx.commissionPct,
+          purchaseFeePct: tx.purchaseFeePct
         };
       } else if (tx.assetType === 'Bond') {
         return {
@@ -24,7 +26,9 @@ export default function PortfolioTransactions({ transactions }: Props) {
           quantity: tx.quantity,
           price: tx.price,
           typeLabel: tx.type === 'Buy' ? 'Compra Bono' : 'Venta Bono',
-          typeColor: tx.type === 'Buy' ? 'text-green-600' : 'text-red-600'
+          typeColor: tx.type === 'Buy' ? 'text-green-600' : 'text-red-600',
+          commissionPct: tx.commissionPct,
+          purchaseFeePct: tx.purchaseFeePct
         };
       }
     } else if (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit') {
@@ -33,7 +37,9 @@ export default function PortfolioTransactions({ transactions }: Props) {
         quantity: null,
         price: null,
         typeLabel: 'Creación Plazo Fijo',
-        typeColor: 'text-blue-600'
+        typeColor: 'text-blue-600',
+        commissionPct: undefined,
+        purchaseFeePct: undefined
       };
     } else if (tx.type === 'Deposit') {
       return {
@@ -41,7 +47,9 @@ export default function PortfolioTransactions({ transactions }: Props) {
         quantity: null,
         price: null,
         typeLabel: 'Depósito',
-        typeColor: 'text-blue-600'
+        typeColor: 'text-blue-600',
+        commissionPct: undefined,
+        purchaseFeePct: undefined
       };
     }
     
@@ -51,7 +59,9 @@ export default function PortfolioTransactions({ transactions }: Props) {
       quantity: null,
       price: null,
       typeLabel: tx.type,
-      typeColor: 'text-gray-600'
+      typeColor: 'text-gray-600',
+      commissionPct: undefined,
+      purchaseFeePct: undefined
     };
   };
 
@@ -67,11 +77,14 @@ export default function PortfolioTransactions({ transactions }: Props) {
               <th className="px-4 py-2 text-left">Símbolo/Proveedor</th>
               <th className="px-4 py-2 text-right">Monto / Cantidad</th>
               <th className="px-4 py-2 text-right">Precio</th>
+              <th className="px-4 py-2 text-right">Comisiones</th>
             </tr>
           </thead>
           <tbody>
             {sorted.map((tx, i) => {
               const display = getTransactionDisplay(tx);
+              const hasFees = display.commissionPct !== undefined || display.purchaseFeePct !== undefined;
+              
               return (
                 <tr key={i} className="even:bg-gray-50">
                   <td className="px-4 py-2 font-mono text-gray-800">{new Date(tx.date).toLocaleDateString()}</td>
@@ -86,6 +99,18 @@ export default function PortfolioTransactions({ transactions }: Props) {
                   </td>
                   <td className="px-4 py-2 text-right text-gray-800">
                     {display.price !== null ? `$${display.price.toFixed(2)}` : '—'}
+                  </td>
+                  <td className="px-4 py-2 text-right text-gray-800">
+                    {hasFees ? (
+                      <div className="text-xs">
+                        {display.commissionPct !== undefined && (
+                          <div>Comisión: {display.commissionPct}%</div>
+                        )}
+                        {display.purchaseFeePct !== undefined && (
+                          <div>Fee: {display.purchaseFeePct}%</div>
+                        )}
+                      </div>
+                    ) : '—'}
                   </td>
                 </tr>
               );

@@ -26,6 +26,31 @@ describe('PortfolioTransactions', () => {
     expect(screen.getByText('$150.00')).toBeInTheDocument();
   });
 
+  it('should render stock buy transaction with commission and purchase fee correctly', () => {
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '1',
+        date: '2024-01-01T00:00:00.000Z',
+        type: 'Buy',
+        assetType: 'Stock',
+        symbol: 'AAPL',
+        quantity: 10,
+        price: 150,
+        commissionPct: 1.5,
+        purchaseFeePct: 0.1
+      }
+    ];
+
+    render(<PortfolioTransactions transactions={transactions} />);
+    
+    expect(screen.getByText('Compra')).toBeInTheDocument();
+    expect(screen.getByText('AAPL')).toBeInTheDocument();
+    expect(screen.getByText('10')).toBeInTheDocument();
+    expect(screen.getByText('$150.00')).toBeInTheDocument();
+    expect(screen.getByText('Comisión: 1.5%')).toBeInTheDocument();
+    expect(screen.getByText('Fee: 0.1%')).toBeInTheDocument();
+  });
+
   it('should render stock sell transaction correctly', () => {
     const transactions: PortfolioTransaction[] = [
       {
@@ -66,6 +91,31 @@ describe('PortfolioTransactions', () => {
     expect(screen.getByText('GOV-BOND-2025')).toBeInTheDocument();
     expect(screen.getByText('100')).toBeInTheDocument();
     expect(screen.getByText('$995.00')).toBeInTheDocument();
+  });
+
+  it('should render bond buy transaction with commission and purchase fee correctly', () => {
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '3',
+        date: '2024-01-03T00:00:00.000Z',
+        type: 'Buy',
+        assetType: 'Bond',
+        ticker: 'GOV-BOND-2025',
+        quantity: 100,
+        price: 995,
+        commissionPct: 2.0,
+        purchaseFeePct: 0.05
+      }
+    ];
+
+    render(<PortfolioTransactions transactions={transactions} />);
+    
+    expect(screen.getByText('Compra Bono')).toBeInTheDocument();
+    expect(screen.getByText('GOV-BOND-2025')).toBeInTheDocument();
+    expect(screen.getByText('100')).toBeInTheDocument();
+    expect(screen.getByText('$995.00')).toBeInTheDocument();
+    expect(screen.getByText('Comisión: 2%')).toBeInTheDocument();
+    expect(screen.getByText('Fee: 0.05%')).toBeInTheDocument();
   });
 
   it('should render bond sell transaction correctly', () => {
@@ -109,7 +159,10 @@ describe('PortfolioTransactions', () => {
     expect(screen.getByText('Creación Plazo Fijo')).toBeInTheDocument();
     expect(screen.getByText('Banco Santander')).toBeInTheDocument();
     expect(screen.getByText('$10000.00')).toBeInTheDocument();
-    expect(screen.getByText('—')).toBeInTheDocument(); // Price column
+    
+    // Check that there are exactly 2 instances of '—' (price and commission columns)
+    const dashElements = screen.getAllByText('—');
+    expect(dashElements).toHaveLength(2);
   });
 
   it('should render deposit transaction correctly', () => {
@@ -127,9 +180,9 @@ describe('PortfolioTransactions', () => {
     expect(screen.getByText('Depósito')).toBeInTheDocument();
     expect(screen.getByText('$5000.00')).toBeInTheDocument();
     
-    // Check that there are exactly 2 instances of '—' (symbol and price columns)
+    // Check that there are exactly 3 instances of '—' (symbol, price, and commission columns)
     const dashElements = screen.getAllByText('—');
-    expect(dashElements).toHaveLength(2);
+    expect(dashElements).toHaveLength(3);
   });
 
   it('should sort transactions by date (newest first)', () => {
@@ -216,5 +269,23 @@ describe('PortfolioTransactions', () => {
     expect(screen.getByText('Banco Santander')).toBeInTheDocument();
     expect(screen.getByText('GOV-BOND-2025')).toBeInTheDocument();
     expect(screen.getByText('AAPL')).toBeInTheDocument();
+  });
+
+  it('should display commission column header', () => {
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '1',
+        date: '2024-01-01T00:00:00.000Z',
+        type: 'Buy',
+        assetType: 'Stock',
+        symbol: 'AAPL',
+        quantity: 10,
+        price: 150
+      }
+    ];
+
+    render(<PortfolioTransactions transactions={transactions} />);
+    
+    expect(screen.getByText('Comisiones')).toBeInTheDocument();
   });
 }); 

@@ -47,7 +47,7 @@ export default function BondsPage() {
     setIsModalOpen(true);
   };
 
-  const handleBuyBond: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier) => {
+  const handleBuyBond: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier, commissionPct, purchaseFeePct) => {
     if (!selectedBond) return;
     
     const session = localStorage.getItem('session');
@@ -60,6 +60,8 @@ export default function BondsPage() {
       ticker: identifier,
       quantity,
       price: selectedBond.price,
+      commissionPct,
+      purchaseFeePct,
     };
 
     try {

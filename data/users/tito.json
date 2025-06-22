@@ -12,7 +12,7 @@
     {
       "type": "Bond",
       "ticker": "GD30",
-      "quantity": 7,
+      "quantity": 8,
       "averagePrice": 55
     },
     {
@@ -20,6 +20,12 @@
       "ticker": "YMC2O",
       "quantity": 2,
       "averagePrice": 98
+    },
+    {
+      "type": "Stock",
+      "symbol": "TSLA",
+      "quantity": 1,
+      "averagePrice": 322.1600036621094
     }
   ],
   "transactions": [
@@ -92,6 +98,28 @@
       "symbol": "MSFT",
       "quantity": 1,
       "price": 477.3999938964844
+    },
+    {
+      "id": "1750622675749",
+      "date": "2025-06-22T20:04:35.749Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "TSLA",
+      "quantity": 1,
+      "price": 322.1600036621094,
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1750622982036",
+      "date": "2025-06-22T20:09:42.036Z",
+      "type": "Buy",
+      "assetType": "Bond",
+      "ticker": "GD30",
+      "quantity": 1,
+      "price": 55,
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
     }
   ],
   "goals": [
@@ -104,7 +132,7 @@
       "id": "1750597174218"
     }
   ],
-  "availableCash": 919.0800018310547,
+  "availableCash": 537.9598181304932,
   "profile": {
     "instrumentsUsed": [
       "Plazo Fijo",
@@ -122,8 +150,8 @@
     "investmentAmount": 2000
   },
   "investmentStrategy": {
-    "id": "strategy-60688144-69c0-4d51-be44-0c8344d02c9c",
-    "createdAt": "2025-06-22T19:46:53.196Z",
+    "id": "strategy-40d536de-8bd0-4031-a46d-7a0eac18c0a9",
+    "createdAt": "2025-06-22T20:03:40.823Z",
     "targetAllocation": {
       "stocks": 60,
       "bonds": 30,
@@ -132,7 +160,7 @@
     },
     "recommendations": [
       {
-        "id": "alloc-551667bf-adf1-407c-b80f-a03ba7b31fe3",
+        "id": "alloc-b5dff25b-74d3-40e8-a23b-416ed5e46193",
         "action": "increase",
         "assetClass": "stocks",
         "reason": "Tu portafolio tiene 25.0% en acciones, pero tu estrategia objetivo es 60%",
@@ -140,7 +168,7 @@
         "expectedImpact": "positive"
       },
       {
-        "id": "cash-b1c176df-aac9-4689-b12f-6198133648cc",
+        "id": "cash-8ee11804-510a-4bee-b471-25b425a0d484",
         "action": "decrease",
         "assetClass": "cash",
         "reason": "Tienes mucho efectivo disponible. Considera invertirlo según tu estrategia",

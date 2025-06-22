@@ -60,6 +60,8 @@ export interface StockTradeTransaction {
   symbol:string;
   quantity: number;
   price: number;
+  commissionPct?: number; // Commission percentage (optional)
+  purchaseFeePct?: number; // Purchase fee percentage (optional)
 }
 
 export interface BondTradeTransaction {
@@ -70,6 +72,8 @@ export interface BondTradeTransaction {
   ticker: string;
   quantity: number;
   price: number;
+  commissionPct?: number; // Commission percentage (optional)
+  purchaseFeePct?: number; // Purchase fee percentage (optional)
 }
 
 export interface DepositTransaction {

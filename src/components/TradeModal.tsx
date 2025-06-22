@@ -3,13 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { PortfolioPosition } from '@/types'; // Import main types
 import { usePortfolio } from '@/contexts/PortfolioContext';
+import { DEFAULT_COMMISSION_PCT, DEFAULT_PURCHASE_FEE_PCT } from '@/utils/constants';
 
 export type TradeType = 'Buy' | 'Sell' | 'Invest';
 
 export interface TradeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (value: number, assetType: PortfolioPosition['type'], identifier: string) => Promise<void>;
+  onSubmit: (value: number, assetType: PortfolioPosition['type'], identifier: string, commissionPct?: number, purchaseFeePct?: number) => Promise<void>;
   tradeType: TradeType;
   assetName: string;
   assetType: PortfolioPosition['type']; // 'Stock', 'Bond', 'FixedTermDeposit'
@@ -34,12 +35,18 @@ export default function TradeModal({
   isAmountBased = false,
 }: TradeModalProps) {
   const [value, setValue] = useState(1);
+  const [commissionPct, setCommissionPct] = useState(DEFAULT_COMMISSION_PCT);
+  const [purchaseFeePct, setPurchaseFeePct] = useState(DEFAULT_PURCHASE_FEE_PCT);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
   const { refreshPortfolio } = usePortfolio();
   
-  const totalCost = value * price;
+  // Calculate total cost including fees for buy transactions
+  const baseCost = value * price;
+  const totalCost = tradeType === 'Buy' && (assetType === 'Stock' || assetType === 'Bond')
+    ? baseCost * (1 + commissionPct / 100 + purchaseFeePct / 100)
+    : baseCost;
 
   const getTradeTypeText = () => {
     if (tradeType === 'Invest') return 'Invertir en';
@@ -50,6 +57,8 @@ export default function TradeModal({
   useEffect(() => {
     if (isOpen) {
       setValue(isAmountBased ? 50000 : 1); // Start with a default amount or quantity 1
+      setCommissionPct(DEFAULT_COMMISSION_PCT);
+      setPurchaseFeePct(DEFAULT_PURCHASE_FEE_PCT);
       setError('');
       setLoading(false);
     }
@@ -72,7 +81,9 @@ export default function TradeModal({
 
     setLoading(true);
     try {
-      await onSubmit(value, assetType, identifier);
+      const commission = tradeType === 'Buy' && (assetType === 'Stock' || assetType === 'Bond') ? commissionPct : undefined;
+      const purchaseFee = tradeType === 'Buy' && (assetType === 'Stock' || assetType === 'Bond') ? purchaseFeePct : undefined;
+      await onSubmit(value, assetType, identifier, commission, purchaseFee);
       await refreshPortfolio(); // Refresh portfolio data from server
       onClose();
     } catch (err: any) {
@@ -86,6 +97,7 @@ export default function TradeModal({
 
   const labelText = isAmountBased ? "Monto a Invertir" : "Cantidad";
   const inputType = isAmountBased ? "number" : "number";
+  const showFees = tradeType === 'Buy' && (assetType === 'Stock' || assetType === 'Bond');
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -110,9 +122,45 @@ export default function TradeModal({
             />
           </div>
 
+          {showFees && (
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label htmlFor="commission" className="block text-sm font-medium text-gray-700">Comisión (%)</label>
+                <input
+                  id="commission"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={commissionPct}
+                  onChange={(e) => setCommissionPct(Number(e.target.value))}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                />
+              </div>
+              <div>
+                <label htmlFor="purchaseFee" className="block text-sm font-medium text-gray-700">Fee de Compra (%)</label>
+                <input
+                  id="purchaseFee"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={purchaseFeePct}
+                  onChange={(e) => setPurchaseFeePct(Number(e.target.value))}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                />
+              </div>
+            </div>
+          )}
+
           <div className="text-sm text-gray-700 space-y-1 mb-4">
             {!isAmountBased && <p>Precio por unidad: <span className="font-semibold text-gray-900">${price.toFixed(2)}</span></p>}
-            <p>{tradeType === 'Buy' ? 'Costo Total' : 'Valor Total'}: <span className="font-semibold text-gray-900">${totalCost.toFixed(2)}</span></p>
+            <p>Costo Base: <span className="font-semibold text-gray-900">${baseCost.toFixed(2)}</span></p>
+            {showFees && (
+              <>
+                <p>Comisión: <span className="font-semibold text-gray-900">${(baseCost * commissionPct / 100).toFixed(2)}</span></p>
+                <p>Fee de Compra: <span className="font-semibold text-gray-900">${(baseCost * purchaseFeePct / 100).toFixed(2)}</span></p>
+              </>
+            )}
+            <p className="text-lg font-bold">{tradeType === 'Buy' ? 'Costo Total' : 'Valor Total'}: <span className="font-semibold text-gray-900">${totalCost.toFixed(2)}</span></p>
             {tradeType !== 'Sell' && <p>Efectivo Disponible: <span className="font-semibold text-gray-900">${availableCash.toFixed(2)}</span></p>}
           </div>
 
