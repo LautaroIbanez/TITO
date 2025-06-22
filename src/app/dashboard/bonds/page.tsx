@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { Bond } from '@/types/finance';
 import TradeModal, { TradeModalProps } from '@/components/TradeModal';
+import AvailableCapitalIndicator from '@/components/AvailableCapitalIndicator';
+import { usePortfolio } from '@/contexts/PortfolioContext';
 
 export default function BondsPage() {
   const [bonds, setBonds] = useState<Bond[]>([]);
@@ -9,7 +11,7 @@ export default function BondsPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedBond, setSelectedBond] = useState<Bond | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [availableCash, setAvailableCash] = useState(0);
+  const { portfolioData } = usePortfolio();
 
   async function fetchInitialData() {
     setLoading(true);
@@ -18,19 +20,12 @@ export default function BondsPage() {
       if (!session) throw new Error('User not logged in');
       const username = JSON.parse(session).username;
 
-      const [bondsRes, portfolioRes] = await Promise.all([
-        fetch('/api/bonds'),
-        fetch(`/api/portfolio/data?username=${username}`)
-      ]);
+      const bondsRes = await fetch('/api/bonds');
 
       if (!bondsRes.ok) throw new Error('Failed to fetch bonds data');
       const bondsData = await bondsRes.json();
       setBonds(bondsData);
 
-      if (portfolioRes.ok) {
-        const portfolioData = await portfolioRes.json();
-        setAvailableCash(portfolioData.availableCash ?? 0);
-      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -97,10 +92,14 @@ export default function BondsPage() {
           assetType="Bond"
           identifier={selectedBond.ticker}
           price={selectedBond.price}
-          availableCash={availableCash}
+          availableCash={portfolioData?.availableCash ?? 0}
         />
       )}
       <div className="space-y-6">
+        <div className="flex justify-end">
+          <AvailableCapitalIndicator assetClass="bonds" />
+        </div>
+        
         <h1 className="text-2xl font-bold text-gray-900">Mercado de Bonos</h1>
         <p className="text-gray-600">
           Explora bonos corporativos y gubernamentales para diversificar tu portafolio.
@@ -134,7 +133,7 @@ export default function BondsPage() {
                       <button 
                         onClick={() => handleOpenModal(bond)}
                         className="text-blue-600 hover:text-blue-800 disabled:text-gray-400"
-                        disabled={availableCash < bond.price}
+                        disabled={(portfolioData?.availableCash ?? 0) < bond.price}
                       >
                         Comprar
                       </button>

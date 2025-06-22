@@ -1,11 +1,13 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import PortfolioCard from '@/components/PortfolioCard';
 import ReturnComparison from '@/components/ReturnComparison';
 import { compareWithBenchmarks } from '@/utils/returnCalculator';
 import PortfolioTable from '@/components/PortfolioTable';
 import PortfolioPieChart from '@/components/PortfolioPieChart';
+import PortfolioHistoryChart from '@/components/PortfolioHistoryChart';
 import PortfolioTransactions from '@/components/PortfolioTransactions';
+import { calculatePortfolioValueHistory } from '@/utils/calculatePortfolioValue';
 import { StockPosition, PortfolioTransaction } from '@/types';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 
@@ -17,6 +19,18 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
   const [depositSuccess, setDepositSuccess] = useState('');
 
   const { portfolioData, loading, refreshPortfolio, triggerPortfolioUpdate } = usePortfolio();
+
+  // Calculate portfolio value history using memoization
+  const valueHistory = useMemo(() => {
+    if (portfolioData?.transactions && portfolioData?.historicalPrices) {
+      return calculatePortfolioValueHistory(
+        portfolioData.transactions,
+        portfolioData.historicalPrices,
+        { days: 90 } // Show last 90 days
+      );
+    }
+    return [];
+  }, [portfolioData?.transactions, portfolioData?.historicalPrices]);
 
   // Calculate portfolio return based on invested capital vs current value
   useEffect(() => {
@@ -142,8 +156,10 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
         {depositSuccess && <div className="text-green-600 text-sm mt-1">{depositSuccess}</div>}
       </div>
       
+      {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <PortfolioPieChart positions={portfolioData.positions} prices={portfolioData.historicalPrices} />
+        <PortfolioHistoryChart valueHistory={valueHistory} />
       </div>
 
       <PortfolioTransactions transactions={portfolioData.transactions} />

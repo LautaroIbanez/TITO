@@ -12,7 +12,7 @@
     {
       "type": "Bond",
       "ticker": "GD30",
-      "quantity": 8,
+      "quantity": 9,
       "averagePrice": 55
     },
     {
@@ -120,6 +120,29 @@
       "price": 55,
       "commissionPct": 1,
       "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1750628587125",
+      "date": "2025-06-22T21:43:07.125Z",
+      "type": "Buy",
+      "assetType": "Bond",
+      "ticker": "GD30",
+      "quantity": 1,
+      "price": 55,
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1750628676314",
+      "type": "Deposit",
+      "date": "2025-06-22T21:44:36.314Z",
+      "amount": 1000
+    },
+    {
+      "id": "1750628743233",
+      "type": "Deposit",
+      "date": "2025-06-22T21:45:43.233Z",
+      "amount": 500
     }
   ],
   "goals": [
@@ -132,7 +155,7 @@
       "id": "1750597174218"
     }
   ],
-  "availableCash": 537.9598181304932,
+  "availableCash": 1982.3823181304933,
   "profile": {
     "instrumentsUsed": [
       "Plazo Fijo",
@@ -150,8 +173,8 @@
     "investmentAmount": 2000
   },
   "investmentStrategy": {
-    "id": "strategy-40d536de-8bd0-4031-a46d-7a0eac18c0a9",
-    "createdAt": "2025-06-22T20:03:40.823Z",
+    "id": "strategy-ab3e66fe-c8cc-4666-88ad-1d3754ee92fd",
+    "createdAt": "2025-06-22T21:41:40.045Z",
     "targetAllocation": {
       "stocks": 60,
       "bonds": 30,
@@ -160,15 +183,15 @@
     },
     "recommendations": [
       {
-        "id": "alloc-b5dff25b-74d3-40e8-a23b-416ed5e46193",
+        "id": "alloc-b1a27562-fce1-4c82-badc-06012969c7a3",
         "action": "increase",
         "assetClass": "stocks",
-        "reason": "Tu portafolio tiene 25.0% en acciones, pero tu estrategia objetivo es 60%",
+        "reason": "Tu portafolio tiene 41.2% en acciones, pero tu estrategia objetivo es 60%",
         "priority": "high",
         "expectedImpact": "positive"
       },
       {
-        "id": "cash-8ee11804-510a-4bee-b471-25b425a0d484",
+        "id": "cash-49913c08-ae59-4b2e-9ef2-4eb57d6b4a92",
         "action": "decrease",
         "assetClass": "cash",
         "reason": "Tienes mucho efectivo disponible. Considera invertirlo según tu estrategia",

@@ -1,0 +1,100 @@
+import '@testing-library/jest-dom';
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import PortfolioHistoryChart from '../PortfolioHistoryChart';
+
+// Mock react-chartjs-2
+jest.mock('react-chartjs-2', () => ({
+  Line: ({ data, options }: any) => (
+    <div data-testid="line-chart">
+      <div data-testid="chart-data">{JSON.stringify(data)}</div>
+      <div data-testid="chart-options">{JSON.stringify(options)}</div>
+    </div>
+  ),
+}));
+
+describe('PortfolioHistoryChart', () => {
+  it('should render chart with value history data', () => {
+    const valueHistory = [
+      { date: '2024-01-01', value: 10000 },
+      { date: '2024-01-02', value: 10500 },
+      { date: '2024-01-03', value: 10200 },
+      { date: '2024-01-04', value: 10800 },
+    ];
+
+    render(<PortfolioHistoryChart valueHistory={valueHistory} />);
+    
+    expect(screen.getByText('Evolución del Valor del Portafolio')).toBeInTheDocument();
+    expect(screen.getByTestId('line-chart')).toBeInTheDocument();
+    
+    // Check that chart data is passed correctly
+    const chartData = screen.getByTestId('chart-data');
+    expect(chartData).toBeInTheDocument();
+    
+    // Verify the data structure
+    const data = JSON.parse(chartData.textContent || '{}');
+    expect(data.labels).toEqual(['2024-01-01', '2024-01-02', '2024-01-03', '2024-01-04']);
+    expect(data.datasets[0].data).toEqual([10000, 10500, 10200, 10800]);
+    expect(data.datasets[0].label).toBe('Valor del Portafolio');
+  });
+
+  it('should render empty state when no value history', () => {
+    render(<PortfolioHistoryChart valueHistory={[]} />);
+    
+    expect(screen.getByText('Evolución del Valor del Portafolio')).toBeInTheDocument();
+    expect(screen.getByText('No hay datos disponibles')).toBeInTheDocument();
+    expect(screen.queryByTestId('line-chart')).not.toBeInTheDocument();
+  });
+
+  it('should handle single data point', () => {
+    const valueHistory = [
+      { date: '2024-01-01', value: 10000 },
+    ];
+
+    render(<PortfolioHistoryChart valueHistory={valueHistory} />);
+    
+    expect(screen.getByText('Evolución del Valor del Portafolio')).toBeInTheDocument();
+    expect(screen.getByTestId('line-chart')).toBeInTheDocument();
+    
+    const chartData = screen.getByTestId('chart-data');
+    const data = JSON.parse(chartData.textContent || '{}');
+    expect(data.labels).toEqual(['2024-01-01']);
+    expect(data.datasets[0].data).toEqual([10000]);
+  });
+
+  it('should handle large numbers in value history', () => {
+    const valueHistory = [
+      { date: '2024-01-01', value: 1000000 },
+      { date: '2024-01-02', value: 1050000 },
+    ];
+
+    render(<PortfolioHistoryChart valueHistory={valueHistory} />);
+    
+    expect(screen.getByTestId('line-chart')).toBeInTheDocument();
+    
+    const chartData = screen.getByTestId('chart-data');
+    const data = JSON.parse(chartData.textContent || '{}');
+    expect(data.datasets[0].data).toEqual([1000000, 1050000]);
+  });
+
+  it('should have correct chart styling properties', () => {
+    const valueHistory = [
+      { date: '2024-01-01', value: 10000 },
+      { date: '2024-01-02', value: 10500 },
+    ];
+
+    render(<PortfolioHistoryChart valueHistory={valueHistory} />);
+    
+    const chartOptions = screen.getByTestId('chart-options');
+    const options = JSON.parse(chartOptions.textContent || '{}');
+    
+    // Check that chart options are set correctly
+    expect(options.responsive).toBe(true);
+    expect(options.plugins.legend.display).toBe(false);
+    expect(options.plugins.tooltip.enabled).toBe(true);
+    expect(options.scales.x.display).toBe(false);
+    expect(options.scales.y.display).toBe(true);
+    expect(options.elements.line.borderWidth).toBe(2);
+    expect(options.maintainAspectRatio).toBe(false);
+  });
+}); 

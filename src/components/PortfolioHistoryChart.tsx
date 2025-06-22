@@ -31,12 +31,12 @@ export default function PortfolioHistoryChart({ valueHistory }: Props) {
     maintainAspectRatio: false,
   };
   return (
-    <div className="bg-white rounded-lg shadow p-4 mb-8 max-w-2xl mx-auto">
+    <div className="bg-white rounded-lg shadow p-4">
       <h3 className="text-sm font-bold text-gray-900 mb-2">Evolución del Valor del Portafolio</h3>
       {valueHistory.length > 0 ? (
-        <div className="h-48"><Line data={chartData} options={chartOptions} height={180} /></div>
+        <div className="h-64"><Line data={chartData} options={chartOptions} /></div>
       ) : (
-        <div className="text-gray-700 text-center py-8">No hay datos disponibles</div>
+        <div className="h-64 flex items-center justify-center text-gray-700 text-center py-8">No hay datos disponibles</div>
       )}
     </div>
   );

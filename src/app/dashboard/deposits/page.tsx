@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { FixedTermDeposit } from '@/types/finance';
 import TradeModal, { TradeModalProps } from '@/components/TradeModal';
+import AvailableCapitalIndicator from '@/components/AvailableCapitalIndicator';
+import { usePortfolio } from '@/contexts/PortfolioContext';
 
 export default function DepositsPage() {
   const [deposits, setDeposits] = useState<FixedTermDeposit[]>([]);
@@ -9,7 +11,7 @@ export default function DepositsPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedDeposit, setSelectedDeposit] = useState<FixedTermDeposit | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [availableCash, setAvailableCash] = useState(0);
+  const { portfolioData } = usePortfolio();
 
   async function fetchInitialData() {
     setLoading(true);
@@ -18,19 +20,12 @@ export default function DepositsPage() {
       if (!session) throw new Error('User not logged in');
       const username = JSON.parse(session).username;
 
-      const [depositsRes, portfolioRes] = await Promise.all([
-        fetch('/api/deposits'),
-        fetch(`/api/portfolio/data?username=${username}`)
-      ]);
+      const depositsRes = await fetch('/api/deposits');
 
       if (!depositsRes.ok) throw new Error('Failed to fetch deposits data');
       const depositsData = await depositsRes.json();
       setDeposits(depositsData);
 
-      if (portfolioRes.ok) {
-        const portfolioData = await portfolioRes.json();
-        setAvailableCash(portfolioData.availableCash ?? 0);
-      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -94,11 +89,15 @@ export default function DepositsPage() {
           assetName={`${selectedDeposit.provider} ${selectedDeposit.termDays} días`}
           assetType="FixedTermDeposit"
           identifier={selectedDeposit.id}
-          availableCash={availableCash}
+          availableCash={portfolioData?.availableCash ?? 0}
           isAmountBased={true}
         />
       )}
       <div className="space-y-6">
+        <div className="flex justify-end">
+          <AvailableCapitalIndicator assetClass="deposits" />
+        </div>
+        
         <h1 className="text-2xl font-bold text-gray-900">Plazos Fijos Disponibles</h1>
         <p className="text-gray-600">
           Invierte en depósitos a plazo fijo para obtener un rendimiento predecible y de bajo riesgo.
@@ -122,7 +121,7 @@ export default function DepositsPage() {
                 <button 
                   onClick={() => handleOpenModal(deposit)}
                   className="w-full mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:text-gray-400"
-                  disabled={availableCash <= 0}
+                  disabled={(portfolioData?.availableCash ?? 0) <= 0}
                 >
                   Invertir
                 </button>

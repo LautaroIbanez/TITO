@@ -1,10 +1,12 @@
 'use client';
 import { useEffect, useState } from 'react';
 import ScoopCard from '@/components/ScoopCard';
+import AvailableCapitalIndicator from '@/components/AvailableCapitalIndicator';
 import { InvestorProfile, InvestmentGoal } from '@/types';
 import { calculateRequiredReturn } from '@/utils/goalCalculator';
 import dayjs from 'dayjs';
 import { useScoop } from '@/contexts/ScoopContext';
+import { usePortfolio } from '@/contexts/PortfolioContext';
 
 const FIXED_LIST = ["AAPL", "MSFT", "TSLA", "AMZN", "NVDA", "BABA", "GOOGL", "JPM", "KO", "PFE"];
 
@@ -57,8 +59,8 @@ export default function ScoopPage() {
   const [portfolioSymbols, setPortfolioSymbols] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [requiredReturn, setRequiredReturn] = useState(0);
-  const [availableCash, setAvailableCash] = useState(0);
   const { filterMode } = useScoop();
+  const { portfolioData } = usePortfolio();
 
   // Load portfolio symbols and scoop data
   const loadData = async () => {
@@ -77,7 +79,6 @@ export default function ScoopPage() {
       userPositions = (data.positions || []).map((p: any) => p.symbol);
       setPortfolioSymbols(userPositions);
       setProfile(userProfile);
-      setAvailableCash(data.availableCash ?? 0);
 
       const goalsRes = await fetch(`/api/goals?username=${username}`);
       if(goalsRes.ok) {
@@ -142,6 +143,10 @@ export default function ScoopPage() {
 
   return (
     <div className="space-y-8">
+      <div className="flex justify-end">
+        <AvailableCapitalIndicator assetClass="stocks" />
+      </div>
+      
       {requiredReturn > 0 && (
         <div className="mb-4 p-3 bg-blue-100 border border-blue-200 rounded-lg text-sm text-blue-800">
           Para alcanzar tus metas, necesitas un retorno anual estimado de <strong>{(requiredReturn * 100).toFixed(2)}%</strong>.
@@ -167,7 +172,7 @@ export default function ScoopPage() {
                     isTrending={stock.isTrending}
                     inPortfolio={portfolioSymbols.includes(stock.symbol)}
                     onTrade={loadData}
-                    availableCash={availableCash}
+                    availableCash={portfolioData?.availableCash ?? 0}
                   />
                 ))}
               </div>
@@ -188,7 +193,7 @@ export default function ScoopPage() {
                     isTrending={stock.isTrending}
                     inPortfolio={portfolioSymbols.includes(stock.symbol)}
                     onTrade={loadData}
-                    availableCash={availableCash}
+                    availableCash={portfolioData?.availableCash ?? 0}
                   />
                 ))}
               </div>
@@ -209,7 +214,7 @@ export default function ScoopPage() {
                     isTrending={stock.isTrending}
                     inPortfolio={portfolioSymbols.includes(stock.symbol)}
                     onTrade={loadData}
-                    availableCash={availableCash}
+                    availableCash={portfolioData?.availableCash ?? 0}
                   />
                 ))}
               </div>

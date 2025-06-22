@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
     user.availableCash += amount;
     
     const newTransaction: DepositTransaction = {
+        id: Date.now().toString(),
         type: 'Deposit',
         date: new Date().toISOString(),
         amount,
