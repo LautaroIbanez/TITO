@@ -112,3 +112,33 @@ If you request `/api/stocks/AAPL`, the server will:
 ## Descargo de Responsabilidad
 
 TITO es un proyecto con fines exclusivamente educativos y de demostración. La información y las recomendaciones proporcionadas por esta aplicación no deben considerarse como asesoramiento financiero profesional. Realiza tu propia investigación y/o consulta a un asesor financiero calificado antes de tomar cualquier decisión de inversión.
+
+## Endpoints de la API
+
+A continuación se describen los principales endpoints de la API REST del proyecto.
+
+### Autenticación y Perfil
+*   `POST /api/login`: Autentica a un usuario.
+*   `GET /api/profile?username={username}`: Obtiene el perfil de un usuario.
+
+### Portafolio
+*   `GET /api/portfolio/data?username={username}`: Obtiene todos los datos del portafolio del usuario, incluyendo posiciones, historial de transacciones, valores calculados y precios históricos de las acciones.
+*   `POST /api/portfolio/buy`: Compra un activo (acción, bono, etc.).
+*   `POST /api/portfolio/sell`: Vende un activo.
+*   `POST /api/portfolio/remove`: Elimina un activo del portafolio.
+*   `POST /api/portfolio/deposit`: Realiza un depósito de efectivo en la cuenta.
+
+### Datos de Mercado
+*   `GET /api/stocks/list`: Obtiene la lista completa de símbolos de acciones disponibles.
+*   `GET /api/stocks/{symbol}`: Obtiene un resumen completo de la cotización de una acción.
+    *   `GET /api/stocks/{symbol}?type=fundamentals`: Obtiene solo los datos fundamentales.
+    -   `GET /api/stocks/{symbol}?type=technicals`: Obtiene solo los indicadores técnicos.
+    -   `GET /api/stocks/{symbol}?type=prices`: Obtiene el historial de precios de los últimos 90 días.
+*   `GET /api/scoop`: Obtiene la lista de acciones que son tendencia en el mercado (EEUU).
+*   `GET /api/bonds`: Obtiene la lista de bonos disponibles.
+*   `GET /api/deposits`: Obtiene la lista de depósitos a plazo fijo disponibles.
+
+### Metas Financieras
+*   `GET /api/goals?username={username}`: Obtiene las metas financieras de un usuario.
+*   `POST /api/goals`: Crea o actualiza una meta financiera.
+*   `DELETE /api/goals`: Elimina una meta financiera.

@@ -1,74 +1,42 @@
 {
   "username": "tito",
-  "createdAt": "2025-06-21T13:04:47.449Z",
+  "createdAt": "2025-06-22T00:53:48.569Z",
   "profileCompleted": true,
   "positions": [
     {
+      "type": "Stock",
       "symbol": "MSFT",
-      "quantity": 2,
-      "averagePrice": 477.3999938964844
-    },
-    {
-      "symbol": "AMZN",
       "quantity": 1,
-      "averagePrice": 209.69000244140625
+      "averagePrice": 477.3999938964844
     }
   ],
   "transactions": [
     {
-      "date": "2025-06-21T13:06:56.049Z",
+      "id": "1750553745801",
+      "date": "2025-06-22T00:55:45.801Z",
       "type": "Buy",
-      "symbol": "AAPL",
-      "quantity": 1,
-      "price": 201
-    },
-    {
-      "date": "2025-06-21T15:02:00.731Z",
-      "type": "Buy",
+      "assetType": "Stock",
       "symbol": "MSFT",
-      "quantity": 2,
+      "quantity": 1,
       "price": 477.3999938964844
-    },
-    {
-      "date": "2025-06-21T15:03:50.284Z",
-      "type": "Sell",
-      "symbol": "AAPL",
-      "quantity": 1,
-      "price": 201
-    },
-    {
-      "date": "2025-06-21T18:46:17.583Z",
-      "type": "Buy",
-      "symbol": "AMZN",
-      "quantity": 1,
-      "price": 209.69000244140625
     }
   ],
-  "goals": [
-    {
-      "name": "Departamento ",
-      "targetAmount": 10000,
-      "targetDate": "2025-08-21",
-      "initialDeposit": 1000,
-      "monthlyContribution": 0,
-      "id": "1750512657191"
-    }
-  ],
-  "availableCash": 835.510009765625,
+  "goals": [],
+  "availableCash": 1522.6000061035156,
   "profile": {
     "instrumentsUsed": [
       "Plazo Fijo",
       "Acciones",
-      "Futuros"
+      "Fondos Comunes de Inversión"
     ],
     "knowledgeLevels": {
-      "Plazo Fijo": "Medio",
-      "Acciones": "Medio",
-      "Futuros": "Bajo"
+      "Plazo Fijo": "Bajo",
+      "Acciones": "Bajo",
+      "Fondos Comunes de Inversión": "Bajo"
     },
     "holdingPeriod": "1 a 5 años",
     "ageGroup": "30 a 40",
-    "riskAppetite": "Agresivo",
-    "investmentAmount": 1000
+    "riskAppetite": "Balanceado",
+    "investmentAmount": 2000
   }
 }

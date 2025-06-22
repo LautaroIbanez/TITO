@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPortfolioData } from '@/utils/portfolioData';
-import yahooFinance from 'yahoo-finance2';
-import NodeCache from 'node-cache';
-import { promises as fs } from 'fs';
-import path from 'path';
-
-const cache = new NodeCache({ stdTTL: 600 }); // 10 minutos
+import { getFundamentals, getHistoricalPrices, getTechnicals } from '@/utils/financeData';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -15,47 +10,37 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Primero obtenemos los datos base del usuario (posiciones, transacciones, etc)
     const data = await getPortfolioData(username);
-    // Para cada acción, intentamos obtener el precio en vivo y cachearlo
-    const stockSymbols = data.positions.filter((pos: any) => pos.type === 'Stock').map((pos: any) => pos.symbol);
-    const historicalPrices: Record<string, any[]> = {};
-    for (const symbol of stockSymbols) {
-      const cacheKey = `stock-${symbol}`;
-      let prices: any[] = [];
-      const cachedPrices = cache.get(cacheKey);
+    const stockSymbols = data.positions
+      .filter((pos: any) => pos.type === 'Stock')
+      .map((pos: any) => pos.symbol);
 
-      if (Array.isArray(cachedPrices)) {
-        prices = cachedPrices;
-      } else {
-        try {
-          // Yahoo Finance historical prices (últimos 90 días)
-          const livePrices = await yahooFinance.historical(symbol, { period1: '90d' });
-          prices = livePrices;
-          cache.set(cacheKey, prices);
-        } catch {
-          // Fallback: leer archivo local
-          try {
-            const filePath = path.join(process.cwd(), 'data', 'stocks', `${symbol}.json`);
-            const file = await fs.readFile(filePath, 'utf-8');
-            prices = JSON.parse(file);
-          } catch {
-            prices = [];
-          }
-        }
-      }
+    const historicalPrices: Record<string, any[]> = {};
+    const fundamentals: Record<string, any> = {};
+    const technicals: Record<string, any> = {};
+
+    await Promise.all(stockSymbols.map(async (symbol: string) => {
+      const [prices, fund, tech] = await Promise.all([
+        getHistoricalPrices(symbol),
+        getFundamentals(symbol),
+        getTechnicals(symbol)
+      ]);
       historicalPrices[symbol] = prices;
-    }
-    // Devuelve el resto de los datos como antes, pero con precios actualizados
+      fundamentals[symbol] = fund;
+      technicals[symbol] = tech;
+    }));
+
     return NextResponse.json({
       ...data,
       historicalPrices,
+      fundamentals,
+      technicals,
     });
   } catch (error) {
     if (error instanceof Error && error.message === 'User not found') {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
-    // Generic server error for other cases
+    console.error('Error in /api/portfolio/data:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 } 

@@ -1,11 +1,42 @@
 {
   "username": "warren",
-  "createdAt": "2025-06-21T23:55:22.003Z",
+  "createdAt": "2025-06-22T02:05:00.893Z",
   "profileCompleted": true,
-  "positions": [],
-  "transactions": [],
-  "goals": [],
-  "availableCash": 3000,
+  "positions": [
+    {
+      "type": "FixedTermDeposit",
+      "id": "ftd-1750558296711",
+      "provider": "Banco Galicia",
+      "amount": 3000,
+      "annualRate": 75,
+      "startDate": "2025-06-22T02:11:36.711Z",
+      "maturityDate": "2025-07-22T02:11:36.711Z"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "1750558296711",
+      "date": "2025-06-22T02:11:36.711Z",
+      "type": "Create",
+      "assetType": "FixedTermDeposit",
+      "provider": "Banco Galicia",
+      "amount": 3000,
+      "annualRate": 75,
+      "termDays": 30,
+      "maturityDate": "2025-07-22T02:11:36.711Z"
+    }
+  ],
+  "goals": [
+    {
+      "name": "Dentadura",
+      "targetAmount": 6000,
+      "targetDate": "2030-07-22",
+      "initialDeposit": 0,
+      "monthlyContribution": 80,
+      "id": "1750557963275"
+    }
+  ],
+  "availableCash": 0,
   "profile": {
     "instrumentsUsed": [
       "Plazo Fijo",
@@ -13,8 +44,8 @@
       "Fondos Comunes de Inversión"
     ],
     "knowledgeLevels": {
-      "Plazo Fijo": "Medio",
-      "Acciones": "Medio",
+      "Plazo Fijo": "Bajo",
+      "Acciones": "Bajo",
       "Fondos Comunes de Inversión": "Bajo"
     },
     "holdingPeriod": "1 a 5 años",
