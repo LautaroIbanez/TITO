@@ -122,8 +122,8 @@
     "investmentAmount": 2000
   },
   "investmentStrategy": {
-    "id": "strategy-c3394dfe-dd9b-4d5c-b5d4-4f024950de95",
-    "createdAt": "2025-06-22T19:32:16.832Z",
+    "id": "strategy-60688144-69c0-4d51-be44-0c8344d02c9c",
+    "createdAt": "2025-06-22T19:46:53.196Z",
     "targetAllocation": {
       "stocks": 60,
       "bonds": 30,
@@ -132,7 +132,7 @@
     },
     "recommendations": [
       {
-        "id": "alloc-9c7fdb98-c059-4f03-a789-1e0113d26baa",
+        "id": "alloc-551667bf-adf1-407c-b80f-a03ba7b31fe3",
         "action": "increase",
         "assetClass": "stocks",
         "reason": "Tu portafolio tiene 25.0% en acciones, pero tu estrategia objetivo es 60%",
@@ -140,7 +140,7 @@
         "expectedImpact": "positive"
       },
       {
-        "id": "cash-9fa5a10c-bc26-4b3a-be25-b006e3ac593f",
+        "id": "cash-b1c176df-aac9-4689-b12f-6198133648cc",
         "action": "decrease",
         "assetClass": "cash",
         "reason": "Tienes mucho efectivo disponible. Considera invertirlo según tu estrategia",

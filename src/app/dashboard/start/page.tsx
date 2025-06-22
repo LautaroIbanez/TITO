@@ -1,7 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { Allocation } from '@/utils/portfolioAdvisor';
-import { InvestorProfile } from '@/types';
+import { usePortfolio } from '@/contexts/PortfolioContext';
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -28,68 +26,38 @@ const AllocationDescription: Record<string, { title: string, description: string
   deposits: {
     title: 'Depósitos a Plazo / Liquidez',
     description: 'Mantiene una porción de tu cartera en activos de bajo riesgo y alta liquidez, como depósitos a plazo o fondos del mercado monetario, para preservar el capital y tener fondos disponibles.'
+  },
+  cash: {
+    title: 'Efectivo',
+    description: 'Mantiene una pequeña porción en efectivo para oportunidades de inversión emergentes, emergencias o para aprovechar caídas del mercado.'
   }
 };
 
 export default function StartPage() {
-  const [allocation, setAllocation] = useState<Allocation | null>(null);
-  const [profile, setProfile] = useState<InvestorProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchData() {
-      const session = localStorage.getItem('session');
-      if (!session) {
-        setError("No has iniciado sesión.");
-        setLoading(false);
-        return;
-      }
-      const username = JSON.parse(session).username;
-
-      // First, get the full user profile
-      try {
-        const profileRes = await fetch(`/api/profile?username=${username}`);
-        if (!profileRes.ok) throw new Error('Failed to fetch profile');
-        const userProfile: InvestorProfile = await profileRes.json();
-        setProfile(userProfile);
-
-        // Then, get the recommendation based on that profile
-        const recoRes = await fetch('/api/portfolio/recommendation', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(userProfile),
-        });
-        if (!recoRes.ok) throw new Error('Failed to fetch recommendation');
-        const data: Allocation = await recoRes.json();
-        setAllocation(data);
-
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Ocurrió un error desconocido");
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, []);
+  const { strategy, strategyLoading, strategyError } = usePortfolio();
 
   const chartData = {
     labels: ['Asignación Recomendada'],
     datasets: [
       {
         label: 'Acciones',
-        data: [allocation?.stocks || 0],
+        data: [strategy?.targetAllocation.stocks || 0],
         backgroundColor: 'rgba(37, 99, 235, 0.8)',
       },
       {
         label: 'Bonos',
-        data: [allocation?.bonds || 0],
+        data: [strategy?.targetAllocation.bonds || 0],
         backgroundColor: 'rgba(79, 70, 229, 0.8)',
       },
       {
         label: 'Depósitos',
-        data: [allocation?.deposits || 0],
+        data: [strategy?.targetAllocation.deposits || 0],
         backgroundColor: 'rgba(124, 58, 237, 0.8)',
+      },
+      {
+        label: 'Efectivo',
+        data: [strategy?.targetAllocation.cash || 0],
+        backgroundColor: 'rgba(34, 197, 94, 0.8)',
       },
     ],
   };
@@ -112,9 +80,9 @@ export default function StartPage() {
     },
   };
 
-  if (loading) return <div className="text-center text-gray-700 py-10">Generando recomendación...</div>;
-  if (error) return <div className="text-center text-red-500 py-10">Error: {error}</div>;
-  if (!allocation) return <div className="text-center text-gray-700 py-10">No se pudo generar una recomendación.</div>;
+  if (strategyLoading) return <div className="text-center text-gray-700 py-10">Generando estrategia...</div>;
+  if (strategyError) return <div className="text-center text-red-500 py-10">Error: {strategyError}</div>;
+  if (!strategy) return <div className="text-center text-gray-700 py-10">No se pudo generar una estrategia.</div>;
 
   return (
     <div className="space-y-8">
@@ -127,8 +95,8 @@ export default function StartPage() {
         <Bar data={chartData} options={chartOptions} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {Object.entries(allocation).map(([key, value]) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {Object.entries(strategy.targetAllocation).map(([key, value]) => (
           <div key={key} className="bg-white rounded-xl shadow-lg p-6">
             <h3 className="text-xl font-bold text-gray-900">{AllocationDescription[key].title}</h3>
             <p className="text-3xl font-bold text-blue-600 my-2">{value}%</p>
@@ -136,6 +104,36 @@ export default function StartPage() {
           </div>
         ))}
       </div>
+
+      {strategy.recommendations && strategy.recommendations.length > 0 && (
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Recomendaciones de Estrategia</h2>
+          <div className="space-y-3">
+            {strategy.recommendations.slice(0, 3).map((rec) => (
+              <div key={rec.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                <div className={`w-2 h-2 rounded-full mt-2 ${
+                  rec.priority === 'high' ? 'bg-red-500' : 
+                  rec.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                }`} />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">
+                    {rec.action === 'increase' && 'Aumentar'}
+                    {rec.action === 'decrease' && 'Reducir'}
+                    {rec.action === 'rotate' && 'Rotar'}
+                    {' '}
+                    {rec.assetClass === 'stocks' && 'exposición a acciones'}
+                    {rec.assetClass === 'bonds' && 'exposición a bonos'}
+                    {rec.assetClass === 'cash' && 'efectivo disponible'}
+                    {rec.symbol && ` de ${rec.symbol}`}
+                    {rec.targetSymbol && ` a ${rec.targetSymbol}`}
+                  </p>
+                  <p className="text-xs text-gray-600 mt-1">{rec.reason}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       
       <div className="text-center mt-8">
         <Link href="/dashboard/scoop" className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors">
