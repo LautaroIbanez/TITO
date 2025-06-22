@@ -93,6 +93,35 @@ export interface FixedTermDepositCreationTransaction {
 
 export type PortfolioTransaction = StockTradeTransaction | BondTradeTransaction | DepositTransaction | FixedTermDepositCreationTransaction;
 
+// -- Investment Strategy --
+export type StrategyAction = 'buy' | 'sell' | 'hold' | 'rotate' | 'increase' | 'decrease';
+export type AssetClass = 'stocks' | 'bonds' | 'deposits' | 'cash';
+
+export interface StrategyRecommendation {
+  id: string;
+  action: StrategyAction;
+  assetClass?: AssetClass;
+  symbol?: string;
+  targetSymbol?: string; // For rotation actions
+  reason: string;
+  priority: 'high' | 'medium' | 'low';
+  expectedImpact: 'positive' | 'neutral' | 'negative';
+}
+
+export interface InvestmentStrategy {
+  id: string;
+  createdAt: string;
+  targetAllocation: {
+    stocks: number; // Percentage
+    bonds: number; // Percentage
+    deposits: number; // Percentage
+    cash: number; // Percentage
+  };
+  recommendations: StrategyRecommendation[];
+  riskLevel: RiskAppetite;
+  timeHorizon: string;
+  notes?: string;
+}
 
 export interface UserData {
   username: string;
@@ -103,4 +132,5 @@ export interface UserData {
   transactions: PortfolioTransaction[];
   goals: InvestmentGoal[];
   availableCash: number;
+  investmentStrategy?: InvestmentStrategy;
 } 

@@ -1,6 +1,6 @@
 'use client';
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
-import { UserData } from '@/types';
+import { UserData, InvestmentStrategy } from '@/types';
 
 // Extended type to match what the API actually returns
 interface PortfolioData extends UserData {
@@ -11,10 +11,12 @@ interface PortfolioData extends UserData {
 
 interface PortfolioContextType {
   portfolioData: PortfolioData | null;
+  strategy: InvestmentStrategy | null;
   loading: boolean;
   error: string | null;
   portfolioVersion: number;
   refreshPortfolio: () => Promise<void>;
+  refreshStrategy: () => Promise<void>;
   triggerPortfolioUpdate: () => void;
 }
 
@@ -22,6 +24,7 @@ const PortfolioContext = createContext<PortfolioContextType | undefined>(undefin
 
 export function PortfolioProvider({ children }: { children: ReactNode }) {
   const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null);
+  const [strategy, setStrategy] = useState<InvestmentStrategy | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [portfolioVersion, setPortfolioVersion] = useState(0);
@@ -55,10 +58,33 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const fetchStrategy = useCallback(async () => {
+    try {
+      const session = localStorage.getItem('session');
+      if (!session) return;
+      
+      const sessionData = JSON.parse(session);
+      const username = sessionData.username;
+      
+      const response = await fetch(`/api/strategy?username=${username}`);
+      
+      if (response.ok) {
+        const strategyData = await response.json();
+        setStrategy(strategyData);
+      }
+    } catch (err) {
+      console.error('Error fetching strategy:', err);
+    }
+  }, []);
+
   const refreshPortfolio = useCallback(async () => {
     await fetchPortfolioData();
     setPortfolioVersion(prev => prev + 1);
   }, [fetchPortfolioData]);
+
+  const refreshStrategy = useCallback(async () => {
+    await fetchStrategy();
+  }, [fetchStrategy]);
 
   const triggerPortfolioUpdate = useCallback(() => {
     setPortfolioVersion(prev => prev + 1);
@@ -67,15 +93,18 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   // Initial fetch on mount
   useEffect(() => {
     fetchPortfolioData();
-  }, [fetchPortfolioData]);
+    fetchStrategy();
+  }, [fetchPortfolioData, fetchStrategy]);
 
   return (
     <PortfolioContext.Provider value={{ 
       portfolioData, 
+      strategy,
       loading, 
       error, 
       portfolioVersion, 
       refreshPortfolio, 
+      refreshStrategy,
       triggerPortfolioUpdate 
     }}>
       {children}

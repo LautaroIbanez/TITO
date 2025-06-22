@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { UserData, PortfolioTransaction } from '@/types';
+import { UserData, StockTradeTransaction, StockPosition } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,19 +29,27 @@ export async function POST(request: NextRequest) {
     if (!Array.isArray(user.positions)) user.positions = [];
     if (!Array.isArray(user.transactions)) user.transactions = [];
     
-    let pos = user.positions.find((p) => p.symbol === symbol);
+    const pos = user.positions.find((p): p is StockPosition => 
+      p.type === 'Stock' && p.symbol === symbol
+    );
+    
     if (!pos || pos.quantity < quantity) {
       return NextResponse.json({ error: 'Not enough shares' }, { status: 400 });
     }
     
     pos.quantity -= quantity;
     if (pos.quantity === 0) {
-      user.positions = user.positions.filter((p) => p.symbol !== symbol);
+      user.positions = user.positions.filter(p => {
+        if (p.type === 'Stock') return p.symbol !== symbol;
+        return true;
+      });
     }
     
-    const tx: PortfolioTransaction = {
+    const tx: StockTradeTransaction = {
+      id: `txn_${Date.now()}`,
       date: new Date().toISOString(),
       type: 'Sell',
+      assetType: 'Stock',
       symbol,
       quantity,
       price,

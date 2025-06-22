@@ -1,0 +1,88 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { promises as fs } from 'fs';
+import path from 'path';
+import { UserData } from '@/types';
+import { generateInvestmentStrategy } from '@/utils/strategyAdvisor';
+
+async function getUserData(username: string): Promise<UserData | null> {
+  const userFile = path.join(process.cwd(), 'data', 'users', `${username}.json`);
+  try {
+    const data = await fs.readFile(userFile, 'utf-8');
+    return JSON.parse(data);
+  } catch {
+    return null;
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const username = searchParams.get('username');
+
+    if (!username) {
+      return NextResponse.json({ error: 'Username is required' }, { status: 400 });
+    }
+
+    const user = await getUserData(username);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    if (!user.profile) {
+      return NextResponse.json({ error: 'User profile not completed' }, { status: 400 });
+    }
+
+    // Generate strategy
+    const strategy = generateInvestmentStrategy({
+      profile: user.profile,
+      goals: user.goals || [],
+      positions: user.positions || [],
+      availableCash: user.availableCash || 0
+    });
+
+    // Save strategy to user data
+    user.investmentStrategy = strategy;
+    await fs.writeFile(path.join(process.cwd(), 'data', 'users', `${username}.json`), JSON.stringify(user, null, 2));
+
+    return NextResponse.json(strategy);
+  } catch (error) {
+    console.error('Strategy generation error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const { username } = await request.json();
+
+    if (!username) {
+      return NextResponse.json({ error: 'Username is required' }, { status: 400 });
+    }
+
+    const user = await getUserData(username);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    if (!user.profile) {
+      return NextResponse.json({ error: 'User profile not completed' }, { status: 400 });
+    }
+
+    // Generate strategy
+    const strategy = generateInvestmentStrategy({
+      profile: user.profile,
+      goals: user.goals || [],
+      positions: user.positions || [],
+      availableCash: user.availableCash || 0
+    });
+
+    // Save strategy to user data
+    user.investmentStrategy = strategy;
+    await fs.writeFile(path.join(process.cwd(), 'data', 'users', `${username}.json`), JSON.stringify(user, null, 2));
+
+    return NextResponse.json(strategy);
+  } catch (error) {
+    console.error('Strategy generation error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+} 

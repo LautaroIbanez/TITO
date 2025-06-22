@@ -8,6 +8,24 @@
       "symbol": "MSFT",
       "quantity": 1,
       "averagePrice": 477.3999938964844
+    },
+    {
+      "type": "Stock",
+      "symbol": "GOOGL",
+      "quantity": 3,
+      "averagePrice": 166.63999938964844
+    },
+    {
+      "type": "Bond",
+      "ticker": "GD30",
+      "quantity": 7,
+      "averagePrice": 55
+    },
+    {
+      "type": "Bond",
+      "ticker": "YMC2O",
+      "quantity": 2,
+      "averagePrice": 98
     }
   ],
   "transactions": [
@@ -19,6 +37,58 @@
       "symbol": "MSFT",
       "quantity": 1,
       "price": 477.3999938964844
+    },
+    {
+      "id": "1750617417830",
+      "date": "2025-06-22T18:36:57.830Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "GOOGL",
+      "quantity": 5,
+      "price": 166.63999938964844
+    },
+    {
+      "id": "1750617456627",
+      "date": "2025-06-22T18:37:36.627Z",
+      "type": "Buy",
+      "assetType": "Bond",
+      "ticker": "GD30",
+      "quantity": 5,
+      "price": 55
+    },
+    {
+      "date": "2025-06-22T18:38:28.394Z",
+      "type": "Sell",
+      "symbol": "GOOGL",
+      "quantity": 1,
+      "price": 166.63999938964844
+    },
+    {
+      "id": "1750617571241",
+      "date": "2025-06-22T18:39:31.241Z",
+      "type": "Buy",
+      "assetType": "Bond",
+      "ticker": "YMC2O",
+      "quantity": 2,
+      "price": 98
+    },
+    {
+      "id": "1750617598557",
+      "date": "2025-06-22T18:39:58.557Z",
+      "type": "Buy",
+      "assetType": "Bond",
+      "ticker": "GD30",
+      "quantity": 2,
+      "price": 55
+    },
+    {
+      "id": "txn_1750617767526",
+      "date": "2025-06-22T18:42:47.526Z",
+      "type": "Sell",
+      "assetType": "Stock",
+      "symbol": "GOOGL",
+      "quantity": 1,
+      "price": 166.63999938964844
     }
   ],
   "goals": [
@@ -31,7 +101,7 @@
       "id": "1750597174218"
     }
   ],
-  "availableCash": 1522.6000061035156,
+  "availableCash": 441.6800079345703,
   "profile": {
     "instrumentsUsed": [
       "Plazo Fijo",
@@ -47,5 +117,36 @@
     "ageGroup": "30 a 40",
     "riskAppetite": "Balanceado",
     "investmentAmount": 2000
+  },
+  "investmentStrategy": {
+    "id": "strategy-1750617786329",
+    "createdAt": "2025-06-22T18:43:06.329Z",
+    "targetAllocation": {
+      "stocks": 60,
+      "bonds": 30,
+      "deposits": 5,
+      "cash": 5
+    },
+    "recommendations": [
+      {
+        "id": "alloc-1750617786328-1",
+        "action": "increase",
+        "assetClass": "stocks",
+        "reason": "Tu portafolio tiene 48.9% en acciones, pero tu estrategia objetivo es 60%",
+        "priority": "high",
+        "expectedImpact": "positive"
+      },
+      {
+        "id": "cash-1750617786328-1",
+        "action": "decrease",
+        "assetClass": "cash",
+        "reason": "Tienes mucho efectivo disponible. Considera invertirlo según tu estrategia",
+        "priority": "medium",
+        "expectedImpact": "positive"
+      }
+    ],
+    "riskLevel": "Balanceado",
+    "timeHorizon": "Mediano plazo (3-7 años)",
+    "notes": "Estrategia alineada con 1 meta(s) de inversión"
   }
 }

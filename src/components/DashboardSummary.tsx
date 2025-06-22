@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { InvestmentGoal, DepositTransaction } from '@/types';
+import { InvestmentGoal, DepositTransaction, StrategyRecommendation } from '@/types';
 import { calculatePortfolioValueHistory } from '@/utils/calculatePortfolioValue';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import GoalProgress from './GoalProgress';
@@ -12,7 +12,7 @@ export default function DashboardSummary() {
   const [firstGoal, setFirstGoal] = useState<InvestmentGoal | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   
-  const { portfolioData, loading, error, portfolioVersion } = usePortfolio();
+  const { portfolioData, strategy, loading, error, portfolioVersion } = usePortfolio();
 
   useEffect(() => {
     async function fetchGoals() {
@@ -57,6 +57,27 @@ export default function DashboardSummary() {
       const sessionData = JSON.parse(session);
       delete sessionData.firstTime;
       localStorage.setItem('session', JSON.stringify(sessionData));
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'text-red-600';
+      case 'medium': return 'text-yellow-600';
+      case 'low': return 'text-green-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  const getActionLabel = (recommendation: StrategyRecommendation) => {
+    switch (recommendation.action) {
+      case 'buy': return 'Comprar';
+      case 'sell': return 'Vender';
+      case 'hold': return 'Mantener';
+      case 'rotate': return 'Rotar';
+      case 'increase': return 'Aumentar';
+      case 'decrease': return 'Reducir';
+      default: return recommendation.action;
     }
   };
 
@@ -105,6 +126,47 @@ export default function DashboardSummary() {
           </div>
         </div>
       )}
+
+      {/* Strategy Recommendations */}
+      {strategy && strategy.recommendations.length > 0 && (
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Sugerencias de Estrategia</h3>
+            <span className="text-sm text-gray-500">Perfil: {strategy.riskLevel}</span>
+          </div>
+          
+          <div className="space-y-3 mb-4">
+            {strategy.recommendations.map((recommendation) => (
+              <div key={recommendation.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className={`px-2 py-1 rounded text-xs font-semibold ${getPriorityColor(recommendation.priority)}`}>
+                  {getActionLabel(recommendation)}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-gray-800">{recommendation.reason}</p>
+                  {recommendation.symbol && recommendation.targetSymbol && (
+                    <p className="text-xs text-gray-600 mt-1">
+                      {recommendation.symbol} → {recommendation.targetSymbol}
+                    </p>
+                  )}
+                </div>
+                <div className={`text-xs px-2 py-1 rounded ${
+                  recommendation.expectedImpact === 'positive' ? 'bg-green-100 text-green-700' :
+                  recommendation.expectedImpact === 'negative' ? 'bg-red-100 text-red-700' :
+                  'bg-gray-100 text-gray-700'
+                }`}>
+                  {recommendation.expectedImpact === 'positive' ? 'Positivo' :
+                   recommendation.expectedImpact === 'negative' ? 'Negativo' : 'Neutral'}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="text-xs text-gray-600 text-center border-t pt-3">
+            Esta información es orientativa y no constituye asesoramiento financiero.
+          </div>
+        </div>
+      )}
+
       {/* Portfolio Snapshot */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-lg shadow">
