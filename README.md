@@ -91,6 +91,24 @@ Para mantener los datos actualizados de forma automática, puedes configurar una
 
 Asegúrate de reemplazar `/ruta/completa/hacia/el/proyecto/TITO` con la ruta real a tu proyecto.
 
+## Live Data Fetching and Caching
+
+This project now uses live financial data for stocks (and trending stocks) via [yahoo-finance2](https://www.npmjs.com/package/yahoo-finance2), with in-memory caching using [node-cache](https://www.npmjs.com/package/node-cache).
+
+### How it works
+- API endpoints under `/api/stocks/`, `/api/stocks/list/`, `/api/scoop/`, and `/api/portfolio/data/` first try to fetch live data from Yahoo Finance.
+- Results are cached in memory for 10 minutes to avoid excessive requests and rate limits.
+- If the live API fails, the endpoints fall back to the local JSON files under `/data/`.
+
+### Dependencies
+- `yahoo-finance2`: For live stock quotes, historical prices, trending stocks, and search.
+- `node-cache`: For in-memory caching of API responses.
+
+### Example
+If you request `/api/stocks/AAPL`, the server will:
+1. Try to fetch the latest data for AAPL from Yahoo Finance and cache it.
+2. If Yahoo Finance is unavailable, it will return the last saved data from `data/stocks/AAPL.json`.
+
 ## Descargo de Responsabilidad
 
 TITO es un proyecto con fines exclusivamente educativos y de demostración. La información y las recomendaciones proporcionadas por esta aplicación no deben considerarse como asesoramiento financiero profesional. Realiza tu propia investigación y/o consulta a un asesor financiero calificado antes de tomar cualquier decisión de inversión.

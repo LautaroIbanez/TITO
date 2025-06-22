@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { PortfolioPosition } from '@/types'; // Import main types
+import { usePortfolio } from '@/contexts/PortfolioContext';
 
 export type TradeType = 'Buy' | 'Sell' | 'Invest';
 
@@ -35,6 +36,8 @@ export default function TradeModal({
   const [value, setValue] = useState(1);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  const { refreshPortfolio } = usePortfolio();
   
   const totalCost = value * price;
 
@@ -70,6 +73,7 @@ export default function TradeModal({
     setLoading(true);
     try {
       await onSubmit(value, assetType, identifier);
+      await refreshPortfolio(); // Refresh portfolio data from server
       onClose();
     } catch (err: any) {
       setError(err.message || 'Ocurrió un error.');

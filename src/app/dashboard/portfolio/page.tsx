@@ -7,55 +7,32 @@ import PortfolioTable from '@/components/PortfolioTable';
 import PortfolioPieChart from '@/components/PortfolioPieChart';
 import PortfolioTransactions from '@/components/PortfolioTransactions';
 import { StockPosition } from '@/types';
+import { usePortfolio } from '@/contexts/PortfolioContext';
 
 export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange?: () => void }) {
-  const [positions, setPositions] = useState<any[]>([]);
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [prices, setPrices] = useState<Record<string, any[]>>({});
-  const [loading, setLoading] = useState(true);
   const [comparison, setComparison] = useState<any>(null);
-  const [fundamentals, setFundamentals] = useState<Record<string, any>>({});
-  const [technicals, setTechnicals] = useState<Record<string, any>>({});
-  const [availableCash, setAvailableCash] = useState(0);
   const [depositAmount, setDepositAmount] = useState('');
   const [depositLoading, setDepositLoading] = useState(false);
   const [depositError, setDepositError] = useState('');
   const [depositSuccess, setDepositSuccess] = useState('');
 
-  async function fetchPortfolio() {
-    setLoading(true);
-    const session = localStorage.getItem('session');
-    if (!session) return;
-    const username = JSON.parse(session).username;
-    // Fetch portfolio data
-    const res = await fetch(`/api/portfolio/data?username=${username}`);
-    const data = await res.json();
-    setPositions(data.positions || []);
-    setTransactions(data.transactions || []);
-    setPrices(data.historicalPrices || {});
-    setFundamentals(data.fundamentals || {});
-    setTechnicals(data.technicals || {});
-    setAvailableCash(data.availableCash ?? 0);
-    
-    // Calculate returns
-    const prices: Record<string, any[]> = {};
-    Object.entries(data.historicalPrices || {}).forEach(([symbol, arr]) => {
-      prices[symbol] = arr as any[];
-    });
-    const portReturn = calculatePortfolioReturn(prices, '1y');
-    setComparison(compareWithBenchmarks(portReturn));
-    setLoading(false);
-  }
+  const { portfolioData, loading, refreshPortfolio, triggerPortfolioUpdate } = usePortfolio();
 
+  // Calculate returns when portfolio data changes
   useEffect(() => {
-    fetchPortfolio();
-  }, []);
+    if (portfolioData?.historicalPrices) {
+      const prices: Record<string, any[]> = {};
+      Object.entries(portfolioData.historicalPrices).forEach(([symbol, arr]) => {
+        prices[symbol] = arr as any[];
+      });
+      const portReturn = calculatePortfolioReturn(prices, '1y');
+      setComparison(compareWithBenchmarks(portReturn));
+    }
+  }, [portfolioData]);
 
   // Filter positions to only include stocks for the card grid
-  const stockPositions = positions.filter((pos): pos is StockPosition => pos.type === 'Stock');
+  const stockPositions = portfolioData?.positions.filter((pos): pos is StockPosition => pos.type === 'Stock') || [];
 
-  // handleRemove is no longer needed as sell action is in the modal
-  
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
     setDepositError('');
@@ -79,19 +56,28 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
     if (res.ok) {
       setDepositSuccess(`Se depositaron $${amount.toFixed(2)}`);
       setDepositAmount('');
-      fetchPortfolio();
+      await refreshPortfolio(); // Use context's refresh method
+      triggerPortfolioUpdate(); // Trigger portfolio update to notify DashboardSummary
     } else {
       setDepositError(data.error || 'El depósito falló');
     }
     setDepositLoading(false);
   };
 
+  if (loading) {
+    return <div className="text-center text-gray-500">Loading portfolio...</div>;
+  }
+
+  if (!portfolioData) {
+    return <div className="text-center text-gray-500">Could not load portfolio data.</div>;
+  }
+
   return (
     <div className="space-y-8">
       {/* Cash balance and deposit */}
       <div className="bg-white rounded-lg shadow p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="text-lg font-semibold text-gray-900">Efectivo Disponible: <span className="text-blue-700">${availableCash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+          <div className="text-lg font-semibold text-gray-900">Efectivo Disponible: <span className="text-blue-700">${portfolioData.availableCash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
         </div>
         <form className="flex gap-2 items-center" onSubmit={handleDeposit}>
           <input
@@ -117,18 +103,18 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <PortfolioPieChart positions={positions} prices={prices} />
+        <PortfolioPieChart positions={portfolioData.positions} prices={portfolioData.historicalPrices} />
       </div>
 
-      <PortfolioTransactions transactions={transactions} />
+      <PortfolioTransactions transactions={portfolioData.transactions} />
       {comparison && <ReturnComparison data={comparison} />}
       <PortfolioTable 
-        positions={positions} 
-        prices={prices} 
-        fundamentals={fundamentals} 
-        technicals={technicals} 
-        availableCash={availableCash}
-        onPortfolioUpdate={fetchPortfolio}
+        positions={portfolioData.positions} 
+        prices={portfolioData.historicalPrices} 
+        fundamentals={portfolioData.fundamentals} 
+        technicals={portfolioData.technicals} 
+        availableCash={portfolioData.availableCash}
+        onPortfolioUpdate={refreshPortfolio}
       />
       
       {/* Stock Cards - Only show stock positions */}
@@ -142,12 +128,12 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
             <PortfolioCard
               key={stock.symbol}
               symbol={stock.symbol}
-              fundamentals={fundamentals[stock.symbol]}
-              technicals={technicals[stock.symbol]}
-              prices={prices[stock.symbol]}
+              fundamentals={portfolioData.fundamentals[stock.symbol]}
+              technicals={portfolioData.technicals[stock.symbol]}
+              prices={portfolioData.historicalPrices[stock.symbol]}
               position={stock}
-              onTrade={fetchPortfolio}
-              availableCash={availableCash}
+              onTrade={refreshPortfolio}
+              availableCash={portfolioData.availableCash}
             />
           ))
         )}

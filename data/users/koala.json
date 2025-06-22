@@ -1,0 +1,23 @@
+{
+  "username": "koala",
+  "createdAt": "2025-06-21T23:59:17.233Z",
+  "profileCompleted": true,
+  "positions": [],
+  "transactions": [],
+  "goals": [],
+  "availableCash": 1000,
+  "profile": {
+    "instrumentsUsed": [
+      "Plazo Fijo",
+      "Acciones"
+    ],
+    "knowledgeLevels": {
+      "Plazo Fijo": "Bajo",
+      "Acciones": "Bajo"
+    },
+    "holdingPeriod": "1 a 5 años",
+    "ageGroup": "30 a 40",
+    "riskAppetite": "Balanceado",
+    "investmentAmount": 1000
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "username": "warren",
+  "createdAt": "2025-06-21T23:55:22.003Z",
+  "profileCompleted": true,
+  "positions": [],
+  "transactions": [],
+  "goals": [],
+  "availableCash": 3000,
+  "profile": {
+    "instrumentsUsed": [
+      "Plazo Fijo",
+      "Acciones",
+      "Fondos Comunes de Inversión"
+    ],
+    "knowledgeLevels": {
+      "Plazo Fijo": "Medio",
+      "Acciones": "Medio",
+      "Fondos Comunes de Inversión": "Bajo"
+    },
+    "holdingPeriod": "1 a 5 años",
+    "ageGroup": "30 a 40",
+    "riskAppetite": "Balanceado",
+    "investmentAmount": 3000
+  }
+}

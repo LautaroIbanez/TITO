@@ -1,26 +1,23 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { InvestmentGoal, UserData, DepositTransaction } from '@/types';
+import { InvestmentGoal, DepositTransaction } from '@/types';
 import { calculatePortfolioValueHistory } from '@/utils/calculatePortfolioValue';
+import { usePortfolio } from '@/contexts/PortfolioContext';
 import GoalProgress from './GoalProgress';
 
 export default function DashboardSummary() {
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<UserData | null>(null);
-  const [portfolioValue, setPortfolioValue] = useState(0);
   const [valueHistory, setValueHistory] = useState<{ date: string; value: number }[]>([]);
+  const [portfolioValue, setPortfolioValue] = useState(0);
   const [firstGoal, setFirstGoal] = useState<InvestmentGoal | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  
+  const { portfolioData, loading, error, portfolioVersion } = usePortfolio();
 
   useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
+    async function fetchGoals() {
       const session = localStorage.getItem('session');
-      if (!session) {
-        setLoading(false);
-        return;
-      }
+      if (!session) return;
       const sessionData = JSON.parse(session);
       const username = sessionData.username;
       
@@ -28,38 +25,30 @@ export default function DashboardSummary() {
         setShowOnboarding(true);
       }
 
-      // Fetch all data in parallel
-      const [portfolioRes, goalsRes] = await Promise.all([
-        fetch(`/api/portfolio/data?username=${username}`),
-        fetch(`/api/goals?username=${username}`),
-      ]);
-
-      if (portfolioRes.ok) {
-        const portfolioData = await portfolioRes.json();
-        setUser(portfolioData);
-
-        const history = calculatePortfolioValueHistory(
-          portfolioData.transactions || [],
-          portfolioData.historicalPrices || {},
-          { days: 90 }
-        );
-        setValueHistory(history);
-
-        const latestValue = history.length > 0 ? history[history.length - 1].value : 0;
-        setPortfolioValue(latestValue);
-      }
-
+      const goalsRes = await fetch(`/api/goals?username=${username}`);
       if (goalsRes.ok) {
         const goals = await goalsRes.json();
         if (goals.length > 0) {
           setFirstGoal(goals[0]);
         }
       }
-
-      setLoading(false);
     }
-    fetchData();
-  }, []);
+
+    if (portfolioData) {
+      // Calculate portfolio value history
+      const history = calculatePortfolioValueHistory(
+        portfolioData.transactions || [],
+        portfolioData.historicalPrices || {},
+        { days: 90 }
+      );
+      setValueHistory(history);
+
+      const latestValue = history.length > 0 ? history[history.length - 1].value : 0;
+      setPortfolioValue(latestValue);
+    }
+
+    fetchGoals();
+  }, [portfolioData, portfolioVersion]);
 
   const handleDismissOnboarding = () => {
     setShowOnboarding(false);
@@ -75,11 +64,15 @@ export default function DashboardSummary() {
     return <div className="text-center text-gray-500">Loading dashboard...</div>;
   }
 
-  if (!user) {
+  if (error) {
+    return <div className="text-center text-red-500">Error: {error}</div>;
+  }
+
+  if (!portfolioData) {
     return <div className="text-center text-gray-500">Could not load user data.</div>;
   }
   
-  const investedCapital = user.transactions
+  const investedCapital = portfolioData.transactions
     .filter((t): t is DepositTransaction => t.type === 'Deposit')
     .reduce((sum, t) => sum + t.amount, 0);
     
@@ -130,13 +123,13 @@ export default function DashboardSummary() {
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-sm font-medium text-gray-700">Efectivo Disponible</h3>
-          <p className="text-2xl font-semibold text-blue-600">${user.availableCash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+          <p className="text-2xl font-semibold text-blue-600">${portfolioData.availableCash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
           <p className="text-xs text-gray-700">Listo para invertir</p>
         </div>
       </div>
 
-      {firstGoal && user ? (
-        <GoalProgress goal={firstGoal} valueHistory={valueHistory} currentValue={portfolioValue} transactions={user.transactions} />
+      {firstGoal && portfolioData ? (
+        <GoalProgress goal={firstGoal} valueHistory={valueHistory} currentValue={portfolioValue} transactions={portfolioData.transactions} />
       ) : (
         <div className="bg-white p-6 rounded-lg shadow text-center">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Aún no tienes metas</h3>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PortfolioPosition, StockPosition, BondPosition, FixedTermDepositPosition } from '@/types';
 import TradeModal, { TradeType } from './TradeModal';
 import type { TradeModalProps } from './TradeModal';
+import { usePortfolio } from '@/contexts/PortfolioContext';
 
 interface Props {
   positions: PortfolioPosition[];
@@ -23,6 +24,8 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
     tradeType: TradeType;
     asset: PortfolioPosition | null;
   }>({ isOpen: false, tradeType: 'Sell', asset: null });
+
+  const { refreshPortfolio } = usePortfolio();
 
   const handleSellSubmit: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier) => {
     const session = localStorage.getItem('session');
@@ -47,6 +50,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
       throw new Error(data.error || 'La venta falló');
     }
     onPortfolioUpdate();
+    await refreshPortfolio();
     setModalState({ isOpen: false, tradeType: 'Sell', asset: null });
   };
 
@@ -68,6 +72,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
 
     if (res.ok) {
       onPortfolioUpdate();
+      await refreshPortfolio();
     } else {
       const data = await res.json();
       alert(`Error: ${data.error || 'No se pudo eliminar la posición.'}`);

@@ -8,11 +8,15 @@ import dayjs from 'dayjs';
 const FIXED_LIST = ["AAPL", "MSFT", "TSLA", "AMZN", "NVDA", "BABA", "GOOGL", "JPM", "KO", "PFE"];
 
 function getSuggestedStocks(
-  profile: InvestorProfile,
+  profile: InvestorProfile | null,
   stocks: any[],
   requiredReturn: number
 ) {
-  if (!profile) return [];
+  if (!profile || !stocks) return stocks.map(s => ({ ...s, isSuggested: false }));
+
+  // Cap the required return for suggestions to a more realistic number (e.g., 30%)
+  // A very high required return from user goals makes it impossible to find suggestions.
+  const realisticRequiredReturn = Math.min(requiredReturn, 30);
 
   const riskScores: Record<string, number> = {};
   stocks.forEach(stock => {
@@ -40,7 +44,7 @@ function getSuggestedStocks(
     const diff = Math.abs(score - targetRisk);
     const f = stock.fundamentals || {};
     // Suggest if risk is acceptable AND return is high enough
-    const meetsReturn = (f.roe ?? 0) * 100 > requiredReturn;
+    const meetsReturn = (f.roe ?? 0) * 100 > realisticRequiredReturn;
     const isSuggested = diff < 0.2 && meetsReturn;
     return { ...stock, isSuggested };
   });
@@ -60,10 +64,10 @@ export default function ScoopPage() {
     const session = localStorage.getItem('session');
     let username = '';
     if (session) username = JSON.parse(session).username;
-    // Fetch user profile and portfolio
-    let userProfile = null;
+    
+    let userProfile: InvestorProfile | null = null;
     let userPositions: string[] = [];
-    let userAvailableCash = 0;
+    
     try {
       const res = await fetch(`/api/portfolio/data?username=${username}`);
       const data = await res.json();
@@ -71,37 +75,63 @@ export default function ScoopPage() {
       userPositions = (data.positions || []).map((p: any) => p.symbol);
       setPortfolioSymbols(userPositions);
       setProfile(userProfile);
-      userAvailableCash = data.availableCash ?? 0;
-      setAvailableCash(userAvailableCash);
+      setAvailableCash(data.availableCash ?? 0);
 
       const goalsRes = await fetch(`/api/goals?username=${username}`);
-      const goals: InvestmentGoal[] = await goalsRes.json();
-      
-      if (goals && goals.length > 0) {
-        const totalTarget = goals.reduce((sum, g) => sum + g.targetAmount, 0);
-        const totalInitial = goals.reduce((sum, g) => sum + g.initialDeposit, 0);
-        const totalMonthly = goals.reduce((sum, g) => sum + g.monthlyContribution, 0);
-        const maxDate = new Date(Math.max(...goals.map(g => new Date(g.targetDate).getTime())));
-        const years = dayjs(maxDate).diff(dayjs(), 'year', true);
+      if(goalsRes.ok) {
+        const goals: InvestmentGoal[] = await goalsRes.json();
+        
+        if (goals && goals.length > 0) {
+          const totalTarget = goals.reduce((sum, g) => sum + g.targetAmount, 0);
+          const totalInitial = goals.reduce((sum, g) => sum + g.initialDeposit, 0);
+          const totalMonthly = goals.reduce((sum, g) => sum + g.monthlyContribution, 0);
+          const maxDate = new Date(Math.max(...goals.map(g => new Date(g.targetDate).getTime())));
+          const years = dayjs(maxDate).diff(dayjs(), 'year', true);
 
-        if (years > 0) {
-          const reqReturn = calculateRequiredReturn(totalTarget, years, totalInitial, totalMonthly);
-          setRequiredReturn(reqReturn);
+          if (years > 0) {
+            const reqReturn = calculateRequiredReturn(totalTarget, years, totalInitial, totalMonthly);
+            setRequiredReturn(reqReturn);
+          }
         }
       }
-    } catch {}
-    // Fetch all stocks data
-    const res = await fetch('/api/scoop');
-    const stocksData = await res.json();
-    // Only show stocks not in portfolio
-    const filtered = stocksData.filter((s: any) => !userPositions.includes(s.symbol) && FIXED_LIST.includes(s.symbol));
-    setStocks(getSuggestedStocks(userProfile, filtered, requiredReturn));
+    } catch(e) {
+      console.error("Failed to load user data or goals", e);
+    }
+
+    // Fetch trending stocks just to add a badge
+    const trendingRes = await fetch('/api/scoop');
+    const trendingData = await trendingRes.json();
+    const trendingSymbols = (trendingData.quotes || []).map((q: any) => q.symbol);
+
+    // Use FIXED_LIST as the base, filter out owned stocks
+    const stocksToShowSymbols = FIXED_LIST.filter(symbol => !userPositions.includes(symbol));
+
+    // Enrich the stocks with all necessary data
+    const enrichedStocks = await Promise.all(
+        stocksToShowSymbols.map(async (symbol: string) => {
+            const [fundamentals, technicals, prices] = await Promise.all([
+                fetch(`/api/stocks/${symbol}?type=fundamentals`).then(res => res.ok ? res.json() : null),
+                fetch(`/api/stocks/${symbol}?type=technicals`).then(res => res.ok ? res.json() : null),
+                fetch(`/api/stocks/${symbol}?type=prices`).then(res => res.ok ? res.json() : [])
+            ]);
+            return {
+                symbol,
+                companyName: fundamentals?.longName || symbol,
+                prices,
+                fundamentals,
+                technicals,
+                isTrending: trendingSymbols.includes(symbol)
+            };
+        })
+    );
+    
+    setStocks(getSuggestedStocks(userProfile, enrichedStocks, requiredReturn));
     setLoading(false);
   };
 
   useEffect(() => {
     loadData();
-  }, [requiredReturn]); // Reload if requiredReturn changes
+  }, []);
 
   const suggestedStocks = stocks.filter(s => s.isSuggested);
   const otherStocks = stocks.filter(s => !s.isSuggested);
@@ -110,8 +140,8 @@ export default function ScoopPage() {
     <div className="space-y-8">
       {requiredReturn > 0 && (
         <div className="mb-4 p-3 bg-blue-100 border border-blue-200 rounded-lg text-sm text-blue-800">
-          Para alcanzar tus metas, necesitas un retorno anual estimado de <strong>{requiredReturn.toFixed(2)}%</strong>.
-          Las sugerencias se filtran según este requisito.
+          Para alcanzar tus metas, necesitas un retorno anual estimado de <strong>{(requiredReturn * 100).toFixed(2)}%</strong>.
+          Las sugerencias se basan en un retorno más realista.
         </div>
       )}
 
@@ -119,7 +149,6 @@ export default function ScoopPage() {
         <div className="text-center text-gray-700 py-10">Cargando Oportunidades...</div>
       ) : (
         <>
-          {/* Suggested Stocks */}
           {suggestedStocks.length > 0 && (
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Sugerencias para ti</h2>
@@ -131,6 +160,7 @@ export default function ScoopPage() {
                     fundamentals={stock.fundamentals}
                     technicals={stock.technicals}
                     isSuggested={stock.isSuggested}
+                    isTrending={stock.isTrending}
                     inPortfolio={portfolioSymbols.includes(stock.symbol)}
                     onTrade={loadData}
                     availableCash={availableCash}
@@ -140,7 +170,6 @@ export default function ScoopPage() {
             </div>
           )}
 
-          {/* Other Stocks */}
           {otherStocks.length > 0 && (
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-6 mt-10">Otras Oportunidades</h2>
@@ -152,6 +181,7 @@ export default function ScoopPage() {
                     fundamentals={stock.fundamentals}
                     technicals={stock.technicals}
                     isSuggested={stock.isSuggested}
+                    isTrending={stock.isTrending}
                     inPortfolio={portfolioSymbols.includes(stock.symbol)}
                     onTrade={loadData}
                     availableCash={availableCash}
@@ -161,7 +191,7 @@ export default function ScoopPage() {
             </div>
           )}
 
-          {!stocks.length && (
+          {!loading && !stocks.length && (
             <div className="text-center text-gray-700 py-10">
               <h3 className="text-xl font-semibold">No hay nuevas sugerencias por ahora.</h3>
               <p>Todas las acciones analizadas ya están en tu portafolio.</p>

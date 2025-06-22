@@ -15,6 +15,8 @@ import { getTradeSignal, TradeSignal } from '@/utils/tradeSignal';
 import TradeModal, { TradeType } from './TradeModal';
 import type { TradeModalProps } from './TradeModal';
 import TechnicalDisplay from './TechnicalDisplay';
+import { usePortfolio } from '@/contexts/PortfolioContext';
+import dayjs from 'dayjs';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
@@ -105,11 +107,21 @@ const SignalBadge = ({ signal }: { signal: TradeSignal }) => {
   );
 };
 
+const formatDate = (dateString: string) => {
+  return dayjs(dateString).format('DD/MM/YYYY');
+};
+
 export default function PortfolioCard({ symbol, fundamentals, technicals, prices, position, onTrade, availableCash }: PortfolioCardProps) {
   const [modalState, setModalState] = useState<{ isOpen: boolean; tradeType: TradeType }>({ isOpen: false, tradeType: 'Buy' });
   
+  const { refreshPortfolio } = usePortfolio();
+  
   const signal = getTradeSignal(technicals);
   const currentPrice = prices.length > 0 ? prices[prices.length - 1].close : 0;
+
+  // Compute last price date
+  const lastPriceDate = prices.length > 0 ? prices[prices.length - 1].date : null;
+  const fundamentalsDate = fundamentals?.updatedAt;
 
   const handleTrade: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier) => {
     const session = localStorage.getItem('session');
@@ -132,6 +144,7 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
 
     if (res.ok) {
       onTrade();
+      await refreshPortfolio(); // Refresh portfolio data from server
     } else {
       const data = await res.json();
       // Use a more user-friendly notification if available
@@ -230,6 +243,18 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
             <TechnicalDisplay label="SMA 200" indicatorKey="SMA" value={technicals?.sma200} currentPrice={currentPrice} />
             <TechnicalDisplay label="EMA 50" indicatorKey="EMA" value={technicals?.ema50} currentPrice={currentPrice} />
             <TechnicalDisplay label="ADX" indicatorKey="ADX" value={technicals?.adx} />
+          </div>
+        </div>
+
+        {/* Data Update Footer */}
+        <div className="border-t pt-2 mt-2">
+          <div className="flex justify-between text-xs text-gray-500">
+            {lastPriceDate && (
+              <span>Precios al {formatDate(lastPriceDate)}</span>
+            )}
+            {fundamentalsDate && (
+              <span>Fundamentales al {formatDate(fundamentalsDate)}</span>
+            )}
           </div>
         </div>
       </div>

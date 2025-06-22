@@ -1,3 +1,4 @@
+'use client';
 import React, { useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
@@ -14,6 +15,8 @@ import { Fundamentals, getRatioColor, Technicals } from '../types/finance';
 import { getTradeSignal, TradeSignal } from '@/utils/tradeSignal';
 import TradeModal, { TradeModalProps } from './TradeModal';
 import TechnicalDisplay from './TechnicalDisplay';
+import { usePortfolio } from '@/contexts/PortfolioContext';
+import dayjs from 'dayjs';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
@@ -22,6 +25,7 @@ interface ScoopCardProps {
   fundamentals: Fundamentals;
   technicals: Technicals | null;
   isSuggested: boolean;
+  isTrending: boolean;
   inPortfolio: boolean;
   onTrade: () => void; // Renamed from onAddToPortfolio
   availableCash: number;
@@ -54,6 +58,10 @@ const formatValue = (value: number | null | undefined, format: 'default' | 'curr
       return value.toFixed(2);
   }
 }
+
+const formatDate = (dateString: string) => {
+  return dayjs(dateString).format('DD/MM/YYYY');
+};
 
 const RatioRow = ({ label, value, metric, format = 'default' }: { label: string; value: number | null | undefined; metric: keyof typeof RATIO_TOOLTIPS; format?: 'default' | 'currency' | 'percent' }) => (
   <div className="group relative">
@@ -120,6 +128,7 @@ export default function ScoopCard({
   fundamentals,
   technicals,
   isSuggested,
+  isTrending,
   inPortfolio,
   onTrade,
   availableCash,
@@ -129,6 +138,11 @@ export default function ScoopCard({
   // Prepare chart data
   const prices = stockData?.prices || [];
   const currentPrice = prices.length > 0 ? prices[prices.length - 1].close : 0;
+  
+  // Compute last price date
+  const lastPriceDate = prices.length > 0 ? prices[prices.length - 1].date : null;
+  const fundamentalsDate = fundamentals?.updatedAt;
+  
   const chartData = {
     labels: prices.map((p: any) => p.date),
     datasets: [
@@ -168,8 +182,8 @@ export default function ScoopCard({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         username,
-        assetType: assetType, // This will be 'Stock'
-        symbol: identifier, // This will be the stock symbol
+        assetType: 'Stock',
+        symbol: stockData.symbol,
         quantity,
         price: currentPrice,
       }),
@@ -204,8 +218,13 @@ export default function ScoopCard({
           <span className="text-sm font-mono text-gray-900">{stockData?.symbol}</span>
           <SignalBadge signal={signal} />
           {isSuggested && (
-            <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-semibold">
+            <span className="ml-auto px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-semibold">
               Sugerido
+            </span>
+          )}
+          {isTrending && (
+            <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-semibold">
+              Trending
             </span>
           )}
         </div>
@@ -257,38 +276,40 @@ export default function ScoopCard({
             <div className="text-xs text-gray-700">
               <RatioRow label="EBITDA" value={fundamentals.ebitda} metric="ebitda" format="currency" />
               <RatioRow label="FCF" value={fundamentals.freeCashFlow} metric="freeCashFlow" format="currency" />
-              <RatioRow label="Crec. Ingresos" value={fundamentals.revenueGrowth} metric="revenueGrowth" format="percent" />
-              <RatioRow label="Crec. BPA Est." value={fundamentals.epsGrowth} metric="epsGrowth" format="percent" />
+              <RatioRow label="Revenue Growth" value={fundamentals.revenueGrowth} metric="revenueGrowth" format="percent" />
+              <RatioRow label="EPS Growth" value={fundamentals.epsGrowth} metric="epsGrowth" format="percent" />
+            </div>
+          </div>
+
+          {/* Financial Health */}
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900 mb-1">Salud Financiera</h3>
+            <div className="text-xs text-gray-700">
+              <RatioRow label="Deuda/Equity" value={fundamentals.debtToEquity} metric="debtToEquity" />
+              <RatioRow label="Deuda/EBITDA" value={fundamentals.debtToEbitda} metric="debtToEbitda" />
             </div>
           </div>
         </div>
 
-        {/* Technicals */}
-        <div>
-          <h3 className="text-sm font-semibold text-gray-900 mb-2">Análisis Técnico</h3>
-          <div className="grid grid-cols-2 gap-x-4 text-xs text-gray-700">
-            <TechnicalDisplay label="RSI" indicatorKey="RSI" value={technicals?.rsi} />
-            <TechnicalDisplay label="MACD" indicatorKey="MACD" value={technicals?.macd} />
-            <TechnicalDisplay label="SMA 200" indicatorKey="SMA" value={technicals?.sma200} currentPrice={currentPrice} />
-            <TechnicalDisplay label="EMA 50" indicatorKey="EMA" value={technicals?.ema50} currentPrice={currentPrice} />
-            <TechnicalDisplay label="ADX" indicatorKey="ADX" value={technicals?.adx} />
+        {/* Data Update Footer */}
+        <div className="border-t pt-2 mt-2">
+          <div className="flex justify-between text-xs text-gray-500">
+            {lastPriceDate && (
+              <span>Precios al {formatDate(lastPriceDate)}</span>
+            )}
+            {fundamentalsDate && (
+              <span>Fundamentales al {formatDate(fundamentalsDate)}</span>
+            )}
           </div>
         </div>
 
-        <div className="flex gap-2 mt-2">
-          {!inPortfolio && (
-            <button
-              className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-              onClick={() => setIsModalOpen(true)}
-              disabled={currentPrice > availableCash}
-            >
-              Buy
-            </button>
-          )}
-          {inPortfolio && (
-            <span className="px-4 py-1 bg-gray-200 text-gray-600 rounded text-xs">In Portfolio</span>
-          )}
-        </div>
+        {/* Buy Button */}
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+        >
+          Comprar {stockData?.symbol}
+        </button>
       </div>
     </>
   );
