@@ -4,6 +4,7 @@ import ScoopCard from '@/components/ScoopCard';
 import { InvestorProfile, InvestmentGoal } from '@/types';
 import { calculateRequiredReturn } from '@/utils/goalCalculator';
 import dayjs from 'dayjs';
+import { useScoop } from '@/contexts/ScoopContext';
 
 const FIXED_LIST = ["AAPL", "MSFT", "TSLA", "AMZN", "NVDA", "BABA", "GOOGL", "JPM", "KO", "PFE"];
 
@@ -57,6 +58,7 @@ export default function ScoopPage() {
   const [loading, setLoading] = useState(true);
   const [requiredReturn, setRequiredReturn] = useState(0);
   const [availableCash, setAvailableCash] = useState(0);
+  const { filterMode } = useScoop();
 
   // Load portfolio symbols and scoop data
   const loadData = async () => {
@@ -136,6 +138,8 @@ export default function ScoopPage() {
   const suggestedStocks = stocks.filter(s => s.isSuggested);
   const otherStocks = stocks.filter(s => !s.isSuggested);
 
+  const displayedStocks = filterMode === 'suggested' ? suggestedStocks : stocks;
+
   return (
     <div className="space-y-8">
       {requiredReturn > 0 && (
@@ -149,7 +153,7 @@ export default function ScoopPage() {
         <div className="text-center text-gray-700 py-10">Cargando Oportunidades...</div>
       ) : (
         <>
-          {suggestedStocks.length > 0 && (
+          {filterMode === 'all' && suggestedStocks.length > 0 && (
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Sugerencias para ti</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -170,7 +174,28 @@ export default function ScoopPage() {
             </div>
           )}
 
-          {otherStocks.length > 0 && (
+          {filterMode === 'suggested' && (
+             <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Sugerencias para ti</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {suggestedStocks.map((stock) => (
+                  <ScoopCard
+                    key={stock.symbol}
+                    stockData={stock}
+                    fundamentals={stock.fundamentals}
+                    technicals={stock.technicals}
+                    isSuggested={stock.isSuggested}
+                    isTrending={stock.isTrending}
+                    inPortfolio={portfolioSymbols.includes(stock.symbol)}
+                    onTrade={loadData}
+                    availableCash={availableCash}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {filterMode === 'all' && otherStocks.length > 0 && (
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-6 mt-10">Otras Oportunidades</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -191,10 +216,16 @@ export default function ScoopPage() {
             </div>
           )}
 
-          {!loading && !stocks.length && (
+          {!loading && displayedStocks.length === 0 && (
             <div className="text-center text-gray-700 py-10">
-              <h3 className="text-xl font-semibold">No hay nuevas sugerencias por ahora.</h3>
-              <p>Todas las acciones analizadas ya están en tu portafolio.</p>
+              <h3 className="text-xl font-semibold">
+                {filterMode === 'suggested' ? 'No hay sugerencias por ahora.' : 'No hay nuevas oportunidades por ahora.'}
+              </h3>
+              <p>
+                {filterMode === 'suggested'
+                  ? 'Ajusta tus metas o perfil de riesgo para ver nuevas sugerencias.'
+                  : 'Todas las acciones analizadas ya están en tu portafolio.'}
+              </p>
             </div>
           )}
         </>

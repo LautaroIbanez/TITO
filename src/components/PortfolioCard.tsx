@@ -10,13 +10,13 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import { Fundamentals, getRatioColor, Technicals } from '../types/finance';
+import { Fundamentals, Technicals } from '../types/finance';
 import { getTradeSignal, TradeSignal } from '@/utils/tradeSignal';
 import TradeModal, { TradeType } from './TradeModal';
 import type { TradeModalProps } from './TradeModal';
 import TechnicalDisplay from './TechnicalDisplay';
 import { usePortfolio } from '@/contexts/PortfolioContext';
-import dayjs from 'dayjs';
+import { RatioRow, StockBadges, formatDate } from './StockMetrics';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
@@ -29,65 +29,6 @@ interface PortfolioCardProps {
   onTrade: () => void;
   availableCash: number;
 }
-
-// Reuse the same tooltip descriptions and RatioRow component from ScoopCard
-const RATIO_TOOLTIPS = {
-  peRatio: "Price to Earnings: Compara el precio de la acción con las ganancias por acción. Menor = más barata.",
-  pbRatio: "Price to Book: Compara el precio con el valor contable. Menor = más barata.",
-  evToEbitda: "Enterprise Value to EBITDA: Valuation múltiple que considera la deuda. Menor = más barata.",
-  roe: "Return on Equity: Rentabilidad sobre el capital propio. Mayor = mejor.",
-  roa: "Return on Assets: Rentabilidad sobre los activos totales. Mayor = mejor.",
-  debtToEquity: "Debt to Equity: Nivel de apalancamiento. Menor = menos riesgo.",
-  debtToEbitda: "Debt to EBITDA: Capacidad de pago de deuda. Menor = menos riesgo.",
-  netMargin: "Net Margin: Margen de ganancia neta. Mayor = mejor.",
-  freeCashFlow: "Free Cash Flow: Flujo de caja libre en millones. Positivo = mejor.",
-  priceToFCF: "Price to Free Cash Flow: Similar al PE pero usando el flujo de caja. Menor = más barata.",
-  ebitda: "EBITDA: Earnings Before Interest, Taxes, Depreciation, and Amortization. Mayor = mejor.",
-  revenueGrowth: "Revenue Growth: Crecimiento de ingresos. Mayor = mejor.",
-  epsGrowth: "EPS Growth: Crecimiento de ganancias por acción. Mayor = mejor."
-};
-
-const RatioRow = ({ label, value, metric }: { label: string; value: number | null | undefined; metric: keyof Omit<Fundamentals, 'updatedAt' | 'sector' | 'industry'> }) => (
-  <div className="group relative">
-    <div className="flex justify-between py-1">
-      <span>{label}</span>
-      <span className={`font-mono ${getRatioColor(value ?? null, metric)}`}>
-        {value == null ? '—' : value.toFixed(2)}
-      </span>
-    </div>
-    <div className="hidden group-hover:block absolute z-10 bg-gray-800 text-white text-xs p-2 rounded shadow-lg -top-2 left-full ml-2 w-64">
-      {RATIO_TOOLTIPS[metric]}
-    </div>
-  </div>
-);
-
-const StockBadges = ({ fundamentals }: { fundamentals: Fundamentals | null | undefined }) => {
-  const badges = [];
-  
-  if (fundamentals?.priceToFCF != null && fundamentals?.pbRatio != null &&
-      fundamentals.priceToFCF < 15 && fundamentals.pbRatio < 1.5) {
-    badges.push({ text: "Infravalorada", color: "bg-green-100 text-green-700" });
-  }
-  
-  if (fundamentals?.roe != null && fundamentals?.netMargin != null &&
-      fundamentals.roe > 15 && fundamentals.netMargin > 10) {
-    badges.push({ text: "Rentable", color: "bg-blue-100 text-blue-700" });
-  }
-  
-  if (fundamentals?.debtToEbitda != null && fundamentals.debtToEbitda > 4) {
-    badges.push({ text: "Endeudada", color: "bg-red-100 text-red-700" });
-  }
-  
-  return (
-    <div className="flex gap-2 mb-2">
-      {badges.map((badge, idx) => (
-        <span key={idx} className={`px-2 py-1 rounded text-xs font-semibold ${badge.color}`}>
-          {badge.text}
-        </span>
-      ))}
-    </div>
-  );
-};
 
 const SignalBadge = ({ signal }: { signal: TradeSignal }) => {
   const badgeStyles: Record<TradeSignal, string> = {
@@ -105,10 +46,6 @@ const SignalBadge = ({ signal }: { signal: TradeSignal }) => {
       {signalText[signal]}
     </span>
   );
-};
-
-const formatDate = (dateString: string) => {
-  return dayjs(dateString).format('DD/MM/YYYY');
 };
 
 export default function PortfolioCard({ symbol, fundamentals, technicals, prices, position, onTrade, availableCash }: PortfolioCardProps) {
@@ -248,13 +185,33 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
 
         {/* Data Update Footer */}
         <div className="border-t pt-2 mt-2">
-          <div className="flex justify-between text-xs text-gray-500">
-            {lastPriceDate && (
-              <span>Precios al {formatDate(lastPriceDate)}</span>
-            )}
-            {fundamentalsDate && (
-              <span>Fundamentales al {formatDate(fundamentalsDate)}</span>
-            )}
+          <div className="text-xs text-gray-500 flex justify-between">
+            <span>Precio: {lastPriceDate ? formatDate(lastPriceDate) : '—'}</span>
+            <span>Fundamentales: {fundamentalsDate ? formatDate(fundamentalsDate) : '—'}</span>
+          </div>
+        </div>
+
+        {/* Position Info */}
+        <div className="bg-gray-50 p-3 rounded-lg">
+          <div className="text-sm text-gray-700">
+            <div className="flex justify-between">
+              <span>Cantidad:</span>
+              <span className="font-mono">{position.quantity}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Precio Promedio:</span>
+              <span className="font-mono">${position.averagePrice.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Valor Actual:</span>
+              <span className="font-mono">${(position.quantity * currentPrice).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>P&L:</span>
+              <span className={`font-mono ${(currentPrice - position.averagePrice) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {((currentPrice - position.averagePrice) / position.averagePrice * 100).toFixed(2)}%
+              </span>
+            </div>
           </div>
         </div>
       </div>

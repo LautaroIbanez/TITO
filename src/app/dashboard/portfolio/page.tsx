@@ -2,11 +2,11 @@
 import { useEffect, useState } from 'react';
 import PortfolioCard from '@/components/PortfolioCard';
 import ReturnComparison from '@/components/ReturnComparison';
-import { calculatePortfolioReturn, compareWithBenchmarks } from '@/utils/returnCalculator';
+import { compareWithBenchmarks } from '@/utils/returnCalculator';
 import PortfolioTable from '@/components/PortfolioTable';
 import PortfolioPieChart from '@/components/PortfolioPieChart';
 import PortfolioTransactions from '@/components/PortfolioTransactions';
-import { StockPosition } from '@/types';
+import { StockPosition, PortfolioTransaction } from '@/types';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 
 export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange?: () => void }) {
@@ -18,30 +18,51 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
 
   const { portfolioData, loading, refreshPortfolio, triggerPortfolioUpdate } = usePortfolio();
 
-  // Calculate returns when portfolio data changes
+  // Calculate portfolio return based on invested capital vs current value
   useEffect(() => {
     async function calculateComparison() {
-      if (portfolioData?.historicalPrices) {
+      if (portfolioData?.transactions && portfolioData?.positions && portfolioData?.historicalPrices) {
         try {
+          // Calculate total invested capital from deposit transactions
+          const totalInvestedCapital = portfolioData.transactions
+            .filter((tx: PortfolioTransaction): tx is PortfolioTransaction & { type: 'Deposit'; amount: number } => tx.type === 'Deposit')
+            .reduce((sum: number, tx) => sum + tx.amount, 0);
+
+          // Calculate current portfolio value (positions + available cash)
+          let currentPortfolioValue = portfolioData.availableCash;
+
+          // Add value of all positions
+          for (const position of portfolioData.positions) {
+            if (position.type === 'Stock') {
+              const prices = portfolioData.historicalPrices[position.symbol];
+              if (prices && prices.length > 0) {
+                const currentPrice = prices[prices.length - 1].close;
+                currentPortfolioValue += position.quantity * currentPrice;
+              }
+            } else if (position.type === 'Bond') {
+              // For bonds, use average price as current value (simplified)
+              currentPortfolioValue += position.quantity * position.averagePrice;
+            } else if (position.type === 'FixedTermDeposit') {
+              // For fixed-term deposits, use the amount as current value
+              currentPortfolioValue += position.amount;
+            }
+          }
+
+          // Calculate gain percentage
+          let gainPercent = 0;
+          if (totalInvestedCapital > 0) {
+            gainPercent = ((currentPortfolioValue - totalInvestedCapital) / totalInvestedCapital) * 100;
+          }
+
           // Fetch benchmarks from API
           const benchmarksResponse = await fetch('/api/benchmarks');
           const benchmarks = await benchmarksResponse.json();
           
-          const prices: Record<string, any[]> = {};
-          Object.entries(portfolioData.historicalPrices).forEach(([symbol, arr]) => {
-            prices[symbol] = arr as any[];
-          });
-          const portReturn = calculatePortfolioReturn(prices, '1y');
-          setComparison(compareWithBenchmarks(portReturn, benchmarks));
+          setComparison(compareWithBenchmarks(gainPercent, benchmarks));
         } catch (error) {
-          console.error('Error fetching benchmarks:', error);
-          // Fallback to default benchmarks
-          const prices: Record<string, any[]> = {};
-          Object.entries(portfolioData.historicalPrices).forEach(([symbol, arr]) => {
-            prices[symbol] = arr as any[];
-          });
-          const portReturn = calculatePortfolioReturn(prices, '1y');
-          setComparison(compareWithBenchmarks(portReturn));
+          console.error('Error calculating portfolio return:', error);
+          // Fallback to default benchmarks with 0% return
+          setComparison(compareWithBenchmarks(0));
         }
       }
     }
