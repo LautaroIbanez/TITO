@@ -112,6 +112,9 @@ export default function DashboardSummary() {
   const netGainsARS = portfolioValueARS - investedCapitalARS;
   const gainsColorARS = netGainsARS >= 0 ? 'text-green-600' : 'text-red-600';
 
+  const netGainsUSD = portfolioValueUSD - investedCapitalUSD;
+  const gainsColorUSD = netGainsUSD >= 0 ? 'text-green-600' : 'text-red-600';
+
   return (
     <div className="space-y-8">
        {/* Onboarding Banner */}
@@ -195,8 +198,18 @@ export default function DashboardSummary() {
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-sm font-medium text-gray-700">Ganancias / Pérdidas (ARS)</h3>
-          <p className={`text-2xl font-semibold ${gainsColorARS}`}>
+          <p className={`text-2xl font-semibold ${gainsColorARS}`}> 
             {netGainsARS >= 0 ? '+' : ''}{formatCurrency(netGainsARS, 'ARS')}
+          </p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-sm font-medium text-gray-700">Capital Invertido (USD)</h3>
+          <p className="text-2xl font-semibold text-gray-900">{formatCurrency(investedCapitalUSD, 'USD')}</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-sm font-medium text-gray-700">Ganancias / Pérdidas (USD)</h3>
+          <p className={`text-2xl font-semibold ${gainsColorUSD}`}> 
+            {netGainsUSD >= 0 ? '+' : ''}{formatCurrency(netGainsUSD, 'USD')}
           </p>
         </div>
          <div className="bg-white p-6 rounded-lg shadow">

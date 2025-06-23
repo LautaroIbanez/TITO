@@ -178,9 +178,8 @@ export function calculatePortfolioValueHistory(
 export function getDailyPortfolioValue(
   transactions: PortfolioTransaction[],
   priceHistory: Record<string, PriceData[]>
-): { date: string; value: number }[] {
+): { date: string; valueARS: number; valueUSD: number }[] {
   const history = calculatePortfolioValueHistory(transactions, priceHistory, {});
-  // Returning ARS value for now to maintain compatibility.
-  // This should be updated to handle both currencies where it's called.
-  return history.map(h => ({ date: h.date, value: h.valueARS }));
+  // Now returns both ARS and USD values for each day.
+  return history.map(h => ({ date: h.date, valueARS: h.valueARS, valueUSD: h.valueUSD }));
 } 

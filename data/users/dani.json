@@ -36,8 +36,8 @@
     "investmentAmount": 1000000
   },
   "investmentStrategy": {
-    "id": "strategy-686a7ed7-ef26-4187-875c-d7c780af915c",
-    "createdAt": "2025-06-23T14:35:47.262Z",
+    "id": "strategy-c5e32524-f473-4f1e-a2e0-4c5e7131be01",
+    "createdAt": "2025-06-23T19:22:57.352Z",
     "targetAllocation": {
       "stocks": 60,
       "bonds": 30,
@@ -46,7 +46,7 @@
     },
     "recommendations": [
       {
-        "id": "alloc-88ab3c53-845e-40bf-b7a3-498f8918c962",
+        "id": "alloc-11bf60c5-7a42-4f9c-8951-cf6362f06983",
         "action": "increase",
         "assetClass": "stocks",
         "reason": "Tu portafolio tiene 0.0% en acciones, pero tu estrategia objetivo es 60%",
@@ -54,7 +54,7 @@
         "expectedImpact": "positive"
       },
       {
-        "id": "alloc-efdc4969-235e-4c2d-a18d-3aa83b6728da",
+        "id": "alloc-1f2d6b8a-408b-4e39-a92f-ca2e93f4595a",
         "action": "increase",
         "assetClass": "bonds",
         "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 30%",
@@ -62,11 +62,10 @@
         "expectedImpact": "positive"
       },
       {
-        "id": "cash-a977547d-4bf6-41b8-aefa-4236620426b9",
-        "action": "decrease",
-        "assetClass": "cash",
-        "reason": "Tienes mucho efectivo disponible. Considera invertirlo según tu estrategia",
-        "priority": "medium",
+        "id": "cash-invest-d38a5a89-1d8f-4d6d-a0b7-8bbcf942bd6c",
+        "action": "buy",
+        "reason": "Tienes un 100.0% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
+        "priority": "high",
         "expectedImpact": "positive"
       }
     ],

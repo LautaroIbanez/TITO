@@ -14,10 +14,10 @@ const mockCalculatePortfolioValueHistory = calculatePortfolioValueHistory as jes
 
 describe('DashboardSummary', () => {
   const mockTransactions: PortfolioTransaction[] = [
-    { id: '1', type: 'Deposit', amount: 10000, date: '2023-01-01' },
-    { id: '2', type: 'Buy', assetType: 'Stock', symbol: 'AAPL', quantity: 10, price: 150, date: '2023-01-02' }, // Invested: 1500
-    { id: '3', type: 'Create', assetType: 'FixedTermDeposit', provider: 'Test Bank', amount: 5000, annualRate: 0.03, termDays: 90, date: '2023-01-03', maturityDate: '2023-04-03' } as FixedTermDepositCreationTransaction, // Invested: 5000
-    { id: '4', type: 'Sell', assetType: 'Stock', symbol: 'AAPL', quantity: 5, price: 160, date: '2023-01-04' }, // Invested: -800
+    { id: '1', type: 'Deposit', amount: 10000, date: '2023-01-01', currency: 'ARS' },
+    { id: '2', type: 'Buy', assetType: 'Stock', symbol: 'AAPL', quantity: 10, price: 150, date: '2023-01-02', currency: 'ARS', market: 'BCBA' }, // Invested: 1500
+    { id: '3', type: 'Create', assetType: 'FixedTermDeposit', provider: 'Test Bank', amount: 5000, annualRate: 0.03, termDays: 90, date: '2023-01-03', maturityDate: '2023-04-03', currency: 'ARS' } as FixedTermDepositCreationTransaction, // Invested: 5000
+    { id: '4', type: 'Sell', assetType: 'Stock', symbol: 'AAPL', quantity: 5, price: 160, date: '2023-01-04', currency: 'ARS', market: 'BCBA' }, // Invested: -800
   ];
   // Total Invested Capital = 1500 + 5000 - 800 = 5700
 
@@ -27,7 +27,7 @@ describe('DashboardSummary', () => {
     profileCompleted: true,
     positions: [],
     transactions: mockTransactions,
-    availableCash: 4300, 
+    cash: { ARS: 4300, USD: 0 },
   };
 
 
@@ -66,8 +66,11 @@ describe('DashboardSummary', () => {
     // Wait for the component to process data
     await waitFor(() => {
       // Invested capital should be 5700 from our manual calculation
-      expect(screen.getByText('Capital Invertido')).toBeInTheDocument();
+      expect(screen.getByText('Capital Invertido (ARS)')).toBeInTheDocument();
       expect(screen.getByText('$5,700.00')).toBeInTheDocument();
+      // USD section should also be present
+      expect(screen.getByText('Capital Invertido (USD)')).toBeInTheDocument();
+      expect(screen.getByText('$0.00')).toBeInTheDocument();
     });
   });
 
@@ -83,8 +86,11 @@ describe('DashboardSummary', () => {
     // Wait for the component to process data
     await waitFor(() => {
       // Portfolio Value (7000) - Invested Capital (5700) = 1300
-      expect(screen.getByText('Ganancias / Pérdidas')).toBeInTheDocument();
+      expect(screen.getByText('Ganancias / Pérdidas (ARS)')).toBeInTheDocument();
       expect(screen.getByText('+1,300.00')).toBeInTheDocument();
+      // USD section should also be present
+      expect(screen.getByText('Ganancias / Pérdidas (USD)')).toBeInTheDocument();
+      expect(screen.getByText('+0.00')).toBeInTheDocument();
     });
   });
 }); 

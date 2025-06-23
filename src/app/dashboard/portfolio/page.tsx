@@ -41,41 +41,67 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
     async function calculateComparison() {
       if (portfolioData?.transactions && portfolioData?.positions && portfolioData?.historicalPrices) {
         try {
-          const totalInvestedCapital = calculateInvestedCapital(portfolioData.transactions, 'ARS');
+          // Calculate invested capital per currency
+          const investedCapitalARS = calculateInvestedCapital(portfolioData.transactions, 'ARS');
+          const investedCapitalUSD = calculateInvestedCapital(portfolioData.transactions, 'USD');
 
-          // Calculate current investments value (positions only, no cash)
-          let currentInvestmentsValue = 0;
+          // Calculate current investments value per currency (positions only, no cash)
+          let currentInvestmentsValueARS = 0;
+          let currentInvestmentsValueUSD = 0;
 
-          // Add value of all positions
           for (const position of portfolioData.positions) {
             if (position.type === 'Stock') {
               const prices = portfolioData.historicalPrices[position.symbol];
               if (prices && prices.length > 0) {
                 const currentPrice = prices[prices.length - 1].close;
-                currentInvestmentsValue += position.quantity * currentPrice;
+                if (position.currency === 'ARS') {
+                  currentInvestmentsValueARS += position.quantity * currentPrice;
+                } else if (position.currency === 'USD') {
+                  currentInvestmentsValueUSD += position.quantity * currentPrice;
+                }
               }
             } else if (position.type === 'Bond') {
-              currentInvestmentsValue += position.quantity * position.averagePrice;
+              if (position.currency === 'ARS') {
+                currentInvestmentsValueARS += position.quantity * position.averagePrice;
+              } else if (position.currency === 'USD') {
+                currentInvestmentsValueUSD += position.quantity * position.averagePrice;
+              }
             } else if (position.type === 'FixedTermDeposit') {
-              currentInvestmentsValue += position.amount;
+              if (position.currency === 'ARS') {
+                currentInvestmentsValueARS += position.amount;
+              } else if (position.currency === 'USD') {
+                currentInvestmentsValueUSD += position.amount;
+              }
             }
           }
 
-          // Calculate gain percentage based on invested assets
-          let gainPercent = 0;
-          if (totalInvestedCapital > 0) {
-            const netGain = currentInvestmentsValue - totalInvestedCapital;
-            gainPercent = (netGain / totalInvestedCapital) * 100;
+          // Calculate gain percentages, guard against division by zero
+          let gainPercentARS = 0;
+          let gainPercentUSD = 0;
+          if (investedCapitalARS > 0) {
+            const netGainARS = currentInvestmentsValueARS - investedCapitalARS;
+            gainPercentARS = (netGainARS / investedCapitalARS) * 100;
+          }
+          if (investedCapitalUSD > 0) {
+            const netGainUSD = currentInvestmentsValueUSD - investedCapitalUSD;
+            gainPercentUSD = (netGainUSD / investedCapitalUSD) * 100;
           }
 
           // Fetch benchmarks from API
           const benchmarksResponse = await fetch('/api/benchmarks');
           const benchmarks = await benchmarksResponse.json();
-          
-          setComparison(compareWithBenchmarks(gainPercent, benchmarks));
+
+          // Use the new dual-currency comparison helper
+          setComparison(
+            require('@/utils/returnCalculator').compareWithBenchmarksDual(
+              gainPercentARS,
+              gainPercentUSD,
+              benchmarks
+            )
+          );
         } catch (error) {
           console.error('Error calculating portfolio return:', error);
-          setComparison(compareWithBenchmarks(0));
+          setComparison(require('@/utils/returnCalculator').compareWithBenchmarksDual(0, 0, {}));
         }
       }
     }

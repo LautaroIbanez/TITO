@@ -55,4 +55,16 @@ export function compareWithBenchmarks(
   };
 }
 
+export function compareWithBenchmarksDual(
+  portfolioReturnARS: number,
+  portfolioReturnUSD: number,
+  benchmarks: Record<string, number> = DEFAULT_BENCHMARKS
+) {
+  return {
+    portfolioReturnARS,
+    portfolioReturnUSD,
+    ...benchmarks,
+  };
+}
+
 export type ComparisonResult = ReturnType<typeof compareWithBenchmarks>; 

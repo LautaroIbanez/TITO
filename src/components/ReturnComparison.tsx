@@ -1,8 +1,11 @@
 import React from 'react';
-import { ComparisonResult } from '@/utils/returnCalculator';
 
 interface Props {
-  data: ComparisonResult;
+  data: {
+    portfolioReturnARS: number;
+    portfolioReturnUSD: number;
+    [key: string]: number;
+  };
 }
 
 const benchmarkLabels: Record<string, string> = {
@@ -24,11 +27,12 @@ const benchmarkLabels: Record<string, string> = {
 };
 
 export default function ReturnComparison({ data }: Props) {
-  // Extract portfolio return and create items for other benchmarks
-  const { portfolioReturn, ...benchmarks } = data;
-  
+  // Extract portfolio returns and create items for other benchmarks
+  const { portfolioReturnARS, portfolioReturnUSD, ...benchmarks } = data;
+
   const items = [
-    { label: 'Tu Portafolio', value: portfolioReturn },
+    { label: 'Tu Portafolio (ARS)', value: portfolioReturnARS },
+    { label: 'Tu Portafolio (USD)', value: portfolioReturnUSD },
     ...Object.entries(benchmarks).map(([key, value]) => ({
       label: benchmarkLabels[key] || key,
       value: value as number

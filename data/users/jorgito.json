@@ -1,0 +1,132 @@
+{
+  "username": "jorgito",
+  "createdAt": "2025-06-23T19:23:52.138Z",
+  "profileCompleted": true,
+  "positions": [
+    {
+      "type": "Stock",
+      "symbol": "MSFT.BA",
+      "quantity": 5,
+      "averagePrice": 18425,
+      "currency": "ARS",
+      "market": "BCBA"
+    },
+    {
+      "type": "Stock",
+      "symbol": "TSLA.BA",
+      "quantity": 5,
+      "averagePrice": 24850,
+      "currency": "ARS",
+      "market": "BCBA"
+    },
+    {
+      "type": "FixedTermDeposit",
+      "id": "ftd-1750707045991",
+      "provider": "Banco Galicia",
+      "amount": 50000,
+      "annualRate": 75,
+      "startDate": "2025-06-23T19:30:45.990Z",
+      "maturityDate": "2025-07-23T19:30:45.990Z",
+      "currency": "ARS"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "1750706753159",
+      "date": "2025-06-23T19:25:53.159Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "MSFT.BA",
+      "quantity": 5,
+      "price": 18425,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1750706778035",
+      "date": "2025-06-23T19:26:18.035Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "TSLA.BA",
+      "quantity": 5,
+      "price": 24850,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1750707045991",
+      "date": "2025-06-23T19:30:45.991Z",
+      "type": "Create",
+      "assetType": "FixedTermDeposit",
+      "provider": "Banco Galicia",
+      "amount": 50000,
+      "annualRate": 75,
+      "termDays": 30,
+      "maturityDate": "2025-07-23T19:30:45.990Z",
+      "currency": "ARS"
+    }
+  ],
+  "goals": [],
+  "cash": {
+    "ARS": 731353.0625,
+    "USD": 5000
+  },
+  "profile": {
+    "instrumentsUsed": [
+      "Plazo Fijo",
+      "Fondos Comunes de Inversión"
+    ],
+    "knowledgeLevels": {
+      "Plazo Fijo": "Alto",
+      "Fondos Comunes de Inversión": "Bajo"
+    },
+    "holdingPeriod": "1 a 5 años",
+    "ageGroup": "Más de 50",
+    "riskAppetite": "Balanceado",
+    "investmentAmount": 1005000,
+    "initialBalanceARS": 1000000,
+    "initialBalanceUSD": 5000
+  },
+  "investmentStrategy": {
+    "id": "strategy-9bb0ee5b-884f-4527-9faa-fda7135ecde8",
+    "createdAt": "2025-06-23T19:30:57.412Z",
+    "targetAllocation": {
+      "stocks": 60,
+      "bonds": 30,
+      "deposits": 5,
+      "cash": 5
+    },
+    "recommendations": [
+      {
+        "id": "alloc-1ccb48aa-f82b-4853-b07f-4e9aedf894ea",
+        "action": "increase",
+        "assetClass": "stocks",
+        "reason": "Tu portafolio tiene 21.6% en acciones, pero tu estrategia objetivo es 60%",
+        "priority": "high",
+        "expectedImpact": "positive"
+      },
+      {
+        "id": "alloc-6ec23e38-2ad6-424c-8cb9-1a290685dcde",
+        "action": "increase",
+        "assetClass": "bonds",
+        "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 30%",
+        "priority": "high",
+        "expectedImpact": "positive"
+      },
+      {
+        "id": "cash-invest-64a22ed9-28b3-4862-af35-686826a2ce4a",
+        "action": "buy",
+        "reason": "Tienes un 73.4% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
+        "priority": "high",
+        "expectedImpact": "positive"
+      }
+    ],
+    "riskLevel": "Balanceado",
+    "timeHorizon": "5-10 años",
+    "notes": ""
+  }
+}
