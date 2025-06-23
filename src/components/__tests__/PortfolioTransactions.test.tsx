@@ -1,10 +1,54 @@
 import '@testing-library/jest-dom';
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import PortfolioTransactions from '../PortfolioTransactions';
 import { PortfolioTransaction } from '@/types';
+import { PortfolioProvider } from '../../contexts/PortfolioContext';
+
+// Mock the usePortfolio hook
+const mockRefreshPortfolio = jest.fn();
+jest.mock('../../contexts/PortfolioContext', () => ({
+  ...jest.requireActual('../../contexts/PortfolioContext'),
+  usePortfolio: () => ({
+    refreshPortfolio: mockRefreshPortfolio,
+  }),
+}));
+
+// Mock localStorage
+const mockLocalStorage = {
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+};
+Object.defineProperty(window, 'localStorage', {
+  value: mockLocalStorage,
+});
+
+// Mock fetch
+global.fetch = jest.fn();
+
+// Mock window.confirm
+global.confirm = jest.fn();
+
+const renderWithProvider = (transactions: PortfolioTransaction[]) => {
+  return render(
+    <PortfolioProvider>
+      <PortfolioTransactions transactions={transactions} />
+    </PortfolioProvider>
+  );
+};
 
 describe('PortfolioTransactions', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockLocalStorage.getItem.mockReturnValue(JSON.stringify({ username: 'testuser' }));
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ message: 'Success' }),
+    });
+    (global.confirm as jest.Mock).mockReturnValue(true);
+  });
+
   it('should render stock buy transaction correctly', () => {
     const transactions: PortfolioTransaction[] = [
       {
@@ -18,7 +62,7 @@ describe('PortfolioTransactions', () => {
       }
     ];
 
-    render(<PortfolioTransactions transactions={transactions} />);
+    renderWithProvider(transactions);
     
     expect(screen.getByText('Compra')).toBeInTheDocument();
     expect(screen.getByText('AAPL')).toBeInTheDocument();
@@ -41,7 +85,7 @@ describe('PortfolioTransactions', () => {
       }
     ];
 
-    render(<PortfolioTransactions transactions={transactions} />);
+    renderWithProvider(transactions);
     
     expect(screen.getByText('Compra')).toBeInTheDocument();
     expect(screen.getByText('AAPL')).toBeInTheDocument();
@@ -64,7 +108,7 @@ describe('PortfolioTransactions', () => {
       }
     ];
 
-    render(<PortfolioTransactions transactions={transactions} />);
+    renderWithProvider(transactions);
     
     expect(screen.getByText('Venta')).toBeInTheDocument();
     expect(screen.getByText('MSFT')).toBeInTheDocument();
@@ -85,7 +129,7 @@ describe('PortfolioTransactions', () => {
       }
     ];
 
-    render(<PortfolioTransactions transactions={transactions} />);
+    renderWithProvider(transactions);
     
     expect(screen.getByText('Compra Bono')).toBeInTheDocument();
     expect(screen.getByText('GOV-BOND-2025')).toBeInTheDocument();
@@ -108,7 +152,7 @@ describe('PortfolioTransactions', () => {
       }
     ];
 
-    render(<PortfolioTransactions transactions={transactions} />);
+    renderWithProvider(transactions);
     
     expect(screen.getByText('Compra Bono')).toBeInTheDocument();
     expect(screen.getByText('GOV-BOND-2025')).toBeInTheDocument();
@@ -131,7 +175,7 @@ describe('PortfolioTransactions', () => {
       }
     ];
 
-    render(<PortfolioTransactions transactions={transactions} />);
+    renderWithProvider(transactions);
     
     expect(screen.getByText('Venta Bono')).toBeInTheDocument();
     expect(screen.getByText('CORP-BOND-2026')).toBeInTheDocument();
@@ -154,7 +198,7 @@ describe('PortfolioTransactions', () => {
       }
     ];
 
-    render(<PortfolioTransactions transactions={transactions} />);
+    renderWithProvider(transactions);
     
     expect(screen.getByText('Creación Plazo Fijo')).toBeInTheDocument();
     expect(screen.getByText('Banco Santander')).toBeInTheDocument();
@@ -175,7 +219,7 @@ describe('PortfolioTransactions', () => {
       }
     ];
 
-    render(<PortfolioTransactions transactions={transactions} />);
+    renderWithProvider(transactions);
     
     expect(screen.getByText('Depósito')).toBeInTheDocument();
     expect(screen.getByText('$5000.00')).toBeInTheDocument();
@@ -213,7 +257,7 @@ describe('PortfolioTransactions', () => {
       }
     ];
 
-    render(<PortfolioTransactions transactions={transactions} />);
+    renderWithProvider(transactions);
     
     const rows = screen.getAllByRole('row');
     // Skip header row, check first data row (newest transaction)
@@ -223,7 +267,7 @@ describe('PortfolioTransactions', () => {
   });
 
   it('should show empty state when no transactions', () => {
-    render(<PortfolioTransactions transactions={[]} />);
+    renderWithProvider([]);
     
     expect(screen.getByText('Aún no hay transacciones.')).toBeInTheDocument();
   });
@@ -261,7 +305,7 @@ describe('PortfolioTransactions', () => {
       }
     ];
 
-    render(<PortfolioTransactions transactions={transactions} />);
+    renderWithProvider(transactions);
     
     expect(screen.getByText('Creación Plazo Fijo')).toBeInTheDocument();
     expect(screen.getByText('Compra Bono')).toBeInTheDocument();
@@ -284,8 +328,112 @@ describe('PortfolioTransactions', () => {
       }
     ];
 
-    render(<PortfolioTransactions transactions={transactions} />);
+    renderWithProvider(transactions);
     
     expect(screen.getByText('Comisiones')).toBeInTheDocument();
+  });
+
+  // New tests for deposit CRUD functionality
+  it('should show edit and delete buttons for deposit transactions', () => {
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '6',
+        date: '2024-01-06T00:00:00.000Z',
+        type: 'Deposit',
+        amount: 5000
+      }
+    ];
+
+    renderWithProvider(transactions);
+    
+    expect(screen.getByText('Editar')).toBeInTheDocument();
+    expect(screen.getByText('Eliminar')).toBeInTheDocument();
+  });
+
+  it('should not show edit and delete buttons for non-deposit transactions', () => {
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '1',
+        date: '2024-01-01T00:00:00.000Z',
+        type: 'Buy',
+        assetType: 'Stock',
+        symbol: 'AAPL',
+        quantity: 10,
+        price: 150
+      }
+    ];
+
+    renderWithProvider(transactions);
+    
+    expect(screen.queryByText('Editar')).not.toBeInTheDocument();
+    expect(screen.queryByText('Eliminar')).not.toBeInTheDocument();
+  });
+
+  it('should handle deposit deletion successfully', async () => {
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '6',
+        date: '2024-01-06T00:00:00.000Z',
+        type: 'Deposit',
+        amount: 5000
+      }
+    ];
+
+    renderWithProvider(transactions);
+    
+    const deleteButton = screen.getByText('Eliminar');
+    fireEvent.click(deleteButton);
+    
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/portfolio/deposit/6?username=testuser',
+        { method: 'DELETE' }
+      );
+      expect(mockRefreshPortfolio).toHaveBeenCalled();
+    });
+  });
+
+  it('should handle deposit deletion error', async () => {
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '6',
+        date: '2024-01-06T00:00:00.000Z',
+        type: 'Deposit',
+        amount: 5000
+      }
+    ];
+
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: false,
+      json: () => Promise.resolve({ error: 'Cannot delete deposit' }),
+    });
+
+    renderWithProvider(transactions);
+    
+    const deleteButton = screen.getByText('Eliminar');
+    fireEvent.click(deleteButton);
+    
+    await waitFor(() => {
+      expect(screen.getByText('Cannot delete deposit')).toBeInTheDocument();
+    });
+  });
+
+  it('should open edit modal when edit button is clicked', () => {
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '6',
+        date: '2024-01-06T00:00:00.000Z',
+        type: 'Deposit',
+        amount: 5000
+      }
+    ];
+
+    renderWithProvider(transactions);
+    
+    const editButton = screen.getByText('Editar');
+    fireEvent.click(editButton);
+    
+    // The modal should be rendered (we'll test the modal component separately)
+    expect(screen.getByText('Editar Depósito')).toBeInTheDocument();
   });
 }); 

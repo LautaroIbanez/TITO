@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { UserData, DepositTransaction } from '@/types';
-import { getPortfolioData, saveUserData } from '@/utils/portfolioData';
+import { saveUserData } from '@/utils/portfolioData';
 
 async function readUserFile(username: string): Promise<UserData | null> {
     const userFile = path.join(process.cwd(), 'data', 'users', `${username}.json`);
@@ -14,73 +14,36 @@ async function readUserFile(username: string): Promise<UserData | null> {
     }
 }
 
-// Add a new deposit
-export async function POST(request: Request) {
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
+    const transactionId = params.id;
     const { username, amount, date } = await request.json();
-    if (!username || !amount || !date) {
+    if (!username || !transactionId || amount === undefined || !date) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const userData = await readUserFile(username);
     if (!userData) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-    
-    const newDeposit: DepositTransaction = {
-      id: `dep_${new Date().getTime()}`,
-      date: date,
-      type: 'Deposit',
-      amount: Number(amount),
-    };
-
-    userData.transactions.push(newDeposit);
-    userData.availableCash = (userData.availableCash || 0) + Number(amount);
-
-    await saveUserData(username, userData);
-
-    return NextResponse.json({ message: 'Deposit added successfully', deposit: newDeposit });
-  } catch (error) {
-    console.error('Failed to add deposit:', error);
-    return NextResponse.json({ error: 'Failed to add deposit' }, { status: 500 });
-  }
-}
-
-// Update an existing deposit
-export async function PUT(request: Request) {
-  try {
-    const { username, transactionId, amount, date } = await request.json();
-    if (!username || !transactionId || !amount || !date) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-
-    const userData = await readUserFile(username);
-    if (!userData) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     const txIndex = userData.transactions.findIndex(tx => tx.id === transactionId);
-
     if (txIndex === -1) {
       return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
     }
-    
+
     const oldTx = userData.transactions[txIndex];
     if (oldTx.type !== 'Deposit') {
-        return NextResponse.json({ error: 'Transaction is not a deposit' }, { status: 400 });
+      return NextResponse.json({ error: 'Transaction is not a deposit' }, { status: 400 });
     }
-    
+
     const oldAmount = (oldTx as DepositTransaction).amount;
     const newAmount = Number(amount);
-
-    // Adjust available cash
     userData.availableCash = (userData.availableCash || 0) - oldAmount + newAmount;
     
-    // Update transaction
     userData.transactions[txIndex] = { ...oldTx, amount: newAmount, date };
 
     await saveUserData(username, userData);
-
     return NextResponse.json({ message: 'Deposit updated successfully' });
   } catch (error) {
     console.error('Failed to update deposit:', error);
@@ -88,12 +51,11 @@ export async function PUT(request: Request) {
   }
 }
 
-// Delete a deposit
-export async function DELETE(request: Request) {
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
+    const transactionId = params.id;
     const { searchParams } = new URL(request.url);
     const username = searchParams.get('username');
-    const transactionId = searchParams.get('transactionId');
 
     if (!username || !transactionId) {
       return NextResponse.json({ error: 'Missing required query parameters' }, { status: 400 });
@@ -101,25 +63,28 @@ export async function DELETE(request: Request) {
 
     const userData = await readUserFile(username);
     if (!userData) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
-    
-    const txIndex = userData.transactions.findIndex(tx => tx.id === transactionId);
 
+    const txIndex = userData.transactions.findIndex(tx => tx.id === transactionId);
     if (txIndex === -1) {
       return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
     }
 
     const txToDelete = userData.transactions[txIndex];
     if (txToDelete.type !== 'Deposit') {
-        return NextResponse.json({ error: 'Transaction is not a deposit' }, { status: 400 });
+      return NextResponse.json({ error: 'Transaction is not a deposit' }, { status: 400 });
     }
 
-    userData.availableCash = (userData.availableCash || 0) - (txToDelete as DepositTransaction).amount;
+    const amountToDelete = (txToDelete as DepositTransaction).amount;
+    if (userData.availableCash < amountToDelete) {
+      return NextResponse.json({ error: 'Cannot delete deposit, insufficient available cash' }, { status: 400 });
+    }
+    
+    userData.availableCash -= amountToDelete;
     userData.transactions.splice(txIndex, 1);
 
     await saveUserData(username, userData);
-
     return NextResponse.json({ message: 'Deposit deleted successfully' });
   } catch (error) {
     console.error('Failed to delete deposit:', error);

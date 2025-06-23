@@ -143,6 +143,12 @@
       "type": "Deposit",
       "date": "2025-06-22T21:45:43.233Z",
       "amount": 500
+    },
+    {
+      "id": "dep_1750636152493",
+      "date": "2025-06-22",
+      "type": "Deposit",
+      "amount": 200
     }
   ],
   "goals": [
@@ -155,7 +161,7 @@
       "id": "1750635388567"
     }
   ],
-  "availableCash": 1982.3823181304933,
+  "availableCash": 2182.3823181304933,
   "profile": {
     "instrumentsUsed": [
       "Plazo Fijo",
@@ -173,8 +179,8 @@
     "investmentAmount": 2000
   },
   "investmentStrategy": {
-    "id": "strategy-95cfefee-77bc-416d-8d3b-65c90777f2e8",
-    "createdAt": "2025-06-22T23:34:01.755Z",
+    "id": "strategy-7ae4b32e-014b-426f-a8f7-3e3154a47d67",
+    "createdAt": "2025-06-23T01:40:57.024Z",
     "targetAllocation": {
       "stocks": 60,
       "bonds": 30,
@@ -183,23 +189,23 @@
     },
     "recommendations": [
       {
-        "id": "alloc-2abb28cf-dbc7-42b3-97c1-f5d696eda5c9",
+        "id": "alloc-b67d1ded-26ea-45d8-bd8f-c683dd8c5df7",
         "action": "increase",
         "assetClass": "stocks",
-        "reason": "Tu portafolio tiene 23.5% en acciones, pero tu estrategia objetivo es 60%",
+        "reason": "Tu portafolio tiene 22.2% en acciones, pero tu estrategia objetivo es 60%",
         "priority": "high",
         "expectedImpact": "positive"
       },
       {
-        "id": "alloc-a305cd07-1d81-41cf-b918-f910e7d02ca3",
+        "id": "alloc-85baa0dc-53d8-47c2-8424-ec09bcfa96b2",
         "action": "increase",
         "assetClass": "bonds",
-        "reason": "Tu portafolio tiene 19.8% en bonos, pero tu estrategia objetivo es 30%",
+        "reason": "Tu portafolio tiene 18.7% en bonos, pero tu estrategia objetivo es 30%",
         "priority": "high",
         "expectedImpact": "positive"
       },
       {
-        "id": "cash-c3128691-6248-45ba-a0b5-7040929dde71",
+        "id": "cash-3bee139e-1fc1-4cc5-ac54-3793f39d869c",
         "action": "decrease",
         "assetClass": "cash",
         "reason": "Tienes mucho efectivo disponible. Considera invertirlo según tu estrategia",

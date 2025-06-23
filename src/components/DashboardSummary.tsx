@@ -1,9 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { InvestmentGoal, DepositTransaction, StrategyRecommendation, PortfolioPosition } from '@/types';
+import { InvestmentGoal, PortfolioTransaction, StrategyRecommendation, PortfolioPosition } from '@/types';
 import { Bond } from '@/types/finance';
 import { calculatePortfolioValueHistory } from '@/utils/calculatePortfolioValue';
+import { calculateInvestedCapital } from '@/utils/investedCapital';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import GoalProgress from './GoalProgress';
 
@@ -104,9 +105,7 @@ export default function DashboardSummary() {
     return <div className="text-center text-gray-500">Could not load user data.</div>;
   }
   
-  const investedCapital = portfolioData.transactions
-    .filter((t): t is DepositTransaction => t.type === 'Deposit')
-    .reduce((sum, t) => sum + t.amount, 0);
+  const investedCapital = calculateInvestedCapital(portfolioData.transactions);
     
   const netGains = portfolioValue - investedCapital;
   const gainsColor = netGains >= 0 ? 'text-green-600' : 'text-red-600';

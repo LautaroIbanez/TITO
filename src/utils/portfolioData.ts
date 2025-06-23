@@ -51,4 +51,14 @@ export async function getPortfolioData(username: string) {
     availableCash: user.availableCash,
     goals: user.goals,
   };
+}
+
+export async function saveUserData(username: string, data: UserData): Promise<void> {
+  const userFile = path.join(process.cwd(), 'data', 'users', `${username}.json`);
+  try {
+    await fs.writeFile(userFile, JSON.stringify(data, null, 2));
+  } catch (error) {
+    console.error(`Failed to save data for user ${username}:`, error);
+    throw new Error('Failed to save user data');
+  }
 } 
