@@ -147,7 +147,7 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
       const res = await fetch(`/api/portfolio/deposit/${deposit.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, amount: deposit.amount, date: deposit.date }),
+        body: JSON.stringify({ username, amount: deposit.amount, date: deposit.date, currency: deposit.currency }),
       });
       if (!res.ok) {
         const data = await res.json();

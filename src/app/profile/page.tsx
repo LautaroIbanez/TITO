@@ -24,13 +24,15 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
   
-  const [formData, setFormData] = useState<InvestorProfile>({
+  const [formData, setFormData] = useState<InvestorProfile & { initialBalanceARS?: number; initialBalanceUSD?: number; }>({
     instrumentsUsed: [],
     knowledgeLevels: {},
     holdingPeriod: '',
     ageGroup: '',
     riskAppetite: 'Balanceado',
-    investmentAmount: 0
+    investmentAmount: 0,
+    initialBalanceARS: 0,
+    initialBalanceUSD: 0,
   });
 
   // Load saved form data from localStorage
@@ -83,12 +85,16 @@ export default function ProfilePage() {
       setIsLoading(false);
       return;
     }
-
-    if (formData.investmentAmount <= 0) {
-      setError('Por favor, ingresa un monto de inversión válido.');
+    
+    const totalInvestment = (formData.initialBalanceARS || 0) + (formData.initialBalanceUSD || 0);
+    if (totalInvestment <= 0) {
+      setError('Por favor, ingresa un monto de inversión válido en ARS o USD.');
       setIsLoading(false);
       return;
     }
+
+    // Set the total investment amount for strategy calculations
+    const finalFormData = { ...formData, investmentAmount: totalInvestment };
 
     try {
       const sessionData = localStorage.getItem('session');
@@ -106,7 +112,7 @@ export default function ProfilePage() {
         },
         body: JSON.stringify({
           username,
-          profile: formData
+          profile: finalFormData
         }),
       });
 
@@ -314,22 +320,42 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 </div>
-
-                {/* Investment Amount */}
-                <div className="space-y-2">
-                  <label htmlFor="investmentAmount" className="text-sm font-medium text-gray-700">
-                    Monto de Inversión Inicial (ARS)
+              </div>
+            )}
+            
+            {/* Step 4: Investment Amount */}
+            {step === 4 && (
+              <div className="space-y-4 animate-fade-in">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  Paso 4: Capital Inicial
+                </h2>
+                <p className="text-sm text-gray-600">
+                  Ingresa los saldos iniciales con los que operarás. Puedes empezar con uno o ambos.
+                </p>
+                <div>
+                  <label htmlFor="initialBalanceARS" className="block text-sm font-medium text-gray-700">
+                    Saldo Inicial en Pesos (ARS)
                   </label>
                   <input
                     type="number"
-                    id="investmentAmount"
-                    value={formData.investmentAmount}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      investmentAmount: Number(e.target.value)
-                    }))}
-                    className="p-2 border rounded text-gray-900 placeholder:text-gray-500 w-full"
-                    placeholder="50000"
+                    id="initialBalanceARS"
+                    value={formData.initialBalanceARS || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, initialBalanceARS: Number(e.target.value) }))}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
+                    placeholder="Ej: 50000"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="initialBalanceUSD" className="block text-sm font-medium text-gray-700">
+                    Saldo Inicial en Dólares (USD)
+                  </label>
+                  <input
+                    type="number"
+                    id="initialBalanceUSD"
+                    value={formData.initialBalanceUSD || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, initialBalanceUSD: Number(e.target.value) }))}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
+                    placeholder="Ej: 1000"
                   />
                 </div>
               </div>
@@ -351,7 +377,7 @@ export default function ProfilePage() {
                 <div /> // Placeholder for alignment
               )}
 
-              {step < 3 ? (
+              {step < 4 ? (
                 <button
                   type="button"
                   onClick={handleNext}

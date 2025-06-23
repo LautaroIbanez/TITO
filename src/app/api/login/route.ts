@@ -71,7 +71,7 @@ export async function POST(request: Request) {
         positions: [],
         transactions: [],
         goals: [],
-        availableCash: 0
+        cash: { ARS: 0, USD: 0 }
       };
 
       // Save the new user data

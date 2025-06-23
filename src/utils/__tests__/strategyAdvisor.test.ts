@@ -1,4 +1,4 @@
-import { generateInvestmentStrategy } from '../strategyAdvisor';
+import { generateInvestmentStrategy, StrategyInput } from '../strategyAdvisor';
 import { InvestorProfile, InvestmentGoal, PortfolioPosition } from '@/types';
 import dayjs from 'dayjs';
 
@@ -28,23 +28,27 @@ describe('strategyAdvisor', () => {
       type: 'Stock',
       symbol: 'AAPL',
       quantity: 10,
-      averagePrice: 150
+      averagePrice: 150,
+      currency: 'USD',
+      market: 'NASDAQ',
     },
     {
       type: 'Stock',
       symbol: 'MSFT',
       quantity: 5,
-      averagePrice: 300
+      averagePrice: 300,
+      currency: 'USD',
+      market: 'NASDAQ',
     }
   ];
 
   describe('generateInvestmentStrategy', () => {
     it('should generate a strategy with basic input', () => {
-      const input = {
+      const input: StrategyInput = {
         profile: mockProfile,
         goals: mockGoals,
         positions: mockPositions,
-        availableCash: 1000
+        cash: { ARS: 1000, USD: 0 },
       };
 
       const strategy = generateInvestmentStrategy(input);
@@ -78,7 +82,7 @@ describe('strategyAdvisor', () => {
         profile: conservativeProfile,
         goals: mockGoals,
         positions: mockPositions,
-        availableCash: 1000
+        cash: { ARS: 1000, USD: 0 },
       });
 
       expect(strategy.targetAllocation.stocks).toBeLessThan(50);
@@ -92,7 +96,7 @@ describe('strategyAdvisor', () => {
         profile: aggressiveProfile,
         goals: mockGoals,
         positions: mockPositions,
-        availableCash: 1000
+        cash: { ARS: 1000, USD: 0 },
       });
 
       expect(strategy.targetAllocation.stocks).toBeGreaterThanOrEqual(70);
@@ -116,7 +120,7 @@ describe('strategyAdvisor', () => {
         profile: aggressiveProfile,
         goals: shortTermGoals,
         positions: mockPositions,
-        availableCash: 1000
+        cash: { ARS: 1000, USD: 0 },
       });
 
       expect(strategy.targetAllocation.stocks).toBeGreaterThanOrEqual(70);
@@ -151,7 +155,7 @@ describe('strategyAdvisor', () => {
         profile: aggressiveHighKnowledgeProfile,
         goals: longTermGoals,
         positions: mockPositions,
-        availableCash: 1000
+        cash: { ARS: 1000, USD: 0 },
       });
 
       // Verify high stock allocation for aggressive + long-term + high knowledge
@@ -187,14 +191,14 @@ describe('strategyAdvisor', () => {
         profile: highKnowledgeProfile,
         goals: mockGoals,
         positions: mockPositions,
-        availableCash: 1000
+        cash: { ARS: 1000, USD: 0 },
       });
 
       const lowKnowledgeStrategy = generateInvestmentStrategy({
         profile: lowKnowledgeProfile,
         goals: mockGoals,
         positions: mockPositions,
-        availableCash: 1000
+        cash: { ARS: 1000, USD: 0 },
       });
 
       expect(highKnowledgeStrategy.targetAllocation.stocks).toBeGreaterThan(
@@ -207,7 +211,7 @@ describe('strategyAdvisor', () => {
         profile: mockProfile,
         goals: mockGoals,
         positions: mockPositions,
-        availableCash: 1000
+        cash: { ARS: 1000, USD: 0 },
       });
 
       expect(strategy.recommendations).toBeDefined();
@@ -217,18 +221,18 @@ describe('strategyAdvisor', () => {
 
     it('should generate rotation recommendations for concentrated portfolios', () => {
       const concentratedPositions: PortfolioPosition[] = [
-        { type: 'Stock', symbol: 'AAPL', quantity: 10, averagePrice: 150 },
-        { type: 'Stock', symbol: 'MSFT', quantity: 5, averagePrice: 300 },
-        { type: 'Stock', symbol: 'GOOGL', quantity: 3, averagePrice: 2500 },
-        { type: 'Stock', symbol: 'AMZN', quantity: 2, averagePrice: 3000 },
-        { type: 'Stock', symbol: 'TSLA', quantity: 1, averagePrice: 800 }
+        { type: 'Stock', symbol: 'AAPL', quantity: 10, averagePrice: 150, currency: 'USD', market: 'NASDAQ' },
+        { type: 'Stock', symbol: 'MSFT', quantity: 5, averagePrice: 300, currency: 'USD', market: 'NASDAQ' },
+        { type: 'Stock', symbol: 'GOOGL', quantity: 3, averagePrice: 2500, currency: 'USD', market: 'NASDAQ' },
+        { type: 'Stock', symbol: 'AMZN', quantity: 2, averagePrice: 3000, currency: 'USD', market: 'NASDAQ' },
+        { type: 'Stock', symbol: 'TSLA', quantity: 1, averagePrice: 800, currency: 'USD', market: 'NASDAQ' }
       ];
 
       const strategy = generateInvestmentStrategy({
         profile: mockProfile,
         goals: mockGoals,
         positions: concentratedPositions,
-        availableCash: 1000
+        cash: { ARS: 1000, USD: 0 },
       });
 
       const rotationRecommendations = strategy.recommendations.filter(
@@ -244,14 +248,32 @@ describe('strategyAdvisor', () => {
         profile: mockProfile,
         goals: mockGoals,
         positions: mockPositions,
-        availableCash: 10000 // High cash relative to positions
+        cash: { ARS: 10000, USD: 0 }, // High cash relative to positions
       });
 
       const cashRecommendations = highCashStrategy.recommendations.filter(
-        rec => rec.assetClass === 'cash'
+        rec => rec.reason.includes('efectivo')
       );
-
       expect(cashRecommendations.length).toBeGreaterThan(0);
+      expect(cashRecommendations[0].action).toBe('buy');
+
+      // Test with low cash
+      const lowCashPositions: PortfolioPosition[] = [
+        ...mockPositions,
+        { type: 'Stock', symbol: 'GOOGL', quantity: 10, averagePrice: 2500, currency: 'USD', market: 'NASDAQ' }
+      ]
+      const lowCashStrategy = generateInvestmentStrategy({
+        profile: mockProfile,
+        goals: mockGoals,
+        positions: lowCashPositions,
+        cash: { ARS: 100, USD: 0 }, // Low cash relative to positions
+      });
+
+      const lowCashRecs = lowCashStrategy.recommendations.filter(
+        rec => rec.reason.includes('efectivo')
+      );
+      expect(lowCashRecs.length).toBeGreaterThan(0);
+      expect(lowCashRecs[0].action).toBe('sell');
     });
 
     it('should handle empty positions and goals', () => {
@@ -259,7 +281,7 @@ describe('strategyAdvisor', () => {
         profile: mockProfile,
         goals: [],
         positions: [],
-        availableCash: 1000
+        cash: { ARS: 1000, USD: 0 },
       });
 
       expect(strategy).toBeDefined();
@@ -283,7 +305,7 @@ describe('strategyAdvisor', () => {
         profile: mockProfile,
         goals: shortTermGoals,
         positions: mockPositions,
-        availableCash: 1000
+        cash: { ARS: 1000, USD: 0 },
       });
 
       expect(strategy.timeHorizon).toBe('Corto plazo (< 3 años)');
@@ -292,14 +314,14 @@ describe('strategyAdvisor', () => {
     it('should generate conservative recommendations for conservative profile with volatile stocks', () => {
       const conservativeProfile = { ...mockProfile, riskAppetite: 'Conservador' as const };
       const volatilePositions: PortfolioPosition[] = [
-        { type: 'Stock', symbol: 'TSLA', quantity: 10, averagePrice: 200 }
+        { type: 'Stock', symbol: 'TSLA', quantity: 10, averagePrice: 200, currency: 'USD', market: 'NASDAQ' }
       ];
 
       const strategy = generateInvestmentStrategy({
         profile: conservativeProfile,
         goals: mockGoals,
         positions: volatilePositions,
-        availableCash: 1000
+        cash: { ARS: 1000, USD: 0 },
       });
 
       const tslaRecommendations = strategy.recommendations.filter(
@@ -335,7 +357,7 @@ describe('strategyAdvisor', () => {
           profile,
           goals,
           positions: mockPositions,
-          availableCash: 1000
+          cash: { ARS: 1000, USD: 0 },
         });
 
         const totalAllocation = strategy.targetAllocation.stocks + 
@@ -351,6 +373,58 @@ describe('strategyAdvisor', () => {
         expect(strategy.targetAllocation.deposits).toBeGreaterThanOrEqual(0);
         expect(strategy.targetAllocation.cash).toBeGreaterThanOrEqual(0);
       });
+    });
+
+    it('should not generate recommendations for a well-balanced portfolio', () => {
+      // This is tricky to set up perfectly without real price data, 
+      // but we can approximate a "good enough" state.
+      const balancedPositions: PortfolioPosition[] = [
+        // ~60% stocks
+        { type: 'Stock', symbol: 'AAPL', quantity: 40, averagePrice: 150, currency: 'USD', market: 'NASDAQ' }, // 6000
+        // ~30% bonds
+        { type: 'Bond', ticker: 'GOV-BOND-2025', quantity: 30, averagePrice: 100, currency: 'ARS' }, // 3000
+        // ~5% deposits
+        { type: 'FixedTermDeposit', id: 'ftd-1', provider: 'Test Bank', amount: 500, annualRate: 0.05, startDate: '2023-01-01', maturityDate: '2024-01-01', currency: 'ARS' } // 500
+      ];
+
+      const strategy = generateInvestmentStrategy({
+        profile: mockProfile,
+        goals: mockGoals,
+        positions: balancedPositions,
+        cash: { ARS: 500, USD: 0 }, // ~5% cash
+      });
+
+      // Allow for one minor recommendation, but shouldn't have major rebalancing suggestions.
+      expect(strategy.recommendations.length).toBeLessThanOrEqual(1);
+    });
+
+    it('should recommend rotating from volatile stocks for conservative profiles', () => {
+      const conservativeProfile = { ...mockProfile, riskAppetite: 'Conservador' as const };
+      const volatilePositions: PortfolioPosition[] = [
+        { type: 'Stock', symbol: 'TSLA', quantity: 10, averagePrice: 200, currency: 'USD', market: 'NASDAQ' }
+      ];
+
+      const goals: InvestmentGoal[] = [{
+        id: '1',
+        name: 'Vacaciones',
+        targetAmount: 5000,
+        targetDate: dayjs().add(1, 'year').format('YYYY-MM-DD'),
+        initialDeposit: 1000,
+        monthlyContribution: 200
+      }];
+
+      const strategy = generateInvestmentStrategy({
+        profile: conservativeProfile,
+        goals: goals,
+        positions: volatilePositions,
+        cash: { ARS: 1000, USD: 0 },
+      });
+
+      const rotationRecommendations = strategy.recommendations.filter(
+        rec => rec.action === 'rotate'
+      );
+
+      expect(rotationRecommendations.length).toBeGreaterThan(0);
     });
   });
 }); 

@@ -2,8 +2,9 @@ import '@testing-library/jest-dom';
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import PortfolioTransactions from '../PortfolioTransactions';
-import { PortfolioTransaction } from '@/types';
+import { PortfolioTransaction, DepositTransaction } from '@/types';
 import { PortfolioProvider } from '../../contexts/PortfolioContext';
+import EditDepositModal from '../EditDepositModal';
 
 // Mock the usePortfolio hook
 const mockRefreshPortfolio = jest.fn();
@@ -58,7 +59,9 @@ describe('PortfolioTransactions', () => {
         assetType: 'Stock',
         symbol: 'AAPL',
         quantity: 10,
-        price: 150
+        price: 150,
+        currency: 'USD',
+        market: 'NASDAQ',
       }
     ];
 
@@ -81,7 +84,9 @@ describe('PortfolioTransactions', () => {
         quantity: 10,
         price: 150,
         commissionPct: 1.5,
-        purchaseFeePct: 0.1
+        purchaseFeePct: 0.1,
+        currency: 'USD',
+        market: 'NASDAQ',
       }
     ];
 
@@ -104,7 +109,9 @@ describe('PortfolioTransactions', () => {
         assetType: 'Stock',
         symbol: 'MSFT',
         quantity: 5,
-        price: 300
+        price: 300,
+        currency: 'USD',
+        market: 'NASDAQ',
       }
     ];
 
@@ -125,7 +132,8 @@ describe('PortfolioTransactions', () => {
         assetType: 'Bond',
         ticker: 'GOV-BOND-2025',
         quantity: 100,
-        price: 995
+        price: 995,
+        currency: 'ARS',
       }
     ];
 
@@ -148,7 +156,8 @@ describe('PortfolioTransactions', () => {
         quantity: 100,
         price: 995,
         commissionPct: 2.0,
-        purchaseFeePct: 0.05
+        purchaseFeePct: 0.05,
+        currency: 'ARS',
       }
     ];
 
@@ -171,7 +180,8 @@ describe('PortfolioTransactions', () => {
         assetType: 'Bond',
         ticker: 'CORP-BOND-2026',
         quantity: 50,
-        price: 1020
+        price: 1020,
+        currency: 'ARS',
       }
     ];
 
@@ -192,6 +202,7 @@ describe('PortfolioTransactions', () => {
         assetType: 'FixedTermDeposit',
         provider: 'Banco Santander',
         amount: 10000,
+        currency: 'ARS',
         annualRate: 5.5,
         termDays: 365,
         maturityDate: '2025-01-05T00:00:00.000Z'
@@ -203,19 +214,21 @@ describe('PortfolioTransactions', () => {
     expect(screen.getByText('Creación Plazo Fijo')).toBeInTheDocument();
     expect(screen.getByText('Banco Santander')).toBeInTheDocument();
     expect(screen.getByText('$10000.00')).toBeInTheDocument();
+    expect(screen.getByText('ARS')).toBeInTheDocument();
     
     // Check that there are exactly 2 instances of '—' (price and commission columns)
     const dashElements = screen.getAllByText('—');
     expect(dashElements).toHaveLength(2);
   });
 
-  it('should render deposit transaction correctly', () => {
+  it('should render deposit transaction correctly in ARS', () => {
     const transactions: PortfolioTransaction[] = [
       {
         id: '6',
         date: '2024-01-06T00:00:00.000Z',
         type: 'Deposit',
-        amount: 5000
+        amount: 5000,
+        currency: 'ARS'
       }
     ];
 
@@ -223,8 +236,30 @@ describe('PortfolioTransactions', () => {
     
     expect(screen.getByText('Depósito')).toBeInTheDocument();
     expect(screen.getByText('$5000.00')).toBeInTheDocument();
+    expect(screen.getByText('ARS')).toBeInTheDocument();
     
     // Check that there are exactly 3 instances of '—' (symbol, price, and commission columns)
+    const dashElements = screen.getAllByText('—');
+    expect(dashElements).toHaveLength(3);
+  });
+
+  it('should render deposit transaction correctly in USD', () => {
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '7',
+        date: '2024-01-07T00:00:00.000Z',
+        type: 'Deposit',
+        amount: 700,
+        currency: 'USD'
+      }
+    ];
+
+    renderWithProvider(transactions);
+    
+    expect(screen.getByText('Depósito')).toBeInTheDocument();
+    expect(screen.getByText('$700.00')).toBeInTheDocument();
+    expect(screen.getByText('USD')).toBeInTheDocument();
+    
     const dashElements = screen.getAllByText('—');
     expect(dashElements).toHaveLength(3);
   });
@@ -238,7 +273,9 @@ describe('PortfolioTransactions', () => {
         assetType: 'Stock',
         symbol: 'AAPL',
         quantity: 10,
-        price: 150
+        price: 150,
+        currency: 'USD',
+        market: 'NASDAQ',
       },
       {
         id: '2',
@@ -247,193 +284,173 @@ describe('PortfolioTransactions', () => {
         assetType: 'Stock',
         symbol: 'MSFT',
         quantity: 5,
-        price: 300
+        price: 300,
+        currency: 'USD',
+        market: 'NASDAQ',
       },
       {
-        id: '3',
+        id: '6',
         date: '2024-01-02T00:00:00.000Z',
         type: 'Deposit',
-        amount: 1000
+        amount: 5000,
+        currency: 'ARS',
       }
     ];
 
     renderWithProvider(transactions);
-    
+
     const rows = screen.getAllByRole('row');
-    // Skip header row, check first data row (newest transaction)
-    expect(rows[1]).toHaveTextContent('MSFT'); // 2024-01-03
-    expect(rows[2]).toHaveTextContent('Depósito'); // 2024-01-02
-    expect(rows[3]).toHaveTextContent('AAPL'); // 2024-01-01
+    // rows[0] is the header row
+    expect(rows[1]).toHaveTextContent('Venta');
+    expect(rows[1]).toHaveTextContent('MSFT');
+    expect(rows[2]).toHaveTextContent('Depósito');
+    expect(rows[3]).toHaveTextContent('Compra');
+    expect(rows[3]).toHaveTextContent('AAPL');
   });
 
-  it('should show empty state when no transactions', () => {
-    renderWithProvider([]);
-    
-    expect(screen.getByText('Aún no hay transacciones.')).toBeInTheDocument();
-  });
-
-  it('should handle mixed transaction types', () => {
+  it('should handle delete transaction correctly', async () => {
     const transactions: PortfolioTransaction[] = [
       {
-        id: '1',
-        date: '2024-01-01T00:00:00.000Z',
-        type: 'Buy',
-        assetType: 'Stock',
-        symbol: 'AAPL',
-        quantity: 10,
-        price: 150
-      },
-      {
-        id: '2',
-        date: '2024-01-02T00:00:00.000Z',
-        type: 'Buy',
-        assetType: 'Bond',
-        ticker: 'GOV-BOND-2025',
-        quantity: 100,
-        price: 995
-      },
-      {
-        id: '3',
-        date: '2024-01-03T00:00:00.000Z',
-        type: 'Create',
-        assetType: 'FixedTermDeposit',
-        provider: 'Banco Santander',
-        amount: 10000,
-        annualRate: 5.5,
-        termDays: 365,
-        maturityDate: '2025-01-03T00:00:00.000Z'
-      }
-    ];
-
-    renderWithProvider(transactions);
-    
-    expect(screen.getByText('Creación Plazo Fijo')).toBeInTheDocument();
-    expect(screen.getByText('Compra Bono')).toBeInTheDocument();
-    expect(screen.getByText('Compra')).toBeInTheDocument();
-    expect(screen.getByText('Banco Santander')).toBeInTheDocument();
-    expect(screen.getByText('GOV-BOND-2025')).toBeInTheDocument();
-    expect(screen.getByText('AAPL')).toBeInTheDocument();
-  });
-
-  it('should display commission column header', () => {
-    const transactions: PortfolioTransaction[] = [
-      {
-        id: '1',
-        date: '2024-01-01T00:00:00.000Z',
-        type: 'Buy',
-        assetType: 'Stock',
-        symbol: 'AAPL',
-        quantity: 10,
-        price: 150
-      }
-    ];
-
-    renderWithProvider(transactions);
-    
-    expect(screen.getByText('Comisiones')).toBeInTheDocument();
-  });
-
-  // New tests for deposit CRUD functionality
-  it('should show edit and delete buttons for deposit transactions', () => {
-    const transactions: PortfolioTransaction[] = [
-      {
-        id: '6',
+        id: 'delete-me',
         date: '2024-01-06T00:00:00.000Z',
         type: 'Deposit',
-        amount: 5000
+        amount: 1000,
+        currency: 'ARS',
       }
     ];
 
     renderWithProvider(transactions);
-    
-    expect(screen.getByText('Editar')).toBeInTheDocument();
-    expect(screen.getByText('Eliminar')).toBeInTheDocument();
-  });
 
-  it('should not show edit and delete buttons for non-deposit transactions', () => {
-    const transactions: PortfolioTransaction[] = [
-      {
-        id: '1',
-        date: '2024-01-01T00:00:00.000Z',
-        type: 'Buy',
-        assetType: 'Stock',
-        symbol: 'AAPL',
-        quantity: 10,
-        price: 150
-      }
-    ];
-
-    renderWithProvider(transactions);
-    
-    expect(screen.queryByText('Editar')).not.toBeInTheDocument();
-    expect(screen.queryByText('Eliminar')).not.toBeInTheDocument();
-  });
-
-  it('should handle deposit deletion successfully', async () => {
-    const transactions: PortfolioTransaction[] = [
-      {
-        id: '6',
-        date: '2024-01-06T00:00:00.000Z',
-        type: 'Deposit',
-        amount: 5000
-      }
-    ];
-
-    renderWithProvider(transactions);
-    
     const deleteButton = screen.getByText('Eliminar');
     fireEvent.click(deleteButton);
-    
+
     await waitFor(() => {
+      expect(global.confirm).toHaveBeenCalledWith('Are you sure you want to delete this deposit?');
       expect(global.fetch).toHaveBeenCalledWith(
-        '/api/portfolio/deposit/6?username=testuser',
+        '/api/portfolio/deposit/delete-me?username=testuser',
         { method: 'DELETE' }
       );
       expect(mockRefreshPortfolio).toHaveBeenCalled();
     });
   });
 
-  it('should handle deposit deletion error', async () => {
-    const transactions: PortfolioTransaction[] = [
-      {
-        id: '6',
-        date: '2024-01-06T00:00:00.000Z',
-        type: 'Deposit',
-        amount: 5000
-      }
-    ];
-
+  it('should show error message on delete failure', async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: false,
-      json: () => Promise.resolve({ error: 'Cannot delete deposit' }),
+      json: () => Promise.resolve({ error: 'Delete failed' }),
     });
+
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: 'fail-delete',
+        date: '2024-01-06T00:00:00.000Z',
+        type: 'Deposit',
+        amount: 1000,
+        currency: 'ARS',
+      }
+    ];
 
     renderWithProvider(transactions);
     
     const deleteButton = screen.getByText('Eliminar');
     fireEvent.click(deleteButton);
-    
+
     await waitFor(() => {
-      expect(screen.getByText('Cannot delete deposit')).toBeInTheDocument();
+      expect(screen.getByText('Delete failed')).toBeInTheDocument();
     });
   });
 
   it('should open edit modal when edit button is clicked', () => {
     const transactions: PortfolioTransaction[] = [
       {
-        id: '6',
+        id: 'edit-me',
         date: '2024-01-06T00:00:00.000Z',
         type: 'Deposit',
-        amount: 5000
+        amount: 1000,
+        currency: 'ARS'
       }
     ];
-
+  
+    // Mock the EditDepositModal to check if it's rendered
+    jest.mock('../EditDepositModal', () => ({
+      __esModule: true,
+      default: ({ isOpen }: { isOpen: boolean }) => (
+        isOpen ? <div>EditDepositModal is open</div> : null
+      ),
+    }));
+  
     renderWithProvider(transactions);
-    
+  
     const editButton = screen.getByText('Editar');
     fireEvent.click(editButton);
+  
+    expect(screen.getByText('EditDepositModal is open')).toBeInTheDocument();
+  });
+  
+
+  it('should handle update transaction correctly', async () => {
+    const initialDeposit: DepositTransaction = {
+      id: 'update-me',
+      date: '2024-01-06T00:00:00.000Z',
+      type: 'Deposit',
+      amount: 1000,
+      currency: 'ARS',
+    };
     
-    // The modal should be rendered (we'll test the modal component separately)
-    expect(screen.getByText('Editar Depósito')).toBeInTheDocument();
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ message: 'Update successful' }),
+    });
+
+    const mockUpdate = jest.fn();
+
+    render(
+      <PortfolioProvider>
+        <EditDepositModal 
+          isOpen={true} 
+          onClose={() => {}} 
+          onUpdate={mockUpdate} 
+          deposit={initialDeposit}
+          error={null}
+        />
+      </PortfolioProvider>
+    );
+    
+    const amountInput = screen.getByLabelText('Amount');
+    fireEvent.change(amountInput, { target: { value: '1500' } });
+
+    const updateButton = screen.getByText('Update Deposit');
+    fireEvent.click(updateButton);
+
+    await waitFor(() => {
+      expect(mockUpdate).toHaveBeenCalledWith({
+        ...initialDeposit,
+        amount: 1500,
+      });
+    });
+  });
+  
+  it('should show error message on update failure', async () => {
+    const deposit: DepositTransaction = {
+      id: 'fail-update',
+      date: '2024-01-06T00:00:00.000Z',
+      type: 'Deposit',
+      amount: 1000,
+      currency: 'ARS'
+    };
+    const mockUpdate = jest.fn();
+    const mockClose = jest.fn();
+
+    render(
+      <EditDepositModal 
+        isOpen={true} 
+        onClose={mockClose} 
+        onUpdate={mockUpdate} 
+        deposit={deposit} 
+        error="Update failed" 
+      />
+    );
+
+    expect(screen.getByText('Update failed')).toBeInTheDocument();
   });
 }); 

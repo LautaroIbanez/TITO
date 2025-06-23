@@ -56,6 +56,7 @@ export default function PortfolioTransactions({ transactions }: Props) {
           username,
           amount: deposit.amount,
           date: deposit.date,
+          currency: deposit.currency,
         }),
       });
       if (!res.ok) {
@@ -138,6 +139,7 @@ export default function PortfolioTransactions({ transactions }: Props) {
               <th className="px-4 py-2 text-left">Tipo</th>
               <th className="px-4 py-2 text-left">Símbolo/Proveedor</th>
               <th className="px-4 py-2 text-right">Monto / Cantidad</th>
+              <th className="px-4 py-2 text-left">Moneda</th>
               <th className="px-4 py-2 text-right">Precio</th>
               <th className="px-4 py-2 text-right">Comisiones</th>
               <th className="px-4 py-2 text-right">Acciones</th>
@@ -157,8 +159,12 @@ export default function PortfolioTransactions({ transactions }: Props) {
                   <td className="px-4 py-2 font-mono text-gray-800">{display.symbol}</td>
                   <td className="px-4 py-2 text-right text-gray-800">
                     {display.quantity !== null ? display.quantity : 
-                     tx.type === 'Deposit' ? `$${tx.amount.toFixed(2)} ${tx.currency}` :
-                     tx.type === 'Create' && tx.assetType === 'FixedTermDeposit' ? `$${tx.amount.toFixed(2)} ${tx.currency}` : '—'}
+                     (tx.type === 'Deposit' || (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit')) 
+                     ? `$${tx.amount.toFixed(2)}` : '—'}
+                  </td>
+                  <td className="px-4 py-2 text-left text-gray-800">
+                    {(tx.type === 'Deposit' || (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit'))
+                     ? tx.currency : '—'}
                   </td>
                   <td className="px-4 py-2 text-right text-gray-800">
                     {display.price !== null ? `$${display.price.toFixed(2)}` : '—'}

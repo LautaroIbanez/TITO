@@ -1,0 +1,18 @@
+{
+  "peRatio": null,
+  "pbRatio": 432.44806,
+  "evToEbitda": null,
+  "roe": 0.3361,
+  "roa": 0.14581999,
+  "debtToEquity": 32.626,
+  "debtToEbitda": 0.7040081179184995,
+  "netMargin": 0.35789,
+  "freeCashFlow": 54817001472,
+  "priceToFCF": 76605.2197778131,
+  "ebitda": 149172994048,
+  "revenueGrowth": 0.133,
+  "epsGrowth": null,
+  "sector": "Technology",
+  "industry": "Software - Infrastructure",
+  "updatedAt": "2025-06-23T15:26:19.990Z"
+}

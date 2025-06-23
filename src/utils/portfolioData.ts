@@ -19,8 +19,20 @@ export async function getPortfolioData(username: string) {
     throw new Error('User not found');
   }
 
+  // --- Start Migration Logic ---
+  // If the old `availableCash` property exists, migrate it to the new `cash` object.
+  // We assume the legacy currency was ARS.
+  if (typeof (user as any).availableCash === 'number') {
+    user.cash = {
+      ARS: (user as any).availableCash,
+      USD: 0, // Assume no USD balance for old accounts
+    };
+    delete (user as any).availableCash;
+  }
+  // --- End Migration Logic ---
+
   // Initialize missing fields for safety
-  if (typeof user.availableCash !== 'number') user.availableCash = 0;
+  if (!user.cash) user.cash = { ARS: 0, USD: 0 };
   if (!user.positions) user.positions = [];
   if (!user.transactions) user.transactions = [];
   if (!user.goals) user.goals = [];
@@ -48,7 +60,7 @@ export async function getPortfolioData(username: string) {
     fundamentals,
     technicals,
     profile: user.profile,
-    availableCash: user.availableCash,
+    cash: user.cash,
     goals: user.goals,
   };
 }

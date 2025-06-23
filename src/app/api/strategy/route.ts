@@ -24,12 +24,14 @@ async function generateAndSaveStrategy(username: string): Promise<InvestmentStra
     throw new Error('User profile not completed');
   }
 
+  const userCash = user.cash || { ARS: 0, USD: 0 };
+
   // Generate strategy
   const strategy = generateInvestmentStrategy({
     profile: user.profile,
     goals: user.goals || [],
     positions: user.positions || [],
-    availableCash: user.availableCash || 0
+    cash: userCash
   });
 
   // Save strategy to user data

@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(request: Request) {
   try {
-    const { username, profile }: { username: string; profile: InvestorProfile } = await request.json();
+    const { username, profile }: { username: string; profile: InvestorProfile & { initialBalanceARS?: number; initialBalanceUSD?: number; } } = await request.json();
 
     if (!username || !profile) {
       return NextResponse.json(
@@ -68,12 +68,15 @@ export async function POST(request: Request) {
       const fileContent = await fs.readFile(userFilePath, 'utf-8');
       const userData: UserData = JSON.parse(fileContent);
 
-      // Update user data with profile
+      // Update user data with profile and initial cash balances
       const updatedUserData: UserData = {
         ...userData,
         profileCompleted: true,
         profile,
-        availableCash: profile.investmentAmount,
+        cash: {
+          ARS: profile.initialBalanceARS || 0,
+          USD: profile.initialBalanceUSD || 0,
+        },
       };
 
       // Save updated user data

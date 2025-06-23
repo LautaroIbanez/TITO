@@ -6,6 +6,7 @@ import { useEffect, useState, Dispatch, SetStateAction } from 'react';
 const navItems = [
   { label: "🏠 Resumen", href: "/dashboard" },
   { label: "🚀 Cómo empezar", href: "/dashboard/start" },
+  { label: "🧠 Cómo funciona", href: "/dashboard/how-it-works" },
   { label: "📊 Portfolio", href: "/dashboard/portfolio" },
   { label: "🕵️ Scoop", href: "/dashboard/scoop" },
   { label: "📜 Bonos", href: "/dashboard/bonds" },

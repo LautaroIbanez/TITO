@@ -14,9 +14,9 @@ export default function AvailableCapitalIndicator({ assetClass, currency = 'ARS'
     return null;
   }
 
-  const availableCash = portfolioData.cash[currency] || 0;
+  const { cash } = portfolioData;
   const targetAllocation = strategy.targetAllocation[assetClass];
-  const capital = availableCash * (targetAllocation / 100);
+  const capital = (cash[currency] || 0) * (targetAllocation / 100);
 
   return (
     <div className="text-sm text-gray-600">

@@ -12,17 +12,17 @@ export interface StrategyInput {
   profile: InvestorProfile;
   goals: InvestmentGoal[];
   positions: PortfolioPosition[];
-  availableCash: number;
+  cash: { ARS: number; USD: number };
 }
 
 export function generateInvestmentStrategy(input: StrategyInput): InvestmentStrategy {
-  const { profile, goals, positions, availableCash } = input;
+  const { profile, goals, positions, cash } = input;
   
   // Calculate target allocation based on risk profile and goals
   const targetAllocation = calculateTargetAllocation(profile, goals);
   
   // Generate recommendations based on current positions vs target allocation
-  const recommendations = generateRecommendations(profile, goals, positions, availableCash, targetAllocation);
+  const recommendations = generateRecommendations(profile, goals, positions, cash, targetAllocation);
   
   // Determine time horizon based on goals
   const timeHorizon = calculateTimeHorizon(goals);
@@ -169,14 +169,15 @@ function generateRecommendations(
   profile: InvestorProfile, 
   goals: InvestmentGoal[], 
   positions: PortfolioPosition[], 
-  availableCash: number,
+  cash: { ARS: number; USD: number },
   targetAllocation: InvestmentStrategy['targetAllocation']
 ): StrategyRecommendation[] {
   const recommendations: StrategyRecommendation[] = [];
+  const totalCash = cash.ARS + cash.USD; // Assuming 1:1 exchange rate for now
   
   // Calculate current allocation
-  const totalValue = calculateTotalPortfolioValue(positions, availableCash);
-  const currentAllocation = calculateCurrentAllocation(positions, availableCash, totalValue);
+  const totalValue = calculateTotalPortfolioValue(positions, totalCash);
+  const currentAllocation = calculateCurrentAllocation(positions, totalCash, totalValue);
   
   // Asset allocation recommendations
   if (currentAllocation.stocks < targetAllocation.stocks - 5) {
@@ -248,21 +249,19 @@ function generateRecommendations(
   }
   
   // Cash management recommendations
-  if (availableCash > totalValue * 0.15) {
+  if (totalCash > totalValue * 0.15) {
     recommendations.push({
-      id: `cash-${crypto.randomUUID()}`,
-      action: 'decrease',
-      assetClass: 'cash',
-      reason: 'Tienes mucho efectivo disponible. Considera invertirlo según tu estrategia',
-      priority: 'medium',
+      id: `cash-invest-${crypto.randomUUID()}`,
+      action: 'buy',
+      reason: `Tienes un ${currentAllocation.cash.toFixed(1)}% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido`,
+      priority: 'high',
       expectedImpact: 'positive'
     });
-  } else if (availableCash < totalValue * 0.02) {
+  } else if (totalCash < totalValue * 0.02) {
     recommendations.push({
-      id: `cash-${crypto.randomUUID()}`,
-      action: 'increase',
-      assetClass: 'cash',
-      reason: 'Tu efectivo disponible es bajo. Considera mantener más liquidez',
+      id: `cash-reserve-${crypto.randomUUID()}`,
+      action: 'sell',
+      reason: `Tienes menos de 2% de tu portafolio en efectivo. Considera vender algunas posiciones para tener una reserva de liquidez.`,
       priority: 'low',
       expectedImpact: 'neutral'
     });
@@ -286,47 +285,48 @@ function generateRecommendations(
   return recommendations.slice(0, 5); // Limit to top 5 recommendations
 }
 
-function calculateTotalPortfolioValue(positions: PortfolioPosition[], availableCash: number): number {
-  let total = availableCash;
-  
-  for (const position of positions) {
-    if (position.type === 'Stock') {
-      // Use average price as current value (simplified)
-      total += position.quantity * position.averagePrice;
-    } else if (position.type === 'Bond') {
-      total += position.quantity * position.averagePrice;
-    } else if (position.type === 'FixedTermDeposit') {
-      total += position.amount;
+function calculateTotalPortfolioValue(positions: PortfolioPosition[], totalCash: number): number {
+  let total = totalCash;
+  // This function is simplified and assumes all assets are in a common currency (e.g., USD)
+  // A real implementation would need price history and exchange rates.
+  for (const pos of positions) {
+    if (pos.type === 'Stock' || pos.type === 'Bond') {
+      total += pos.quantity * pos.averagePrice; 
+    } else if (pos.type === 'FixedTermDeposit') {
+      total += pos.amount;
     }
   }
-  
   return total;
 }
 
 function calculateCurrentAllocation(
   positions: PortfolioPosition[], 
-  availableCash: number, 
+  totalCash: number, 
   totalValue: number
 ): { stocks: number; bonds: number; deposits: number; cash: number } {
-  let stocksValue = 0;
-  let bondsValue = 0;
-  let depositsValue = 0;
-  
-  for (const position of positions) {
-    if (position.type === 'Stock') {
-      stocksValue += position.quantity * position.averagePrice;
-    } else if (position.type === 'Bond') {
-      bondsValue += position.quantity * position.averagePrice;
-    } else if (position.type === 'FixedTermDeposit') {
-      depositsValue += position.amount;
+  if (totalValue === 0) {
+    return { stocks: 0, bonds: 0, deposits: 0, cash: 100 };
+  }
+
+  let stockValue = 0;
+  let bondValue = 0;
+  let depositValue = 0;
+
+  for (const pos of positions) {
+    if (pos.type === 'Stock') {
+      stockValue += pos.quantity * pos.averagePrice;
+    } else if (pos.type === 'Bond') {
+      bondValue += pos.quantity * pos.averagePrice;
+    } else if (pos.type === 'FixedTermDeposit') {
+      depositValue += pos.amount;
     }
   }
   
   return {
-    stocks: totalValue > 0 ? (stocksValue / totalValue) * 100 : 0,
-    bonds: totalValue > 0 ? (bondsValue / totalValue) * 100 : 0,
-    deposits: totalValue > 0 ? (depositsValue / totalValue) * 100 : 0,
-    cash: totalValue > 0 ? (availableCash / totalValue) * 100 : 0
+    stocks: (stockValue / totalValue) * 100,
+    bonds: (bondValue / totalValue) * 100,
+    deposits: (depositValue / totalValue) * 100,
+    cash: totalValue > 0 ? (totalCash / totalValue) * 100 : 0
   };
 }
 

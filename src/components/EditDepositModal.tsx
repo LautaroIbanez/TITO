@@ -24,6 +24,11 @@ export default function EditDepositModal({ deposit, isOpen, onClose, onUpdate, e
     setFormData(prev => ({ ...prev, [name]: name === 'amount' ? Number(value) : value }));
   };
 
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value as 'ARS' | 'USD' }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onUpdate(formData);
@@ -44,6 +49,19 @@ export default function EditDepositModal({ deposit, isOpen, onClose, onUpdate, e
               onChange={handleChange}
               className="p-2 mt-1 border rounded text-gray-900 w-full"
             />
+          </div>
+          <div>
+            <label htmlFor="currency" className="block text-sm font-medium text-gray-700">Moneda</label>
+            <select
+              id="currency"
+              name="currency"
+              value={formData.currency}
+              onChange={handleSelectChange}
+              className="p-2 mt-1 border rounded text-gray-900 w-full bg-white"
+            >
+              <option value="ARS">ARS</option>
+              <option value="USD">USD</option>
+            </select>
           </div>
           <div>
             <label htmlFor="amount" className="block text-sm font-medium text-gray-700">Monto</label>
