@@ -40,8 +40,8 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
         try {
           const totalInvestedCapital = calculateInvestedCapital(portfolioData.transactions);
 
-          // Calculate current portfolio value (positions + available cash)
-          let currentPortfolioValue = portfolioData.availableCash;
+          // Calculate current investments value (positions only, no cash)
+          let currentInvestmentsValue = 0;
 
           // Add value of all positions
           for (const position of portfolioData.positions) {
@@ -49,19 +49,19 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
               const prices = portfolioData.historicalPrices[position.symbol];
               if (prices && prices.length > 0) {
                 const currentPrice = prices[prices.length - 1].close;
-                currentPortfolioValue += position.quantity * currentPrice;
+                currentInvestmentsValue += position.quantity * currentPrice;
               }
             } else if (position.type === 'Bond') {
-              currentPortfolioValue += position.quantity * position.averagePrice;
+              currentInvestmentsValue += position.quantity * position.averagePrice;
             } else if (position.type === 'FixedTermDeposit') {
-              currentPortfolioValue += position.amount;
+              currentInvestmentsValue += position.amount;
             }
           }
 
-          // Calculate gain percentage using invested capital (excluding deposits)
+          // Calculate gain percentage based on invested assets
           let gainPercent = 0;
           if (totalInvestedCapital > 0) {
-            const netGain = currentPortfolioValue - totalInvestedCapital;
+            const netGain = currentInvestmentsValue - totalInvestedCapital;
             gainPercent = (netGain / totalInvestedCapital) * 100;
           }
 
