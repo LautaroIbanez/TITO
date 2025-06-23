@@ -3,14 +3,19 @@ import { PortfolioTransaction } from '@/types';
 /**
  * Calculates the total capital invested based on market transactions.
  * This includes the cost of all buy transactions and fixed-term deposits,
- * minus the proceeds from all sell transactions. Simple cash deposits are ignored.
+ * minus the proceeds from all sell transactions for a specific currency.
  * @param transactions - An array of all portfolio transactions.
- * @returns The net invested capital.
+ * @param currency - The currency to calculate the invested capital for.
+ * @returns The net invested capital for the specified currency.
  */
-export function calculateInvestedCapital(transactions: PortfolioTransaction[]): number {
+export function calculateInvestedCapital(transactions: PortfolioTransaction[], currency: 'ARS' | 'USD'): number {
   let investedCapital = 0;
 
   for (const tx of transactions) {
+    if (tx.currency !== currency) {
+      continue;
+    }
+
     switch (tx.type) {
       case 'Buy':
         investedCapital += tx.price * tx.quantity;

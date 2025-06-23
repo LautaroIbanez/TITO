@@ -12,6 +12,9 @@ function calculateDailyInterest(positions: PortfolioPosition[], bonds: Bond[]): 
   let dailyInterest = 0;
 
   positions.forEach(position => {
+    if (position.currency !== 'ARS') {
+      return;
+    }
     if (position.type === 'FixedTermDeposit') {
       const dailyRate = position.annualRate / 100 / 365;
       dailyInterest += position.amount * dailyRate;

@@ -2,21 +2,28 @@ import { PortfolioTransaction, FixedTermDepositCreationTransaction } from '@/typ
 import { PriceData } from '@/types/finance';
 import dayjs from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import { getExchangeRate } from './currency';
 dayjs.extend(isSameOrBefore);
-
-export interface PortfolioValueOptions {
-  days?: number; // If provided, calculate last N days. If not, calculate from first transaction to today
-}
 
 interface ActiveFixedTermDeposit extends FixedTermDepositCreationTransaction {
   isMatured?: boolean;
+}
+
+export interface PortfolioValueHistory {
+  date: string;
+  valueARS: number;
+  valueUSD: number;
+}
+
+export interface PortfolioValueOptions {
+  days?: number; // If provided, calculate last N days. If not, calculate from first transaction to today
 }
 
 export function calculatePortfolioValueHistory(
   transactions: PortfolioTransaction[],
   priceHistory: Record<string, PriceData[]>,
   options: PortfolioValueOptions = {}
-): { date: string; value: number }[] {
+): PortfolioValueHistory[] {
   if (!transactions || transactions.length === 0) return [];
 
   const txs = [...transactions].sort((a, b) => dayjs(a.date).diff(dayjs(b.date)));
@@ -47,7 +54,7 @@ export function calculatePortfolioValueHistory(
     currentDate = currentDate.add(1, 'day');
   }
   
-  const positions: Record<string, number> = {};
+  const positions: Record<string, { quantity: number; currency: 'ARS' | 'USD' }> = {};
   const activeDeposits: ActiveFixedTermDeposit[] = [];
   
   // Initialize positions up to the start date
@@ -59,10 +66,12 @@ export function calculatePortfolioValueHistory(
     if (tx.type === 'Buy' || tx.type === 'Sell') {
       const identifier = tx.assetType === 'Stock' ? tx.symbol : tx.assetType === 'Bond' ? tx.ticker : null;
       if (identifier) {
+        const key = `${identifier}_${tx.currency}`;
+        const currentQuantity = positions[key]?.quantity || 0;
         if (tx.type === 'Buy') {
-          positions[identifier] = (positions[identifier] || 0) + tx.quantity;
+          positions[key] = { quantity: currentQuantity + tx.quantity, currency: tx.currency };
         } else if (tx.type === 'Sell') {
-          positions[identifier] = (positions[identifier] || 0) - tx.quantity;
+          positions[key] = { quantity: currentQuantity - tx.quantity, currency: tx.currency };
         }
       }
     } else if (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit') {
@@ -70,8 +79,9 @@ export function calculatePortfolioValueHistory(
     }
   }
 
-  const valueHistory: { date: string; value: number }[] = [];
-  let lastKnownValue = 0;
+  const valueHistory: PortfolioValueHistory[] = [];
+  let lastKnownValueARS = 0;
+  let lastKnownValueUSD = 0;
 
   for (const dateStr of allDates) {
     const today = dayjs(dateStr);
@@ -80,10 +90,12 @@ export function calculatePortfolioValueHistory(
       if (tx.type === 'Buy' || tx.type === 'Sell') {
         const identifier = tx.assetType === 'Stock' ? tx.symbol : tx.assetType === 'Bond' ? tx.ticker : null;
         if (identifier) {
+          const key = `${identifier}_${tx.currency}`;
+          const currentQuantity = positions[key]?.quantity || 0;
           if (tx.type === 'Buy') {
-            positions[identifier] = (positions[identifier] || 0) + tx.quantity;
+            positions[key] = { quantity: currentQuantity + tx.quantity, currency: tx.currency };
           } else if (tx.type === 'Sell') {
-            positions[identifier] = (positions[identifier] || 0) - tx.quantity;
+            positions[key] = { quantity: currentQuantity - tx.quantity, currency: tx.currency };
           }
         }
       } else if (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit') {
@@ -91,11 +103,15 @@ export function calculatePortfolioValueHistory(
       }
     }
 
-    let dailyValue = 0;
+    let dailyValueARS = 0;
+    let dailyValueUSD = 0;
+
     // Stocks and Bonds
-    for (const symbol in positions) {
-      if (positions[symbol] <= 0) continue;
+    for (const key in positions) {
+      const { quantity, currency } = positions[key];
+      if (quantity <= 1e-6) continue;
       
+      const symbol = key.split('_')[0];
       const ph = priceHistory[symbol];
       if (!ph || ph.length === 0) continue;
       
@@ -105,7 +121,13 @@ export function calculatePortfolioValueHistory(
         price = priceEntry.close;
       }
       
-      dailyValue += positions[symbol] * price;
+      const valueInOwnCurrency = quantity * price;
+
+      if (currency === 'ARS') {
+        dailyValueARS += valueInOwnCurrency;
+      } else {
+        dailyValueUSD += valueInOwnCurrency;
+      }
     }
     
     // Fixed-Term Deposits
@@ -119,7 +141,7 @@ export function calculatePortfolioValueHistory(
         deposit.isMatured = true;
       }
 
-      if (deposit.isMatured) continue; // Once matured, it's considered cash, not a growing asset
+      if (deposit.isMatured) continue;
 
       let value = deposit.amount;
       if (today.isAfter(startDate)) {
@@ -128,24 +150,37 @@ export function calculatePortfolioValueHistory(
         const interest = deposit.amount * dailyRate * daysActive;
         value += interest;
       }
-      dailyValue += value;
+      
+      if (deposit.currency === 'ARS') {
+        dailyValueARS += value;
+      } else {
+        dailyValueUSD += value;
+      }
     }
     
-    if (dailyValue === 0 && (Object.keys(positions).length > 0 || activeDeposits.length > 0)) {
-      dailyValue = lastKnownValue;
-    }
+    const exchangeRate = getExchangeRate('USD', 'ARS');
+    const totalARS = dailyValueARS + dailyValueUSD * exchangeRate;
+    const totalUSD = dailyValueUSD + dailyValueARS / exchangeRate;
     
-    valueHistory.push({ date: dateStr, value: dailyValue });
-    lastKnownValue = dailyValue;
+    if (totalARS === 0 && (Object.keys(positions).length > 0 || activeDeposits.length > 0)) {
+      valueHistory.push({ date: dateStr, valueARS: lastKnownValueARS, valueUSD: lastKnownValueUSD });
+    } else {
+      valueHistory.push({ date: dateStr, valueARS: totalARS, valueUSD: totalUSD });
+      lastKnownValueARS = totalARS;
+      lastKnownValueUSD = totalUSD;
+    }
   }
 
   return valueHistory;
 }
 
-// Backward compatibility functions
+// Backward compatibility functions - NOTE: This will need to be updated where used
 export function getDailyPortfolioValue(
   transactions: PortfolioTransaction[],
   priceHistory: Record<string, PriceData[]>
 ): { date: string; value: number }[] {
-  return calculatePortfolioValueHistory(transactions, priceHistory, {});
+  const history = calculatePortfolioValueHistory(transactions, priceHistory, {});
+  // Returning ARS value for now to maintain compatibility.
+  // This should be updated to handle both currencies where it's called.
+  return history.map(h => ({ date: h.date, value: h.valueARS }));
 } 

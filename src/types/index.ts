@@ -30,6 +30,8 @@ export interface StockPosition {
   symbol: string;
   quantity: number;
   averagePrice: number;
+  currency: 'ARS' | 'USD';
+  market: 'NASDAQ' | 'NYSE' | 'BCBA';
 }
 
 export interface BondPosition {
@@ -37,6 +39,7 @@ export interface BondPosition {
   ticker: string;
   quantity: number;
   averagePrice: number;
+  currency: 'ARS' | 'USD';
 }
 
 export interface FixedTermDepositPosition {
@@ -47,6 +50,7 @@ export interface FixedTermDepositPosition {
   annualRate: number;
   startDate: string;
   maturityDate: string;
+  currency: 'ARS' | 'USD';
 }
 
 export type PortfolioPosition = StockPosition | BondPosition | FixedTermDepositPosition;
@@ -62,6 +66,8 @@ export interface StockTradeTransaction {
   price: number;
   commissionPct?: number; // Commission percentage (optional)
   purchaseFeePct?: number; // Purchase fee percentage (optional)
+  currency: 'ARS' | 'USD';
+  market: 'NASDAQ' | 'NYSE' | 'BCBA';
 }
 
 export interface BondTradeTransaction {
@@ -74,6 +80,7 @@ export interface BondTradeTransaction {
   price: number;
   commissionPct?: number; // Commission percentage (optional)
   purchaseFeePct?: number; // Purchase fee percentage (optional)
+  currency: 'ARS' | 'USD';
 }
 
 export interface DepositTransaction {
@@ -81,6 +88,15 @@ export interface DepositTransaction {
   date: string; // ISO string
   type: 'Deposit';
   amount: number;
+  currency: 'ARS' | 'USD';
+}
+
+export interface WithdrawalTransaction {
+  id: string;
+  date: string; // ISO string
+  type: 'Withdrawal';
+  amount: number;
+  currency: 'ARS' | 'USD';
 }
 
 export interface FixedTermDepositCreationTransaction {
@@ -93,9 +109,10 @@ export interface FixedTermDepositCreationTransaction {
   annualRate: number;
   termDays: number;
   maturityDate: string;
+  currency: 'ARS' | 'USD';
 }
 
-export type PortfolioTransaction = StockTradeTransaction | BondTradeTransaction | DepositTransaction | FixedTermDepositCreationTransaction;
+export type PortfolioTransaction = StockTradeTransaction | BondTradeTransaction | DepositTransaction | FixedTermDepositCreationTransaction | WithdrawalTransaction;
 
 // -- Investment Strategy --
 export type StrategyAction = 'buy' | 'sell' | 'hold' | 'rotate' | 'increase' | 'decrease';
@@ -135,6 +152,9 @@ export interface UserData {
   positions: PortfolioPosition[];
   transactions: PortfolioTransaction[];
   goals: InvestmentGoal[];
-  availableCash: number;
+  cash: {
+    ARS: number;
+    USD: number;
+  };
   investmentStrategy?: InvestmentStrategy;
 } 

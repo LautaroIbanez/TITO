@@ -101,15 +101,19 @@ export function isFeasibleContribution(monthlyAmount: number, estimatedSalary: n
 }
 
 /**
- * Format currency values
+ * Formats a number as a currency string.
+ * @param value The number to format.
+ * @param currency The currency code ('ARS' or 'USD').
+ * @returns A formatted currency string (e.g., "$1,234.56" or "US$1,234.56").
  */
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('es-AR', {
+export function formatCurrency(value: number, currency: 'ARS' | 'USD' = 'ARS'): string {
+  const formatter = new Intl.NumberFormat('es-AR', {
     style: 'currency',
-    currency: 'ARS',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(amount);
+    currency: currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return formatter.format(value);
 }
 
 /**

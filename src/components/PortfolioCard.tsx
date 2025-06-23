@@ -17,6 +17,8 @@ import type { TradeModalProps } from './TradeModal';
 import TechnicalDisplay from './TechnicalDisplay';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import { RatioRow, StockBadges, formatDate } from './StockMetrics';
+import { formatCurrency } from '@/utils/goalCalculator';
+import { StockPosition } from '@/types';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
@@ -25,9 +27,9 @@ interface PortfolioCardProps {
   fundamentals?: Fundamentals | null;
   technicals: Technicals | null;
   prices: any[];
-  position: { quantity: number; averagePrice: number };
+  position: StockPosition;
   onTrade: () => void;
-  availableCash: number;
+  cash: { ARS: number; USD: number };
 }
 
 const SignalBadge = ({ signal }: { signal: TradeSignal }) => {
@@ -48,8 +50,9 @@ const SignalBadge = ({ signal }: { signal: TradeSignal }) => {
   );
 };
 
-export default function PortfolioCard({ symbol, fundamentals, technicals, prices, position, onTrade, availableCash }: PortfolioCardProps) {
-  const [modalState, setModalState] = useState<{ isOpen: boolean; tradeType: TradeType }>({ isOpen: false, tradeType: 'Buy' });
+export default function PortfolioCard({ symbol, fundamentals, technicals, prices, position, onTrade, cash }: PortfolioCardProps) {
+  const [isTradeModalOpen, setTradeModalOpen] = useState(false);
+  const [tradeType, setTradeType] = useState<'Buy' | 'Sell'>('Buy');
   
   const { refreshPortfolio } = usePortfolio();
   
@@ -60,38 +63,43 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
   const lastPriceDate = prices.length > 0 ? prices[prices.length - 1].date : null;
   const fundamentalsDate = fundamentals?.updatedAt;
 
-  const handleTrade: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier) => {
-    const session = localStorage.getItem('session');
-    if (!session) return;
-    const username = JSON.parse(session).username;
-    
-    const endpoint = modalState.tradeType === 'Buy' ? '/api/portfolio/buy' : '/api/portfolio/sell';
+  const handleOpenModal = (type: 'Buy' | 'Sell') => {
+    setTradeType(type);
+    setTradeModalOpen(true);
+  };
 
-    const res = await fetch(endpoint, {
+  const handleTradeSubmit = async (quantity: number, assetType: 'Stock' | 'Bond' | 'FixedTermDeposit', identifier: string, currency: 'ARS' | 'USD', commissionPct?: number, purchaseFeePct?: number) => {
+    const session = localStorage.getItem('session');
+    if (!session) throw new Error("Session not found");
+    const username = JSON.parse(session).username;
+
+    const res = await fetch(`/api/portfolio/${tradeType.toLowerCase()}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         username, 
         assetType, 
-        symbol: identifier, 
+        symbol: identifier, // Assuming symbol for stocks
+        ticker: identifier, // Assuming ticker for bonds
         quantity, 
-        price: currentPrice 
+        price: currentPrice,
+        currency,
+        commissionPct,
+        purchaseFeePct
       }),
     });
 
-    if (res.ok) {
-      onTrade();
-      await refreshPortfolio(); // Refresh portfolio data from server
-    } else {
+    if (!res.ok) {
       const data = await res.json();
-      // Use a more user-friendly notification if available
-      alert(`Error: ${data.error || 'Ocurrió un error en la transacción.'}`);
+      throw new Error(data.error || `La ${tradeType.toLowerCase()} falló`);
     }
+    onTrade();
+    setTradeModalOpen(false);
+    await refreshPortfolio(); // Refresh portfolio data from server
   };
   
-  const openModal = (tradeType: TradeType) => {
-    setModalState({ isOpen: true, tradeType });
-  };
+  const value = position.quantity * currentPrice;
+  const gain = ((currentPrice - position.averagePrice) / position.averagePrice) * 100;
 
   // Chart: last 90 days
   const last90 = prices?.slice(-90) || [];
@@ -120,16 +128,17 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
   return (
     <>
       <TradeModal
-        isOpen={modalState.isOpen}
-        onClose={() => setModalState({ ...modalState, isOpen: false })}
-        onSubmit={handleTrade}
-        tradeType={modalState.tradeType}
+        isOpen={isTradeModalOpen}
+        onClose={() => setTradeModalOpen(false)}
+        onSubmit={handleTradeSubmit}
+        tradeType={tradeType}
         assetName={symbol}
-        assetType={'Stock'}
+        assetType="Stock"
         identifier={symbol}
         price={currentPrice}
-        availableCash={availableCash}
+        cash={cash}
         maxShares={position.quantity}
+        currency={position.currency}
       />
       <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col gap-4 relative">
         <div className="flex items-center gap-2 justify-between">
@@ -138,8 +147,8 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
             <SignalBadge signal={signal} />
           </div>
           <div className="flex gap-2">
-            <button onClick={() => openModal('Buy')} className="px-3 py-1 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-700">Comprar</button>
-            <button onClick={() => openModal('Sell')} className="px-3 py-1 bg-red-600 text-white rounded text-xs font-semibold hover:bg-red-700">Vender</button>
+            <button onClick={() => handleOpenModal('Buy')} className="px-3 py-1 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-700">Comprar</button>
+            <button onClick={() => handleOpenModal('Sell')} className="px-3 py-1 bg-red-600 text-white rounded text-xs font-semibold hover:bg-red-700">Vender</button>
           </div>
         </div>
 
@@ -200,17 +209,15 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
             </div>
             <div className="flex justify-between">
               <span>Precio Promedio:</span>
-              <span className="font-mono">${position.averagePrice.toFixed(2)}</span>
+              <span className="font-mono">{formatCurrency(position.averagePrice, position.currency)}</span>
             </div>
             <div className="flex justify-between">
               <span>Valor Actual:</span>
-              <span className="font-mono">${(position.quantity * currentPrice).toFixed(2)}</span>
+              <span className="font-mono">{formatCurrency(value, position.currency)}</span>
             </div>
             <div className="flex justify-between">
-              <span>P&L:</span>
-              <span className={`font-mono ${(currentPrice - position.averagePrice) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {((currentPrice - position.averagePrice) / position.averagePrice * 100).toFixed(2)}%
-              </span>
+              <span>Gan/Pérd:</span>
+              <span className={`font-mono ${gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>{gain.toFixed(2)}%</span>
             </div>
           </div>
         </div>

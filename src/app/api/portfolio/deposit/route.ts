@@ -17,8 +17,8 @@ async function readUserFile(username: string): Promise<UserData | null> {
 // Add a new deposit
 export async function POST(request: Request) {
   try {
-    const { username, amount, date } = await request.json();
-    if (!username || !amount || !date) {
+    const { username, amount, date, currency }: { username: string; amount: number; date: string; currency: 'ARS' | 'USD' } = await request.json();
+    if (!username || !amount || !date || !currency) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -26,20 +26,28 @@ export async function POST(request: Request) {
     if (!userData) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
+
+    if (!userData.cash) {
+      userData.cash = { ARS: 0, USD: 0 };
+    }
+    if (!userData.transactions) {
+      userData.transactions = [];
+    }
     
     const newDeposit: DepositTransaction = {
       id: `dep_${new Date().getTime()}`,
       date: date,
       type: 'Deposit',
       amount: Number(amount),
+      currency: currency,
     };
 
     userData.transactions.push(newDeposit);
-    userData.availableCash = (userData.availableCash || 0) + Number(amount);
+    userData.cash[currency] = (userData.cash[currency] || 0) + Number(amount);
 
     await saveUserData(username, userData);
 
-    return NextResponse.json({ message: 'Deposit added successfully', deposit: newDeposit });
+    return NextResponse.json({ message: 'Deposit added successfully', deposit: newDeposit, cash: userData.cash });
   } catch (error) {
     console.error('Failed to add deposit:', error);
     return NextResponse.json({ error: 'Failed to add deposit' }, { status: 500 });
@@ -49,8 +57,8 @@ export async function POST(request: Request) {
 // Update an existing deposit
 export async function PUT(request: Request) {
   try {
-    const { username, transactionId, amount, date } = await request.json();
-    if (!username || !transactionId || !amount || !date) {
+    const { username, transactionId, amount, date, currency }: { username: string; transactionId: string; amount: number; date: string; currency: 'ARS' | 'USD' } = await request.json();
+    if (!username || !transactionId || !amount || !date || !currency) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -70,18 +78,27 @@ export async function PUT(request: Request) {
         return NextResponse.json({ error: 'Transaction is not a deposit' }, { status: 400 });
     }
     
-    const oldAmount = (oldTx as DepositTransaction).amount;
+    const oldDeposit = oldTx as DepositTransaction;
+    const oldAmount = oldDeposit.amount;
+    const oldCurrency = oldDeposit.currency;
     const newAmount = Number(amount);
 
     // Adjust available cash
-    userData.availableCash = (userData.availableCash || 0) - oldAmount + newAmount;
+    if (oldCurrency !== currency) {
+      // Currency has changed, so we need to adjust both balances
+      userData.cash[oldCurrency] = (userData.cash[oldCurrency] || 0) - oldAmount;
+      userData.cash[currency] = (userData.cash[currency] || 0) + newAmount;
+    } else {
+      // Currency is the same, just adjust the balance
+      userData.cash[currency] = (userData.cash[currency] || 0) - oldAmount + newAmount;
+    }
     
     // Update transaction
-    userData.transactions[txIndex] = { ...oldTx, amount: newAmount, date };
+    userData.transactions[txIndex] = { ...oldTx, amount: newAmount, date, currency };
 
     await saveUserData(username, userData);
 
-    return NextResponse.json({ message: 'Deposit updated successfully' });
+    return NextResponse.json({ message: 'Deposit updated successfully', cash: userData.cash });
   } catch (error) {
     console.error('Failed to update deposit:', error);
     return NextResponse.json({ error: 'Failed to update deposit' }, { status: 500 });
@@ -115,12 +132,13 @@ export async function DELETE(request: Request) {
         return NextResponse.json({ error: 'Transaction is not a deposit' }, { status: 400 });
     }
 
-    userData.availableCash = (userData.availableCash || 0) - (txToDelete as DepositTransaction).amount;
+    const depositToDelete = txToDelete as DepositTransaction;
+    userData.cash[depositToDelete.currency] = (userData.cash[depositToDelete.currency] || 0) - depositToDelete.amount;
     userData.transactions.splice(txIndex, 1);
 
     await saveUserData(username, userData);
 
-    return NextResponse.json({ message: 'Deposit deleted successfully' });
+    return NextResponse.json({ message: 'Deposit deleted successfully', cash: userData.cash });
   } catch (error) {
     console.error('Failed to delete deposit:', error);
     return NextResponse.json({ error: 'Failed to delete deposit' }, { status: 500 });

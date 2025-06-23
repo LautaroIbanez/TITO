@@ -7,25 +7,29 @@
       "type": "Stock",
       "symbol": "GOOGL",
       "quantity": 3,
-      "averagePrice": 166.63999938964844
+      "averagePrice": 166.63999938964844,
+      "currency": "ARS"
     },
     {
       "type": "Bond",
       "ticker": "GD30",
       "quantity": 9,
-      "averagePrice": 55
+      "averagePrice": 55,
+      "currency": "ARS"
     },
     {
       "type": "Bond",
       "ticker": "YMC2O",
       "quantity": 2,
-      "averagePrice": 98
+      "averagePrice": 98,
+      "currency": "ARS"
     },
     {
       "type": "Stock",
       "symbol": "TSLA",
       "quantity": 1,
-      "averagePrice": 322.1600036621094
+      "averagePrice": 322.1600036621094,
+      "currency": "ARS"
     }
   ],
   "transactions": [
@@ -36,7 +40,8 @@
       "assetType": "Stock",
       "symbol": "MSFT",
       "quantity": 1,
-      "price": 477.3999938964844
+      "price": 477.3999938964844,
+      "currency": "ARS"
     },
     {
       "id": "1750617417830",
@@ -45,7 +50,8 @@
       "assetType": "Stock",
       "symbol": "GOOGL",
       "quantity": 5,
-      "price": 166.63999938964844
+      "price": 166.63999938964844,
+      "currency": "ARS"
     },
     {
       "id": "1750617456627",
@@ -54,14 +60,16 @@
       "assetType": "Bond",
       "ticker": "GD30",
       "quantity": 5,
-      "price": 55
+      "price": 55,
+      "currency": "ARS"
     },
     {
       "date": "2025-06-22T18:38:28.394Z",
       "type": "Sell",
       "symbol": "GOOGL",
       "quantity": 1,
-      "price": 166.63999938964844
+      "price": 166.63999938964844,
+      "currency": "ARS"
     },
     {
       "id": "1750617571241",
@@ -70,7 +78,8 @@
       "assetType": "Bond",
       "ticker": "YMC2O",
       "quantity": 2,
-      "price": 98
+      "price": 98,
+      "currency": "ARS"
     },
     {
       "id": "1750617598557",
@@ -79,7 +88,8 @@
       "assetType": "Bond",
       "ticker": "GD30",
       "quantity": 2,
-      "price": 55
+      "price": 55,
+      "currency": "ARS"
     },
     {
       "id": "txn_1750617767526",
@@ -88,7 +98,8 @@
       "assetType": "Stock",
       "symbol": "GOOGL",
       "quantity": 1,
-      "price": 166.63999938964844
+      "price": 166.63999938964844,
+      "currency": "ARS"
     },
     {
       "id": "txn_1750619945608",
@@ -97,7 +108,8 @@
       "assetType": "Stock",
       "symbol": "MSFT",
       "quantity": 1,
-      "price": 477.3999938964844
+      "price": 477.3999938964844,
+      "currency": "ARS"
     },
     {
       "id": "1750622675749",
@@ -108,7 +120,8 @@
       "quantity": 1,
       "price": 322.1600036621094,
       "commissionPct": 1,
-      "purchaseFeePct": 0.05
+      "purchaseFeePct": 0.05,
+      "currency": "ARS"
     },
     {
       "id": "1750622982036",
@@ -119,7 +132,8 @@
       "quantity": 1,
       "price": 55,
       "commissionPct": 1,
-      "purchaseFeePct": 0.05
+      "purchaseFeePct": 0.05,
+      "currency": "ARS"
     },
     {
       "id": "1750628587125",
@@ -130,25 +144,29 @@
       "quantity": 1,
       "price": 55,
       "commissionPct": 1,
-      "purchaseFeePct": 0.05
+      "purchaseFeePct": 0.05,
+      "currency": "ARS"
     },
     {
       "id": "1750628676314",
       "type": "Deposit",
       "date": "2025-06-22T21:44:36.314Z",
-      "amount": 1000
+      "amount": 1000,
+      "currency": "ARS"
     },
     {
       "id": "1750628743233",
       "type": "Deposit",
       "date": "2025-06-22T21:45:43.233Z",
-      "amount": 500
+      "amount": 500,
+      "currency": "ARS"
     },
     {
       "id": "dep_1750636152493",
       "date": "2025-06-22",
       "type": "Deposit",
-      "amount": 200
+      "amount": 200,
+      "currency": "ARS"
     }
   ],
   "goals": [
@@ -161,7 +179,10 @@
       "id": "1750635388567"
     }
   ],
-  "availableCash": 2182.3823181304933,
+  "cash": {
+    "ARS": 2182.3823181304933,
+    "USD": 0
+  },
   "profile": {
     "instrumentsUsed": [
       "Plazo Fijo",
@@ -217,4 +238,4 @@
     "timeHorizon": "Mediano plazo (3-7 años)",
     "notes": "Estrategia alineada con 1 meta(s) de inversión"
   }
-}
+} 

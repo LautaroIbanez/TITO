@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { InvestmentGoal, PortfolioPosition } from '@/types';
 import { Bond } from '@/types/finance';
-import GoalForm from '../../../components/GoalForm';
 import GoalList from '../../../components/GoalList';
 import EditGoalModal from '../../../components/EditGoalModal';
 import { calculateMonthlyInvestment, calculateEffectiveYield } from '@/utils/goalCalculator';
+import GoalModal from '@/components/GoalModal';
 
 export default function GoalsPage() {
   const [goals, setGoals] = useState<InvestmentGoal[]>([]);
@@ -15,6 +15,7 @@ export default function GoalsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<InvestmentGoal | null>(null);
 
   const fetchData = async () => {
@@ -81,6 +82,7 @@ export default function GoalsPage() {
         throw new Error('Failed to save goal.');
       }
       await fetchData(); // Refresh list after adding
+      setIsAddModalOpen(false);
     } catch (err: any) {
       setError(err.message);
     }
@@ -133,16 +135,17 @@ export default function GoalsPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-gray-900">Metas de Inversión</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-900">Metas de Inversión</h1>
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Agregar Meta
+        </button>
+      </div>
       
-      <GoalForm 
-        onSubmit={handleAddGoal} 
-        positions={positions}
-        bonds={bonds}
-      />
-
       <div className="mt-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Tus Metas</h2>
         {loading ? (
           <p className="text-gray-700">Cargando metas...</p>
         ) : error ? (
@@ -150,13 +153,25 @@ export default function GoalsPage() {
         ) : (
           <>
             {goals.length === 0 ? (
-              <p className="text-gray-700">Aún no has definido ninguna meta. Utiliza el formulario de arriba para añadir la primera.</p>
+              <div className='flex flex-col gap-4 items-center'>
+                <p className="text-gray-700">Aún no has definido ninguna meta.</p>
+              </div>
             ) : (
               <GoalList goals={goals} onEdit={handleEdit} onDelete={handleDelete} />
             )}
           </>
         )}
       </div>
+
+      {isAddModalOpen && (
+        <GoalModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onSubmit={handleAddGoal}
+          positions={positions}
+          bonds={bonds}
+        />
+      )}
 
       {isEditModalOpen && editingGoal && (
         <EditGoalModal

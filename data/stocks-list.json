@@ -1,3 +1,4 @@
 [
-  "AAPL", "MSFT", "TSLA", "AMZN", "NVDA", "BABA", "GOOGL", "JPM", "KO", "PFE"
+  "AAPL", "MSFT", "TSLA", "AMZN", "NVDA", "BABA", "GOOGL", "JPM", "KO", "PFE",
+  "AAPL.BA", "MSFT.BA", "TSLA.BA", "AMZN.BA", "NVDA.BA", "BABA.BA", "GOOGL.BA", "JPM.BA", "KO.BA", "PFE.BA"
 ] 

@@ -70,14 +70,15 @@ export default function ScoopPage() {
     if (session) username = JSON.parse(session).username;
     
     let userProfile: InvestorProfile | null = null;
-    let userPositions: string[] = [];
+    let userPositions: any[] = [];
     
     try {
       const res = await fetch(`/api/portfolio/data?username=${username}`);
       const data = await res.json();
       userProfile = data.profile || null;
-      userPositions = (data.positions || []).map((p: any) => p.symbol);
-      setPortfolioSymbols(userPositions);
+      userPositions = data.positions || [];
+      // Store the base symbol (e.g., AAPL from AAPL.BA)
+      setPortfolioSymbols(userPositions.map((p: any) => p.symbol.split('.')[0]));
       setProfile(userProfile);
 
       const goalsRes = await fetch(`/api/goals?username=${username}`);
@@ -172,7 +173,7 @@ export default function ScoopPage() {
                     isTrending={stock.isTrending}
                     inPortfolio={portfolioSymbols.includes(stock.symbol)}
                     onTrade={loadData}
-                    availableCash={portfolioData?.availableCash ?? 0}
+                    cash={portfolioData?.cash ?? { ARS: 0, USD: 0 }}
                   />
                 ))}
               </div>
@@ -193,7 +194,7 @@ export default function ScoopPage() {
                     isTrending={stock.isTrending}
                     inPortfolio={portfolioSymbols.includes(stock.symbol)}
                     onTrade={loadData}
-                    availableCash={portfolioData?.availableCash ?? 0}
+                    cash={portfolioData?.cash ?? { ARS: 0, USD: 0 }}
                   />
                 ))}
               </div>
@@ -201,23 +202,23 @@ export default function ScoopPage() {
           )}
           
           {filterMode === 'all' && otherStocks.length > 0 && (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 mt-10">Otras Oportunidades</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {otherStocks.map((stock) => (
-                  <ScoopCard
-                    key={stock.symbol}
-                    stockData={stock}
-                    fundamentals={stock.fundamentals}
-                    technicals={stock.technicals}
-                    isSuggested={stock.isSuggested}
-                    isTrending={stock.isTrending}
-                    inPortfolio={portfolioSymbols.includes(stock.symbol)}
-                    onTrade={loadData}
-                    availableCash={portfolioData?.availableCash ?? 0}
-                  />
-                ))}
-              </div>
+            <div className="mt-12">
+               <h2 className="text-2xl font-bold text-gray-900 mb-6">Otras Oportunidades</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {otherStocks.map((stock) => (
+                    <ScoopCard
+                      key={stock.symbol}
+                      stockData={stock}
+                      fundamentals={stock.fundamentals}
+                      technicals={stock.technicals}
+                      isSuggested={stock.isSuggested}
+                      isTrending={stock.isTrending}
+                      inPortfolio={portfolioSymbols.includes(stock.symbol)}
+                      onTrade={loadData}
+                      cash={portfolioData?.cash ?? { ARS: 0, USD: 0 }}
+                    />
+                  ))}
+                </div>
             </div>
           )}
 

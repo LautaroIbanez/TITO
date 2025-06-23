@@ -3,14 +3,15 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { InvestmentGoal, PortfolioTransaction, StrategyRecommendation, PortfolioPosition } from '@/types';
 import { Bond } from '@/types/finance';
-import { calculatePortfolioValueHistory } from '@/utils/calculatePortfolioValue';
+import { calculatePortfolioValueHistory, PortfolioValueHistory } from '@/utils/calculatePortfolioValue';
 import { calculateInvestedCapital } from '@/utils/investedCapital';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import GoalProgress from './GoalProgress';
+import { formatCurrency } from '@/utils/goalCalculator';
 
 export default function DashboardSummary() {
-  const [valueHistory, setValueHistory] = useState<{ date: string; value: number }[]>([]);
-  const [portfolioValue, setPortfolioValue] = useState(0);
+  const [portfolioValueARS, setPortfolioValueARS] = useState(0);
+  const [portfolioValueUSD, setPortfolioValueUSD] = useState(0);
   const [firstGoal, setFirstGoal] = useState<InvestmentGoal | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [bonds, setBonds] = useState<Bond[]>([]);
@@ -53,10 +54,10 @@ export default function DashboardSummary() {
         portfolioData.historicalPrices || {},
         { days: 90 }
       );
-      setValueHistory(history);
-
-      const latestValue = history.length > 0 ? history[history.length - 1].value : 0;
-      setPortfolioValue(latestValue);
+      
+      const latestValue = history.length > 0 ? history[history.length - 1] : { valueARS: 0, valueUSD: 0 };
+      setPortfolioValueARS(latestValue.valueARS);
+      setPortfolioValueUSD(latestValue.valueUSD);
     }
 
     fetchData();
@@ -105,10 +106,11 @@ export default function DashboardSummary() {
     return <div className="text-center text-gray-500">Could not load user data.</div>;
   }
   
-  const investedCapital = calculateInvestedCapital(portfolioData.transactions);
+  const investedCapitalARS = calculateInvestedCapital(portfolioData.transactions, 'ARS');
+  const investedCapitalUSD = calculateInvestedCapital(portfolioData.transactions, 'USD');
     
-  const netGains = portfolioValue - investedCapital;
-  const gainsColor = netGains >= 0 ? 'text-green-600' : 'text-red-600';
+  const netGainsARS = portfolioValueARS - investedCapitalARS;
+  const gainsColorARS = netGainsARS >= 0 ? 'text-green-600' : 'text-red-600';
 
   return (
     <div className="space-y-8">
@@ -178,45 +180,47 @@ export default function DashboardSummary() {
       )}
 
       {/* Portfolio Snapshot */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow col-span-1 lg:col-span-3">
+          <h3 className="text-lg font-medium text-gray-800 mb-2">Valor Total del Portafolio</h3>
+          <div className="flex items-baseline gap-x-6">
+            <p className="text-3xl font-semibold text-gray-900">{formatCurrency(portfolioValueARS, 'ARS')}</p>
+            <p className="text-xl font-medium text-gray-600">{formatCurrency(portfolioValueUSD, 'USD')}</p>
+          </div>
+        </div>
+        
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-700">Valor del Portafolio</h3>
-          <p className="text-2xl font-semibold text-gray-900">${portfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+          <h3 className="text-sm font-medium text-gray-700">Capital Invertido (ARS)</h3>
+          <p className="text-2xl font-semibold text-gray-900">{formatCurrency(investedCapitalARS, 'ARS')}</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-700">Capital Invertido</h3>
-          <p className="text-2xl font-semibold text-gray-900">${investedCapital.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-700">Ganancias / Pérdidas</h3>
-          <p className={`text-2xl font-semibold ${gainsColor}`}>
-            {netGains >= 0 ? '+' : ''}${netGains.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <h3 className="text-sm font-medium text-gray-700">Ganancias / Pérdidas (ARS)</h3>
+          <p className={`text-2xl font-semibold ${gainsColorARS}`}>
+            {netGainsARS >= 0 ? '+' : ''}{formatCurrency(netGainsARS, 'ARS')}
           </p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow">
+         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-sm font-medium text-gray-700">Efectivo Disponible</h3>
-          <p className="text-2xl font-semibold text-blue-600">${portfolioData.availableCash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-          <p className="text-xs text-gray-700">Listo para invertir</p>
+          <p className="text-xl font-semibold text-blue-600">{formatCurrency(portfolioData.cash?.ARS ?? 0, 'ARS')}</p>
+          <p className="text-xl font-semibold text-green-600">{formatCurrency(portfolioData.cash?.USD ?? 0, 'USD')}</p>
         </div>
       </div>
 
-      {firstGoal && portfolioData ? (
+      {firstGoal && (
         <GoalProgress 
           goal={firstGoal} 
-          valueHistory={valueHistory} 
-          currentValue={portfolioValue} 
+          valueHistory={
+            calculatePortfolioValueHistory(
+              portfolioData.transactions || [],
+              portfolioData.historicalPrices || {},
+              { days: 90 }
+            ).map(h => ({ date: h.date, value: h.valueARS }))
+          }
+          currentValue={portfolioValueARS} 
           transactions={portfolioData.transactions}
           positions={portfolioData.positions}
           bonds={bonds}
         />
-      ) : (
-        <div className="bg-white p-6 rounded-lg shadow text-center">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Aún no tienes metas</h3>
-            <p className="text-gray-700 mb-4">Define una meta de inversión para empezar a seguir tu progreso.</p>
-            <Link href="/dashboard/goals" className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
-                Crear Meta
-            </Link>
-        </div>
       )}
       
     </div>

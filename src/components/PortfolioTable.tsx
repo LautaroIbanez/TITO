@@ -3,13 +3,14 @@ import { PortfolioPosition, StockPosition, BondPosition, FixedTermDepositPositio
 import TradeModal, { TradeType } from './TradeModal';
 import type { TradeModalProps } from './TradeModal';
 import { usePortfolio } from '@/contexts/PortfolioContext';
+import { formatCurrency } from '@/utils/goalCalculator';
 
 interface Props {
   positions: PortfolioPosition[];
   prices: Record<string, any[]>;
   fundamentals: Record<string, any>;
   technicals: Record<string, any>;
-  availableCash: number;
+  cash: { ARS: number; USD: number };
   onPortfolioUpdate: () => void;
 }
 
@@ -18,7 +19,7 @@ function getCurrentPrice(prices: any[]): number {
   return prices[prices.length - 1]?.close || 0;
 }
 
-export default function PortfolioTable({ positions, prices, fundamentals, technicals, availableCash, onPortfolioUpdate }: Props) {
+export default function PortfolioTable({ positions, prices, fundamentals, technicals, cash, onPortfolioUpdate }: Props) {
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     tradeType: TradeType;
@@ -27,7 +28,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
 
   const { refreshPortfolio } = usePortfolio();
 
-  const handleSellSubmit: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier) => {
+  const handleSellSubmit: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier, currency) => {
     const session = localStorage.getItem('session');
     if (!session) throw new Error("Session not found");
     const username = JSON.parse(session).username;
@@ -42,7 +43,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
     const res = await fetch('/api/portfolio/sell', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, assetType, identifier, quantity, price: currentPrice }),
+      body: JSON.stringify({ username, assetType, identifier, quantity, price: currentPrice, currency }),
     });
 
     if (!res.ok) {
@@ -91,13 +92,14 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
     const t = technicals[pos.symbol];
 
     return (
-      <tr key={pos.symbol} className="even:bg-gray-50">
+      <tr key={`${pos.symbol}-${pos.currency}`} className="even:bg-gray-50">
         <td className="px-4 py-2 font-mono text-gray-900">{pos.symbol}</td>
         <td className="px-4 py-2 text-gray-700">Acción</td>
+        <td className="px-4 py-2 text-gray-700">{pos.currency}</td>
         <td className="px-4 py-2 text-right text-gray-900">{pos.quantity}</td>
-        <td className="px-4 py-2 text-right text-gray-900">${pos.averagePrice.toFixed(2)}</td>
-        <td className="px-4 py-2 text-right text-gray-900">${currPrice.toFixed(2)}</td>
-        <td className="px-4 py-2 text-right text-gray-900">${value.toFixed(2)}</td>
+        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(pos.averagePrice, pos.currency)}</td>
+        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(currPrice, pos.currency)}</td>
+        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(value, pos.currency)}</td>
         <td className={`px-4 py-2 text-right font-semibold ${gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>{gain.toFixed(2)}%</td>
         <td className="px-4 py-2 text-right text-gray-900">{f?.peRatio?.toFixed(2) ?? '-'}</td>
         <td className="px-4 py-2 text-right text-gray-900">{t?.rsi?.toFixed(2) ?? '-'}</td>
@@ -111,13 +113,14 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
   const renderBondRow = (pos: BondPosition) => {
     const value = pos.quantity * pos.averagePrice;
     return (
-      <tr key={pos.ticker} className="even:bg-gray-50">
+      <tr key={`${pos.ticker}-${pos.currency}`} className="even:bg-gray-50">
         <td className="px-4 py-2 font-mono text-gray-900">{pos.ticker}</td>
         <td className="px-4 py-2 text-gray-700">Bono</td>
+        <td className="px-4 py-2 text-gray-700">{pos.currency}</td>
         <td className="px-4 py-2 text-right text-gray-900">{pos.quantity}</td>
-        <td className="px-4 py-2 text-right text-gray-900">${pos.averagePrice.toFixed(2)}</td>
+        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(pos.averagePrice, pos.currency)}</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
-        <td className="px-4 py-2 text-right text-gray-900">${value.toFixed(2)}</td>
+        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(value, pos.currency)}</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
@@ -133,10 +136,11 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
       <tr key={pos.id} className="even:bg-gray-50">
         <td className="px-4 py-2 font-medium text-gray-900">{pos.provider}</td>
         <td className="px-4 py-2 text-gray-700">Plazo Fijo</td>
+        <td className="px-4 py-2 text-gray-700">{pos.currency}</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
-        <td className="px-4 py-2 text-right text-gray-900">${pos.amount.toFixed(2)}</td>
+        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(pos.amount, pos.currency)}</td>
         <td className="px-4 py-2 text-right text-green-600">{pos.annualRate.toFixed(2)}%</td>
         <td className="px-4 py-2 text-right text-gray-700">{new Date(pos.maturityDate).toLocaleDateString()}</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
@@ -148,15 +152,15 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
   };
   
   const getModalInfo = () => {
-    if (!modalState.asset) return { assetName: '', identifier: '', price: 0, maxShares: 0, assetType: 'Stock' as const };
+    if (!modalState.asset) return { assetName: '', identifier: '', price: 0, maxShares: 0, assetType: 'Stock' as const, currency: 'ARS' as const };
     const { asset } = modalState;
     if (asset.type === 'Stock') {
-      return { assetName: asset.symbol, identifier: asset.symbol, price: getCurrentPrice(prices[asset.symbol]), maxShares: asset.quantity, assetType: asset.type };
+      return { assetName: asset.symbol, identifier: asset.symbol, price: getCurrentPrice(prices[asset.symbol]), maxShares: asset.quantity, assetType: asset.type, currency: asset.currency };
     }
     if (asset.type === 'Bond') {
-      return { assetName: asset.ticker, identifier: asset.ticker, price: asset.averagePrice, maxShares: asset.quantity, assetType: asset.type };
+      return { assetName: asset.ticker, identifier: asset.ticker, price: asset.averagePrice, maxShares: asset.quantity, assetType: asset.type, currency: asset.currency };
     }
-    return { assetName: '', identifier: '', price: 0, maxShares: 0, assetType: 'Stock' as const };
+    return { assetName: '', identifier: '', price: 0, maxShares: 0, assetType: 'Stock' as const, currency: 'ARS' as const };
   };
 
   const modalInfo = getModalInfo();
@@ -173,8 +177,9 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
           assetType={modalInfo.assetType}
           identifier={modalInfo.identifier}
           price={modalInfo.price}
-          availableCash={availableCash}
+          cash={cash}
           maxShares={modalInfo.maxShares}
+          currency={modalInfo.currency}
         />
       )}
       <div className="overflow-x-auto rounded-lg shadow mb-8">
@@ -183,6 +188,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
             <tr className="bg-gray-100 text-gray-700">
               <th className="px-4 py-2 text-left">Activo</th>
               <th className="px-4 py-2 text-left">Tipo</th>
+              <th className="px-4 py-2 text-left">Moneda</th>
               <th className="px-4 py-2 text-right">Cantidad</th>
               <th className="px-4 py-2 text-right">Precio Prom.</th>
               <th className="px-4 py-2 text-right">Precio Actual</th>

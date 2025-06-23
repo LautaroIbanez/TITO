@@ -17,9 +17,12 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
   const [comparison, setComparison] = useState<any>(null);
   const [depositAmount, setDepositAmount] = useState('');
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
+  const [depositCurrency, setDepositCurrency] = useState<'ARS' | 'USD'>('ARS');
   const [depositLoading, setDepositLoading] = useState(false);
   const [depositError, setDepositError] = useState('');
   const [depositSuccess, setDepositSuccess] = useState('');
+  const [editingDeposit, setEditingDeposit] = useState<DepositTransaction | null>(null);
+  const [depositActionError, setDepositActionError] = useState<string | null>(null);
 
   const { portfolioData, loading, refreshPortfolio } = usePortfolio();
 
@@ -38,7 +41,7 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
     async function calculateComparison() {
       if (portfolioData?.transactions && portfolioData?.positions && portfolioData?.historicalPrices) {
         try {
-          const totalInvestedCapital = calculateInvestedCapital(portfolioData.transactions);
+          const totalInvestedCapital = calculateInvestedCapital(portfolioData.transactions, 'ARS');
 
           // Calculate current investments value (positions only, no cash)
           let currentInvestmentsValue = 0;
@@ -89,14 +92,14 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
     const username = JSON.parse(session).username;
     const amount = parseFloat(depositAmount);
     if (isNaN(amount) || amount <= 0) {
-      setDepositError('Ingresa un monto válido');
+      setDepositError('Por favor, ingrese un monto válido');
       setDepositLoading(false);
       return;
     }
     const res = await fetch('/api/portfolio/deposit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, amount, date: depositDate }),
+      body: JSON.stringify({ username, amount, date: depositDate, currency: depositCurrency }),
     });
     const data = await res.json();
     if (res.ok) {
@@ -117,13 +120,14 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
     return <div className="text-center text-gray-500">Could not load portfolio data.</div>;
   }
   
+  // Provide a default for cash to prevent runtime errors
+  const cash = portfolioData.cash || { ARS: 0, USD: 0 };
+
   const stockPositions = portfolioData.positions.filter((pos): pos is StockPosition => pos.type === 'Stock') || [];
   
   const depositTransactions: DepositTransaction[] = portfolioData.transactions.filter(
     (tx): tx is DepositTransaction => tx.type === 'Deposit'
   );
-  const [editingDeposit, setEditingDeposit] = useState<DepositTransaction | null>(null);
-  const [depositActionError, setDepositActionError] = useState<string | null>(null);
 
   // Handlers for editing and deleting deposits
   const handleEditDeposit = (deposit: DepositTransaction) => {
@@ -185,9 +189,19 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
       <div className="bg-white rounded-lg shadow p-4 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <div className="text-lg font-semibold text-gray-900">Efectivo Disponible: <span className="text-blue-700">${portfolioData.availableCash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+              <div className="text-lg font-semibold text-gray-900">Efectivo Disponible (ARS): <span className="text-blue-700">${cash.ARS.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+              <div className="text-lg font-semibold text-gray-900">Efectivo Disponible (USD): <span className="text-blue-700">${cash.USD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
             </div>
             <form className="flex gap-2 items-center flex-wrap" onSubmit={handleDeposit}>
+              <select 
+                value={depositCurrency}
+                onChange={(e) => setDepositCurrency(e.target.value as 'ARS' | 'USD')}
+                className="border rounded px-2 py-1 text-gray-900 bg-white"
+                disabled={depositLoading}
+              >
+                <option value="ARS">ARS</option>
+                <option value="USD">USD</option>
+              </select>
               <input
                 type="date"
                 className="border rounded px-2 py-1 text-gray-900"
@@ -221,7 +235,7 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <PortfolioPieChart positions={portfolioData.positions} prices={portfolioData.historicalPrices} />
-        <PortfolioHistoryChart valueHistory={valueHistory} />
+        <PortfolioHistoryChart valueHistory={valueHistory.map(h => ({date: h.date, value: h.valueARS}))} />
       </div>
 
       <PortfolioTransactions transactions={portfolioData.transactions} />
@@ -231,7 +245,7 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
         prices={portfolioData.historicalPrices} 
         fundamentals={portfolioData.fundamentals} 
         technicals={portfolioData.technicals} 
-        availableCash={portfolioData.availableCash}
+        cash={cash}
         onPortfolioUpdate={refreshPortfolio}
       />
       
@@ -246,7 +260,7 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
             prices={portfolioData.historicalPrices[stock.symbol]}
             position={stock}
             onTrade={refreshPortfolio}
-            availableCash={portfolioData.availableCash}
+            cash={cash}
           />
         ))}
       </div>

@@ -44,26 +44,30 @@ export async function POST(request: NextRequest) {
     // Ensure arrays exist
     if (!user.positions) user.positions = [];
     if (!user.transactions) user.transactions = [];
-    if (typeof user.availableCash !== 'number') user.availableCash = 0;
+    if (!user.cash) user.cash = { ARS: 0, USD: 0 };
     
     let totalCost = 0;
 
     switch (assetType) {
       case 'Stock': {
-        const { symbol, quantity, price, commissionPct = DEFAULT_COMMISSION_PCT, purchaseFeePct = DEFAULT_PURCHASE_FEE_PCT } = body;
-        if (!symbol || !quantity || !price) return NextResponse.json({ error: 'Missing fields for Stock purchase' }, { status: 400 });
+        const { symbol, quantity, price, currency, market, commissionPct = DEFAULT_COMMISSION_PCT, purchaseFeePct = DEFAULT_PURCHASE_FEE_PCT } = body;
+        if (!symbol || !quantity || !price || !currency || !market) return NextResponse.json({ error: 'Missing fields for Stock purchase' }, { status: 400 });
         
+        const validatedCurrency = currency as 'ARS' | 'USD';
         const baseCost = quantity * price;
         totalCost = baseCost * (1 + commissionPct / 100 + purchaseFeePct / 100);
-        if (user.availableCash < totalCost) return NextResponse.json({ error: 'Insufficient funds' }, { status: 400 });
+        if (user.cash[validatedCurrency] < totalCost) return NextResponse.json({ error: 'Insufficient funds' }, { status: 400 });
 
         let pos = user.positions.find((p): p is StockPosition => p.type === 'Stock' && p.symbol === symbol);
+        
         if (pos) {
+          // If the position exists, update it. This assumes stocks from different markets are consolidated.
           const newTotalValue = pos.averagePrice * pos.quantity + price * quantity;
           pos.quantity += quantity;
           pos.averagePrice = newTotalValue / pos.quantity;
+          // Note: we don't update the market or currency of the existing position.
         } else {
-          const newPosition: StockPosition = { type: 'Stock', symbol, quantity, averagePrice: price };
+          const newPosition: StockPosition = { type: 'Stock', symbol, quantity, averagePrice: price, currency: validatedCurrency, market };
           user.positions.push(newPosition);
         }
         
@@ -75,28 +79,32 @@ export async function POST(request: NextRequest) {
           symbol, 
           quantity, 
           price,
+          currency: validatedCurrency,
+          market,
           commissionPct,
           purchaseFeePct
         };
         user.transactions.push(tx);
+        user.cash[validatedCurrency] -= totalCost;
         break;
       }
       
       case 'Bond': {
-        const { ticker, quantity, price, commissionPct = DEFAULT_COMMISSION_PCT, purchaseFeePct = DEFAULT_PURCHASE_FEE_PCT } = body;
-        if (!ticker || !quantity || !price) return NextResponse.json({ error: 'Missing fields for Bond purchase' }, { status: 400 });
+        const { ticker, quantity, price, currency, commissionPct = DEFAULT_COMMISSION_PCT, purchaseFeePct = DEFAULT_PURCHASE_FEE_PCT } = body;
+        if (!ticker || !quantity || !price || !currency) return NextResponse.json({ error: 'Missing fields for Bond purchase' }, { status: 400 });
         
+        const validatedCurrency = currency as 'ARS' | 'USD';
         const baseCost = quantity * price; // Assuming price is per unit
         totalCost = baseCost * (1 + commissionPct / 100 + purchaseFeePct / 100);
-        if (user.availableCash < totalCost) return NextResponse.json({ error: 'Insufficient funds' }, { status: 400 });
+        if (user.cash[validatedCurrency] < totalCost) return NextResponse.json({ error: 'Insufficient funds' }, { status: 400 });
 
-        let pos = user.positions.find((p): p is BondPosition => p.type === 'Bond' && p.ticker === ticker);
+        let pos = user.positions.find((p): p is BondPosition => p.type === 'Bond' && p.ticker === ticker && p.currency === validatedCurrency);
         if (pos) {
           const newTotalValue = pos.averagePrice * pos.quantity + price * quantity;
           pos.quantity += quantity;
           pos.averagePrice = newTotalValue / pos.quantity;
         } else {
-          const newPosition: BondPosition = { type: 'Bond', ticker, quantity, averagePrice: price };
+          const newPosition: BondPosition = { type: 'Bond', ticker, quantity, averagePrice: price, currency: validatedCurrency };
           user.positions.push(newPosition);
         }
         
@@ -108,19 +116,22 @@ export async function POST(request: NextRequest) {
           ticker, 
           quantity, 
           price,
+          currency: validatedCurrency,
           commissionPct,
           purchaseFeePct
         };
         user.transactions.push(tx);
+        user.cash[validatedCurrency] -= totalCost;
         break;
       }
       
       case 'FixedTermDeposit': {
-        const { provider, amount, annualRate, termDays } = body;
-        if (!provider || !amount || !annualRate || !termDays) return NextResponse.json({ error: 'Missing fields for Fixed Term Deposit' }, { status: 400 });
+        const { provider, amount, annualRate, termDays, currency } = body;
+        if (!provider || !amount || !annualRate || !termDays || !currency) return NextResponse.json({ error: 'Missing fields for Fixed Term Deposit' }, { status: 400 });
 
+        const validatedCurrency = currency as 'ARS' | 'USD';
         totalCost = amount;
-        if (user.availableCash < totalCost) return NextResponse.json({ error: 'Insufficient funds' }, { status: 400 });
+        if (user.cash[validatedCurrency] < totalCost) return NextResponse.json({ error: 'Insufficient funds' }, { status: 400 });
 
         const startDate = dayjs();
         const maturityDate = startDate.add(termDays, 'day');
@@ -133,6 +144,7 @@ export async function POST(request: NextRequest) {
           annualRate,
           startDate: startDate.toISOString(),
           maturityDate: maturityDate.toISOString(),
+          currency: validatedCurrency,
         };
         user.positions.push(newPosition);
 
@@ -145,23 +157,24 @@ export async function POST(request: NextRequest) {
           amount,
           annualRate,
           termDays,
-          maturityDate: maturityDate.toISOString()
+          maturityDate: maturityDate.toISOString(),
+          currency: validatedCurrency,
         };
         user.transactions.push(tx);
+        user.cash[validatedCurrency] -= totalCost;
         break;
       }
       
       default:
         return NextResponse.json({ error: 'Invalid asset type' }, { status: 400 });
     }
-
-    user.availableCash -= totalCost;
+    
     await saveUserData(username, user);
     
     return NextResponse.json({ 
       positions: user.positions, 
       transactions: user.transactions,
-      availableCash: user.availableCash
+      cash: user.cash
     });
 
   } catch (err) {

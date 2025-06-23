@@ -42,7 +42,7 @@ export default function DepositsPage() {
     setIsModalOpen(true);
   };
 
-  const handleCreateDeposit: TradeModalProps['onSubmit'] = async (amount, assetType, identifier) => {
+  const handleCreateDeposit: TradeModalProps['onSubmit'] = async (amount, assetType, identifier, currency) => {
     if (!selectedDeposit) return;
     
     const session = localStorage.getItem('session');
@@ -56,6 +56,7 @@ export default function DepositsPage() {
       amount,
       annualRate: selectedDeposit.annualRate,
       termDays: selectedDeposit.termDays,
+      currency: selectedDeposit.currency,
     };
 
     try {
@@ -89,13 +90,17 @@ export default function DepositsPage() {
           assetName={`${selectedDeposit.provider} ${selectedDeposit.termDays} días`}
           assetType="FixedTermDeposit"
           identifier={selectedDeposit.id}
-          availableCash={portfolioData?.availableCash ?? 0}
+          cash={portfolioData?.cash ?? { ARS: 0, USD: 0 }}
           isAmountBased={true}
+          currency={selectedDeposit.currency}
         />
       )}
       <div className="space-y-6">
-        <div className="flex justify-end">
-          <AvailableCapitalIndicator assetClass="deposits" />
+        <div className="flex justify-between items-center">
+          <div className="flex gap-4">
+            <AvailableCapitalIndicator assetClass="deposits" currency="ARS" />
+            <AvailableCapitalIndicator assetClass="deposits" currency="USD" />
+          </div>
         </div>
         
         <h1 className="text-2xl font-bold text-gray-900">Plazos Fijos Disponibles</h1>
@@ -120,8 +125,8 @@ export default function DepositsPage() {
                 </div>
                 <button 
                   onClick={() => handleOpenModal(deposit)}
-                  className="w-full mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:text-gray-400"
-                  disabled={(portfolioData?.availableCash ?? 0) <= 0}
+                  className="w-full mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
+                  disabled={(portfolioData?.cash?.[deposit.currency] ?? 0) <= 0}
                 >
                   Invertir
                 </button>

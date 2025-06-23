@@ -11,7 +11,7 @@ describe('projectFixedIncome', () => {
   it('should project value correctly with a fixed term deposit', () => {
     const initialValue = 10000;
     const positions: PortfolioPosition[] = [
-      { type: 'FixedTermDeposit', id: 'ftd-1', provider: 'Bank', amount: 10000, annualRate: 10, startDate: '2023-01-01', maturityDate: '2024-01-01' },
+      { type: 'FixedTermDeposit', id: 'ftd-1', provider: 'Bank', amount: 10000, annualRate: 10, startDate: '2023-01-01', maturityDate: '2024-01-01', currency: 'ARS' },
     ];
     const goals: InvestmentGoal[] = [
       { id: 'g1', name: 'Goal 1', targetAmount: 12000, targetDate: dayjs().add(1, 'year').format('YYYY-MM-DD'), initialDeposit: 10000, monthlyContribution: 0 },
@@ -31,7 +31,7 @@ describe('projectFixedIncome', () => {
   it('should project value correctly with a bond', () => {
     const initialValue = 5000;
     const positions: PortfolioPosition[] = [
-      { type: 'Bond', ticker: 'AL30', quantity: 100, averagePrice: 50 },
+      { type: 'Bond', ticker: 'AL30', quantity: 100, averagePrice: 50, currency: 'ARS' },
     ];
     const goals: InvestmentGoal[] = [
       { id: 'g1', name: 'Goal 1', targetAmount: 6000, targetDate: dayjs().add(1, 'year').format('YYYY-MM-DD'), initialDeposit: 5000, monthlyContribution: 0 },

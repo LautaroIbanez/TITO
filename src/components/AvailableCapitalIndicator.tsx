@@ -1,27 +1,26 @@
 'use client';
 import { usePortfolio } from '@/contexts/PortfolioContext';
+import { formatCurrency } from '@/utils/goalCalculator';
 
 interface AvailableCapitalIndicatorProps {
   assetClass: 'stocks' | 'bonds' | 'deposits';
+  currency?: 'ARS' | 'USD';
 }
 
-export default function AvailableCapitalIndicator({ assetClass }: AvailableCapitalIndicatorProps) {
+export default function AvailableCapitalIndicator({ assetClass, currency = 'ARS' }: AvailableCapitalIndicatorProps) {
   const { portfolioData, strategy } = usePortfolio();
 
-  if (!portfolioData || !strategy) {
+  if (!portfolioData || !strategy || !portfolioData.cash) {
     return null;
   }
 
-  const availableCash = portfolioData.availableCash;
+  const availableCash = portfolioData.cash[currency] || 0;
   const targetAllocation = strategy.targetAllocation[assetClass];
   const capital = availableCash * (targetAllocation / 100);
 
   return (
     <div className="text-sm text-gray-600">
-      Capital disponible: ${capital.toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      })}
+      Capital disponible ({currency}): {formatCurrency(capital, currency)}
     </div>
   );
 } 

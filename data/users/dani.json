@@ -1,0 +1,81 @@
+{
+  "username": "dani",
+  "createdAt": "2025-06-23T14:21:40.067Z",
+  "profileCompleted": true,
+  "positions": [],
+  "transactions": [
+    {
+      "id": "dep_1750689132802",
+      "date": "2025-06-23",
+      "type": "Deposit",
+      "amount": 1000,
+      "currency": "ARS"
+    },
+    {
+      "id": "dep_1750689360293",
+      "date": "2025-06-23",
+      "type": "Deposit",
+      "amount": 10000,
+      "currency": "ARS"
+    }
+  ],
+  "goals": [],
+  "availableCash": 1000000,
+  "profile": {
+    "instrumentsUsed": [
+      "Plazo Fijo",
+      "Fondos Comunes de Inversión"
+    ],
+    "knowledgeLevels": {
+      "Plazo Fijo": "Alto",
+      "Fondos Comunes de Inversión": "Bajo"
+    },
+    "holdingPeriod": "1 a 5 años",
+    "ageGroup": "30 a 40",
+    "riskAppetite": "Balanceado",
+    "investmentAmount": 1000000
+  },
+  "investmentStrategy": {
+    "id": "strategy-686a7ed7-ef26-4187-875c-d7c780af915c",
+    "createdAt": "2025-06-23T14:35:47.262Z",
+    "targetAllocation": {
+      "stocks": 60,
+      "bonds": 30,
+      "deposits": 5,
+      "cash": 5
+    },
+    "recommendations": [
+      {
+        "id": "alloc-88ab3c53-845e-40bf-b7a3-498f8918c962",
+        "action": "increase",
+        "assetClass": "stocks",
+        "reason": "Tu portafolio tiene 0.0% en acciones, pero tu estrategia objetivo es 60%",
+        "priority": "high",
+        "expectedImpact": "positive"
+      },
+      {
+        "id": "alloc-efdc4969-235e-4c2d-a18d-3aa83b6728da",
+        "action": "increase",
+        "assetClass": "bonds",
+        "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 30%",
+        "priority": "high",
+        "expectedImpact": "positive"
+      },
+      {
+        "id": "cash-a977547d-4bf6-41b8-aefa-4236620426b9",
+        "action": "decrease",
+        "assetClass": "cash",
+        "reason": "Tienes mucho efectivo disponible. Considera invertirlo según tu estrategia",
+        "priority": "medium",
+        "expectedImpact": "positive"
+      }
+    ],
+    "riskLevel": "Balanceado",
+    "timeHorizon": "5-10 años",
+    "notes": ""
+  },
+  "cash": {
+    "ARS": 11000,
+    "USD": 0
+  }
+}

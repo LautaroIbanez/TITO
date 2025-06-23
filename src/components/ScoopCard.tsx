@@ -27,8 +27,8 @@ interface ScoopCardProps {
   isSuggested: boolean;
   isTrending: boolean;
   inPortfolio: boolean;
-  onTrade: () => void; // Renamed from onAddToPortfolio
-  availableCash: number;
+  onTrade: () => void;
+  cash: { ARS: number; USD: number };
 }
 
 const SignalBadge = ({ signal }: { signal: TradeSignal }) => {
@@ -57,15 +57,16 @@ export default function ScoopCard({
   isTrending,
   inPortfolio,
   onTrade,
-  availableCash,
+  cash,
 }: ScoopCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // Prepare chart data
+  const [market, setMarket] = useState<'NASDAQ' | 'BCBA'>('NASDAQ');
+  const [localPrice, setLocalPrice] = useState<number | null>(null);
+
   const prices = stockData?.prices || [];
-  const currentPrice = prices.length > 0 ? prices[prices.length - 1].close : 0;
+  const currentPrice = market === 'BCBA' && localPrice ? localPrice : (prices.length > 0 ? prices[prices.length - 1].close : 0);
   const signal = getTradeSignal(technicals, currentPrice);
   
-  // Compute last price date
   const lastPriceDate = prices.length > 0 ? prices[prices.length - 1].date : null;
   const fundamentalsDate = fundamentals?.updatedAt;
   
@@ -99,31 +100,55 @@ export default function ScoopCard({
     maintainAspectRatio: false,
   };
 
-  const handleBuy: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier, commissionPct, purchaseFeePct) => {
+  const handleMarketChange = async (newMarket: 'NASDAQ' | 'BCBA') => {
+    setMarket(newMarket);
+    if (newMarket === 'BCBA' && !localPrice) {
+      try {
+        const res = await fetch(`/api/stocks/${stockData.symbol}.BA?type=prices`);
+        if (res.ok) {
+          const localPrices = await res.json();
+          if (localPrices.length > 0) {
+            setLocalPrice(localPrices[localPrices.length - 1].close);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch local price for', stockData.symbol);
+      }
+    }
+  };
+
+  const handleBuy: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier, currency, commissionPct, purchaseFeePct) => {
     const session = localStorage.getItem('session');
     if (!session) return;
     const username = JSON.parse(session).username;
+    
+    const symbol = market === 'BCBA' ? `${stockData.symbol}.BA` : stockData.symbol;
+
     const res = await fetch('/api/portfolio/buy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         username,
         assetType: 'Stock',
-        symbol: stockData.symbol,
+        symbol,
         quantity,
         price: currentPrice,
+        currency,
+        market,
         commissionPct,
         purchaseFeePct,
       }),
     });
     if (res.ok) {
-      onTrade(); // Refresh data
+      onTrade();
       setIsModalOpen(false);
     } else {
       const data = await res.json();
       alert(`Error: ${data.error}`);
     }
   };
+
+  const currency = market === 'BCBA' ? 'ARS' : 'USD';
 
   return (
     <>
@@ -132,11 +157,12 @@ export default function ScoopCard({
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleBuy}
         tradeType="Buy"
-        assetName={stockData.symbol}
+        assetName={market === 'BCBA' ? `${stockData.symbol}.BA` : stockData.symbol}
         assetType="Stock"
         identifier={stockData.symbol}
         price={currentPrice}
-        availableCash={availableCash}
+        cash={cash}
+        currency={currency}
       />
       <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col gap-4 relative">
         <div className="flex items-center gap-2">
@@ -233,18 +259,30 @@ export default function ScoopCard({
           </div>
         </div>
 
-        {/* Action Button */}
-        <button
-          onClick={() => setIsModalOpen(true)}
-          disabled={inPortfolio}
-          className={`mt-4 px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
-            inPortfolio
-              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              : 'bg-blue-600 text-white hover:bg-blue-700'
-          }`}
-        >
-          {inPortfolio ? 'Ya en Portafolio' : 'Comprar'}
-        </button>
+        {/* Action Buttons */}
+        <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center gap-1 rounded-full bg-gray-100 p-1 text-xs">
+            <button 
+              onClick={() => handleMarketChange('NASDAQ')}
+              className={`px-3 py-1 rounded-full ${market === 'NASDAQ' ? 'bg-white shadow' : 'text-gray-600'}`}
+            >
+              USD
+            </button>
+            <button
+              onClick={() => handleMarketChange('BCBA')}
+              className={`px-3 py-1 rounded-full ${market === 'BCBA' ? 'bg-white shadow' : 'text-gray-600'}`}
+            >
+              ARS (.BA)
+            </button>
+          </div>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            disabled={inPortfolio || cash[currency] < 1}
+            className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            {inPortfolio ? 'En Portafolio' : 'Comprar'}
+          </button>
+        </div>
       </div>
     </>
   );

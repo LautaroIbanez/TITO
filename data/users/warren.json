@@ -10,7 +10,8 @@
       "amount": 3000,
       "annualRate": 75,
       "startDate": "2025-06-22T02:11:36.711Z",
-      "maturityDate": "2025-07-22T02:11:36.711Z"
+      "maturityDate": "2025-07-22T02:11:36.711Z",
+      "currency": "ARS"
     }
   ],
   "transactions": [
@@ -23,7 +24,8 @@
       "amount": 3000,
       "annualRate": 75,
       "termDays": 30,
-      "maturityDate": "2025-07-22T02:11:36.711Z"
+      "maturityDate": "2025-07-22T02:11:36.711Z",
+      "currency": "ARS"
     }
   ],
   "goals": [
@@ -36,7 +38,10 @@
       "id": "1750557963275"
     }
   ],
-  "availableCash": 0,
+  "cash": {
+    "ARS": 0,
+    "USD": 0
+  },
   "profile": {
     "instrumentsUsed": [
       "Plazo Fijo",
@@ -53,4 +58,4 @@
     "riskAppetite": "Balanceado",
     "investmentAmount": 3000
   }
-}
+} 
