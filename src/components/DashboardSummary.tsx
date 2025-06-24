@@ -5,6 +5,7 @@ import { InvestmentGoal, PortfolioTransaction, StrategyRecommendation, Portfolio
 import { Bond } from '@/types/finance';
 import { calculatePortfolioValueHistory, PortfolioValueHistory, calculateCurrentValueByCurrency } from '@/utils/calculatePortfolioValue';
 import { calculateInvestedCapital } from '@/utils/investedCapital';
+import { calculatePortfolioPerformance, fetchInflationData, formatPerformance, PerformanceMetrics, InflationData } from '@/utils/portfolioPerformance';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import GoalProgress from './GoalProgress';
 import { formatCurrency } from '@/utils/goalCalculator';
@@ -15,6 +16,8 @@ export default function DashboardSummary() {
   const [firstGoal, setFirstGoal] = useState<InvestmentGoal | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [bonds, setBonds] = useState<Bond[]>([]);
+  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
+  const [inflationData, setInflationData] = useState<InflationData | null>(null);
   
   const { portfolioData, strategy, loading, error, portfolioVersion } = usePortfolio();
 
@@ -29,9 +32,10 @@ export default function DashboardSummary() {
         setShowOnboarding(true);
       }
 
-      const [goalsRes, bondsRes] = await Promise.all([
+      const [goalsRes, bondsRes, inflationRes] = await Promise.all([
         fetch(`/api/goals?username=${username}`),
-        fetch('/api/bonds')
+        fetch('/api/bonds'),
+        fetchInflationData()
       ]);
 
       if (goalsRes.ok) {
@@ -45,6 +49,10 @@ export default function DashboardSummary() {
         const bondsData = await bondsRes.json();
         setBonds(bondsData);
       }
+
+      if (inflationRes) {
+        setInflationData(inflationRes);
+      }
     }
 
     if (portfolioData) {
@@ -56,10 +64,20 @@ export default function DashboardSummary() {
       );
       setPortfolioValueARS(ARS);
       setPortfolioValueUSD(USD);
+
+      // Calculate performance metrics
+      const valueHistory = calculatePortfolioValueHistory(
+        portfolioData.transactions || [],
+        portfolioData.historicalPrices || {},
+        { days: 365 } // Get 1 year of history for performance calculations
+      );
+      
+      const performance = calculatePortfolioPerformance(valueHistory, inflationData || undefined);
+      setPerformanceMetrics(performance);
     }
 
     fetchData();
-  }, [portfolioData, portfolioVersion]);
+  }, [portfolioData, portfolioVersion, inflationData]);
 
   const handleDismissOnboarding = () => {
     setShowOnboarding(false);
@@ -216,6 +234,100 @@ export default function DashboardSummary() {
           <p className="text-xl font-semibold text-green-600">{formatCurrency(portfolioData.cash?.USD ?? 0, 'USD')}</p>
         </div>
       </div>
+
+      {/* Performance Metrics */}
+      {performanceMetrics && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Rendimiento Mensual (ARS)</h3>
+            <div className="space-y-1">
+              <p className={`text-xl font-semibold ${formatPerformance(performanceMetrics.monthlyReturnARS).color}`}>
+                {formatPerformance(performanceMetrics.monthlyReturnARS).formatted}
+              </p>
+              {inflationData && (
+                <p className={`text-sm ${formatPerformance(performanceMetrics.monthlyReturnARSReal, true).color}`}>
+                  Real: {formatPerformance(performanceMetrics.monthlyReturnARSReal, true).formatted}
+                </p>
+              )}
+            </div>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Rendimiento Mensual (USD)</h3>
+            <div className="space-y-1">
+              <p className={`text-xl font-semibold ${formatPerformance(performanceMetrics.monthlyReturnUSD).color}`}>
+                {formatPerformance(performanceMetrics.monthlyReturnUSD).formatted}
+              </p>
+              {inflationData && (
+                <p className={`text-sm ${formatPerformance(performanceMetrics.monthlyReturnUSDReal, true).color}`}>
+                  Real: {formatPerformance(performanceMetrics.monthlyReturnUSDReal, true).formatted}
+                </p>
+              )}
+            </div>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Rendimiento Anual (ARS)</h3>
+            <div className="space-y-1">
+              <p className={`text-xl font-semibold ${formatPerformance(performanceMetrics.annualReturnARS).color}`}>
+                {formatPerformance(performanceMetrics.annualReturnARS).formatted}
+              </p>
+              {inflationData && (
+                <p className={`text-sm ${formatPerformance(performanceMetrics.annualReturnARSReal, true).color}`}>
+                  Real: {formatPerformance(performanceMetrics.annualReturnARSReal, true).formatted}
+                </p>
+              )}
+            </div>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Rendimiento Anual (USD)</h3>
+            <div className="space-y-1">
+              <p className={`text-xl font-semibold ${formatPerformance(performanceMetrics.annualReturnUSD).color}`}>
+                {formatPerformance(performanceMetrics.annualReturnUSD).formatted}
+              </p>
+              {inflationData && (
+                <p className={`text-sm ${formatPerformance(performanceMetrics.annualReturnUSDReal, true).color}`}>
+                  Real: {formatPerformance(performanceMetrics.annualReturnUSDReal, true).formatted}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Inflation Data */}
+      {inflationData && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-medium text-gray-800 mb-4">Inflación Argentina</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-600">Mensual</p>
+                <p className="text-2xl font-semibold text-red-600">+{inflationData.argentina.monthly.toFixed(1)}%</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Anual</p>
+                <p className="text-2xl font-semibold text-red-600">+{inflationData.argentina.annual.toFixed(1)}%</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-medium text-gray-800 mb-4">Inflación EE.UU.</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-600">Mensual</p>
+                <p className="text-2xl font-semibold text-orange-600">+{inflationData.usa.monthly.toFixed(1)}%</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Anual</p>
+                <p className="text-2xl font-semibold text-orange-600">+{inflationData.usa.annual.toFixed(1)}%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {firstGoal && (
         <GoalProgress 

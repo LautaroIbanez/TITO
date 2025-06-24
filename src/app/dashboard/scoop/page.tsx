@@ -78,7 +78,7 @@ export default function ScoopPage() {
       userProfile = data.profile || null;
       userPositions = data.positions || [];
       // Store the base symbol (e.g., AAPL from AAPL.BA)
-      setPortfolioSymbols(userPositions.map((p: any) => p.symbol.split('.')[0]));
+      setPortfolioSymbols(userPositions.map((p: any) => p.symbol?.split('.')[0] || p.symbol || ''));
       setProfile(userProfile);
 
       const goalsRes = await fetch(`/api/goals?username=${username}`);
@@ -144,8 +144,9 @@ export default function ScoopPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-end">
-        <AvailableCapitalIndicator assetClass="stocks" />
+      <div className="flex gap-4 justify-end">
+        <AvailableCapitalIndicator assetClass="stocks" currency="ARS" />
+        <AvailableCapitalIndicator assetClass="stocks" currency="USD" />
       </div>
       
       {requiredReturn > 0 && (

@@ -200,6 +200,8 @@ export function calculateCurrentValueByCurrency(
   let valueARS = cash.ARS || 0;
   let valueUSD = cash.USD || 0;
 
+  const today = new Date();
+
   for (const pos of positions) {
     if (pos.type === 'Stock' || pos.type === 'Bond') {
       const symbol = pos.type === 'Stock' ? pos.symbol : pos.ticker;
@@ -213,10 +215,26 @@ export function calculateCurrentValueByCurrency(
         }
       }
     } else if (pos.type === 'FixedTermDeposit') {
+      const startDate = new Date(pos.startDate);
+      const maturityDate = new Date(pos.maturityDate);
+      let value = pos.amount;
+      let interest = 0;
+      if (today >= maturityDate) {
+        // Full interest
+        const days = Math.round((maturityDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        const dailyRate = pos.annualRate / 100 / 365;
+        interest = pos.amount * dailyRate * days;
+      } else if (today > startDate) {
+        // Accrued interest up to today
+        const days = Math.round((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        const dailyRate = pos.annualRate / 100 / 365;
+        interest = pos.amount * dailyRate * days;
+      }
+      value += interest;
       if (pos.currency === 'ARS') {
-        valueARS += pos.amount;
+        valueARS += value;
       } else if (pos.currency === 'USD') {
-        valueUSD += pos.amount;
+        valueUSD += value;
       }
     }
   }

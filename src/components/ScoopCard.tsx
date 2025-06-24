@@ -62,20 +62,30 @@ export default function ScoopCard({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [market, setMarket] = useState<'NASDAQ' | 'BCBA'>('NASDAQ');
   const [localPrice, setLocalPrice] = useState<number | null>(null);
-
-  const prices = stockData?.prices || [];
-  const currentPrice = market === 'BCBA' && localPrice ? localPrice : (prices.length > 0 ? prices[prices.length - 1].close : 0);
-  const signal = getTradeSignal(technicals, currentPrice);
   
-  const lastPriceDate = prices.length > 0 ? prices[prices.length - 1].date : null;
-  const fundamentalsDate = fundamentals?.updatedAt;
+  // Display states for current market data
+  const [displayPrices, setDisplayPrices] = useState<any[]>(stockData?.prices || []);
+  const [displayFundamentals, setDisplayFundamentals] = useState<Fundamentals>(fundamentals);
+  const [displayTechnicals, setDisplayTechnicals] = useState<Technicals | null>(technicals);
+  
+  // BCBA caches
+  const [bcbaPrices, setBcbaPrices] = useState<any[]>([]);
+  const [bcbaFundamentals, setBcbaFundamentals] = useState<Fundamentals | null>(null);
+  const [bcbaTechnicals, setBcbaTechnicals] = useState<Technicals | null>(null);
+  const [bcbaDataLoaded, setBcbaDataLoaded] = useState(false);
+
+  const currentPrice = displayPrices.length > 0 ? displayPrices[displayPrices.length - 1].close : 0;
+  const signal = getTradeSignal(displayTechnicals, currentPrice);
+  
+  const lastPriceDate = displayPrices.length > 0 ? displayPrices[displayPrices.length - 1].date : null;
+  const fundamentalsDate = displayFundamentals?.updatedAt;
   
   const chartData = {
-    labels: prices.map((p: any) => p.date),
+    labels: displayPrices.map((p: any) => p.date),
     datasets: [
       {
         label: 'Close',
-        data: prices.map((p: any) => p.close),
+        data: displayPrices.map((p: any) => p.close),
         fill: true,
         borderColor: '#2563eb',
         backgroundColor: 'rgba(37,99,235,0.08)',
@@ -102,18 +112,56 @@ export default function ScoopCard({
 
   const handleMarketChange = async (newMarket: 'NASDAQ' | 'BCBA') => {
     setMarket(newMarket);
-    if (newMarket === 'BCBA' && !localPrice) {
+    
+    if (newMarket === 'BCBA') {
+      // Use cached BCBA data if available
+      if (bcbaDataLoaded) {
+        setDisplayPrices(bcbaPrices);
+        setDisplayFundamentals(bcbaFundamentals || fundamentals);
+        setDisplayTechnicals(bcbaTechnicals);
+        return;
+      }
+      
+      // Fetch BCBA data for the first time
       try {
-        const res = await fetch(`/api/stocks/${stockData.symbol}.BA?type=prices`);
-        if (res.ok) {
-          const localPrices = await res.json();
-          if (localPrices.length > 0) {
-            setLocalPrice(localPrices[localPrices.length - 1].close);
-          }
+        const [pricesRes, fundamentalsRes, technicalsRes] = await Promise.all([
+          fetch(`/api/stocks/${stockData.symbol}.BA?type=prices`),
+          fetch(`/api/stocks/${stockData.symbol}.BA?type=fundamentals`),
+          fetch(`/api/stocks/${stockData.symbol}.BA?type=technicals`)
+        ]);
+        
+        const bcbaPricesData = pricesRes.ok ? await pricesRes.json() : [];
+        const bcbaFundamentalsData = fundamentalsRes.ok ? await fundamentalsRes.json() : fundamentals;
+        const bcbaTechnicalsData = technicalsRes.ok ? await technicalsRes.json() : null;
+        
+        // Cache the BCBA data
+        setBcbaPrices(bcbaPricesData);
+        setBcbaFundamentals(bcbaFundamentalsData);
+        setBcbaTechnicals(bcbaTechnicalsData);
+        setBcbaDataLoaded(true);
+        
+        // Update display data
+        setDisplayPrices(bcbaPricesData);
+        setDisplayFundamentals(bcbaFundamentalsData);
+        setDisplayTechnicals(bcbaTechnicalsData);
+        
+        // Update local price if available
+        if (bcbaPricesData.length > 0) {
+          setLocalPrice(bcbaPricesData[bcbaPricesData.length - 1].close);
         }
       } catch (error) {
-        console.error('Failed to fetch local price for', stockData.symbol);
+        console.error('Failed to fetch BCBA data for', stockData.symbol, error);
+        // Fallback to original data if BCBA fetch fails
+        setDisplayPrices(stockData?.prices || []);
+        setDisplayFundamentals(fundamentals);
+        setDisplayTechnicals(technicals);
       }
+    } else {
+      // Switch back to NASDAQ data
+      setDisplayPrices(stockData?.prices || []);
+      setDisplayFundamentals(fundamentals);
+      setDisplayTechnicals(technicals);
+      setLocalPrice(null);
     }
   };
 
@@ -183,17 +231,17 @@ export default function ScoopCard({
           )}
         </div>
         
-        {fundamentals?.sector && (
+        {displayFundamentals?.sector && (
           <div className="text-xs text-gray-700 -mt-3">
-            {fundamentals.sector} / {fundamentals.industry}
+            {displayFundamentals.sector} / {displayFundamentals.industry}
           </div>
         )}
 
-        <StockBadges fundamentals={fundamentals} />
+        <StockBadges fundamentals={displayFundamentals} />
         
         {/* Price Chart */}
         <div className="h-32 flex items-center justify-center bg-gray-50 rounded">
-          {prices.length > 0 ? (
+          {displayPrices.length > 0 ? (
             <Line data={chartData} options={chartOptions} height={100} />
           ) : (
             <span className="text-gray-900 text-sm">[Gráfico de Precios]</span>
@@ -205,36 +253,36 @@ export default function ScoopCard({
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-2">Valuación</h3>
             <div className="space-y-1 text-xs text-gray-700">
-              <RatioRow label="PE" value={fundamentals?.peRatio} metric="peRatio" />
-              <RatioRow label="PB" value={fundamentals?.pbRatio} metric="pbRatio" />
-              <RatioRow label="EV/EBITDA" value={fundamentals?.evToEbitda} metric="evToEbitda" />
-              <RatioRow label="P/FCF" value={fundamentals?.priceToFCF} metric="priceToFCF" />
+              <RatioRow label="PE" value={displayFundamentals?.peRatio} metric="peRatio" />
+              <RatioRow label="PB" value={displayFundamentals?.pbRatio} metric="pbRatio" />
+              <RatioRow label="EV/EBITDA" value={displayFundamentals?.evToEbitda} metric="evToEbitda" />
+              <RatioRow label="P/FCF" value={displayFundamentals?.priceToFCF} metric="priceToFCF" />
             </div>
           </div>
           
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-2">Rentabilidad</h3>
             <div className="space-y-1 text-xs text-gray-700">
-              <RatioRow label="ROE" value={fundamentals?.roe} metric="roe" format="percent" />
-              <RatioRow label="ROA" value={fundamentals?.roa} metric="roa" format="percent" />
-              <RatioRow label="Net Margin" value={fundamentals?.netMargin} metric="netMargin" format="percent" />
-              <RatioRow label="FCF (M)" value={fundamentals?.freeCashFlow} metric="freeCashFlow" format="currency" />
+              <RatioRow label="ROE" value={displayFundamentals?.roe} metric="roe" format="percent" />
+              <RatioRow label="ROA" value={displayFundamentals?.roa} metric="roa" format="percent" />
+              <RatioRow label="Net Margin" value={displayFundamentals?.netMargin} metric="netMargin" format="percent" />
+              <RatioRow label="FCF (M)" value={displayFundamentals?.freeCashFlow} metric="freeCashFlow" format="currency" />
             </div>
           </div>
           
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-2">Deuda</h3>
             <div className="space-y-1 text-xs text-gray-700">
-              <RatioRow label="D/EBITDA" value={fundamentals?.debtToEbitda} metric="debtToEbitda" />
-              <RatioRow label="D/E" value={fundamentals?.debtToEquity} metric="debtToEquity" />
+              <RatioRow label="D/EBITDA" value={displayFundamentals?.debtToEbitda} metric="debtToEbitda" />
+              <RatioRow label="D/E" value={displayFundamentals?.debtToEquity} metric="debtToEquity" />
             </div>
           </div>
           
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-2">Crecimiento</h3>
             <div className="space-y-1 text-xs text-gray-700">
-              <RatioRow label="Revenue Growth" value={fundamentals?.revenueGrowth} metric="revenueGrowth" format="percent" />
-              <RatioRow label="EPS Growth" value={fundamentals?.epsGrowth} metric="epsGrowth" format="percent" />
+              <RatioRow label="Revenue Growth" value={displayFundamentals?.revenueGrowth} metric="revenueGrowth" format="percent" />
+              <RatioRow label="EPS Growth" value={displayFundamentals?.epsGrowth} metric="epsGrowth" format="percent" />
             </div>
           </div>
         </div>
@@ -243,11 +291,11 @@ export default function ScoopCard({
         <div>
           <h3 className="text-sm font-semibold text-gray-900 mb-2">Técnicos</h3>
           <div className="grid grid-cols-2 gap-x-4 text-xs text-gray-700">
-            <TechnicalDisplay label="RSI" indicatorKey="RSI" value={technicals?.rsi} />
-            <TechnicalDisplay label="MACD" indicatorKey="MACD" value={technicals?.macd} />
-            <TechnicalDisplay label="SMA 200" indicatorKey="SMA" value={technicals?.sma200} currentPrice={currentPrice} />
-            <TechnicalDisplay label="EMA 50" indicatorKey="EMA" value={technicals?.ema50} currentPrice={currentPrice} />
-            <TechnicalDisplay label="ADX" indicatorKey="ADX" value={technicals?.adx} />
+            <TechnicalDisplay label="RSI" indicatorKey="RSI" value={displayTechnicals?.rsi} />
+            <TechnicalDisplay label="MACD" indicatorKey="MACD" value={displayTechnicals?.macd} />
+            <TechnicalDisplay label="SMA 200" indicatorKey="SMA" value={displayTechnicals?.sma200} currentPrice={currentPrice} />
+            <TechnicalDisplay label="EMA 50" indicatorKey="EMA" value={displayTechnicals?.ema50} currentPrice={currentPrice} />
+            <TechnicalDisplay label="ADX" indicatorKey="ADX" value={displayTechnicals?.adx} />
           </div>
         </div>
 

@@ -107,7 +107,29 @@ export async function POST(request: NextRequest) {
       const tx: BondTradeTransaction = { id: Date.now().toString(), date: new Date().toISOString(), type: 'Sell', assetType: 'Bond', ticker: position.ticker, quantity: position.quantity, price, currency: positionCurrency };
       user.transactions.push(tx);
     } else if (position.type === 'FixedTermDeposit') {
-      user.cash[positionCurrency] += position.amount;
+      // Calculate if matured
+      const startDate = new Date(position.startDate);
+      const maturityDate = new Date(position.maturityDate);
+      const today = new Date();
+      let payout = position.amount;
+      let interest = 0;
+      if (today >= maturityDate) {
+        // Full interest
+        const days = Math.round((maturityDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        const dailyRate = position.annualRate / 100 / 365;
+        interest = position.amount * dailyRate * days;
+        payout += interest;
+      }
+      user.cash[positionCurrency] += payout;
+      // Register a DepositTransaction for the payout
+      const tx: DepositTransaction = {
+        id: `dep_${Date.now()}`,
+        date: new Date().toISOString(),
+        type: 'Deposit',
+        amount: payout,
+        currency: positionCurrency
+      };
+      user.transactions.push(tx);
     }
 
     // Remove the position from the array
