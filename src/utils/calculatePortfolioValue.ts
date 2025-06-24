@@ -182,4 +182,43 @@ export function getDailyPortfolioValue(
   const history = calculatePortfolioValueHistory(transactions, priceHistory, {});
   // Now returns both ARS and USD values for each day.
   return history.map(h => ({ date: h.date, valueARS: h.valueARS, valueUSD: h.valueUSD }));
+}
+
+/**
+ * Calculates the current value of the portfolio by currency (no conversion).
+ * Sums the value of each position in its own currency plus the cash in that currency.
+ * @param positions Portfolio positions
+ * @param cash { ARS: number, USD: number }
+ * @param priceHistory Price data for stocks/bonds
+ * @returns { ARS: number, USD: number }
+ */
+export function calculateCurrentValueByCurrency(
+  positions: any[],
+  cash: { ARS: number; USD: number },
+  priceHistory: Record<string, PriceData[]>
+): { ARS: number; USD: number } {
+  let valueARS = cash.ARS || 0;
+  let valueUSD = cash.USD || 0;
+
+  for (const pos of positions) {
+    if (pos.type === 'Stock' || pos.type === 'Bond') {
+      const symbol = pos.type === 'Stock' ? pos.symbol : pos.ticker;
+      const prices = priceHistory[symbol];
+      if (prices && prices.length > 0) {
+        const currentPrice = prices[prices.length - 1].close;
+        if (pos.currency === 'ARS') {
+          valueARS += pos.quantity * currentPrice;
+        } else if (pos.currency === 'USD') {
+          valueUSD += pos.quantity * currentPrice;
+        }
+      }
+    } else if (pos.type === 'FixedTermDeposit') {
+      if (pos.currency === 'ARS') {
+        valueARS += pos.amount;
+      } else if (pos.currency === 'USD') {
+        valueUSD += pos.amount;
+      }
+    }
+  }
+  return { ARS: valueARS, USD: valueUSD };
 } 

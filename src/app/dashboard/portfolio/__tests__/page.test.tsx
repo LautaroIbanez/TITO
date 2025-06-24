@@ -14,12 +14,14 @@ describe('PortfolioPage - Deposit List', () => {
     date: '2024-01-01T00:00:00.000Z',
     type: 'Deposit',
     amount: 1000,
+    currency: 'ARS',
   };
   const deposit2: DepositTransaction = {
     id: 'dep2',
     date: '2024-02-01T00:00:00.000Z',
     type: 'Deposit',
     amount: 2000,
+    currency: 'ARS',
   };
   const mockPortfolioData: UserData = {
     username: 'testuser',
@@ -28,7 +30,7 @@ describe('PortfolioPage - Deposit List', () => {
     positions: [],
     transactions: [deposit1, deposit2],
     goals: [],
-    availableCash: 3000,
+    cash: { ARS: 3000, USD: 0 },
   };
 
   beforeEach(() => {

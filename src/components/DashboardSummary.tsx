@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { InvestmentGoal, PortfolioTransaction, StrategyRecommendation, PortfolioPosition } from '@/types';
 import { Bond } from '@/types/finance';
-import { calculatePortfolioValueHistory, PortfolioValueHistory } from '@/utils/calculatePortfolioValue';
+import { calculatePortfolioValueHistory, PortfolioValueHistory, calculateCurrentValueByCurrency } from '@/utils/calculatePortfolioValue';
 import { calculateInvestedCapital } from '@/utils/investedCapital';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import GoalProgress from './GoalProgress';
@@ -48,16 +48,14 @@ export default function DashboardSummary() {
     }
 
     if (portfolioData) {
-      // Calculate portfolio value history
-      const history = calculatePortfolioValueHistory(
-        portfolioData.transactions || [],
-        portfolioData.historicalPrices || {},
-        { days: 90 }
+      // Use the new helper to get current value by currency (no conversion)
+      const { ARS, USD } = calculateCurrentValueByCurrency(
+        portfolioData.positions || [],
+        portfolioData.cash || { ARS: 0, USD: 0 },
+        portfolioData.historicalPrices || {}
       );
-      
-      const latestValue = history.length > 0 ? history[history.length - 1] : { valueARS: 0, valueUSD: 0 };
-      setPortfolioValueARS(latestValue.valueARS);
-      setPortfolioValueUSD(latestValue.valueUSD);
+      setPortfolioValueARS(ARS);
+      setPortfolioValueUSD(USD);
     }
 
     fetchData();

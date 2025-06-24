@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import DashboardSummary from '../DashboardSummary';
 import { usePortfolio } from '../../contexts/PortfolioContext';
-import { calculatePortfolioValueHistory } from '../../utils/calculatePortfolioValue';
+import { calculatePortfolioValueHistory, calculateCurrentValueByCurrency } from '../../utils/calculatePortfolioValue';
 import { UserData, PortfolioTransaction, FixedTermDepositCreationTransaction } from '@/types';
 
 // Mock the hooks and utilities
@@ -11,6 +11,7 @@ jest.mock('../../utils/calculatePortfolioValue');
 
 const mockUsePortfolio = usePortfolio as jest.Mock;
 const mockCalculatePortfolioValueHistory = calculatePortfolioValueHistory as jest.Mock;
+const mockCalculateCurrentValueByCurrency = calculateCurrentValueByCurrency as jest.Mock;
 
 describe('DashboardSummary', () => {
   const mockTransactions: PortfolioTransaction[] = [
@@ -34,6 +35,9 @@ describe('DashboardSummary', () => {
   beforeEach(() => {
     // Reset mocks before each test
     jest.clearAllMocks();
+    
+    // Mock the current value by currency calculation
+    mockCalculateCurrentValueByCurrency.mockReturnValue({ ARS: 7000, USD: 0 });
     
     // Mock the portfolio value history calculation
     // Let's say the current total value is 7000

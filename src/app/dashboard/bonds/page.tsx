@@ -42,7 +42,14 @@ export default function BondsPage() {
     setIsModalOpen(true);
   };
 
-  const handleBuyBond: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier, commissionPct, purchaseFeePct) => {
+  const handleBuyBond = async (
+    quantity: number,
+    assetType: string,
+    identifier: string,
+    currency: 'ARS' | 'USD',
+    commissionPct?: number,
+    purchaseFeePct?: number
+  ) => {
     if (!selectedBond) return;
     
     const session = localStorage.getItem('session');
@@ -55,6 +62,7 @@ export default function BondsPage() {
       ticker: identifier,
       quantity,
       price: selectedBond.price,
+      currency,
       commissionPct,
       purchaseFeePct,
     };
@@ -92,12 +100,14 @@ export default function BondsPage() {
           assetType="Bond"
           identifier={selectedBond.ticker}
           price={selectedBond.price}
-          availableCash={portfolioData?.availableCash ?? 0}
+          cash={portfolioData?.cash ?? { ARS: 0, USD: 0 }}
+          currency={selectedBond.currency}
         />
       )}
       <div className="space-y-6">
-        <div className="flex justify-end">
-          <AvailableCapitalIndicator assetClass="bonds" />
+        <div className="flex flex-col sm:flex-row gap-2 justify-end">
+          <AvailableCapitalIndicator assetClass="bonds" currency="ARS" />
+          <AvailableCapitalIndicator assetClass="bonds" currency="USD" />
         </div>
         
         <h1 className="text-2xl font-bold text-gray-900">Mercado de Bonos</h1>
@@ -133,7 +143,7 @@ export default function BondsPage() {
                       <button 
                         onClick={() => handleOpenModal(bond)}
                         className="text-blue-600 hover:text-blue-800 disabled:text-gray-400"
-                        disabled={(portfolioData?.availableCash ?? 0) < bond.price}
+                        disabled={(portfolioData?.cash?.[bond.currency] ?? 0) < bond.price}
                       >
                         Comprar
                       </button>
