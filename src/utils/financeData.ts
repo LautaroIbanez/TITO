@@ -43,8 +43,9 @@ async function canRequest(symbol: string, type: 'history' | 'fundamentals', minI
   return true;
 }
 
-export async function getHistoricalPrices(symbol: string): Promise<PriceData[]> {
-  const filePath = path.join(process.cwd(), 'data', 'stocks', `${symbol}.json`);
+export async function getHistoricalPrices(symbol: string, interval: '1d' | '1wk' = '1d'): Promise<PriceData[]> {
+  const suffix = interval === '1d' ? '' : `.${interval}`;
+  const filePath = path.join(process.cwd(), 'data', 'stocks', `${symbol}${suffix}.json`);
   let prices: PriceData[] = [];
   let fileExists = false;
   try {
@@ -62,7 +63,7 @@ export async function getHistoricalPrices(symbol: string): Promise<PriceData[]> 
       const result = await yahooFinance.historical(symbol, {
         period1: dayjs().subtract(5, 'year').format('YYYY-MM-DD'),
         period2: dayjs().format('YYYY-MM-DD'),
-        interval: '1d',
+        interval,
       });
       prices = (result || []).map((d: any) => ({
         date: d.date,
@@ -73,10 +74,10 @@ export async function getHistoricalPrices(symbol: string): Promise<PriceData[]> 
         volume: d.volume,
       }));
       await writeJson(filePath, prices);
-      console.log(`[${symbol}] Fetched and saved 5y history.`);
+      console.log(`[${symbol}] Fetched and saved 5y history (${interval}).`);
       return prices;
     } catch (err) {
-      console.error(`[${symbol}] Error fetching history:`, err);
+      console.error(`[${symbol}] Error fetching history (${interval}):`, err);
       return [];
     }
   } else {
@@ -86,21 +87,24 @@ export async function getHistoricalPrices(symbol: string): Promise<PriceData[]> 
     const lastDate = dayjs(prices[prices.length - 1].date);
     const today = dayjs().startOf('day');
     const yesterday = today.subtract(1, 'day');
-    if (lastDate.isSame(today, 'day') || lastDate.isSame(yesterday, 'day')) {
-      // Up to date
+    if (interval === '1d' && (lastDate.isSame(today, 'day') || lastDate.isSame(yesterday, 'day'))) {
+      // Up to date for daily
+      return prices;
+    } else if (interval === '1wk' && lastDate.isAfter(today.subtract(7, 'day'))) {
+      // Up to date for weekly
       return prices;
     } else {
-      // Fetch missing days
+      // Fetch missing days/weeks
       if (!(await canRequest(symbol, 'history'))) {
         console.log(`[${symbol}] Skipping incremental history fetch due to rate limit.`);
         return prices;
       }
       try {
-        const fromDate = lastDate.add(1, 'day').format('YYYY-MM-DD');
+        const fromDate = lastDate.add(interval === '1d' ? 1 : 7, 'day').format('YYYY-MM-DD');
         const result = await yahooFinance.historical(symbol, {
           period1: fromDate,
           period2: dayjs().format('YYYY-MM-DD'),
-          interval: '1d',
+          interval,
         });
         const newPrices = (result || []).map((d: any) => ({
           date: d.date,
@@ -112,10 +116,10 @@ export async function getHistoricalPrices(symbol: string): Promise<PriceData[]> 
         }));
         const merged = [...prices, ...newPrices.filter(np => !prices.some(p => p.date === np.date))];
         await writeJson(filePath, merged);
-        console.log(`[${symbol}] Appended ${newPrices.length} new days to history.`);
+        console.log(`[${symbol}] Appended ${newPrices.length} new ${interval === '1d' ? 'days' : 'weeks'} to history.`);
         return merged;
       } catch (err) {
-        console.error(`[${symbol}] Error fetching incremental history:`, err);
+        console.error(`[${symbol}] Error fetching incremental history (${interval}):`, err);
         return prices;
       }
     }
@@ -135,7 +139,7 @@ export async function getFundamentals(symbol: string): Promise<Fundamentals | nu
     fundamentals = await readJsonSafe(filePath);
     if (fundamentals && fundamentals.updatedAt) {
       const updated = dayjs(fundamentals.updatedAt);
-      if (dayjs().diff(updated, 'day') < 7) {
+      if (dayjs().diff(updated, 'day') < 7) { // Revert to 7 days
         // Not older than 7 days
         return fundamentals;
       }
@@ -179,6 +183,7 @@ export async function getFundamentals(symbol: string): Promise<Fundamentals | nu
       ebitda: fin?.ebitda ?? income?.ebitda?.raw ?? null,
       revenueGrowth: fin?.revenueGrowth ?? null, // Quarterly
       epsGrowth: trend?.earningsEstimate?.growth?.raw ?? null, // Next year
+      beta: stats?.beta ?? null,
       sector: profile?.sector ?? null,
       industry: profile?.industry ?? null,
       updatedAt: dayjs().toISOString(),
@@ -192,22 +197,23 @@ export async function getFundamentals(symbol: string): Promise<Fundamentals | nu
   }
 }
 
-export async function getTechnicals(symbol: string): Promise<Technicals | null> {
-  const filePath = path.join(process.cwd(), 'data', 'technicals', `${symbol}.json`);
+export async function getTechnicals(symbol: string, interval: '1d' | '1wk' = '1d'): Promise<Technicals | null> {
+  const suffix = interval === '1d' ? '' : `.${interval}`;
+  const filePath = path.join(process.cwd(), 'data', 'technicals', `${symbol}${suffix}.json`);
   let technicals: Technicals | null = null;
 
   // Check for recent file first
   try {
     const fileContent = await readJsonSafe(filePath);
-    if (fileContent && dayjs().diff(dayjs(fileContent.updatedAt), 'day') < 1) {
+    if (fileContent && dayjs().diff(dayjs(fileContent.updatedAt), interval === '1d' ? 'day' : 'week') < 1) {
       return fileContent;
     }
   } catch {}
 
   // If not recent, calculate
-  const prices = await getHistoricalPrices(symbol);
+  const prices = await getHistoricalPrices(symbol, interval);
   if (!prices || prices.length < 200) { // Need enough data for SMA 200
-    console.log(`[${symbol}] Not enough price data to calculate technicals.`);
+    console.log(`[${symbol}] Not enough price data to calculate technicals (${interval}).`);
     return null;
   }
 
@@ -257,10 +263,10 @@ export async function getTechnicals(symbol: string): Promise<Technicals | null> 
     };
 
     await writeJson(filePath, technicals);
-    console.log(`[${symbol}] Calculated and saved technicals.`);
+    console.log(`[${symbol}] Calculated and saved technicals (${interval}).`);
     return technicals;
   } catch (err) {
-    console.error(`[${symbol}] Error calculating technicals:`, err);
+    console.error(`[${symbol}] Error calculating technicals (${interval}):`, err);
     return null;
   }
 } 

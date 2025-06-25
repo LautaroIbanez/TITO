@@ -21,6 +21,7 @@ export interface Fundamentals {
   ebitda: number | null;
   revenueGrowth: number | null;
   epsGrowth: number | null;
+  beta: number | null;
   sector: string | null;
   industry: string | null;
   updatedAt: string;
@@ -48,6 +49,7 @@ export const RATIO_THRESHOLDS: Record<keyof Omit<Fundamentals, 'updatedAt' | 'se
   ebitda: { good: 1000000000, warning: 0, isHigherGood: true },
   revenueGrowth: { good: 0.1, warning: 0, isHigherGood: true },
   epsGrowth: { good: 0.1, warning: 0, isHigherGood: true },
+  beta: { good: 1, warning: 1.5, isHigherGood: false },
 };
 
 // Helper function to get ratio color

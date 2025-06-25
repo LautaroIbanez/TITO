@@ -1,6 +1,7 @@
 import { generateInvestmentStrategy, StrategyInput } from '../strategyAdvisor';
 import { InvestorProfile, InvestmentGoal, PortfolioPosition } from '@/types';
 import dayjs from 'dayjs';
+import { getSuggestedStocks } from '../../app/dashboard/scoop/page';
 
 describe('strategyAdvisor', () => {
   const mockProfile: InvestorProfile = {
@@ -425,6 +426,48 @@ describe('strategyAdvisor', () => {
       );
 
       expect(rotationRecommendations.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('getSuggestedStocks', () => {
+    const baseFundamentals = {
+      peRatio: 15,
+      beta: 1,
+      roe: 0.25,
+    };
+
+    it('suggests stock if risk and return match', () => {
+      const stocks = [
+        { symbol: 'AAPL', fundamentals: { ...baseFundamentals, roe: 0.35 } },
+        { symbol: 'TSLA', fundamentals: { ...baseFundamentals, roe: 0.05 } },
+      ];
+      const result = getSuggestedStocks(mockProfile, stocks, 20);
+      expect(result.find(s => s.symbol === 'AAPL')?.isSuggested).toBe(true);
+      expect(result.find(s => s.symbol === 'TSLA')?.isSuggested).toBe(false);
+    });
+
+    it('does not suggest if risk is too high', () => {
+      const stocks = [
+        { symbol: 'RISKY', fundamentals: { ...baseFundamentals, peRatio: 40, beta: 2, roe: 0.35 } },
+      ];
+      const result = getSuggestedStocks(mockProfile, stocks, 20);
+      expect(result[0].isSuggested).toBe(false);
+    });
+
+    it('does not suggest if return is too low', () => {
+      const stocks = [
+        { symbol: 'LOWROE', fundamentals: { ...baseFundamentals, roe: 0.05 } },
+      ];
+      const result = getSuggestedStocks(mockProfile, stocks, 20);
+      expect(result[0].isSuggested).toBe(false);
+    });
+
+    it('handles missing fundamentals gracefully', () => {
+      const stocks = [
+        { symbol: 'NOFUNDS' },
+      ];
+      const result = getSuggestedStocks(mockProfile, stocks, 20);
+      expect(result[0].isSuggested).toBe(false);
     });
   });
 }); 

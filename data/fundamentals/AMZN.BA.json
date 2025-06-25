@@ -1,6 +1,6 @@
 {
   "peRatio": null,
-  "pbRatio": 7.3827205,
+  "pbRatio": 60.895214,
   "evToEbitda": null,
   "roe": 0.2524,
   "roa": 0.07632,
@@ -8,12 +8,12 @@
   "debtToEbitda": 1.2521641480778765,
   "netMargin": 0.1014,
   "freeCashFlow": 39273500672,
-  "priceToFCF": 57.51591514495283,
+  "priceToFCF": 67374.45834920778,
   "ebitda": 126144004096,
   "revenueGrowth": 0.086,
   "epsGrowth": null,
   "beta": 1.334,
   "sector": "Consumer Cyclical",
   "industry": "Internet Retail",
-  "updatedAt": "2025-06-25T10:53:34.494Z"
+  "updatedAt": "2025-06-25T10:53:36.048Z"
 }
