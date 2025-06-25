@@ -55,24 +55,24 @@ export function calculatePortfolioPerformance(
   const oneMonthAgo = referenceDate.subtract(1, 'month');
   const oneYearAgo = referenceDate.subtract(1, 'year');
 
-  // Find values from 1 month ago
-  const monthlyARS = sortedHistory.find(h => dayjs(h.date).isSameOrBefore(oneMonthAgo, 'day'));
-  const monthlyUSD = sortedHistory.find(h => dayjs(h.date).isSameOrBefore(oneMonthAgo, 'day'));
+  // Find values from 1 month ago - use reverse search to get the last entry on or before the date
+  const monthlyARS = sortedHistory.slice().reverse().find(h => dayjs(h.date).isSameOrBefore(oneMonthAgo, 'day'));
+  const monthlyUSD = sortedHistory.slice().reverse().find(h => dayjs(h.date).isSameOrBefore(oneMonthAgo, 'day'));
 
-  // Find values from 1 year ago
-  const yearlyARS = sortedHistory.find(h => dayjs(h.date).isSameOrBefore(oneYearAgo, 'day'));
-  const yearlyUSD = sortedHistory.find(h => dayjs(h.date).isSameOrBefore(oneYearAgo, 'day'));
+  // Find values from 1 year ago - use reverse search to get the last entry on or before the date
+  const yearlyARS = sortedHistory.slice().reverse().find(h => dayjs(h.date).isSameOrBefore(oneYearAgo, 'day'));
+  const yearlyUSD = sortedHistory.slice().reverse().find(h => dayjs(h.date).isSameOrBefore(oneYearAgo, 'day'));
 
-  // Calculate monthly returns
-  const monthlyReturnARS = monthlyARS ? 
+  // Calculate monthly returns with zero checks
+  const monthlyReturnARS = monthlyARS && monthlyARS.valueARS > 0 ? 
     ((current.valueARS - monthlyARS.valueARS) / monthlyARS.valueARS) * 100 : 0;
-  const monthlyReturnUSD = monthlyUSD ? 
+  const monthlyReturnUSD = monthlyUSD && monthlyUSD.valueUSD > 0 ? 
     ((current.valueUSD - monthlyUSD.valueUSD) / monthlyUSD.valueUSD) * 100 : 0;
 
-  // Calculate annual returns
-  const annualReturnARS = yearlyARS ? 
+  // Calculate annual returns with zero checks
+  const annualReturnARS = yearlyARS && yearlyARS.valueARS > 0 ? 
     ((current.valueARS - yearlyARS.valueARS) / yearlyARS.valueARS) * 100 : 0;
-  const annualReturnUSD = yearlyUSD ? 
+  const annualReturnUSD = yearlyUSD && yearlyUSD.valueUSD > 0 ? 
     ((current.valueUSD - yearlyUSD.valueUSD) / yearlyUSD.valueUSD) * 100 : 0;
 
   // Calculate real returns (adjusted for inflation)

@@ -101,6 +101,63 @@ describe('portfolioPerformance', () => {
       expect(result.monthlyReturnARS).toBe(10);
       expect(result.monthlyReturnUSD).toBe(5);
     });
+
+    it('should handle zero values in the past without producing Infinity', () => {
+      const history: PortfolioValueHistory[] = [
+        { date: '2024-01-01', valueARS: 0, valueUSD: 0 }, // Zero starting value
+        { date: '2024-02-01', valueARS: 1000, valueUSD: 100 } // Current value
+      ];
+      
+      const result = calculatePortfolioPerformance(history);
+      
+      // Should return 0 instead of Infinity when past value is 0
+      expect(result.monthlyReturnARS).toBe(0);
+      expect(result.monthlyReturnUSD).toBe(0);
+      expect(result.annualReturnARS).toBe(0);
+      expect(result.annualReturnUSD).toBe(0);
+    });
+
+    it('should handle negative values in the past correctly', () => {
+      const history: PortfolioValueHistory[] = [
+        { date: '2024-01-01', valueARS: -1000, valueUSD: -100 }, // Negative starting value
+        { date: '2024-02-01', valueARS: 1000, valueUSD: 100 } // Current value
+      ];
+      
+      const result = calculatePortfolioPerformance(history);
+      
+      // Should return 0 instead of calculating with negative values
+      expect(result.monthlyReturnARS).toBe(0);
+      expect(result.monthlyReturnUSD).toBe(0);
+    });
+
+    it('should use reverse search to find the correct reference point', () => {
+      const history: PortfolioValueHistory[] = [
+        { date: '2024-01-01', valueARS: 1000, valueUSD: 100 },
+        { date: '2024-01-15', valueARS: 1100, valueUSD: 105 }, // Should be ignored
+        { date: '2024-01-31', valueARS: 1200, valueUSD: 110 }, // Should be ignored
+        { date: '2024-02-01', valueARS: 1300, valueUSD: 115 } // Current value
+      ];
+      
+      const result = calculatePortfolioPerformance(history);
+      
+      // Should use 2024-01-01 as reference (not 2024-01-15 or 2024-01-31)
+      expect(result.monthlyReturnARS).toBe(30); // (1300 - 1000) / 1000 * 100
+      expect(result.monthlyReturnUSD).toBe(15); // (115 - 100) / 100 * 100
+    });
+
+    it('should handle sparse data with gaps correctly', () => {
+      const history: PortfolioValueHistory[] = [
+        { date: '2023-01-01', valueARS: 1000, valueUSD: 100 }, // 1 year ago
+        { date: '2024-01-01', valueARS: 1200, valueUSD: 110 }, // 1 month ago
+        { date: '2024-02-01', valueARS: 1300, valueUSD: 115 } // Current
+      ];
+      
+      const result = calculatePortfolioPerformance(history);
+      
+      // Should find the correct reference points despite gaps
+      expect(result.monthlyReturnARS).toBeCloseTo(8.33, 2); // (1300 - 1200) / 1200 * 100 ≈ 8.33
+      expect(result.annualReturnARS).toBe(30); // (1300 - 1000) / 1000 * 100
+    });
   });
 
   describe('formatPerformance', () => {

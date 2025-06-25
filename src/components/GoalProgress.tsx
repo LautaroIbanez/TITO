@@ -54,7 +54,9 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
     .reduce((sum, t) => sum + t.amount, 0);
   
   const portfolioGains = Math.max(0, currentValue - totalDeposits);
-  const progressPercentage = Math.min((portfolioGains / goal.targetAmount) * 100, 100);
+  const progressPercentage = (!goal.targetAmount || goal.targetAmount === 0)
+    ? 0
+    : Math.min((portfolioGains / goal.targetAmount) * 100, 100);
   const remainingAmount = Math.max(goal.targetAmount - portfolioGains, 0);
   
   const chartData = {
@@ -131,7 +133,7 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
       <div className="flex justify-between items-start mb-6">
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-1">Progreso de Meta: {goal.name}</h3>
-          <p className="text-sm text-gray-700">Objetivo: ${goal.targetAmount.toLocaleString()}</p>
+          <p className="text-sm text-gray-700">Objetivo: ${Number(goal.targetAmount || 0).toLocaleString()}</p>
         </div>
         <Link 
           href="/dashboard/goals" 
