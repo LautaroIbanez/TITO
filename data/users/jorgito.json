@@ -89,7 +89,16 @@
       "purchaseFeePct": 0.05
     }
   ],
-  "goals": [],
+  "goals": [
+    {
+      "name": "Vacaciones",
+      "targetAmount": 200000,
+      "targetDate": "2030-07-25",
+      "initialDeposit": 0,
+      "monthlyContribution": 320,
+      "id": "1750881539145"
+    }
+  ],
   "cash": {
     "ARS": 731353.0625,
     "USD": 4833.2675
@@ -111,8 +120,8 @@
     "initialBalanceUSD": 5000
   },
   "investmentStrategy": {
-    "id": "strategy-94109866-f15d-40c1-863a-f0b5dc98514e",
-    "createdAt": "2025-06-25T15:12:33.195Z",
+    "id": "strategy-821abcca-caea-42ec-b0c2-108efa4c5bb6",
+    "createdAt": "2025-06-25T19:39:01.610Z",
     "targetAllocation": {
       "stocks": 60,
       "bonds": 30,
@@ -121,7 +130,7 @@
     },
     "recommendations": [
       {
-        "id": "alloc-ab6b1258-eb40-47b0-ad91-6587286e14fb",
+        "id": "alloc-561132e3-16e0-4f2d-af7c-4c9a13c0c23b",
         "action": "increase",
         "assetClass": "stocks",
         "reason": "Tu portafolio tiene 21.6% en acciones, pero tu estrategia objetivo es 60%",
@@ -129,7 +138,7 @@
         "expectedImpact": "positive"
       },
       {
-        "id": "alloc-83d9e491-9a4b-4095-9c08-7d1fcc253be6",
+        "id": "alloc-8fa93960-0c57-4171-a38c-ffa46945ab39",
         "action": "increase",
         "assetClass": "bonds",
         "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 30%",
@@ -137,7 +146,7 @@
         "expectedImpact": "positive"
       },
       {
-        "id": "cash-invest-42a3e835-96ac-4f98-9154-701b627ff4c1",
+        "id": "cash-invest-b40a8673-e661-4083-afd0-987113bc12a2",
         "action": "buy",
         "reason": "Tienes un 73.4% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
         "priority": "high",

@@ -12,6 +12,7 @@ import { calculateInvestedCapital } from '@/utils/investedCapital';
 import { StockPosition, PortfolioTransaction, DepositTransaction } from '@/types';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import EditDepositModal from '@/components/EditDepositModal';
+import { formatCurrency } from '@/utils/goalCalculator';
 
 export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange?: () => void }) {
   const [comparison, setComparison] = useState<any>(null);
@@ -129,7 +130,7 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
     });
     const data = await res.json();
     if (res.ok) {
-      setDepositSuccess(`Se depositaron $${amount.toFixed(2)}`);
+      setDepositSuccess(`Se depositaron ${formatCurrency(amount, depositCurrency)}`);
       setDepositAmount('');
       await refreshPortfolio();
     } else {
@@ -215,8 +216,8 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
       <div className="bg-white rounded-lg shadow p-4 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <div className="text-lg font-semibold text-gray-900">Efectivo Disponible (ARS): <span className="text-blue-700">${cash.ARS.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-              <div className="text-lg font-semibold text-gray-900">Efectivo Disponible (USD): <span className="text-blue-700">${cash.USD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+              <div className="text-lg font-semibold text-gray-900">Efectivo Disponible (ARS): <span className="text-blue-700">{formatCurrency(cash.ARS)}</span></div>
+              <div className="text-lg font-semibold text-gray-900">Efectivo Disponible (USD): <span className="text-blue-700">{formatCurrency(cash.USD, 'USD')}</span></div>
             </div>
             <form className="flex gap-2 items-center flex-wrap" onSubmit={handleDeposit}>
               <select 
@@ -308,7 +309,7 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
               {depositTransactions.map((tx) => (
                 <tr key={tx.id} className="even:bg-gray-50">
                   <td className="px-4 py-2 font-mono text-gray-800">{new Date(tx.date).toLocaleDateString()}</td>
-                  <td className="px-4 py-2 text-right text-gray-800">${tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td className="px-4 py-2 text-right text-gray-800">{formatCurrency(tx.amount, tx.currency)}</td>
                   <td className="px-4 py-2 text-right">
                     <button onClick={() => handleEditDeposit(tx)} className="text-blue-600 hover:text-blue-800 text-xs font-semibold mr-2">Editar</button>
                     <button onClick={() => handleDeleteDeposit(tx.id)} className="text-red-600 hover:text-red-800 text-xs font-semibold">Eliminar</button>

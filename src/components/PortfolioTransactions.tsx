@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PortfolioTransaction, DepositTransaction } from '@/types';
 import EditDepositModal from './EditDepositModal';
 import { usePortfolio } from '@/contexts/PortfolioContext';
+import { formatCurrency } from '@/utils/goalCalculator';
 
 interface Props {
   transactions: PortfolioTransaction[];
@@ -160,14 +161,14 @@ export default function PortfolioTransactions({ transactions }: Props) {
                   <td className="px-4 py-2 text-right text-gray-800">
                     {display.quantity !== null ? display.quantity : 
                      (tx.type === 'Deposit' || (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit')) 
-                     ? `$${tx.amount.toFixed(2)}` : '—'}
+                     ? formatCurrency(tx.amount, tx.currency) : '—'}
                   </td>
                   <td className="px-4 py-2 text-left text-gray-800">
                     {(tx.type === 'Deposit' || (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit'))
                      ? tx.currency : '—'}
                   </td>
                   <td className="px-4 py-2 text-right text-gray-800">
-                    {display.price !== null ? `$${display.price.toFixed(2)}` : '—'}
+                    {display.price !== null ? formatCurrency(display.price, tx.currency) : '—'}
                   </td>
                   <td className="px-4 py-2 text-right text-gray-800">
                     {hasFees ? (

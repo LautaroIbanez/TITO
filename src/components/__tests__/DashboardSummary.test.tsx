@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import DashboardSummary from '../DashboardSummary';
 import { usePortfolio } from '../../contexts/PortfolioContext';
 import { calculatePortfolioValueHistory, calculateCurrentValueByCurrency } from '../../utils/calculatePortfolioValue';
-import { calculatePortfolioPerformance } from '../../utils/portfolioPerformance';
+import { calculatePortfolioPerformance, fetchInflationData } from '../../utils/portfolioPerformance';
 import { UserData, PortfolioTransaction, FixedTermDepositCreationTransaction } from '@/types';
 
 // Mock the hooks and utilities
@@ -15,6 +15,7 @@ const mockUsePortfolio = usePortfolio as jest.Mock;
 const mockCalculatePortfolioValueHistory = calculatePortfolioValueHistory as jest.Mock;
 const mockCalculateCurrentValueByCurrency = calculateCurrentValueByCurrency as jest.Mock;
 const mockCalculatePortfolioPerformance = calculatePortfolioPerformance as jest.Mock;
+const mockFetchInflationData = fetchInflationData as jest.Mock;
 
 describe('DashboardSummary', () => {
   const mockTransactions: PortfolioTransaction[] = [
@@ -67,6 +68,12 @@ describe('DashboardSummary', () => {
       monthlyReturnUSDReal: 2.8,
       annualReturnARSReal: -126.9,
       annualReturnUSDReal: 9.3,
+    });
+    
+    // Mock inflation data fetch
+    mockFetchInflationData.mockResolvedValue({
+      argentina: { monthly: 4.2, annual: 142.7 },
+      usa: { monthly: 0.3, annual: 3.1 }
     });
     
     // Mock API calls made by the component
@@ -228,7 +235,7 @@ describe('DashboardSummary', () => {
     render(<DashboardSummary />);
 
     await waitFor(() => {
-      expect(screen.getByText(new RegExp(`\$${expectedValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`))).toBeInTheDocument();
+      expect(screen.getByText(new RegExp(`\\$${expectedValue.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`))).toBeInTheDocument();
     });
   });
 }); 

@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { InvestmentGoal, PortfolioPosition } from '@/types';
+import { InvestmentGoal, PortfolioPosition, PortfolioTransaction } from '@/types';
 import { Bond } from '@/types/finance';
-import GoalList from '../../../components/GoalList';
+import GoalListWithProgress from '../../../components/GoalList';
 import EditGoalModal from '../../../components/EditGoalModal';
 import { calculateMonthlyInvestment, calculateEffectiveYield } from '@/utils/goalCalculator';
 import GoalModal from '@/components/GoalModal';
@@ -12,6 +12,7 @@ export default function GoalsPage() {
   const [goals, setGoals] = useState<InvestmentGoal[]>([]);
   const [positions, setPositions] = useState<PortfolioPosition[]>([]);
   const [bonds, setBonds] = useState<Bond[]>([]);
+  const [transactions, setTransactions] = useState<PortfolioTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -41,6 +42,7 @@ export default function GoalsPage() {
       if (portfolioRes.ok) {
         const portfolioData = await portfolioRes.json();
         setPositions(portfolioData.positions || []);
+        setTransactions(portfolioData.transactions || []);
       }
       
       if (bondsRes.ok) {
@@ -157,7 +159,14 @@ export default function GoalsPage() {
                 <p className="text-gray-700">Aún no has definido ninguna meta.</p>
               </div>
             ) : (
-              <GoalList goals={goals} onEdit={handleEdit} onDelete={handleDelete} />
+              <GoalListWithProgress
+                goals={goals}
+                transactions={transactions}
+                positions={positions}
+                bonds={bonds}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
             )}
           </>
         )}

@@ -4,6 +4,7 @@ import { Bond } from '@/types/finance';
 import TradeModal, { TradeModalProps } from '@/components/TradeModal';
 import AvailableCapitalIndicator from '@/components/AvailableCapitalIndicator';
 import { usePortfolio } from '@/contexts/PortfolioContext';
+import { formatCurrency } from '@/utils/goalCalculator';
 
 export default function BondsPage() {
   const [bonds, setBonds] = useState<Bond[]>([]);
@@ -138,7 +139,7 @@ export default function BondsPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{bond.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{new Date(bond.maturityDate).toLocaleDateString()}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">{bond.couponRate.toFixed(2)}%</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{bond.currency} ${bond.price.toLocaleString()}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatCurrency(bond.price, bond.currency)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button 
                         onClick={() => handleOpenModal(bond)}

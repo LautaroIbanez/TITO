@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { InvestmentGoal, PortfolioTransaction, DepositTransaction, PortfolioPosition } from '@/types';
 import { Bond } from '@/types/finance';
 import { projectFixedIncome } from '@/utils/fixedIncomeProjection';
-import { calculateEffectiveYield, projectGoalPlan } from '@/utils/goalCalculator';
+import { calculateEffectiveYield, projectGoalPlan, formatCurrency } from '@/utils/goalCalculator';
 import dayjs from 'dayjs';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
@@ -133,7 +133,7 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
       <div className="flex justify-between items-start mb-6">
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-1">Progreso de Meta: {goal.name}</h3>
-          <p className="text-sm text-gray-700">Objetivo: ${Number(goal.targetAmount || 0).toLocaleString()}</p>
+          <p className="text-sm text-gray-700">Objetivo: {formatCurrency(Number(goal.targetAmount || 0))}</p>
         </div>
         <Link 
           href="/dashboard/goals" 
@@ -145,7 +145,7 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="text-center p-4 bg-gray-50 rounded-lg">
-          <div className="text-2xl font-bold text-gray-900">${portfolioGains.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+          <div className="text-2xl font-bold text-gray-900">{formatCurrency(portfolioGains)}</div>
           <div className="text-sm text-gray-700">Ganancias del Portafolio</div>
         </div>
         <div className="text-center p-4 bg-gray-50 rounded-lg">
@@ -153,7 +153,7 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
           <div className="text-sm text-gray-700">Progreso</div>
         </div>
         <div className="text-center p-4 bg-gray-50 rounded-lg">
-          <div className="text-2xl font-bold text-gray-900">${remainingAmount.toLocaleString()}</div>
+          <div className="text-2xl font-bold text-gray-900">{formatCurrency(remainingAmount)}</div>
           <div className="text-sm text-gray-700">Restante</div>
         </div>
       </div>

@@ -1,27 +1,40 @@
-import { InvestmentGoal } from '@/types';
-import { formatCurrency } from '@/utils/goalCalculator';
+import { InvestmentGoal, PortfolioTransaction, PortfolioPosition } from '@/types';
+import { Bond } from '@/types/finance';
+import GoalProgress from './GoalProgress';
 
 interface Props {
   goals: InvestmentGoal[];
+  transactions: PortfolioTransaction[];
+  positions: PortfolioPosition[];
+  bonds: Bond[];
   onEdit: (goal: InvestmentGoal) => void;
   onDelete: (goalId: string) => void;
 }
 
-export default function GoalList({ goals, onEdit, onDelete }: Props) {
+export default function GoalListWithProgress({ goals, transactions, positions, bonds, onEdit, onDelete }: Props) {
   return (
-    <div className="space-y-4">
-      {goals.map((goal) => (
-        <div key={goal.id} className="p-4 border rounded shadow-sm bg-white">
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">{goal.name}</h3>
-              <div className="text-sm text-gray-700 mt-2 grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-1">
-                <p><span className="font-medium">Objetivo:</span> {formatCurrency(goal.targetAmount)}</p>
-                <p><span className="font-medium">Fecha:</span> {new Date(goal.targetDate).toLocaleDateString()}</p>
-                <p><span className="font-medium">Aporte Mensual:</span> {formatCurrency(goal.monthlyContribution)}</p>
-              </div>
-            </div>
-            <div className="flex space-x-2 flex-shrink-0 ml-4">
+    <div className="space-y-8">
+      {goals.map((goal) => {
+        // For now, use all transactions for valueHistory and currentValue
+        // In the future, filter transactions by goal if such linkage exists
+        // Compute valueHistory as a simple array with one value: initialDeposit + sum of deposits
+        const deposits = transactions.filter(t => t.type === 'Deposit');
+        const totalDeposits = deposits.reduce((sum, t) => sum + t.amount, 0);
+        const valueHistory = [
+          { date: goal.targetDate, value: goal.initialDeposit + totalDeposits }
+        ];
+        const currentValue = goal.initialDeposit + totalDeposits;
+        return (
+          <div key={goal.id} className="relative">
+            <GoalProgress
+              goal={goal}
+              valueHistory={valueHistory}
+              currentValue={currentValue}
+              transactions={transactions}
+              positions={positions}
+              bonds={bonds}
+            />
+            <div className="absolute top-4 right-4 flex space-x-2">
               <button
                 onClick={() => onEdit(goal)}
                 className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded hover:bg-blue-200"
@@ -36,8 +49,8 @@ export default function GoalList({ goals, onEdit, onDelete }: Props) {
               </button>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 } 
