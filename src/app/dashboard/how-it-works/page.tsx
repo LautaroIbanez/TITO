@@ -3,6 +3,17 @@
 export default function HowItWorksPage() {
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
+      <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-xl shadow mb-4">
+        <h2 className="text-xl font-bold text-blue-800 mb-2">¿Cómo empezar?</h2>
+        <ol className="list-decimal list-inside text-blue-900 space-y-1 ml-4">
+          <li>Completa tu perfil</li>
+          <li>Deposita capital</li>
+          <li>Revisa oportunidades</li>
+          <li>Ejecuta compras/ventas</li>
+          <li>Actualiza tus metas</li>
+        </ol>
+      </div>
+
       <div className="bg-white rounded-xl shadow-lg p-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">¿Cómo funciona TITO?</h1>
         <p className="text-lg text-gray-700 mb-2">
