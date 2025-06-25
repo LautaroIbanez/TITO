@@ -39,7 +39,7 @@ export default function EditGoalModal({ goal, isOpen, onClose, onUpdate, positio
 
   if (!isOpen) return null;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev!, [name]: name === 'targetAmount' || name === 'initialDeposit' ? Number(value) : value }));
   };
@@ -63,6 +63,13 @@ export default function EditGoalModal({ goal, isOpen, onClose, onUpdate, positio
             <input id="targetAmount" name="targetAmount" type="number" value={formData.targetAmount} onChange={handleChange} className="p-2 mt-1 border rounded text-gray-900 w-full" />
           </div>
           <div>
+            <label htmlFor="currency" className="block text-sm font-medium text-gray-700">Moneda</label>
+            <select id="currency" name="currency" value={formData.currency} onChange={handleChange} className="p-2 mt-1 border rounded text-gray-900 w-full bg-white">
+              <option value="ARS">ARS (Pesos Argentinos)</option>
+              <option value="USD">USD (Dólares Estadounidenses)</option>
+            </select>
+          </div>
+          <div>
             <label htmlFor="targetDate" className="block text-sm font-medium text-gray-700">Fecha Límite</label>
             <input id="targetDate" name="targetDate" type="date" value={new Date(formData.targetDate).toISOString().split('T')[0]} onChange={handleChange} className="p-2 mt-1 border rounded text-gray-900 w-full" />
           </div>
@@ -74,7 +81,7 @@ export default function EditGoalModal({ goal, isOpen, onClose, onUpdate, positio
           {suggestedContribution > 0 && (
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
               <p className="text-sm text-blue-800">
-                Aporte mensual sugerido: <span className="font-bold">{formatCurrency(suggestedContribution)}</span>
+                Aporte mensual sugerido: <span className="font-bold">{formatCurrency(suggestedContribution, formData.currency)}</span>
               </p>
               <p className="text-xs text-blue-600 mt-1">
                 *Cálculo basado en un rendimiento anual estimado del {effectiveYield.toFixed(2)}% según tu cartera actual.

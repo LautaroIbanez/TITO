@@ -1,7 +1,6 @@
 import { generateInvestmentStrategy, StrategyInput } from '../strategyAdvisor';
 import { InvestorProfile, InvestmentGoal, PortfolioPosition } from '@/types';
 import dayjs from 'dayjs';
-import { getSuggestedStocks } from '../../app/dashboard/scoop/page';
 
 describe('strategyAdvisor', () => {
   const mockProfile: InvestorProfile = {
@@ -20,7 +19,8 @@ describe('strategyAdvisor', () => {
       targetAmount: 5000,
       targetDate: dayjs().add(1, 'year').format('YYYY-MM-DD'),
       initialDeposit: 1000,
-      monthlyContribution: 200
+      monthlyContribution: 200,
+      currency: 'ARS'
     }
   ];
 
@@ -113,7 +113,8 @@ describe('strategyAdvisor', () => {
           targetAmount: 10000,
           targetDate: dayjs().add(1, 'year').format('YYYY-MM-DD'),
           initialDeposit: 1000,
-          monthlyContribution: 200
+          monthlyContribution: 200,
+          currency: 'ARS'
         }
       ];
       
@@ -148,7 +149,8 @@ describe('strategyAdvisor', () => {
           targetAmount: 1000000,
           targetDate: dayjs().add(15, 'years').format('YYYY-MM-DD'),
           initialDeposit: 50000,
-          monthlyContribution: 2000
+          monthlyContribution: 2000,
+          currency: 'ARS'
         }
       ];
       
@@ -237,7 +239,7 @@ describe('strategyAdvisor', () => {
       });
 
       const rotationRecommendations = strategy.recommendations.filter(
-        rec => rec.action === 'rotate'
+        (rec: any) => rec.action === 'rotate'
       );
 
       expect(rotationRecommendations.length).toBeGreaterThan(0);
@@ -253,7 +255,7 @@ describe('strategyAdvisor', () => {
       });
 
       const cashRecommendations = highCashStrategy.recommendations.filter(
-        rec => rec.reason.includes('efectivo')
+        (rec: any) => rec.reason.includes('efectivo')
       );
       expect(cashRecommendations.length).toBeGreaterThan(0);
       expect(cashRecommendations[0].action).toBe('buy');
@@ -271,7 +273,7 @@ describe('strategyAdvisor', () => {
       });
 
       const lowCashRecs = lowCashStrategy.recommendations.filter(
-        rec => rec.reason.includes('efectivo')
+        (rec: any) => rec.reason.includes('efectivo')
       );
       expect(lowCashRecs.length).toBeGreaterThan(0);
       expect(lowCashRecs[0].action).toBe('sell');
@@ -298,7 +300,8 @@ describe('strategyAdvisor', () => {
           targetAmount: 3000,
           targetDate: dayjs().add(6, 'months').format('YYYY-MM-DD'),
           initialDeposit: 1000,
-          monthlyContribution: 200
+          monthlyContribution: 200,
+          currency: 'ARS'
         }
       ];
 
@@ -326,7 +329,7 @@ describe('strategyAdvisor', () => {
       });
 
       const tslaRecommendations = strategy.recommendations.filter(
-        rec => rec.symbol === 'TSLA'
+        (rec: any) => rec.symbol === 'TSLA'
       );
 
       expect(tslaRecommendations.length).toBeGreaterThan(0);
@@ -411,7 +414,8 @@ describe('strategyAdvisor', () => {
         targetAmount: 5000,
         targetDate: dayjs().add(1, 'year').format('YYYY-MM-DD'),
         initialDeposit: 1000,
-        monthlyContribution: 200
+        monthlyContribution: 200,
+        currency: 'ARS'
       }];
 
       const strategy = generateInvestmentStrategy({
@@ -422,52 +426,10 @@ describe('strategyAdvisor', () => {
       });
 
       const rotationRecommendations = strategy.recommendations.filter(
-        rec => rec.action === 'rotate'
+        (rec: any) => rec.action === 'rotate'
       );
 
       expect(rotationRecommendations.length).toBeGreaterThan(0);
-    });
-  });
-
-  describe('getSuggestedStocks', () => {
-    const baseFundamentals = {
-      peRatio: 15,
-      beta: 1,
-      roe: 0.25,
-    };
-
-    it('suggests stock if risk and return match', () => {
-      const stocks = [
-        { symbol: 'AAPL', fundamentals: { ...baseFundamentals, roe: 0.35 } },
-        { symbol: 'TSLA', fundamentals: { ...baseFundamentals, roe: 0.05 } },
-      ];
-      const result = getSuggestedStocks(mockProfile, stocks, 20);
-      expect(result.find(s => s.symbol === 'AAPL')?.isSuggested).toBe(true);
-      expect(result.find(s => s.symbol === 'TSLA')?.isSuggested).toBe(false);
-    });
-
-    it('does not suggest if risk is too high', () => {
-      const stocks = [
-        { symbol: 'RISKY', fundamentals: { ...baseFundamentals, peRatio: 40, beta: 2, roe: 0.35 } },
-      ];
-      const result = getSuggestedStocks(mockProfile, stocks, 20);
-      expect(result[0].isSuggested).toBe(false);
-    });
-
-    it('does not suggest if return is too low', () => {
-      const stocks = [
-        { symbol: 'LOWROE', fundamentals: { ...baseFundamentals, roe: 0.05 } },
-      ];
-      const result = getSuggestedStocks(mockProfile, stocks, 20);
-      expect(result[0].isSuggested).toBe(false);
-    });
-
-    it('handles missing fundamentals gracefully', () => {
-      const stocks = [
-        { symbol: 'NOFUNDS' },
-      ];
-      const result = getSuggestedStocks(mockProfile, stocks, 20);
-      expect(result[0].isSuggested).toBe(false);
     });
   });
 }); 

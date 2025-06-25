@@ -176,7 +176,8 @@
       "targetDate": "2030-07-22",
       "initialDeposit": 0,
       "monthlyContribution": 1522,
-      "id": "1750635388567"
+      "id": "1750635388567",
+      "currency": "ARS"
     }
   ],
   "cash": {

@@ -10,6 +10,7 @@ describe('projectGoalPlan', () => {
     targetDate: dayjs().add(1, 'year').toISOString(),
     initialDeposit: 10000,
     monthlyContribution: 500,
+    currency: 'ARS',
   };
 
   it('should project correctly with regular daily dates', () => {

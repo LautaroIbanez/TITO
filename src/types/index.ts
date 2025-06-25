@@ -22,6 +22,7 @@ export interface InvestmentGoal {
   targetDate: string;
   initialDeposit: number;
   monthlyContribution: number;
+  currency: 'ARS' | 'USD';
 }
 
 // -- Portfolio Positions --

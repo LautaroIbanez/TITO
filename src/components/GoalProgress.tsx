@@ -17,9 +17,10 @@ interface Props {
   transactions: PortfolioTransaction[];
   positions: PortfolioPosition[];
   bonds: Bond[];
+  actionButtons?: React.ReactNode;
 }
 
-export default function GoalProgress({ goal, valueHistory, currentValue, transactions, positions, bonds }: Props) {
+export default function GoalProgress({ goal, valueHistory, currentValue, transactions, positions, bonds, actionButtons }: Props) {
   const fixedIncomeProjection = useMemo(() => {
     if (!goal || !positions || !bonds) return [];
     return projectFixedIncome(currentValue, positions, bonds, [goal]);
@@ -133,19 +134,22 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
       <div className="flex justify-between items-start mb-6">
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-1">Progreso de Meta: {goal.name}</h3>
-          <p className="text-sm text-gray-700">Objetivo: {formatCurrency(Number(goal.targetAmount || 0))}</p>
+          <p className="text-sm text-gray-700">Objetivo: {formatCurrency(Number(goal.targetAmount || 0), goal.currency)}</p>
         </div>
-        <Link 
-          href="/dashboard/goals" 
-          className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
-        >
-          Gestionar Metas
-        </Link>
+        <div className="flex items-center space-x-2">
+          {actionButtons}
+          <Link 
+            href="/dashboard/goals" 
+            className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
+          >
+            Gestionar Metas
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="text-center p-4 bg-gray-50 rounded-lg">
-          <div className="text-2xl font-bold text-gray-900">{formatCurrency(portfolioGains)}</div>
+          <div className="text-2xl font-bold text-gray-900">{formatCurrency(portfolioGains, goal.currency)}</div>
           <div className="text-sm text-gray-700">Ganancias del Portafolio</div>
         </div>
         <div className="text-center p-4 bg-gray-50 rounded-lg">
@@ -153,7 +157,7 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
           <div className="text-sm text-gray-700">Progreso</div>
         </div>
         <div className="text-center p-4 bg-gray-50 rounded-lg">
-          <div className="text-2xl font-bold text-gray-900">{formatCurrency(remainingAmount)}</div>
+          <div className="text-2xl font-bold text-gray-900">{formatCurrency(remainingAmount, goal.currency)}</div>
           <div className="text-sm text-gray-700">Restante</div>
         </div>
       </div>

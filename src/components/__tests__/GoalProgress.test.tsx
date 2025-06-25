@@ -12,6 +12,7 @@ describe('GoalProgress', () => {
     targetDate: '2024-12-31',
     initialDeposit: 0,
     monthlyContribution: 0,
+    currency: 'ARS',
   };
 
   it('should show 0% progress if targetAmount is 0', () => {

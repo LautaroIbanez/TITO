@@ -24,31 +24,35 @@ export default function GoalListWithProgress({ goals, transactions, positions, b
           { date: goal.targetDate, value: goal.initialDeposit + totalDeposits }
         ];
         const currentValue = goal.initialDeposit + totalDeposits;
+        
+        const actionButtons = (
+          <>
+            <button
+              onClick={() => onEdit(goal)}
+              className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded hover:bg-blue-200"
+            >
+              Editar
+            </button>
+            <button
+              onClick={() => onDelete(goal.id)}
+              className="px-3 py-1 text-sm font-medium text-red-600 bg-red-100 rounded hover:bg-red-200"
+            >
+              Eliminar
+            </button>
+          </>
+        );
+        
         return (
-          <div key={goal.id} className="relative">
-            <GoalProgress
-              goal={goal}
-              valueHistory={valueHistory}
-              currentValue={currentValue}
-              transactions={transactions}
-              positions={positions}
-              bonds={bonds}
-            />
-            <div className="absolute top-4 right-4 flex space-x-2">
-              <button
-                onClick={() => onEdit(goal)}
-                className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded hover:bg-blue-200"
-              >
-                Editar
-              </button>
-              <button
-                onClick={() => onDelete(goal.id)}
-                className="px-3 py-1 text-sm font-medium text-red-600 bg-red-100 rounded hover:bg-red-200"
-              >
-                Eliminar
-              </button>
-            </div>
-          </div>
+          <GoalProgress
+            key={goal.id}
+            goal={goal}
+            valueHistory={valueHistory}
+            currentValue={currentValue}
+            transactions={transactions}
+            positions={positions}
+            bonds={bonds}
+            actionButtons={actionButtons}
+          />
         );
       })}
     </div>

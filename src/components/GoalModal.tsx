@@ -17,6 +17,7 @@ const initialState = {
   targetAmount: 1000000,
   targetDate: new Date(new Date().setFullYear(new Date().getFullYear() + 5)).toISOString().split('T')[0],
   initialDeposit: 50000,
+  currency: 'ARS' as 'ARS' | 'USD',
 };
 
 export default function GoalModal({ isOpen, onClose, onSubmit, positions, bonds }: Props) {
@@ -39,7 +40,7 @@ export default function GoalModal({ isOpen, onClose, onSubmit, positions, bonds 
 
   if (!isOpen) return null;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: name === 'targetAmount' || name === 'initialDeposit' ? Number(value) : value }));
   };
@@ -64,6 +65,13 @@ export default function GoalModal({ isOpen, onClose, onSubmit, positions, bonds 
             <input id="targetAmount" name="targetAmount" type="number" value={formData.targetAmount} onChange={handleChange} className="p-2 mt-1 border rounded text-gray-900 w-full" />
           </div>
           <div>
+            <label htmlFor="currency" className="block text-sm font-medium text-gray-700">Moneda</label>
+            <select id="currency" name="currency" value={formData.currency} onChange={handleChange} className="p-2 mt-1 border rounded text-gray-900 w-full bg-white">
+              <option value="ARS">ARS (Pesos Argentinos)</option>
+              <option value="USD">USD (Dólares Estadounidenses)</option>
+            </select>
+          </div>
+          <div>
             <label htmlFor="targetDate" className="block text-sm font-medium text-gray-700">Fecha Límite</label>
             <input id="targetDate" name="targetDate" type="date" value={formData.targetDate} onChange={handleChange} className="p-2 mt-1 border rounded text-gray-900 w-full" />
           </div>
@@ -75,7 +83,7 @@ export default function GoalModal({ isOpen, onClose, onSubmit, positions, bonds 
           {suggestedContribution > 0 && (
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
               <p className="text-sm text-blue-800">
-                Aporte mensual sugerido: <span className="font-bold">{formatCurrency(suggestedContribution)}</span>
+                Aporte mensual sugerido: <span className="font-bold">{formatCurrency(suggestedContribution, formData.currency)}</span>
               </p>
               <p className="text-xs text-blue-600 mt-1">
                 *Cálculo basado en un rendimiento anual estimado del {effectiveYield.toFixed(2)}% según tu cartera actual.

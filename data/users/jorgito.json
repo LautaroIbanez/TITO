@@ -96,7 +96,17 @@
       "targetDate": "2030-07-25",
       "initialDeposit": 0,
       "monthlyContribution": 320,
-      "id": "1750881539145"
+      "id": "1750881539145",
+      "currency": "ARS"
+    },
+    {
+      "name": "Dentadura",
+      "targetAmount": 3000,
+      "targetDate": "2030-06-26",
+      "initialDeposit": 0,
+      "monthlyContribution": 5,
+      "id": "1750882950480",
+      "currency": "USD"
     }
   ],
   "cash": {
@@ -120,8 +130,8 @@
     "initialBalanceUSD": 5000
   },
   "investmentStrategy": {
-    "id": "strategy-821abcca-caea-42ec-b0c2-108efa4c5bb6",
-    "createdAt": "2025-06-25T19:39:01.610Z",
+    "id": "strategy-6a5681b3-d0a4-464f-9d10-e2e6a475b863",
+    "createdAt": "2025-06-25T23:14:48.666Z",
     "targetAllocation": {
       "stocks": 60,
       "bonds": 30,
@@ -130,7 +140,7 @@
     },
     "recommendations": [
       {
-        "id": "alloc-561132e3-16e0-4f2d-af7c-4c9a13c0c23b",
+        "id": "alloc-c80fb9bd-f158-4166-82da-4ba014dd00d3",
         "action": "increase",
         "assetClass": "stocks",
         "reason": "Tu portafolio tiene 21.6% en acciones, pero tu estrategia objetivo es 60%",
@@ -138,7 +148,7 @@
         "expectedImpact": "positive"
       },
       {
-        "id": "alloc-8fa93960-0c57-4171-a38c-ffa46945ab39",
+        "id": "alloc-8e5f7c87-1e9a-4763-ace2-dbcdc5dc3ad9",
         "action": "increase",
         "assetClass": "bonds",
         "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 30%",
@@ -146,7 +156,7 @@
         "expectedImpact": "positive"
       },
       {
-        "id": "cash-invest-b40a8673-e661-4083-afd0-987113bc12a2",
+        "id": "cash-invest-1c8e7624-4702-4cce-98eb-6fe3b3cc22fc",
         "action": "buy",
         "reason": "Tienes un 73.4% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
         "priority": "high",
@@ -154,7 +164,7 @@
       }
     ],
     "riskLevel": "Balanceado",
-    "timeHorizon": "5-10 años",
-    "notes": ""
+    "timeHorizon": "Mediano plazo (3-7 años)",
+    "notes": "Estrategia alineada con 2 meta(s) de inversión"
   }
 }
