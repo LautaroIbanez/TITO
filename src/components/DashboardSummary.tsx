@@ -21,6 +21,7 @@ export default function DashboardSummary() {
   
   const { portfolioData, strategy, loading, error, portfolioVersion } = usePortfolio();
 
+  // 1. Fetch goals and bonds only when portfolioData or portfolioVersion changes
   useEffect(() => {
     async function fetchData() {
       const session = localStorage.getItem('session');
@@ -32,10 +33,9 @@ export default function DashboardSummary() {
         setShowOnboarding(true);
       }
 
-      const [goalsRes, bondsRes, inflationRes] = await Promise.all([
+      const [goalsRes, bondsRes] = await Promise.all([
         fetch(`/api/goals?username=${username}`),
-        fetch('/api/bonds'),
-        fetchInflationData()
+        fetch('/api/bonds')
       ]);
 
       if (goalsRes.ok) {
@@ -49,14 +49,20 @@ export default function DashboardSummary() {
         const bondsData = await bondsRes.json();
         setBonds(bondsData);
       }
-
-      if (inflationRes) {
-        setInflationData(inflationRes);
-      }
     }
+    fetchData();
+  }, [portfolioData, portfolioVersion]);
 
+  // 2. Fetch inflation data only on mount
+  useEffect(() => {
+    fetchInflationData().then((inflationRes) => {
+      if (inflationRes) setInflationData(inflationRes);
+    });
+  }, []);
+
+  // 3. Calculate values and performance when portfolioData or inflationData changes
+  useEffect(() => {
     if (portfolioData) {
-      // Use the new helper to get current value by currency (no conversion)
       const { ARS, USD } = calculateCurrentValueByCurrency(
         portfolioData.positions || [],
         portfolioData.cash || { ARS: 0, USD: 0 },
@@ -65,19 +71,15 @@ export default function DashboardSummary() {
       setPortfolioValueARS(ARS);
       setPortfolioValueUSD(USD);
 
-      // Calculate performance metrics
       const valueHistory = calculatePortfolioValueHistory(
         portfolioData.transactions || [],
         portfolioData.historicalPrices || {},
-        { days: 365 } // Get 1 year of history for performance calculations
+        { days: 365 }
       );
-      
       const performance = calculatePortfolioPerformance(valueHistory, inflationData || undefined);
       setPerformanceMetrics(performance);
     }
-
-    fetchData();
-  }, [portfolioData, portfolioVersion, inflationData]);
+  }, [portfolioData, inflationData]);
 
   const handleDismissOnboarding = () => {
     setShowOnboarding(false);
