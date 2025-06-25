@@ -5,10 +5,10 @@ import { useEffect, useState, Dispatch, SetStateAction } from 'react';
 
 const navItems = [
   { label: "🏠 Resumen", href: "/dashboard" },
-  { label: "🚀 Cómo empezar", href: "/dashboard/start" },
   { label: "🧠 Cómo funciona", href: "/dashboard/how-it-works" },
+  { label: "🚀 Cómo empezar", href: "/dashboard/start" },
   { label: "📊 Portfolio", href: "/dashboard/portfolio" },
-  { label: "🕵️ Scoop", href: "/dashboard/scoop" },
+  { label: "🕵️ Acciones", href: "/dashboard/scoop" },
   { label: "📜 Bonos", href: "/dashboard/bonds" },
   { label: "⏳ Plazos Fijos", href: "/dashboard/deposits" },
   { label: "🧾 Impuestos", href: "/dashboard/taxes" },
