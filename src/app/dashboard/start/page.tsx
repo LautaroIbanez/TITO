@@ -14,6 +14,13 @@ import Link from 'next/link';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
+const investmentLinks: Record<string, string> = {
+  stocks: '/dashboard/scoop',
+  bonds: '/dashboard/bonds',
+  deposits: '/dashboard/deposits',
+  cash: '/dashboard/portfolio',
+};
+
 const AllocationDescription: Record<string, { title: string, description: string }> = {
   stocks: {
     title: 'Renta Variable (Acciones)',
@@ -101,6 +108,12 @@ export default function StartPage() {
             <h3 className="text-xl font-bold text-gray-900">{AllocationDescription[key].title}</h3>
             <p className="text-3xl font-bold text-blue-600 my-2">{value}%</p>
             <p className="text-sm text-gray-600">{AllocationDescription[key].description}</p>
+            <Link
+              href={investmentLinks[key]}
+              className="inline-block mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            >
+              Invertir ahora
+            </Link>
           </div>
         ))}
       </div>
