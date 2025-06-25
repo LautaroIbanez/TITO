@@ -148,12 +148,6 @@ export default function StartPage() {
         </div>
       )}
       
-      <div className="text-center mt-8">
-        <Link href="/dashboard/scoop" className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors">
-          Ver Oportunidades de Inversión
-        </Link>
-      </div>
-
       <div className="text-xs text-gray-500 text-center mt-6">
         Esta es una recomendación generada automáticamente y no debe considerarse como asesoramiento financiero.
       </div>
