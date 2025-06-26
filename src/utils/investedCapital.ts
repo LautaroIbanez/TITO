@@ -33,4 +33,43 @@ export function calculateInvestedCapital(transactions: PortfolioTransaction[], c
   }
 
   return investedCapital;
+}
+
+/**
+ * Calculates the net contributions (cash flows) based on all transactions.
+ * This includes deposits, withdrawals, buy/sell transactions, and fixed-term deposits.
+ * @param transactions - An array of all portfolio transactions.
+ * @param currency - The currency to calculate the net contributions for.
+ * @returns The net contributions for the specified currency.
+ */
+export function calculateNetContributions(transactions: PortfolioTransaction[], currency: 'ARS' | 'USD'): number {
+  let netContributions = 0;
+
+  for (const tx of transactions) {
+    if (tx.currency !== currency) {
+      continue;
+    }
+
+    switch (tx.type) {
+      case 'Deposit':
+        netContributions += tx.amount;
+        break;
+      case 'Withdrawal':
+        netContributions -= tx.amount;
+        break;
+      case 'Buy':
+        netContributions += tx.price * tx.quantity;
+        break;
+      case 'Sell':
+        netContributions -= tx.price * tx.quantity;
+        break;
+      case 'Create':
+        if (tx.assetType === 'FixedTermDeposit') {
+          netContributions += tx.amount;
+        }
+        break;
+    }
+  }
+
+  return netContributions;
 } 

@@ -82,11 +82,11 @@ export function calculatePortfolioPerformance(
   let annualReturnUSDReal = annualReturnUSD;
 
   if (inflationData) {
-    // Real return = Nominal return - Inflation rate
-    monthlyReturnARSReal = monthlyReturnARS - inflationData.argentina.monthly;
-    monthlyReturnUSDReal = monthlyReturnUSD - inflationData.usa.monthly;
-    annualReturnARSReal = annualReturnARS - inflationData.argentina.annual;
-    annualReturnUSDReal = annualReturnUSD - inflationData.usa.annual;
+    // Real return = (1 + nominal/100) / (1 + inflation/100) - 1
+    monthlyReturnARSReal = ((1 + monthlyReturnARS/100) / (1 + inflationData.argentina.monthly/100) - 1) * 100;
+    monthlyReturnUSDReal = ((1 + monthlyReturnUSD/100) / (1 + inflationData.usa.monthly/100) - 1) * 100;
+    annualReturnARSReal = ((1 + annualReturnARS/100) / (1 + inflationData.argentina.annual/100) - 1) * 100;
+    annualReturnUSDReal = ((1 + annualReturnUSD/100) / (1 + inflationData.usa.annual/100) - 1) * 100;
   }
 
   return {

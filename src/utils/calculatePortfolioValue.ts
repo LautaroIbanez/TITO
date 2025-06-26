@@ -19,11 +19,11 @@ export interface PortfolioValueOptions {
   days?: number; // If provided, calculate last N days. If not, calculate from first transaction to today
 }
 
-export function calculatePortfolioValueHistory(
+export async function calculatePortfolioValueHistory(
   transactions: PortfolioTransaction[],
   priceHistory: Record<string, PriceData[]>,
   options: PortfolioValueOptions = {}
-): PortfolioValueHistory[] {
+): Promise<PortfolioValueHistory[]> {
   if (!transactions || transactions.length === 0) return [];
 
   const txs = [...transactions].sort((a, b) => dayjs(a.date).diff(dayjs(b.date)));
@@ -56,26 +56,26 @@ export function calculatePortfolioValueHistory(
   
   const positions: Record<string, { quantity: number; currency: 'ARS' | 'USD' }> = {};
   const activeDeposits: ActiveFixedTermDeposit[] = [];
+  const maturedDeposits: ActiveFixedTermDeposit[] = [];
   
   // Initialize positions up to the start date
   for (const tx of txs) {
     const txDate = dayjs(tx.date);
-    if (txDate.isAfter(startDate.subtract(1, 'day'))) {
-      break; 
-    }
-    if (tx.type === 'Buy' || tx.type === 'Sell') {
-      const identifier = tx.assetType === 'Stock' ? tx.symbol : tx.assetType === 'Bond' ? tx.ticker : null;
-      if (identifier) {
-        const key = `${identifier}_${tx.currency}`;
-        const currentQuantity = positions[key]?.quantity || 0;
-        if (tx.type === 'Buy') {
-          positions[key] = { quantity: currentQuantity + tx.quantity, currency: tx.currency };
-        } else if (tx.type === 'Sell') {
-          positions[key] = { quantity: currentQuantity - tx.quantity, currency: tx.currency };
+    if (txDate.isSameOrBefore(startDate)) {
+      if (tx.type === 'Buy' || tx.type === 'Sell') {
+        const identifier = tx.assetType === 'Stock' ? tx.symbol : tx.assetType === 'Bond' ? tx.ticker : null;
+        if (identifier) {
+          const key = `${identifier}_${tx.currency}`;
+          const currentQuantity = positions[key]?.quantity || 0;
+          if (tx.type === 'Buy') {
+            positions[key] = { quantity: currentQuantity + tx.quantity, currency: tx.currency };
+          } else if (tx.type === 'Sell') {
+            positions[key] = { quantity: currentQuantity - tx.quantity, currency: tx.currency };
+          }
         }
+      } else if (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit') {
+        activeDeposits.push(tx as ActiveFixedTermDeposit);
       }
-    } else if (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit') {
-      activeDeposits.push(tx as ActiveFixedTermDeposit);
     }
   }
 
@@ -100,6 +100,29 @@ export function calculatePortfolioValueHistory(
         }
       } else if (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit') {
         activeDeposits.push(tx as ActiveFixedTermDeposit);
+      } else if (tx.type === 'Withdrawal') {
+        // Remove matured deposits that match the withdrawal amount and currency
+        const withdrawalAmount = tx.amount;
+        const withdrawalCurrency = tx.currency;
+        
+        // Find and remove matching matured deposits
+        for (let i = maturedDeposits.length - 1; i >= 0; i--) {
+          const deposit = maturedDeposits[i];
+          if (deposit.currency === withdrawalCurrency) {
+            // Calculate the final value of the deposit (principal + full interest)
+            const startDate = dayjs(deposit.date);
+            const maturityDate = dayjs(deposit.maturityDate);
+            const days = maturityDate.diff(startDate, 'day');
+            const dailyRate = deposit.annualRate / 100 / 365;
+            const fullInterest = deposit.amount * dailyRate * days;
+            const finalValue = deposit.amount + fullInterest;
+            
+            if (Math.abs(finalValue - withdrawalAmount) < 1) { // Allow small rounding differences
+              maturedDeposits.splice(i, 1);
+              break; // Remove only one deposit per withdrawal
+            }
+          }
+        }
       }
     }
 
@@ -139,6 +162,13 @@ export function calculatePortfolioValueHistory(
 
       if (today.isAfter(maturityDate) && !deposit.isMatured) {
         deposit.isMatured = true;
+        // Move to matured deposits array
+        maturedDeposits.push(deposit);
+        // Remove from active deposits
+        const index = activeDeposits.indexOf(deposit);
+        if (index > -1) {
+          activeDeposits.splice(index, 1);
+        }
       }
 
       if (deposit.isMatured) continue;
@@ -158,7 +188,23 @@ export function calculatePortfolioValueHistory(
       }
     }
     
-    const exchangeRate = getExchangeRate('USD', 'ARS');
+    // Matured Deposits (keep their final value until withdrawn)
+    for (const deposit of maturedDeposits) {
+      const startDate = dayjs(deposit.date);
+      const maturityDate = dayjs(deposit.maturityDate);
+      const days = maturityDate.diff(startDate, 'day');
+      const dailyRate = deposit.annualRate / 100 / 365;
+      const fullInterest = deposit.amount * dailyRate * days;
+      const finalValue = deposit.amount + fullInterest;
+      
+      if (deposit.currency === 'ARS') {
+        dailyValueARS += finalValue;
+      } else {
+        dailyValueUSD += finalValue;
+      }
+    }
+    
+    const exchangeRate = await getExchangeRate('USD', 'ARS');
     const totalARS = dailyValueARS + dailyValueUSD * exchangeRate;
     const totalUSD = dailyValueUSD + dailyValueARS / exchangeRate;
     
@@ -175,11 +221,11 @@ export function calculatePortfolioValueHistory(
 }
 
 // Backward compatibility functions - NOTE: This will need to be updated where used
-export function getDailyPortfolioValue(
+export async function getDailyPortfolioValue(
   transactions: PortfolioTransaction[],
   priceHistory: Record<string, PriceData[]>
-): { date: string; valueARS: number; valueUSD: number }[] {
-  const history = calculatePortfolioValueHistory(transactions, priceHistory, {});
+): Promise<{ date: string; valueARS: number; valueUSD: number }[]> {
+  const history = await calculatePortfolioValueHistory(transactions, priceHistory, {});
   // Now returns both ARS and USD values for each day.
   return history.map(h => ({ date: h.date, valueARS: h.valueARS, valueUSD: h.valueUSD }));
 }

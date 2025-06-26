@@ -74,8 +74,8 @@ describe('portfolioPerformance', () => {
       expect(result.monthlyReturnUSD).toBe(5);
       
       // Real returns (nominal - inflation)
-      expect(result.monthlyReturnARSReal).toBe(5.8); // 10 - 4.2
-      expect(result.monthlyReturnUSDReal).toBe(4.7); // 5 - 0.3
+      expect(result.monthlyReturnARSReal).toBeCloseTo(5.57, 2); // (1.1/1.042 - 1) * 100 ≈ 5.57
+      expect(result.monthlyReturnUSDReal).toBeCloseTo(4.69, 2); // (1.05/1.003 - 1) * 100 ≈ 4.69
     });
 
     it('should handle negative returns correctly', () => {

@@ -182,6 +182,32 @@ Asegúrate de reemplazar `/ruta/completa/hacia/el/proyecto/TITO` con la ruta rea
 - **Reintentos Automáticos**: Sistema de reintentos para operaciones fallidas
 - **Interrupción Graceful**: Manejo correcto de Ctrl+C y terminación del proceso
 
+### Dynamic Exchange Rate Configuration
+
+TITO now uses a live USD/ARS exchange rate for all currency conversions, fetched from [exchangerate.host](https://exchangerate.host/). The rate is cached in memory for 10 minutes to minimize API calls and ensure performance.
+
+#### How it works
+- All currency conversions (e.g., in portfolio value calculations) use the latest USD/ARS rate.
+- The rate is fetched automatically from exchangerate.host and cached for 10 minutes.
+- If the API is unavailable, a configurable fallback rate is used (default: 1000).
+
+#### Configuration
+You can change the fallback rate in `src/utils/currency.ts` by editing:
+```ts
+const DEFAULT_EXCHANGE_RATE_USD_TO_ARS = 1000;
+```
+
+#### Usage in Code
+- Use the async functions `getExchangeRate(from, to)` and `convertCurrency(amount, from, to)` for all conversions.
+- Example:
+  ```ts
+  import { getExchangeRate, convertCurrency } from '@/utils/currency';
+
+  const rate = await getExchangeRate('USD', 'ARS');
+  const amountInARS = await convertCurrency(100, 'USD', 'ARS');
+  ```
+- All portfolio calculations (e.g., `calculatePortfolioValueHistory`) now use the dynamic rate.
+
 ## Live Data Fetching and Caching
 
 This project now uses live financial data for stocks (and trending stocks) via [yahoo-finance2](https://www.npmjs.com/package/yahoo-finance2), with in-memory caching using [node-cache](https://www.npmjs.com/package/node-cache).

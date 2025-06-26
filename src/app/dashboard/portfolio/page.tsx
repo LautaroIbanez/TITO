@@ -24,18 +24,24 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
   const [depositSuccess, setDepositSuccess] = useState('');
   const [editingDeposit, setEditingDeposit] = useState<DepositTransaction | null>(null);
   const [depositActionError, setDepositActionError] = useState<string | null>(null);
+  const [valueHistory, setValueHistory] = useState<any[]>([]);
 
   const { portfolioData, loading, refreshPortfolio } = usePortfolio();
 
-  const valueHistory = useMemo(() => {
-    if (portfolioData?.transactions && portfolioData?.historicalPrices) {
-      return calculatePortfolioValueHistory(
-        portfolioData.transactions,
-        portfolioData.historicalPrices,
-        { days: 90 }
-      );
+  useEffect(() => {
+    async function fetchValueHistory() {
+      if (portfolioData?.transactions && portfolioData?.historicalPrices) {
+        const history = await calculatePortfolioValueHistory(
+          portfolioData.transactions,
+          portfolioData.historicalPrices,
+          { days: 90 }
+        );
+        setValueHistory(history);
+      } else {
+        setValueHistory([]);
+      }
     }
-    return [];
+    fetchValueHistory();
   }, [portfolioData?.transactions, portfolioData?.historicalPrices]);
 
   useEffect(() => {

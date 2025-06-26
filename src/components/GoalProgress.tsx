@@ -18,9 +18,10 @@ interface Props {
   positions: PortfolioPosition[];
   bonds: Bond[];
   actionButtons?: React.ReactNode;
+  showManageLink?: boolean;
 }
 
-export default function GoalProgress({ goal, valueHistory, currentValue, transactions, positions, bonds, actionButtons }: Props) {
+export default function GoalProgress({ goal, valueHistory, currentValue, transactions, positions, bonds, actionButtons, showManageLink }: Props) {
   const fixedIncomeProjection = useMemo(() => {
     if (!goal || !positions || !bonds) return [];
     return projectFixedIncome(currentValue, positions, bonds, [goal]);
@@ -138,12 +139,9 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
         </div>
         <div className="flex items-center space-x-2">
           {actionButtons}
-          <Link 
-            href="/dashboard/goals" 
-            className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
-          >
-            Gestionar Metas
-          </Link>
+          {showManageLink && (
+            <Link href="/dashboard/goals" className="text-blue-600 hover:underline text-sm font-medium ml-2">Gestionar Metas</Link>
+          )}
         </div>
       </div>
 

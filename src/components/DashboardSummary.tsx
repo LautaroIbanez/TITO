@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { InvestmentGoal, PortfolioTransaction, StrategyRecommendation, PortfolioPosition } from '@/types';
 import { Bond } from '@/types/finance';
 import { calculatePortfolioValueHistory, PortfolioValueHistory, calculateCurrentValueByCurrency } from '@/utils/calculatePortfolioValue';
-import { calculateInvestedCapital } from '@/utils/investedCapital';
+import { calculateInvestedCapital, calculateNetContributions } from '@/utils/investedCapital';
 import { calculatePortfolioPerformance, fetchInflationData, formatPerformance, PerformanceMetrics, InflationData } from '@/utils/portfolioPerformance';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import GoalProgress from './GoalProgress';
@@ -13,11 +13,12 @@ import { formatCurrency } from '@/utils/goalCalculator';
 export default function DashboardSummary() {
   const [portfolioValueARS, setPortfolioValueARS] = useState(0);
   const [portfolioValueUSD, setPortfolioValueUSD] = useState(0);
-  const [firstGoal, setFirstGoal] = useState<InvestmentGoal | null>(null);
+  const [goals, setGoals] = useState<InvestmentGoal[]>([]);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [bonds, setBonds] = useState<Bond[]>([]);
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
   const [inflationData, setInflationData] = useState<InflationData | null>(null);
+  const [goalValueHistories, setGoalValueHistories] = useState<Record<string, { date: string, value: number }[]>>({});
   
   const { portfolioData, strategy, loading, error, portfolioVersion } = usePortfolio();
 
@@ -41,7 +42,7 @@ export default function DashboardSummary() {
       if (goalsRes.ok) {
         const goals = await goalsRes.json();
         if (goals.length > 0) {
-          setFirstGoal(goals[0]);
+          setGoals(goals);
         }
       }
 
@@ -62,24 +63,44 @@ export default function DashboardSummary() {
 
   // 3. Calculate values and performance when portfolioData or inflationData changes
   useEffect(() => {
-    if (portfolioData) {
-      const { ARS, USD } = calculateCurrentValueByCurrency(
-        portfolioData.positions || [],
-        portfolioData.cash || { ARS: 0, USD: 0 },
-        portfolioData.historicalPrices || {}
-      );
-      setPortfolioValueARS(ARS);
-      setPortfolioValueUSD(USD);
+    async function calculateValues() {
+      if (portfolioData) {
+        const { ARS, USD } = calculateCurrentValueByCurrency(
+          portfolioData.positions || [],
+          portfolioData.cash || { ARS: 0, USD: 0 },
+          portfolioData.historicalPrices || {}
+        );
+        setPortfolioValueARS(ARS);
+        setPortfolioValueUSD(USD);
 
-      const valueHistory = calculatePortfolioValueHistory(
-        portfolioData.transactions || [],
-        portfolioData.historicalPrices || {},
-        { days: 365 }
-      );
-      const performance = calculatePortfolioPerformance(valueHistory, inflationData || undefined);
-      setPerformanceMetrics(performance);
+        const valueHistory = await calculatePortfolioValueHistory(
+          portfolioData.transactions || [],
+          portfolioData.historicalPrices || {},
+          { days: 365 }
+        );
+        const performance = calculatePortfolioPerformance(valueHistory, inflationData || undefined);
+        setPerformanceMetrics(performance);
+      }
     }
+    calculateValues();
   }, [portfolioData, inflationData]);
+
+  useEffect(() => {
+    async function fetchGoalValueHistories() {
+      if (!portfolioData || goals.length === 0) return;
+      const histories: Record<string, { date: string, value: number }[]> = {};
+      for (const goal of goals) {
+        const valueHistory = await calculatePortfolioValueHistory(
+          portfolioData.transactions || [],
+          portfolioData.historicalPrices || {},
+          { days: 90 }
+        );
+        histories[goal.id] = valueHistory.map(h => ({ date: h.date, value: h.valueARS }));
+      }
+      setGoalValueHistories(histories);
+    }
+    fetchGoalValueHistories();
+  }, [goals, portfolioData]);
 
   const handleDismissOnboarding = () => {
     setShowOnboarding(false);
@@ -127,10 +148,13 @@ export default function DashboardSummary() {
   const investedCapitalARS = calculateInvestedCapital(portfolioData.transactions, 'ARS');
   const investedCapitalUSD = calculateInvestedCapital(portfolioData.transactions, 'USD');
     
-  const netGainsARS = portfolioValueARS - investedCapitalARS;
+  const netContributionsARS = calculateNetContributions(portfolioData.transactions, 'ARS');
+  const netContributionsUSD = calculateNetContributions(portfolioData.transactions, 'USD');
+    
+  const netGainsARS = portfolioValueARS - netContributionsARS;
   const gainsColorARS = netGainsARS >= 0 ? 'text-green-600' : 'text-red-600';
 
-  const netGainsUSD = portfolioValueUSD - investedCapitalUSD;
+  const netGainsUSD = portfolioValueUSD - netContributionsUSD;
   const gainsColorUSD = netGainsUSD >= 0 ? 'text-green-600' : 'text-red-600';
 
   return (
@@ -331,21 +355,21 @@ export default function DashboardSummary() {
         </div>
       )}
 
-      {firstGoal && (
-        <GoalProgress 
-          goal={firstGoal} 
-          valueHistory={
-            calculatePortfolioValueHistory(
-              portfolioData.transactions || [],
-              portfolioData.historicalPrices || {},
-              { days: 90 }
-            ).map(h => ({ date: h.date, value: h.valueARS }))
-          }
-          currentValue={portfolioValueARS} 
-          transactions={portfolioData.transactions}
-          positions={portfolioData.positions}
-          bonds={bonds}
-        />
+      {goals.length > 0 && (
+        <div className="space-y-8">
+          {goals.map(goal => (
+            <GoalProgress
+              key={goal.id}
+              goal={goal}
+              valueHistory={goalValueHistories[goal.id] || []}
+              currentValue={portfolioValueARS}
+              transactions={portfolioData.transactions}
+              positions={portfolioData.positions}
+              bonds={bonds}
+              showManageLink={true}
+            />
+          ))}
+        </div>
       )}
       
     </div>
