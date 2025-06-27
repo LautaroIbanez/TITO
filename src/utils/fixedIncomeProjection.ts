@@ -18,6 +18,9 @@ function calculateDailyInterest(positions: PortfolioPosition[], bonds: Bond[]): 
     if (position.type === 'FixedTermDeposit') {
       const dailyRate = position.annualRate / 100 / 365;
       dailyInterest += position.amount * dailyRate;
+    } else if (position.type === 'Caucion') {
+      const dailyRate = position.annualRate / 100 / 365;
+      dailyInterest += position.amount * dailyRate;
     } else if (position.type === 'Bond') {
       const bondInfo = bonds.find(b => b.ticker === position.ticker);
       if (bondInfo) {
@@ -45,20 +48,44 @@ export function projectFixedIncome(
   bonds: Bond[],
   goals: InvestmentGoal[]
 ): { date: string, value: number }[] {
-  if (goals.length === 0) return [{ date: dayjs().format('YYYY-MM-DD'), value: initialValue }];
-
   const dailyInterest = calculateDailyInterest(positions, bonds);
   const projection: { date: string, value: number }[] = [];
   
+  let currentValue = initialValue;
+  let currentDate = dayjs();
+  
+  // Always start with today
+  projection.push({
+    date: currentDate.format('YYYY-MM-DD'),
+    value: currentValue,
+  });
+
+  if (goals.length === 0) {
+    // If no goals, just return today and tomorrow
+    currentValue += dailyInterest;
+    currentDate = currentDate.add(1, 'day');
+    projection.push({
+      date: currentDate.format('YYYY-MM-DD'),
+      value: currentValue,
+    });
+    return projection;
+  }
+
+  // Find the farthest goal date
   const farthestGoalDate = goals.reduce((farthest, goal) => {
     const goalDate = dayjs(goal.targetDate);
     return goalDate.isAfter(farthest) ? goalDate : farthest;
   }, dayjs());
 
-  let currentValue = initialValue;
-  let currentDate = dayjs();
+  // Ensure we project at least until tomorrow, even if farthest goal is today or in the past
+  const tomorrow = currentDate.add(1, 'day');
+  const projectionEndDate = farthestGoalDate.isAfter(tomorrow) ? farthestGoalDate : tomorrow;
 
-  while (currentDate.isBefore(farthestGoalDate) || currentDate.isSame(farthestGoalDate)) {
+  // Start from tomorrow since we already added today
+  currentDate = currentDate.add(1, 'day');
+  currentValue += dailyInterest;
+
+  while (currentDate.isBefore(projectionEndDate) || currentDate.isSame(projectionEndDate)) {
     projection.push({
       date: currentDate.format('YYYY-MM-DD'),
       value: currentValue,

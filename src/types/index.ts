@@ -54,7 +54,19 @@ export interface FixedTermDepositPosition {
   currency: 'ARS' | 'USD';
 }
 
-export type PortfolioPosition = StockPosition | BondPosition | FixedTermDepositPosition;
+export interface CaucionPosition {
+  type: 'Caucion';
+  id: string; // Unique ID for this specific caución
+  provider: string;
+  amount: number;
+  annualRate: number;
+  startDate: string;
+  maturityDate: string;
+  currency: 'ARS' | 'USD';
+  term: number; // Term in days
+}
+
+export type PortfolioPosition = StockPosition | BondPosition | FixedTermDepositPosition | CaucionPosition;
 
 // -- Portfolio Transactions --
 export interface StockTradeTransaction {
@@ -113,7 +125,20 @@ export interface FixedTermDepositCreationTransaction {
   currency: 'ARS' | 'USD';
 }
 
-export type PortfolioTransaction = StockTradeTransaction | BondTradeTransaction | DepositTransaction | FixedTermDepositCreationTransaction | WithdrawalTransaction;
+export interface CaucionCreationTransaction {
+  id: string;
+  date: string; // ISO string
+  type: 'Create';
+  assetType: 'Caucion';
+  provider: string;
+  amount: number;
+  annualRate: number;
+  termDays: number;
+  maturityDate: string;
+  currency: 'ARS' | 'USD';
+}
+
+export type PortfolioTransaction = StockTradeTransaction | BondTradeTransaction | DepositTransaction | FixedTermDepositCreationTransaction | CaucionCreationTransaction | WithdrawalTransaction;
 
 // -- Investment Strategy --
 export type StrategyAction = 'buy' | 'sell' | 'hold' | 'rotate' | 'increase' | 'decrease';

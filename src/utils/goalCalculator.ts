@@ -176,6 +176,10 @@ export function calculateEffectiveYield(positions: PortfolioPosition[], bonds: B
       const value = pos.amount;
       totalValue += value;
       weightedYield += value * (pos.annualRate / 100);
+    } else if (pos.type === 'Caucion') {
+      const value = pos.amount;
+      totalValue += value;
+      weightedYield += value * (pos.annualRate / 100);
     } else if (pos.type === 'Bond') {
       const bondInfo = bonds.find(b => b.ticker === pos.ticker);
       if (bondInfo) {

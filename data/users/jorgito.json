@@ -35,6 +35,17 @@
       "quantity": 3,
       "averagePrice": 55,
       "currency": "USD"
+    },
+    {
+      "type": "Caucion",
+      "id": "caucion_1751025407816",
+      "provider": "BYMA",
+      "amount": 20000,
+      "annualRate": 120.2,
+      "startDate": "2025-06-27T11:56:47.816Z",
+      "maturityDate": "2025-07-04T11:56:47.816Z",
+      "currency": "ARS",
+      "term": 7
     }
   ],
   "transactions": [
@@ -87,6 +98,18 @@
       "currency": "USD",
       "commissionPct": 1,
       "purchaseFeePct": 0.05
+    },
+    {
+      "id": "caucion_tx_1751025407816",
+      "date": "2025-06-27T11:56:47.816Z",
+      "type": "Create",
+      "assetType": "Caucion",
+      "provider": "BYMA",
+      "amount": 20000,
+      "annualRate": 120.2,
+      "termDays": 7,
+      "maturityDate": "2025-07-04T11:56:47.816Z",
+      "currency": "ARS"
     }
   ],
   "goals": [
@@ -110,7 +133,7 @@
     }
   ],
   "cash": {
-    "ARS": 731353.0625,
+    "ARS": 711353.0625,
     "USD": 4833.2675
   },
   "profile": {
@@ -130,8 +153,8 @@
     "initialBalanceUSD": 5000
   },
   "investmentStrategy": {
-    "id": "strategy-09478249-69e2-4439-b156-224d918421b7",
-    "createdAt": "2025-06-26T23:32:07.107Z",
+    "id": "strategy-639010e4-5f6f-4e7e-852b-5b1227c42f7a",
+    "createdAt": "2025-06-27T12:04:50.613Z",
     "targetAllocation": {
       "stocks": 60,
       "bonds": 30,
@@ -140,7 +163,7 @@
     },
     "recommendations": [
       {
-        "id": "alloc-489a2322-0ca0-4005-b5ba-c28947d8d211",
+        "id": "alloc-84636712-06e7-4836-8e94-f78eb5c022a9",
         "action": "increase",
         "assetClass": "stocks",
         "reason": "Tu portafolio tiene 21.6% en acciones, pero tu estrategia objetivo es 60%",
@@ -148,7 +171,7 @@
         "expectedImpact": "positive"
       },
       {
-        "id": "alloc-3db3bbf2-254a-44a8-9b34-ce4ea8c25a7c",
+        "id": "alloc-2836576a-88d9-4643-96ca-9ff5e2b9e27e",
         "action": "increase",
         "assetClass": "bonds",
         "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 30%",
@@ -156,9 +179,9 @@
         "expectedImpact": "positive"
       },
       {
-        "id": "cash-invest-963038b2-9fe1-43bf-a7e0-05bbc7bbac20",
+        "id": "cash-invest-4500a1c8-bb29-475f-9ca4-e8d16e4a32b4",
         "action": "buy",
-        "reason": "Tienes un 73.4% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
+        "reason": "Tienes un 71.4% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
         "priority": "high",
         "expectedImpact": "positive"
       }

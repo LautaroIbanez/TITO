@@ -292,7 +292,7 @@ function calculateTotalPortfolioValue(positions: PortfolioPosition[], totalCash:
   for (const pos of positions) {
     if (pos.type === 'Stock' || pos.type === 'Bond') {
       total += pos.quantity * pos.averagePrice; 
-    } else if (pos.type === 'FixedTermDeposit') {
+    } else if (pos.type === 'FixedTermDeposit' || pos.type === 'Caucion') {
       total += pos.amount;
     }
   }
@@ -317,7 +317,7 @@ function calculateCurrentAllocation(
       stockValue += pos.quantity * pos.averagePrice;
     } else if (pos.type === 'Bond') {
       bondValue += pos.quantity * pos.averagePrice;
-    } else if (pos.type === 'FixedTermDeposit') {
+    } else if (pos.type === 'FixedTermDeposit' || pos.type === 'Caucion') {
       depositValue += pos.amount;
     }
   }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { PortfolioPosition, StockPosition, BondPosition, FixedTermDepositPosition } from '@/types';
+import { PortfolioPosition, StockPosition, BondPosition, FixedTermDepositPosition, CaucionPosition } from '@/types';
+import { PriceData, Fundamentals, Technicals } from '@/types/finance';
 import TradeModal, { TradeType } from './TradeModal';
 import type { TradeModalProps } from './TradeModal';
 import { usePortfolio } from '@/contexts/PortfolioContext';
@@ -7,14 +8,14 @@ import { formatCurrency } from '@/utils/goalCalculator';
 
 interface Props {
   positions: PortfolioPosition[];
-  prices: Record<string, any[]>;
-  fundamentals: Record<string, any>;
-  technicals: Record<string, any>;
+  prices: Record<string, PriceData[]>;
+  fundamentals: Record<string, Fundamentals | null>;
+  technicals: Record<string, Technicals | null>;
   cash: { ARS: number; USD: number };
   onPortfolioUpdate: () => void;
 }
 
-function getCurrentPrice(prices: any[]): number {
+function getCurrentPrice(prices: PriceData[]): number {
   if (!prices || prices.length === 0) return 0;
   return prices[prices.length - 1]?.close || 0;
 }
@@ -150,6 +151,26 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
       </tr>
     );
   };
+
+  const renderCaucionRow = (pos: CaucionPosition) => {
+    return (
+      <tr key={pos.id} className="even:bg-gray-50">
+        <td className="px-4 py-2 font-medium text-gray-900">{pos.provider}</td>
+        <td className="px-4 py-2 text-gray-700">Caución</td>
+        <td className="px-4 py-2 text-gray-700">{pos.currency}</td>
+        <td className="px-4 py-2 text-right text-gray-700">-</td>
+        <td className="px-4 py-2 text-right text-gray-700">-</td>
+        <td className="px-4 py-2 text-right text-gray-700">-</td>
+        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(pos.amount, pos.currency)}</td>
+        <td className="px-4 py-2 text-right text-green-600">{pos.annualRate.toFixed(2)}%</td>
+        <td className="px-4 py-2 text-right text-gray-700">{new Date(pos.maturityDate).toLocaleDateString()}</td>
+        <td className="px-4 py-2 text-right text-gray-700">{pos.term} días</td>
+        <td className="px-4 py-2 text-center">
+          <button onClick={() => handleRemove(pos)} className="text-red-600 hover:text-red-800 text-xs font-semibold">Eliminar</button>
+        </td>
+      </tr>
+    );
+  };
   
   const getModalInfo = () => {
     if (!modalState.asset) return { assetName: '', identifier: '', price: 0, maxShares: 0, assetType: 'Stock' as const, currency: 'ARS' as const };
@@ -204,6 +225,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
               if (pos.type === 'Stock') return renderStockRow(pos);
               if (pos.type === 'Bond') return renderBondRow(pos);
               if (pos.type === 'FixedTermDeposit') return renderDepositRow(pos);
+              if (pos.type === 'Caucion') return renderCaucionRow(pos);
               return null;
             })}
           </tbody>

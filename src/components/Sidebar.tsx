@@ -11,6 +11,7 @@ const navItems = [
   { label: "🕵️ Acciones", href: "/dashboard/scoop" },
   { label: "📜 Bonos", href: "/dashboard/bonds" },
   { label: "⏳ Plazos Fijos", href: "/dashboard/deposits" },
+  { label: "🏦 Cauciones", href: "/dashboard/cauciones" },
   { label: "🧾 Impuestos", href: "/dashboard/taxes" },
   { label: "🎯 Metas", href: "/dashboard/goals" },
   { label: "👤 Mi Perfil", href: "/dashboard/user" },

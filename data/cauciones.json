@@ -1,0 +1,61 @@
+{
+  "lastUpdated": "2024-01-15T10:00:00Z",
+  "rates": [
+    {
+      "term": 1,
+      "annualRate": 118.5,
+      "currency": "ARS",
+      "provider": "BYMA",
+      "description": "Caución a 1 día"
+    },
+    {
+      "term": 7,
+      "annualRate": 120.2,
+      "currency": "ARS", 
+      "provider": "BYMA",
+      "description": "Caución a 7 días"
+    },
+    {
+      "term": 14,
+      "annualRate": 121.8,
+      "currency": "ARS",
+      "provider": "BYMA", 
+      "description": "Caución a 14 días"
+    },
+    {
+      "term": 30,
+      "annualRate": 123.5,
+      "currency": "ARS",
+      "provider": "BYMA",
+      "description": "Caución a 30 días"
+    },
+    {
+      "term": 60,
+      "annualRate": 125.1,
+      "currency": "ARS",
+      "provider": "BYMA",
+      "description": "Caución a 60 días"
+    },
+    {
+      "term": 90,
+      "annualRate": 126.8,
+      "currency": "ARS",
+      "provider": "BYMA",
+      "description": "Caución a 90 días"
+    },
+    {
+      "term": 180,
+      "annualRate": 128.5,
+      "currency": "ARS",
+      "provider": "BYMA",
+      "description": "Caución a 180 días"
+    },
+    {
+      "term": 365,
+      "annualRate": 130.2,
+      "currency": "ARS",
+      "provider": "BYMA",
+      "description": "Caución a 365 días"
+    }
+  ]
+} 
