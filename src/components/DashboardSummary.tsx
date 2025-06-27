@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { InvestmentGoal, PortfolioTransaction, StrategyRecommendation, PortfolioPosition } from '@/types';
 import { Bond } from '@/types/finance';
 import { calculatePortfolioValueHistory, PortfolioValueHistory, calculateCurrentValueByCurrency } from '@/utils/calculatePortfolioValue';
-import { calculateInvestedCapital, calculateNetContributions } from '@/utils/investedCapital';
+import { calculateInvestedCapital } from '@/utils/investedCapital';
 import { calculatePortfolioPerformance, fetchInflationData, formatPerformance, PerformanceMetrics, InflationData } from '@/utils/portfolioPerformance';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import GoalProgress from './GoalProgress';
@@ -147,14 +147,18 @@ export default function DashboardSummary() {
   
   const investedCapitalARS = calculateInvestedCapital(portfolioData.transactions, 'ARS');
   const investedCapitalUSD = calculateInvestedCapital(portfolioData.transactions, 'USD');
-    
-  const netContributionsARS = calculateNetContributions(portfolioData.transactions, 'ARS');
-  const netContributionsUSD = calculateNetContributions(portfolioData.transactions, 'USD');
-    
-  const netGainsARS = portfolioValueARS - netContributionsARS;
+
+  // Current value of invested positions only (exclude cash)
+  const investedValues = calculateCurrentValueByCurrency(
+    portfolioData.positions || [],
+    { ARS: 0, USD: 0 },
+    portfolioData.historicalPrices || {}
+  );
+
+  const netGainsARS = investedValues.ARS - investedCapitalARS;
   const gainsColorARS = netGainsARS >= 0 ? 'text-green-600' : 'text-red-600';
 
-  const netGainsUSD = portfolioValueUSD - netContributionsUSD;
+  const netGainsUSD = investedValues.USD - investedCapitalUSD;
   const gainsColorUSD = netGainsUSD >= 0 ? 'text-green-600' : 'text-red-600';
 
   return (

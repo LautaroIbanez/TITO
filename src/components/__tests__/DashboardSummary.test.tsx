@@ -8,13 +8,13 @@ import { usePortfolio } from '../../contexts/PortfolioContext';
 import { calculatePortfolioValueHistory, calculateCurrentValueByCurrency } from '../../utils/calculatePortfolioValue';
 import { calculatePortfolioPerformance, fetchInflationData } from '../../utils/portfolioPerformance';
 import { UserData, PortfolioTransaction, FixedTermDepositCreationTransaction } from '@/types';
-import { calculateNetContributions } from '../../utils/investedCapital';
+import { calculateInvestedCapital } from '../../utils/investedCapital';
 
 // Mock the hooks and utilities
 jest.mock('../../contexts/PortfolioContext');
 jest.mock('../../utils/calculatePortfolioValue');
 jest.mock('../../utils/portfolioPerformance');
-jest.mock('../../utils/investedCapital');
+jest.mock('../../../utils/investedCapital');
 jest.mock('../../utils/currency');
 
 const mockUsePortfolio = usePortfolio as jest.Mock;
@@ -22,7 +22,7 @@ const mockCalculatePortfolioValueHistory = calculatePortfolioValueHistory as jes
 const mockCalculateCurrentValueByCurrency = calculateCurrentValueByCurrency as jest.Mock;
 const mockCalculatePortfolioPerformance = calculatePortfolioPerformance as jest.Mock;
 const mockFetchInflationData = fetchInflationData as jest.Mock;
-const mockCalculateNetContributions = calculateNetContributions as jest.Mock;
+const mockCalculateInvestedCapital = calculateInvestedCapital as jest.Mock;
 
 // Mock chart components to avoid canvas context issues
 jest.mock('../PortfolioHistoryChart', () => {
@@ -165,8 +165,8 @@ describe('DashboardSummary', () => {
       annualReturnUSDReal: 9.3,
     });
     
-    // Mock net contributions and portfolio value
-    mockCalculateNetContributions.mockReturnValue(1500);
+    // Mock invested capital and portfolio value
+    mockCalculateInvestedCapital.mockImplementation((txs, currency) => currency === 'ARS' ? 1500 : 0);
     mockCalculateCurrentValueByCurrency.mockReturnValue({ ARS: 1600, USD: 0 });
     
     // Mock inflation data fetch
@@ -210,12 +210,10 @@ describe('DashboardSummary', () => {
     expect(screen.getByText('$100,00')).toBeInTheDocument(); // Net gains
   });
 
-  it('calculates net gains using net contributions instead of invested capital', async () => {
+  it('calculates net gains using invested capital', async () => {
     mockCalculateCurrentValueByCurrency.mockReturnValue({ ARS: 2000, USD: 0 });
-    mockCalculateNetContributions.mockReturnValue(1800);
-
+    mockCalculateInvestedCapital.mockImplementation((txs, currency) => currency === 'ARS' ? 1800 : 0);
     render(<DashboardSummary />);
-
     await waitFor(() => {
       expect(screen.getByText('$200,00')).toBeInTheDocument(); // Net gains (2000 - 1800)
     });
@@ -223,10 +221,8 @@ describe('DashboardSummary', () => {
 
   it('handles negative net gains correctly', async () => {
     mockCalculateCurrentValueByCurrency.mockReturnValue({ ARS: 1400, USD: 0 });
-    mockCalculateNetContributions.mockReturnValue(1500);
-
+    mockCalculateInvestedCapital.mockImplementation((txs, currency) => currency === 'ARS' ? 1500 : 0);
     render(<DashboardSummary />);
-
     await waitFor(() => {
       expect(screen.getByText('-$100,00')).toBeInTheDocument(); // Net gains (1400 - 1500)
     });
@@ -270,10 +266,8 @@ describe('DashboardSummary', () => {
 
   it('formats currency values correctly', async () => {
     mockCalculateCurrentValueByCurrency.mockReturnValue({ ARS: 1234567.89, USD: 0 });
-    mockCalculateNetContributions.mockReturnValue(1000000);
-
+    mockCalculateInvestedCapital.mockImplementation((txs, currency) => currency === 'ARS' ? 1000000 : 0);
     render(<DashboardSummary />);
-
     await waitFor(() => {
       expect(screen.getByText('$1.234.567,89')).toBeInTheDocument(); // Portfolio value
       expect(screen.getByText('$1.000.000,00')).toBeInTheDocument(); // Invested capital
