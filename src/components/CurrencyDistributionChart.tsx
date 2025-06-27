@@ -2,7 +2,6 @@ import React from 'react';
 import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { PortfolioPosition } from '@/types';
-import { convertCurrency } from '@/utils/currency';
 import { formatCurrency } from '@/utils/goalCalculator';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -11,6 +10,9 @@ interface Props {
   positions: PortfolioPosition[];
   cash: { ARS: number; USD: number };
 }
+
+// For now, using a hardcoded exchange rate as fallback.
+const DEFAULT_EXCHANGE_RATE_USD_TO_ARS = 1000;
 
 export default function CurrencyDistributionChart({ positions, cash }: Props) {
   let totalARS = cash.ARS || 0;
@@ -25,6 +27,9 @@ export default function CurrencyDistributionChart({ positions, cash }: Props) {
       value = pos.quantity * pos.averagePrice;
     } else if (pos.type === 'FixedTermDeposit') {
       value = pos.amount;
+    } else if (pos.type === 'Crypto') {
+      // This is a simplification. For a real app, you'd fetch current prices.
+      value = pos.quantity * pos.averagePrice;
     }
 
     if (pos.currency === 'ARS') {
@@ -34,7 +39,7 @@ export default function CurrencyDistributionChart({ positions, cash }: Props) {
     }
   });
 
-  const totalValueInARS = totalARS + convertCurrency(totalUSD, 'USD', 'ARS');
+  const totalValueInARS = totalARS + (totalUSD * DEFAULT_EXCHANGE_RATE_USD_TO_ARS);
 
   if (totalValueInARS === 0) {
     return (
@@ -46,7 +51,7 @@ export default function CurrencyDistributionChart({ positions, cash }: Props) {
   }
 
   const arsPercentage = (totalARS / totalValueInARS) * 100;
-  const usdPercentage = (convertCurrency(totalUSD, 'USD', 'ARS') / totalValueInARS) * 100;
+  const usdPercentage = ((totalUSD * DEFAULT_EXCHANGE_RATE_USD_TO_ARS) / totalValueInARS) * 100;
 
   const chartData = {
     labels: [
@@ -55,7 +60,7 @@ export default function CurrencyDistributionChart({ positions, cash }: Props) {
     ],
     datasets: [
       {
-        data: [totalARS, convertCurrency(totalUSD, 'USD', 'ARS')],
+        data: [totalARS, totalUSD * DEFAULT_EXCHANGE_RATE_USD_TO_ARS],
         backgroundColor: ['#2563eb', '#10b981'],
         hoverBackgroundColor: ['#1d4ed8', '#059669'],
         borderColor: '#ffffff',

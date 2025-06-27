@@ -56,7 +56,7 @@ function getSuggestedStocks(
 export default function ScoopPage() {
   const [stocks, setStocks] = useState<any[]>([]);
   const [profile, setProfile] = useState<InvestorProfile | null>(null);
-  const [portfolioSymbols, setPortfolioSymbols] = useState<string[]>([]);
+  const [portfolioSymbols, setPortfolioSymbols] = useState<{ USD: string[]; ARS: string[] }>({ USD: [], ARS: [] });
   const [loading, setLoading] = useState(true);
   const [requiredReturn, setRequiredReturn] = useState(0);
   const { filterMode } = useScoop();
@@ -77,8 +77,16 @@ export default function ScoopPage() {
       const data = await res.json();
       userProfile = data.profile || null;
       userPositions = data.positions || [];
-      // Store the base symbol (e.g., AAPL from AAPL.BA)
-      setPortfolioSymbols(userPositions.map((p: any) => p.symbol?.split('.')[0] || p.symbol || ''));
+      // Clasificar símbolos por moneda
+      const symbolsByCurrency: { USD: string[]; ARS: string[] } = { USD: [], ARS: [] };
+      userPositions.forEach((p: any) => {
+        if (p.symbol) {
+          const baseSymbol = p.symbol.split('.')[0] || p.symbol;
+          if (p.currency === 'USD') symbolsByCurrency.USD.push(baseSymbol);
+          else if (p.currency === 'ARS') symbolsByCurrency.ARS.push(baseSymbol);
+        }
+      });
+      setPortfolioSymbols(symbolsByCurrency);
       setProfile(userProfile);
 
       const goalsRes = await fetch(`/api/goals?username=${username}`);
@@ -107,8 +115,10 @@ export default function ScoopPage() {
     const trendingData = await trendingRes.json();
     const trendingSymbols = (trendingData.quotes || []).map((q: any) => q.symbol);
 
-    // Use FIXED_LIST as the base, filter out owned stocks
-    const stocksToShowSymbols = FIXED_LIST.filter(symbol => !userPositions.includes(symbol));
+    // Usar FIXED_LIST como base, excluir los símbolos presentes en cualquiera de los arrays
+    const stocksToShowSymbols = FIXED_LIST.filter(symbol =>
+      !portfolioSymbols.USD.includes(symbol) && !portfolioSymbols.ARS.includes(symbol)
+    );
 
     // Enrich the stocks with all necessary data
     const enrichedStocks = await Promise.all(
@@ -172,7 +182,8 @@ export default function ScoopPage() {
                     technicals={stock.technicals}
                     isSuggested={stock.isSuggested}
                     isTrending={stock.isTrending}
-                    inPortfolio={portfolioSymbols.includes(stock.symbol)}
+                    inPortfolioUSD={portfolioSymbols.USD.includes(stock.symbol)}
+                    inPortfolioARS={portfolioSymbols.ARS.includes(stock.symbol)}
                     onTrade={loadData}
                     cash={portfolioData?.cash ?? { ARS: 0, USD: 0 }}
                   />
@@ -193,7 +204,8 @@ export default function ScoopPage() {
                     technicals={stock.technicals}
                     isSuggested={stock.isSuggested}
                     isTrending={stock.isTrending}
-                    inPortfolio={portfolioSymbols.includes(stock.symbol)}
+                    inPortfolioUSD={portfolioSymbols.USD.includes(stock.symbol)}
+                    inPortfolioARS={portfolioSymbols.ARS.includes(stock.symbol)}
                     onTrade={loadData}
                     cash={portfolioData?.cash ?? { ARS: 0, USD: 0 }}
                   />
@@ -214,7 +226,8 @@ export default function ScoopPage() {
                       technicals={stock.technicals}
                       isSuggested={stock.isSuggested}
                       isTrending={stock.isTrending}
-                      inPortfolio={portfolioSymbols.includes(stock.symbol)}
+                      inPortfolioUSD={portfolioSymbols.USD.includes(stock.symbol)}
+                      inPortfolioARS={portfolioSymbols.ARS.includes(stock.symbol)}
                       onTrade={loadData}
                       cash={portfolioData?.cash ?? { ARS: 0, USD: 0 }}
                     />

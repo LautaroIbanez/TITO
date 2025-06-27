@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { UserData, PortfolioTransaction, StockPosition, BondPosition } from '@/types';
+import { UserData, PortfolioTransaction, StockPosition, BondPosition, CryptoPosition, CryptoTradeTransaction } from '@/types';
 import { DEFAULT_COMMISSION_PCT } from '@/utils/constants';
 
 async function getUserData(username: string): Promise<UserData | null> {
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { username, assetType, quantity, price, currency }: {
       username: string,
-      assetType: 'Stock' | 'Bond',
+      assetType: 'Stock' | 'Bond' | 'Crypto',
       quantity: number,
       price: number,
       currency: 'ARS' | 'USD'
@@ -105,6 +105,37 @@ export async function POST(request: NextRequest) {
           quantity,
           price,
           currency,
+          commissionPct
+        };
+        user.transactions.push(tx);
+        break;
+      }
+      case 'Crypto': {
+        const { symbol } = body;
+        if (!symbol) return NextResponse.json({ error: 'Symbol is required for crypto sell' }, { status: 400 });
+
+        const posIndex = user.positions.findIndex(p => p.type === 'Crypto' && p.symbol === symbol);
+        if (posIndex === -1) return NextResponse.json({ error: 'Position not found' }, { status: 404 });
+
+        const pos = user.positions[posIndex] as CryptoPosition;
+        if (pos.quantity < quantity) return NextResponse.json({ error: 'Insufficient quantity' }, { status: 400 });
+
+        proceeds = quantity * price * (1 - commissionPct / 100);
+
+        pos.quantity -= quantity;
+        if (pos.quantity < 1e-6) {
+          user.positions.splice(posIndex, 1);
+        }
+
+        const tx: CryptoTradeTransaction = {
+          id: `txn_${Date.now()}`,
+          date: new Date().toISOString(),
+          type: 'Sell',
+          assetType: 'Crypto',
+          symbol,
+          quantity,
+          price,
+          currency: 'USD',
           commissionPct
         };
         user.transactions.push(tx);

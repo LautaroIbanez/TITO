@@ -18,7 +18,7 @@ import TechnicalDisplay from './TechnicalDisplay';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import { RatioRow, StockBadges, formatDate } from './StockMetrics';
 import { formatCurrency } from '@/utils/goalCalculator';
-import { StockPosition } from '@/types';
+import { StockPosition, AssetType } from '@/types';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
@@ -68,7 +68,7 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
     setTradeModalOpen(true);
   };
 
-  const handleTradeSubmit = async (quantity: number, assetType: 'Stock' | 'Bond' | 'FixedTermDeposit', identifier: string, currency: 'ARS' | 'USD', commissionPct?: number, purchaseFeePct?: number) => {
+  const handleTradeSubmit: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier, currency, commissionPct, purchaseFeePct) => {
     const session = localStorage.getItem('session');
     if (!session) throw new Error("Session not found");
     const username = JSON.parse(session).username;
@@ -84,6 +84,7 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
         quantity, 
         price: currentPrice,
         currency,
+        market: position.market,
         commissionPct,
         purchaseFeePct
       }),
@@ -133,7 +134,7 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
         onSubmit={handleTradeSubmit}
         tradeType={tradeType}
         assetName={symbol}
-        assetType="Stock"
+        assetType={position.type}
         identifier={symbol}
         price={currentPrice}
         cash={cash}

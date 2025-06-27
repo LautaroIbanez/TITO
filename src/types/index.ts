@@ -26,6 +26,8 @@ export interface InvestmentGoal {
 }
 
 // -- Portfolio Positions --
+export type AssetType = 'Stock' | 'Bond' | 'FixedTermDeposit' | 'Caucion' | 'Crypto';
+
 export interface StockPosition {
   type: 'Stock';
   symbol: string;
@@ -66,14 +68,22 @@ export interface CaucionPosition {
   term: number; // Term in days
 }
 
-export type PortfolioPosition = StockPosition | BondPosition | FixedTermDepositPosition | CaucionPosition;
+export interface CryptoPosition {
+  type: 'Crypto';
+  symbol: string;
+  quantity: number;
+  averagePrice: number;
+  currency: 'USD';
+}
+
+export type PortfolioPosition = StockPosition | BondPosition | FixedTermDepositPosition | CaucionPosition | CryptoPosition;
 
 // -- Portfolio Transactions --
 export interface StockTradeTransaction {
   id: string;
   date: string; // ISO string
   type: 'Buy' | 'Sell';
-  assetType: 'Stock';
+  assetType: AssetType;
   symbol:string;
   quantity: number;
   price: number;
@@ -87,7 +97,7 @@ export interface BondTradeTransaction {
   id: string;
   date: string; // ISO string
   type: 'Buy' | 'Sell';
-  assetType: 'Bond';
+  assetType: AssetType;
   ticker: string;
   quantity: number;
   price: number;
@@ -116,7 +126,7 @@ export interface FixedTermDepositCreationTransaction {
   id: string;
   date: string; // ISO string
   type: 'Create';
-  assetType: 'FixedTermDeposit';
+  assetType: AssetType;
   provider: string;
   amount: number;
   annualRate: number;
@@ -129,7 +139,7 @@ export interface CaucionCreationTransaction {
   id: string;
   date: string; // ISO string
   type: 'Create';
-  assetType: 'Caucion';
+  assetType: AssetType;
   provider: string;
   amount: number;
   annualRate: number;
@@ -138,11 +148,24 @@ export interface CaucionCreationTransaction {
   currency: 'ARS' | 'USD';
 }
 
-export type PortfolioTransaction = StockTradeTransaction | BondTradeTransaction | DepositTransaction | FixedTermDepositCreationTransaction | CaucionCreationTransaction | WithdrawalTransaction;
+export interface CryptoTradeTransaction {
+  id: string;
+  date: string; // ISO string
+  type: 'Buy' | 'Sell';
+  assetType: AssetType;
+  symbol: string;
+  quantity: number;
+  price: number;
+  commissionPct?: number; // Commission percentage (optional)
+  purchaseFeePct?: number; // Purchase fee percentage (optional)
+  currency: 'USD';
+}
+
+export type PortfolioTransaction = StockTradeTransaction | BondTradeTransaction | DepositTransaction | FixedTermDepositCreationTransaction | CaucionCreationTransaction | WithdrawalTransaction | CryptoTradeTransaction;
 
 // -- Investment Strategy --
 export type StrategyAction = 'buy' | 'sell' | 'hold' | 'rotate' | 'increase' | 'decrease';
-export type AssetClass = 'stocks' | 'bonds' | 'deposits' | 'cash';
+export type AssetClass = 'stocks' | 'bonds' | 'deposits' | 'cash' | 'crypto';
 
 export interface StrategyRecommendation {
   id: string;

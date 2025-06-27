@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PortfolioPosition, StockPosition, BondPosition, FixedTermDepositPosition, CaucionPosition } from '@/types';
+import { PortfolioPosition, StockPosition, BondPosition, FixedTermDepositPosition, CaucionPosition, CryptoPosition } from '@/types';
 import { PriceData, Fundamentals, Technicals } from '@/types/finance';
 import TradeModal, { TradeType } from './TradeModal';
 import type { TradeModalProps } from './TradeModal';
@@ -35,16 +35,22 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
     const username = JSON.parse(session).username;
 
     let currentPrice = 0;
+    let market = undefined;
     if (assetType === 'Stock') {
       currentPrice = getCurrentPrice(prices[identifier]);
+      if (modalState.asset?.type === 'Stock') {
+        market = modalState.asset.market;
+      }
     } else if (assetType === 'Bond' && modalState.asset?.type === 'Bond') {
       currentPrice = modalState.asset.averagePrice;
+    } else if (assetType === 'Crypto') {
+      currentPrice = getCurrentPrice(prices[identifier]);
     }
     
     const res = await fetch('/api/portfolio/sell', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, assetType, identifier, quantity, price: currentPrice, currency }),
+      body: JSON.stringify({ username, assetType, identifier, quantity, price: currentPrice, currency, market }),
     });
 
     if (!res.ok) {
@@ -57,7 +63,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
   };
 
   const handleRemove = async (asset: PortfolioPosition) => {
-    const assetName = asset.type === 'Stock' ? asset.symbol : asset.type === 'Bond' ? asset.ticker : asset.id;
+    const assetName = asset.type === 'Stock' ? asset.symbol : asset.type === 'Bond' ? asset.ticker : asset.type === 'Crypto' ? asset.symbol : asset.id;
     if (!confirm(`¿Estás seguro que quieres eliminar la posición ${assetName}?`)) return;
     
     const session = localStorage.getItem('session');
@@ -81,7 +87,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
     }
   };
   
-  const openSellModal = (asset: StockPosition | BondPosition) => {
+  const openSellModal = (asset: StockPosition | BondPosition | CryptoPosition) => {
     setModalState({ isOpen: true, tradeType: 'Sell', asset });
   };
 
@@ -171,6 +177,32 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
       </tr>
     );
   };
+
+  const renderCryptoRow = (pos: CryptoPosition) => {
+    const currPrice = getCurrentPrice(prices[pos.symbol]);
+    const value = pos.quantity * currPrice;
+    const gain = currPrice && pos.averagePrice ? ((currPrice - pos.averagePrice) / pos.averagePrice) * 100 : 0;
+    const f = fundamentals[pos.symbol];
+    const t = technicals[pos.symbol];
+
+    return (
+      <tr key={`${pos.symbol}-${pos.currency}`} className="even:bg-gray-50">
+        <td className="px-4 py-2 font-mono text-gray-900">{pos.symbol}</td>
+        <td className="px-4 py-2 text-gray-700">Cripto</td>
+        <td className="px-4 py-2 text-gray-700">{pos.currency}</td>
+        <td className="px-4 py-2 text-right text-gray-900">{pos.quantity}</td>
+        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(pos.averagePrice, pos.currency)}</td>
+        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(currPrice, pos.currency)}</td>
+        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(value, pos.currency)}</td>
+        <td className={`px-4 py-2 text-right font-semibold ${gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>{gain.toFixed(2)}%</td>
+        <td className="px-4 py-2 text-right text-gray-900">{f?.peRatio?.toFixed(2) ?? '-'}</td>
+        <td className="px-4 py-2 text-right text-gray-900">{t?.rsi?.toFixed(2) ?? '-'}</td>
+        <td className="px-4 py-2 text-center">
+          <button onClick={() => openSellModal(pos)} className="text-red-600 hover:text-red-800 text-xs font-semibold">Vender</button>
+        </td>
+      </tr>
+    );
+  };
   
   const getModalInfo = () => {
     if (!modalState.asset) return { assetName: '', identifier: '', price: 0, maxShares: 0, assetType: 'Stock' as const, currency: 'ARS' as const };
@@ -180,6 +212,9 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
     }
     if (asset.type === 'Bond') {
       return { assetName: asset.ticker, identifier: asset.ticker, price: asset.averagePrice, maxShares: asset.quantity, assetType: asset.type, currency: asset.currency };
+    }
+    if (asset.type === 'Crypto') {
+      return { assetName: asset.symbol, identifier: asset.symbol, price: getCurrentPrice(prices[asset.symbol]), maxShares: asset.quantity, assetType: asset.type, currency: asset.currency };
     }
     return { assetName: '', identifier: '', price: 0, maxShares: 0, assetType: 'Stock' as const, currency: 'ARS' as const };
   };
@@ -226,6 +261,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
               if (pos.type === 'Bond') return renderBondRow(pos);
               if (pos.type === 'FixedTermDeposit') return renderDepositRow(pos);
               if (pos.type === 'Caucion') return renderCaucionRow(pos);
+              if (pos.type === 'Crypto') return renderCryptoRow(pos);
               return null;
             })}
           </tbody>

@@ -48,7 +48,7 @@ export default function TradeModal({
   const availableCash = cash[currency] || 0;
 
   const baseCost = value * price;
-  const totalCost = tradeType === 'Buy' && (assetType === 'Stock' || assetType === 'Bond')
+  const totalCost = tradeType === 'Buy' && (assetType === 'Stock' || assetType === 'Bond' || assetType === 'Crypto')
     ? baseCost * (1 + commissionPct / 100 + purchaseFeePct / 100)
     : baseCost;
 
@@ -85,13 +85,13 @@ export default function TradeModal({
 
     setLoading(true);
     try {
-      const commission = tradeType === 'Buy' && (assetType === 'Stock' || assetType === 'Bond') ? commissionPct : undefined;
-      const purchaseFee = tradeType === 'Buy' && (assetType === 'Stock' || assetType === 'Bond') ? purchaseFeePct : undefined;
+      const commission = tradeType === 'Buy' && (assetType === 'Stock' || assetType === 'Bond' || assetType === 'Crypto') ? commissionPct : undefined;
+      const purchaseFee = tradeType === 'Buy' && (assetType === 'Stock' || assetType === 'Bond' || assetType === 'Crypto') ? purchaseFeePct : undefined;
       await onSubmit(value, assetType, identifier, currency, commission, purchaseFee);
       await refreshPortfolio();
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Ocurrió un error.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Ocurrió un error.');
     } finally {
       setLoading(false);
     }
@@ -101,7 +101,7 @@ export default function TradeModal({
 
   const labelText = isAmountBased ? "Monto a Invertir" : "Cantidad";
   const inputType = isAmountBased ? "number" : "number";
-  const showFees = tradeType === 'Buy' && (assetType === 'Stock' || assetType === 'Bond');
+  const showFees = tradeType === 'Buy' && (assetType === 'Stock' || assetType === 'Bond' || assetType === 'Crypto');
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">

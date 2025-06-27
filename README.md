@@ -116,6 +116,59 @@ La sección "Scoop" analiza acciones y te sugiere las que mejor se alinean con t
 - **Metas**: En `/dashboard/goals`, puedes crear metas de inversión (ej. "Comprar un auto") y visualizar cómo tu portafolio actual te ayuda a progresar hacia ellas.
 - **Impuestos**: En `/dashboard/taxes`, puedes simular la venta de tus posiciones para estimar el impuesto a las ganancias de capital que tendrías que pagar.
 
+## Manejo de Posiciones por Mercado y Moneda
+
+TITO soporta operaciones en múltiples mercados y monedas, permitiendo una gestión diferenciada de posiciones según el mercado de cotización.
+
+### Mercados Soportados
+
+- **NASDAQ**: Mercado estadounidense para acciones en USD
+- **BCBA**: Mercado argentino (Buenos Aires) para acciones en ARS (símbolos con sufijo `.BA`)
+
+### Identificación Única de Posiciones
+
+Cada posición se identifica únicamente por la combinación de:
+- **Símbolo** (`symbol`): Código de la acción (ej. `AAPL`, `AAPL.BA`)
+- **Moneda** (`currency`): Moneda de cotización (`USD` o `ARS`)
+- **Mercado** (`market`): Mercado donde cotiza (`NASDAQ` o `BCBA`)
+
+### Ejemplos de Posiciones Diferenciadas
+
+```json
+// Posición en NASDAQ (USD)
+{
+  "type": "Stock",
+  "symbol": "AAPL",
+  "quantity": 10,
+  "averagePrice": 150,
+  "currency": "USD",
+  "market": "NASDAQ"
+}
+
+// Posición en BCBA (ARS) - misma empresa, mercado diferente
+{
+  "type": "Stock", 
+  "symbol": "AAPL.BA",
+  "quantity": 100,
+  "averagePrice": 150000,
+  "currency": "ARS",
+  "market": "BCBA"
+}
+```
+
+### Operaciones de Compra y Venta
+
+- **Compra**: Al comprar una acción, el sistema verifica si ya existe una posición con el mismo `symbol`, `currency` y `market`. Si existe, actualiza la cantidad y precio promedio. Si no existe, crea una nueva posición.
+- **Venta**: Al vender, el sistema busca la posición específica usando los tres campos para asegurar que se venda de la posición correcta.
+- **Scoop**: En la sección de recomendaciones, se muestran indicadores visuales si ya tienes la acción en USD o ARS, y el botón de compra se deshabilita según el mercado seleccionado.
+
+### Beneficios
+
+- **Diversificación**: Puedes tener la misma empresa en diferentes mercados
+- **Gestión de Riesgo**: Manejo independiente de posiciones por moneda
+- **Análisis Granular**: Seguimiento separado del rendimiento por mercado
+- **Flexibilidad**: Operaciones en la moneda y mercado que prefieras
+
 ## Ejecutar Tests
 
 El proyecto incluye tests unitarios para verificar la lógica de negocio crítica, como el manejo de depósitos, compras y ventas.
@@ -271,3 +324,28 @@ npm run update-inflation
 This will update `data/inflation.json` with the latest monthly and annual inflation rates.
 
 > Note: You may need to set a FRED API key in the environment as `FRED_API_KEY` for more reliable U.S. data fetching, or the script will use a public CSV fallback.
+
+## Crypto Data Update Script
+
+To fetch and update recent price data for major cryptocurrencies (BTC, ETH, etc.) from Binance and store it under `data/crypto/`, run:
+
+```
+npm run update-crypto
+```
+
+Or directly:
+
+```
+npx ts-node scripts/update-crypto.ts
+```
+
+This will download daily price history for the following symbols:
+- BTCUSDT
+- ETHUSDT
+- BNBUSDT
+- SOLUSDT
+- ADAUSDT
+- MATICUSDT
+- DOGEUSDT
+
+The data is saved as JSON files in `data/crypto/` (e.g., `data/crypto/BTCUSDT.json`).

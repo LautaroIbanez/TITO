@@ -26,7 +26,8 @@ interface ScoopCardProps {
   technicals: Technicals | null;
   isSuggested: boolean;
   isTrending: boolean;
-  inPortfolio: boolean;
+  inPortfolioUSD: boolean;
+  inPortfolioARS: boolean;
   onTrade: () => void;
   cash: { ARS: number; USD: number };
 }
@@ -55,7 +56,8 @@ export default function ScoopCard({
   technicals,
   isSuggested,
   isTrending,
-  inPortfolio,
+  inPortfolioUSD,
+  inPortfolioARS,
   onTrade,
   cash,
 }: ScoopCardProps) {
@@ -197,6 +199,7 @@ export default function ScoopCard({
   };
 
   const currency = market === 'BCBA' ? 'ARS' : 'USD';
+  const inPortfolio = market === 'BCBA' ? inPortfolioARS : inPortfolioUSD;
 
   return (
     <>
@@ -219,6 +222,12 @@ export default function ScoopCard({
           </h2>
           <span className="text-sm font-mono text-gray-900">{stockData?.symbol}</span>
           <SignalBadge signal={signal} />
+          {inPortfolioUSD && (
+            <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold">En cartera USD</span>
+          )}
+          {inPortfolioARS && (
+            <span className="ml-2 px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs font-semibold">En cartera ARS</span>
+          )}
           {isSuggested && (
             <span className="ml-auto px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-semibold">
               Sugerido

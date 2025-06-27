@@ -12,14 +12,6 @@
       "market": "BCBA"
     },
     {
-      "type": "Stock",
-      "symbol": "TSLA.BA",
-      "quantity": 5,
-      "averagePrice": 24850,
-      "currency": "ARS",
-      "market": "BCBA"
-    },
-    {
       "type": "FixedTermDeposit",
       "id": "ftd-1750707045991",
       "provider": "Banco Galicia",
@@ -46,6 +38,14 @@
       "maturityDate": "2025-07-04T11:56:47.816Z",
       "currency": "ARS",
       "term": 7
+    },
+    {
+      "type": "Stock",
+      "symbol": "MSFT",
+      "quantity": 2,
+      "averagePrice": 497.45001220703125,
+      "currency": "USD",
+      "market": "NASDAQ"
     }
   ],
   "transactions": [
@@ -110,6 +110,31 @@
       "termDays": 7,
       "maturityDate": "2025-07-04T11:56:47.816Z",
       "currency": "ARS"
+    },
+    {
+      "id": "1751029310563",
+      "date": "2025-06-27T13:01:50.563Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "MSFT",
+      "quantity": 2,
+      "price": 497.45001220703125,
+      "currency": "USD",
+      "market": "NASDAQ",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "txn_1751029371826",
+      "date": "2025-06-27T13:02:51.826Z",
+      "type": "Sell",
+      "assetType": "Stock",
+      "symbol": "TSLA.BA",
+      "quantity": 5,
+      "price": 26250,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1
     }
   ],
   "goals": [
@@ -133,8 +158,8 @@
     }
   ],
   "cash": {
-    "ARS": 711353.0625,
-    "USD": 4833.2675
+    "ARS": 841290.5625,
+    "USD": 3827.9210253295896
   },
   "profile": {
     "instrumentsUsed": [
@@ -153,8 +178,8 @@
     "initialBalanceUSD": 5000
   },
   "investmentStrategy": {
-    "id": "strategy-79b4f7cf-0efa-4eb0-9792-16eb8cd6ca81",
-    "createdAt": "2025-06-27T12:32:19.627Z",
+    "id": "strategy-7b7f9202-a20b-4364-9872-8130d3e52e14",
+    "createdAt": "2025-06-27T18:44:32.011Z",
     "targetAllocation": {
       "stocks": 60,
       "bonds": 30,
@@ -163,15 +188,15 @@
     },
     "recommendations": [
       {
-        "id": "alloc-587c6a07-7fe4-4145-8fd9-81f507d06b63",
+        "id": "alloc-f63f5601-5e52-48c7-8182-ea4fa3510a0d",
         "action": "increase",
         "assetClass": "stocks",
-        "reason": "Tu portafolio tiene 21.6% en acciones, pero tu estrategia objetivo es 60%",
+        "reason": "Tu portafolio tiene 9.2% en acciones, pero tu estrategia objetivo es 60%",
         "priority": "high",
         "expectedImpact": "positive"
       },
       {
-        "id": "alloc-fd0783f1-966a-4832-9266-310885d42403",
+        "id": "alloc-c97f3cb9-8214-47bb-a3ac-1be88d2ea372",
         "action": "increase",
         "assetClass": "bonds",
         "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 30%",
@@ -179,9 +204,9 @@
         "expectedImpact": "positive"
       },
       {
-        "id": "cash-invest-f0672dd1-9ff6-42da-9403-e70e55c92329",
+        "id": "cash-invest-8037145a-4533-49f8-8fb0-a8d07837f15c",
         "action": "buy",
-        "reason": "Tienes un 71.4% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
+        "reason": "Tienes un 83.8% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
         "priority": "high",
         "expectedImpact": "positive"
       }

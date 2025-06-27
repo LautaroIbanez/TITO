@@ -38,11 +38,12 @@ export function generateInvestmentStrategy(input: StrategyInput): InvestmentStra
   };
 }
 
-function calculateTargetAllocation(profile: InvestorProfile, goals: InvestmentGoal[]): InvestmentStrategy['targetAllocation'] {
+function calculateTargetAllocation(profile: InvestorProfile, goals: InvestmentGoal[]): InvestmentStrategy['targetAllocation'] & { crypto?: number } {
   let stocks = 60;
   let bonds = 30;
   let deposits = 5;
   let cash = 5;
+  let crypto = 0;
   
   // Adjust based on risk appetite
   switch (profile.riskAppetite) {
@@ -51,16 +52,18 @@ function calculateTargetAllocation(profile: InvestorProfile, goals: InvestmentGo
       bonds = 45;
       deposits = 10;
       cash = 5;
+      crypto = 0;
       break;
     case 'Agresivo':
-      stocks = 80;
+      stocks = 75;
       bonds = 15;
       deposits = 3;
       cash = 2;
+      crypto = 5; // Aggressive: allow up to 5% in crypto
       break;
     case 'Balanceado':
     default:
-      // Default values already set
+      crypto = 1; // Balanced: allow up to 1% in crypto
       break;
   }
   
@@ -107,62 +110,63 @@ function calculateTargetAllocation(profile: InvestorProfile, goals: InvestmentGo
     stocks = Math.max(stocks, 70);
   }
 
-  // Normalize to exactly 100%
+  // Remove crypto from normalization, normalize the rest to 100-crypto
   let total = stocks + bonds + deposits + cash;
-  
-  if (total !== 100) {
-    const diff = 100 - total;
-    
-    // If total is less than 100, add to cash
-    if (diff > 0) {
-      cash += diff;
-    } else {
-      // If total is more than 100, reduce cash proportionally
-      // but ensure cash doesn't go below 1%
-      const excess = Math.abs(diff);
-      if (cash > excess + 1) {
-        cash -= excess;
+  const nonCryptoTotal = total;
+  if (crypto > 0) {
+    const scale = (100 - crypto) / nonCryptoTotal;
+    stocks *= scale;
+    bonds *= scale;
+    deposits *= scale;
+    cash *= scale;
+    total = stocks + bonds + deposits + cash + crypto;
+  } else {
+    // If no crypto, normalize to 100 as before
+    if (total !== 100) {
+      const diff = 100 - total;
+      if (diff > 0) {
+        cash += diff;
       } else {
-        // If cash reduction isn't enough, distribute excess proportionally
-        const remainingExcess = excess - (cash - 1);
-        cash = 1;
-        
-        // Distribute remaining excess proportionally among other assets
-        const otherAssets = stocks + bonds + deposits;
-        if (otherAssets > 0) {
-          const stocksRatio = stocks / otherAssets;
-          const bondsRatio = bonds / otherAssets;
-          const depositsRatio = deposits / otherAssets;
-          
-          stocks -= remainingExcess * stocksRatio;
-          bonds -= remainingExcess * bondsRatio;
-          deposits -= remainingExcess * depositsRatio;
+        const excess = Math.abs(diff);
+        if (cash > excess + 1) {
+          cash -= excess;
+        } else {
+          const remainingExcess = excess - (cash - 1);
+          cash = 1;
+          const otherAssets = stocks + bonds + deposits;
+          if (otherAssets > 0) {
+            const stocksRatio = stocks / otherAssets;
+            const bondsRatio = bonds / otherAssets;
+            const depositsRatio = deposits / otherAssets;
+            stocks -= remainingExcess * stocksRatio;
+            bonds -= remainingExcess * bondsRatio;
+            deposits -= remainingExcess * depositsRatio;
+          }
         }
       }
     }
   }
   
-  // Final verification and rounding to ensure exact 100%
+  // Final verification and rounding
   stocks = Math.round(stocks * 100) / 100;
   bonds = Math.round(bonds * 100) / 100;
   deposits = Math.round(deposits * 100) / 100;
   cash = Math.round(cash * 100) / 100;
+  crypto = Math.round(crypto * 100) / 100;
   
   // Ensure cash is at least 1%
   if (cash < 1) {
     cash = 1;
-    // Reduce stocks slightly to compensate
     stocks = Math.max(0, stocks - 1);
   }
   
   // Final total should be exactly 100
-  const finalTotal = stocks + bonds + deposits + cash;
+  const finalTotal = stocks + bonds + deposits + cash + crypto;
   if (Math.abs(finalTotal - 100) > 0.01) {
-    // Last resort: adjust cash to make total exactly 100
     cash = Math.max(0, cash + (100 - finalTotal));
   }
   
-  return { stocks, bonds, deposits, cash };
+  return { stocks, bonds, deposits, cash, crypto };
 }
 
 function generateRecommendations(
@@ -170,10 +174,10 @@ function generateRecommendations(
   goals: InvestmentGoal[], 
   positions: PortfolioPosition[], 
   cash: { ARS: number; USD: number },
-  targetAllocation: InvestmentStrategy['targetAllocation']
+  targetAllocation: ReturnType<typeof calculateTargetAllocation>
 ): StrategyRecommendation[] {
   const recommendations: StrategyRecommendation[] = [];
-  const totalCash = cash.ARS + cash.USD; // Assuming 1:1 exchange rate for now
+  const totalCash = cash.ARS + cash.USD;
   
   // Calculate current allocation
   const totalValue = calculateTotalPortfolioValue(positions, totalCash);
@@ -282,6 +286,29 @@ function generateRecommendations(
     }
   }
   
+  // --- CRYPTO RECOMMENDATIONS ---
+  if (typeof targetAllocation.crypto === 'number') {
+    if ((currentAllocation.crypto ?? 0) < targetAllocation.crypto - 1) {
+      recommendations.push({
+        id: `alloc-${crypto.randomUUID()}`,
+        action: 'increase',
+        assetClass: 'crypto',
+        reason: `Tu portafolio tiene ${(currentAllocation.crypto ?? 0).toFixed(1)}% en cripto, pero tu estrategia objetivo es ${targetAllocation.crypto}% (máximo recomendado por volatilidad).`,
+        priority: 'medium',
+        expectedImpact: 'neutral',
+      });
+    } else if ((currentAllocation.crypto ?? 0) > targetAllocation.crypto + 1) {
+      recommendations.push({
+        id: `alloc-${crypto.randomUUID()}`,
+        action: 'decrease',
+        assetClass: 'crypto',
+        reason: `Tu portafolio tiene ${(currentAllocation.crypto ?? 0).toFixed(1)}% en cripto, superando el máximo recomendado de ${targetAllocation.crypto}%. Considera reducir exposición por volatilidad.`,
+        priority: 'high',
+        expectedImpact: 'negative',
+      });
+    }
+  }
+  
   return recommendations.slice(0, 5); // Limit to top 5 recommendations
 }
 
@@ -290,7 +317,7 @@ function calculateTotalPortfolioValue(positions: PortfolioPosition[], totalCash:
   // This function is simplified and assumes all assets are in a common currency (e.g., USD)
   // A real implementation would need price history and exchange rates.
   for (const pos of positions) {
-    if (pos.type === 'Stock' || pos.type === 'Bond') {
+    if (pos.type === 'Stock' || pos.type === 'Bond' || pos.type === 'Crypto') {
       total += pos.quantity * pos.averagePrice; 
     } else if (pos.type === 'FixedTermDeposit' || pos.type === 'Caucion') {
       total += pos.amount;
@@ -303,22 +330,25 @@ function calculateCurrentAllocation(
   positions: PortfolioPosition[], 
   totalCash: number, 
   totalValue: number
-): { stocks: number; bonds: number; deposits: number; cash: number } {
+): { stocks: number; bonds: number; deposits: number; cash: number; crypto: number } {
   if (totalValue === 0) {
-    return { stocks: 0, bonds: 0, deposits: 0, cash: 100 };
+    return { stocks: 0, bonds: 0, deposits: 0, cash: 100, crypto: 0 };
   }
 
   let stockValue = 0;
   let bondValue = 0;
   let depositValue = 0;
+  let cryptoValue = 0;
 
-  for (const pos of positions) {
+  for (const pos of positions as any[]) {
     if (pos.type === 'Stock') {
       stockValue += pos.quantity * pos.averagePrice;
     } else if (pos.type === 'Bond') {
       bondValue += pos.quantity * pos.averagePrice;
     } else if (pos.type === 'FixedTermDeposit' || pos.type === 'Caucion') {
       depositValue += pos.amount;
+    } else if (pos.type === 'Crypto') {
+      cryptoValue += pos.quantity * pos.averagePrice;
     }
   }
   
@@ -326,7 +356,8 @@ function calculateCurrentAllocation(
     stocks: (stockValue / totalValue) * 100,
     bonds: (bondValue / totalValue) * 100,
     deposits: (depositValue / totalValue) * 100,
-    cash: totalValue > 0 ? (totalCash / totalValue) * 100 : 0
+    cash: totalValue > 0 ? (totalCash / totalValue) * 100 : 0,
+    crypto: (cryptoValue / totalValue) * 100,
   };
 }
 

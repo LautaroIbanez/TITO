@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { UserData, StockPosition } from '@/types';
+import { UserData, StockPosition, CryptoPosition } from '@/types';
 
 async function readJsonSafe(filePath: string) {
   try {
@@ -45,13 +45,24 @@ export async function getPortfolioData(username: string) {
     .filter((pos): pos is StockPosition => pos.type === 'Stock')
     .map((pos) => pos.symbol);
 
-  await Promise.all(
-    stockSymbols.map(async (symbol) => {
+  const cryptoSymbols = user.positions
+    .filter((pos): pos is CryptoPosition => pos.type === 'Crypto')
+    .map((pos) => pos.symbol);
+
+  await Promise.all([
+    // Load stock data
+    ...stockSymbols.map(async (symbol) => {
+      historicalPrices[symbol] = await readJsonSafe(path.join(process.cwd(), 'data', 'stocks', `${symbol}.json`)) || [];
+      fundamentals[symbol] = await readJsonSafe(path.join(process.cwd(), 'data', 'fundamentals', `${symbol}.json`)) || null;
+      technicals[symbol] = await readJsonSafe(path.join(process.cwd(), 'data', 'technicals', `${symbol}.json`)) || null;
+    }),
+    // Load crypto data
+    ...cryptoSymbols.map(async (symbol) => {
       historicalPrices[symbol] = await readJsonSafe(path.join(process.cwd(), 'data', 'stocks', `${symbol}.json`)) || [];
       fundamentals[symbol] = await readJsonSafe(path.join(process.cwd(), 'data', 'fundamentals', `${symbol}.json`)) || null;
       technicals[symbol] = await readJsonSafe(path.join(process.cwd(), 'data', 'technicals', `${symbol}.json`)) || null;
     })
-  );
+  ]);
 
   return {
     positions: user.positions,

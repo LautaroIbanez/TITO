@@ -10,9 +10,11 @@
     "test": "jest",
     "update-data": "ts-node scripts/update-data.ts",
     "update-benchmarks": "ts-node scripts/update-benchmarks.ts",
-    "update-inflation": "ts-node scripts/update-inflation.ts"
+    "update-inflation": "ts-node scripts/update-inflation.ts",
+    "update-crypto": "ts-node scripts/update-crypto.ts"
   },
   "dependencies": {
+    "@binance/connector": "^3.6.1",
     "@types/recharts": "^2.0.1",
     "chart.js": "^4.5.0",
     "dayjs": "^1.11.13",
@@ -26,7 +28,8 @@
     "react-dom": "^19.0.0",
     "recharts": "^2.15.3",
     "technicalindicators": "^3.1.0",
-    "yahoo-finance2": "^2.13.3"
+    "yahoo-finance2": "^2.13.3",
+    "jest": "^30.0.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
