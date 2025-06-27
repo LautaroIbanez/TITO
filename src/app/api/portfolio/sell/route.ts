@@ -48,10 +48,10 @@ export async function POST(request: NextRequest) {
 
     switch (assetType) {
       case 'Stock': {
-        const { symbol } = body;
+        const { symbol, market } = body;
         if (!symbol) return NextResponse.json({ error: 'Symbol is required for stock sell' }, { status: 400 });
 
-        const posIndex = user.positions.findIndex(p => p.type === 'Stock' && p.symbol === symbol && p.currency === currency);
+        const posIndex = user.positions.findIndex(p => p.type === 'Stock' && p.symbol === symbol && p.currency === currency && p.market === market);
         if (posIndex === -1) return NextResponse.json({ error: 'Position not found' }, { status: 404 });
         
         const pos = user.positions[posIndex] as StockPosition;

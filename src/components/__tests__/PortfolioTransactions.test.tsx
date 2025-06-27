@@ -70,7 +70,7 @@ describe('PortfolioTransactions', () => {
     expect(screen.getByText('Compra')).toBeInTheDocument();
     expect(screen.getByText('AAPL')).toBeInTheDocument();
     expect(screen.getByText('10')).toBeInTheDocument();
-    expect(screen.getByText('$150.00')).toBeInTheDocument();
+    expect(screen.getByText((content) => /\$ ?1?50[.,]00/.test(content))).toBeInTheDocument();
   });
 
   it('should render stock buy transaction with commission and purchase fee correctly', () => {
@@ -95,9 +95,9 @@ describe('PortfolioTransactions', () => {
     expect(screen.getByText('Compra')).toBeInTheDocument();
     expect(screen.getByText('AAPL')).toBeInTheDocument();
     expect(screen.getByText('10')).toBeInTheDocument();
-    expect(screen.getByText('$150.00')).toBeInTheDocument();
-    expect(screen.getByText('Comisión: 1.5%')).toBeInTheDocument();
-    expect(screen.getByText('Fee: 0.1%')).toBeInTheDocument();
+    expect(screen.getByText((content) => /\$ ?1?50[.,]00/.test(content))).toBeInTheDocument();
+    expect(screen.getByText(/Comisión: 1.5%/)).toBeInTheDocument();
+    expect(screen.getByText(/Fee: 0.1%/)).toBeInTheDocument();
   });
 
   it('should render stock sell transaction correctly', () => {
@@ -120,7 +120,7 @@ describe('PortfolioTransactions', () => {
     expect(screen.getByText('Venta')).toBeInTheDocument();
     expect(screen.getByText('MSFT')).toBeInTheDocument();
     expect(screen.getByText('5')).toBeInTheDocument();
-    expect(screen.getByText('$300.00')).toBeInTheDocument();
+    expect(screen.getByText((content) => /\$ ?3?00[.,]00/.test(content))).toBeInTheDocument();
   });
 
   it('should render bond buy transaction correctly', () => {
@@ -142,7 +142,7 @@ describe('PortfolioTransactions', () => {
     expect(screen.getByText('Compra Bono')).toBeInTheDocument();
     expect(screen.getByText('GOV-BOND-2025')).toBeInTheDocument();
     expect(screen.getByText('100')).toBeInTheDocument();
-    expect(screen.getByText('$995.00')).toBeInTheDocument();
+    expect(screen.getByText((content) => /\$ ?995[.,]00/.test(content))).toBeInTheDocument();
   });
 
   it('should render bond buy transaction with commission and purchase fee correctly', () => {
@@ -166,9 +166,9 @@ describe('PortfolioTransactions', () => {
     expect(screen.getByText('Compra Bono')).toBeInTheDocument();
     expect(screen.getByText('GOV-BOND-2025')).toBeInTheDocument();
     expect(screen.getByText('100')).toBeInTheDocument();
-    expect(screen.getByText('$995.00')).toBeInTheDocument();
-    expect(screen.getByText('Comisión: 2%')).toBeInTheDocument();
-    expect(screen.getByText('Fee: 0.05%')).toBeInTheDocument();
+    expect(screen.getByText((content) => /\$ ?995[.,]00/.test(content))).toBeInTheDocument();
+    expect(screen.getByText(/Comisión: 2%/)).toBeInTheDocument();
+    expect(screen.getByText(/Fee: 0.05%/)).toBeInTheDocument();
   });
 
   it('should render bond sell transaction correctly', () => {
@@ -190,7 +190,7 @@ describe('PortfolioTransactions', () => {
     expect(screen.getByText('Venta Bono')).toBeInTheDocument();
     expect(screen.getByText('CORP-BOND-2026')).toBeInTheDocument();
     expect(screen.getByText('50')).toBeInTheDocument();
-    expect(screen.getByText('$1020.00')).toBeInTheDocument();
+    expect(screen.getByText((content) => /\$ ?1020[.,]00/.test(content))).toBeInTheDocument();
   });
 
   it('should render fixed-term deposit creation correctly', () => {

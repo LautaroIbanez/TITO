@@ -58,14 +58,20 @@ export async function POST(request: NextRequest) {
         totalCost = baseCost * (1 + commissionPct / 100 + purchaseFeePct / 100);
         if (user.cash[validatedCurrency] < totalCost) return NextResponse.json({ error: 'Insufficient funds' }, { status: 400 });
 
-        let pos = user.positions.find((p): p is StockPosition => p.type === 'Stock' && p.symbol === symbol);
+        // Find an existing position for the same stock, currency, and market
+        let pos = user.positions.find(
+          (p): p is StockPosition =>
+            p.type === 'Stock' &&
+            p.symbol === symbol &&
+            p.currency === validatedCurrency &&
+            p.market === market
+        );
         
         if (pos) {
-          // If the position exists, update it. This assumes stocks from different markets are consolidated.
+          // If the position exists, update it. This now differentiates by currency and market.
           const newTotalValue = pos.averagePrice * pos.quantity + price * quantity;
           pos.quantity += quantity;
           pos.averagePrice = newTotalValue / pos.quantity;
-          // Note: we don't update the market or currency of the existing position.
         } else {
           const newPosition: StockPosition = { type: 'Stock', symbol, quantity, averagePrice: price, currency: validatedCurrency, market };
           user.positions.push(newPosition);
