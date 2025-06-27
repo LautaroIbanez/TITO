@@ -10,6 +10,7 @@ const navItems = [
   { label: "📊 Portfolio", href: "/dashboard/portfolio" },
   { label: "🕵️ Acciones", href: "/dashboard/scoop" },
   { label: "📜 Bonos", href: "/dashboard/bonds" },
+  { label: "💎 Criptomonedas", href: "/dashboard/crypto" },
   { label: "⏳ Plazos Fijos", href: "/dashboard/deposits" },
   { label: "🏦 Cauciones", href: "/dashboard/cauciones" },
   { label: "🧾 Impuestos", href: "/dashboard/taxes" },

@@ -19,6 +19,7 @@ const investmentLinks: Record<string, string> = {
   bonds: '/dashboard/bonds',
   deposits: '/dashboard/deposits',
   cash: '/dashboard/portfolio',
+  crypto: '/dashboard/crypto',
 };
 
 const AllocationDescription: Record<string, { title: string, description: string }> = {
@@ -37,7 +38,11 @@ const AllocationDescription: Record<string, { title: string, description: string
   cash: {
     title: 'Efectivo',
     description: 'Mantiene una pequeña porción en efectivo para oportunidades de inversión emergentes, emergencias o para aprovechar caídas del mercado.'
-  }
+  },
+  crypto: {
+    title: 'Criptomonedas',
+    description: 'Incluye una pequeña porción en criptoactivos como Bitcoin o Ethereum para diversificar y aprovechar el potencial de crecimiento, entendiendo su alta volatilidad y riesgo.'
+  },
 };
 
 export default function StartPage() {
@@ -65,6 +70,11 @@ export default function StartPage() {
         label: 'Efectivo',
         data: [strategy?.targetAllocation.cash || 0],
         backgroundColor: 'rgba(34, 197, 94, 0.8)',
+      },
+      {
+        label: 'Cripto',
+        data: [strategy?.targetAllocation.crypto || 0],
+        backgroundColor: 'rgba(234,179,8,0.8)',
       },
     ],
   };
@@ -104,17 +114,19 @@ export default function StartPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {Object.entries(strategy.targetAllocation).map(([key, value]) => (
-          <div key={key} className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-xl font-bold text-gray-900">{AllocationDescription[key].title}</h3>
-            <p className="text-3xl font-bold text-blue-600 my-2">{value}%</p>
-            <p className="text-sm text-gray-600">{AllocationDescription[key].description}</p>
-            <Link
-              href={investmentLinks[key]}
-              className="inline-block mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-            >
-              Invertir ahora
-            </Link>
-          </div>
+          AllocationDescription[key] && investmentLinks[key] ? (
+            <div key={key} className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-xl font-bold text-gray-900">{AllocationDescription[key].title}</h3>
+              <p className="text-3xl font-bold text-blue-600 my-2">{value}%</p>
+              <p className="text-sm text-gray-600">{AllocationDescription[key].description}</p>
+              <Link
+                href={investmentLinks[key]}
+                className="inline-block mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              >
+                Invertir ahora
+              </Link>
+            </div>
+          ) : null
         ))}
       </div>
 
