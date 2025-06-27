@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { getCryptoPrices } from '../src/utils/cryptoData';
+import { getCryptoPrices, getCryptoTechnicals } from '../src/utils/cryptoData';
 
 const CRYPTOS = [
   'BTCUSDT',
@@ -21,6 +21,15 @@ async function updateAllCrypto() {
       await fs.mkdir(path.dirname(filePath), { recursive: true });
       await fs.writeFile(filePath, JSON.stringify(prices, null, 2));
       console.log(`Saved ${prices.length} days for ${symbol} to ${filePath}`);
+
+      // Save technicals
+      const technicals = await getCryptoTechnicals(symbol, '1d');
+      if (technicals) {
+        const techPath = path.join(process.cwd(), 'data', 'crypto-technicals', `${symbol}.json`);
+        await fs.mkdir(path.dirname(techPath), { recursive: true });
+        await fs.writeFile(techPath, JSON.stringify(technicals, null, 2));
+        console.log(`Saved technicals for ${symbol} to ${techPath}`);
+      }
     } catch (err) {
       console.error(`Error updating ${symbol}:`, err);
     }

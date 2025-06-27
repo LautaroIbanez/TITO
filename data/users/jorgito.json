@@ -178,33 +178,39 @@
     "initialBalanceUSD": 5000
   },
   "investmentStrategy": {
-    "id": "strategy-7b7f9202-a20b-4364-9872-8130d3e52e14",
-    "createdAt": "2025-06-27T18:44:32.011Z",
+    "id": "strategy-906c3c0c-5db6-4249-a2f3-4e868ead82dc",
+    "createdAt": "2025-06-27T22:04:40.829Z",
     "targetAllocation": {
-      "stocks": 60,
-      "bonds": 30,
-      "deposits": 5,
-      "cash": 5
+      "stocks": 59.4,
+      "bonds": 29.7,
+      "deposits": 4.95,
+      "cash": 4.95,
+      "crypto": 1
     },
     "recommendations": [
       {
-        "id": "alloc-f63f5601-5e52-48c7-8182-ea4fa3510a0d",
+        "id": "alloc-b12b1a46-610a-4b31-86bd-0e6a32c95f80",
         "action": "increase",
         "assetClass": "stocks",
-        "reason": "Tu portafolio tiene 9.2% en acciones, pero tu estrategia objetivo es 60%",
+        "reason": "Tu portafolio tiene 9.2% en acciones, pero tu estrategia objetivo es 59.4%",
         "priority": "high",
         "expectedImpact": "positive"
       },
       {
-        "id": "alloc-c97f3cb9-8214-47bb-a3ac-1be88d2ea372",
+        "id": "alloc-eb50b5f4-a00b-4480-89a2-fd4a986872f1",
         "action": "increase",
         "assetClass": "bonds",
-        "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 30%",
+        "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 29.7%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
         "priority": "high",
-        "expectedImpact": "positive"
+        "expectedImpact": "positive",
+        "suggestedAssets": [
+          "GOV-BOND-2025",
+          "CORP-BOND-2026",
+          "MUNI-BOND-2027"
+        ]
       },
       {
-        "id": "cash-invest-8037145a-4533-49f8-8fb0-a8d07837f15c",
+        "id": "cash-invest-a3f600a6-055a-4916-95a5-8f2c2a14d554",
         "action": "buy",
         "reason": "Tienes un 83.8% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
         "priority": "high",

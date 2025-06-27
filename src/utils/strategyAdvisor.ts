@@ -147,25 +147,55 @@ function calculateTargetAllocation(profile: InvestorProfile, goals: InvestmentGo
     }
   }
   
-  // Final verification and rounding
-  stocks = Math.round(stocks * 100) / 100;
-  bonds = Math.round(bonds * 100) / 100;
-  deposits = Math.round(deposits * 100) / 100;
-  cash = Math.round(cash * 100) / 100;
-  crypto = Math.round(crypto * 100) / 100;
-  
-  // Ensure cash is at least 1%
-  if (cash < 1) {
-    cash = 1;
-    stocks = Math.max(0, stocks - 1);
+  // Normalize all allocations so the sum is exactly 100
+  function normalizeAllocations(parts: number[]): number[] {
+    const total = parts.reduce((a, b) => a + b, 0);
+    if (total === 0) return [0, 0, 0, 100, 0]; // Default to 100% cash if no allocations
+    
+    let normalized = parts.map(x => Math.round((x / total) * 10000) / 100);
+    let sum = normalized.reduce((a, b) => a + b, 0);
+    
+    // Ajustar el componente más grande para compensar el error de redondeo
+    if (Math.abs(sum - 100) > 0.01) {
+      const maxIdx = normalized.indexOf(Math.max(...normalized));
+      normalized[maxIdx] = Math.round((normalized[maxIdx] + (100 - sum)) * 100) / 100;
+    }
+    
+    return normalized;
   }
   
-  // Final total should be exactly 100
+  [stocks, bonds, deposits, cash, crypto] = normalizeAllocations([stocks, bonds, deposits, cash, crypto]);
+  
+  // Ensure cash is at least 1% after normalization
+  if (cash < 1) {
+    const diff = 1 - cash;
+    cash = 1;
+    // Remove from the largest allocation
+    const allocations = [
+      { key: 'stocks', value: stocks },
+      { key: 'bonds', value: bonds },
+      { key: 'deposits', value: deposits },
+      { key: 'crypto', value: crypto },
+    ];
+    allocations.sort((a, b) => b.value - a.value);
+    for (const alloc of allocations) {
+      if (alloc.value > diff) {
+        if (alloc.key === 'stocks') stocks -= diff;
+        if (alloc.key === 'bonds') bonds -= diff;
+        if (alloc.key === 'deposits') deposits -= diff;
+        if (alloc.key === 'crypto') crypto -= diff;
+        break;
+      }
+    }
+  }
+  
+  // Final normalization to ensure exact 100%
   const finalTotal = stocks + bonds + deposits + cash + crypto;
   if (Math.abs(finalTotal - 100) > 0.01) {
-    cash = Math.max(0, cash + (100 - finalTotal));
+    [stocks, bonds, deposits, cash, crypto] = normalizeAllocations([stocks, bonds, deposits, cash, crypto]);
   }
   
+  // Ensure the return object includes crypto
   return { stocks, bonds, deposits, cash, crypto };
 }
 
@@ -209,9 +239,10 @@ function generateRecommendations(
       id: `alloc-${crypto.randomUUID()}`,
       action: 'increase',
       assetClass: 'bonds',
-      reason: `Tu portafolio tiene ${currentAllocation.bonds.toFixed(1)}% en bonos, pero tu estrategia objetivo es ${targetAllocation.bonds}%`,
+      reason: `Tu portafolio tiene ${currentAllocation.bonds.toFixed(1)}% en bonos, pero tu estrategia objetivo es ${targetAllocation.bonds}%. Considera alternativas como: ${BOND_ALTERNATIVES.join(', ')}`,
       priority: 'high',
-      expectedImpact: 'positive'
+      expectedImpact: 'positive',
+      suggestedAssets: BOND_ALTERNATIVES,
     });
   }
   

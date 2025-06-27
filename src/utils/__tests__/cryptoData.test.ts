@@ -1,7 +1,8 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import dayjs from 'dayjs';
-import { PriceData, Technicals } from '@/types/finance';
+import { PriceData, Technicals, Fundamentals } from '@/types/finance';
+import { getPortfolioData } from '../portfolioData';
 
 // Mock fs module
 jest.mock('fs', () => ({
@@ -291,5 +292,44 @@ describe('cryptoData', () => {
       expect(result).toEqual([]);
       expect(mockFetch).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('portfolioData - crypto folder structure', () => {
+  const mockFs = fs as jest.Mocked<typeof fs>;
+  const user = {
+    username: 'testuser',
+    createdAt: '',
+    profileCompleted: true,
+    positions: [
+      { type: 'Crypto', symbol: 'BTCUSDT', quantity: 1, averagePrice: 10000, currency: 'USD' },
+    ],
+    transactions: [],
+    goals: [],
+    cash: { ARS: 0, USD: 10000 },
+  };
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.spyOn(process, 'cwd').mockReturnValue('/mock/cwd');
+  });
+  it('loads crypto prices and technicals from correct folders', async () => {
+    // Mock user file
+    mockFs.readFile.mockImplementation(async (filePath: any) => {
+      if ((filePath as string).endsWith('testuser.json')) {
+        return JSON.stringify(user);
+      }
+      if ((filePath as string).endsWith('crypto/BTCUSDT.json')) {
+        return JSON.stringify([{ date: '2024-01-01', open: 10000, high: 11000, low: 9000, close: 10500, volume: 1 }]);
+      }
+      if ((filePath as string).endsWith('crypto-technicals/BTCUSDT.json')) {
+        return JSON.stringify({ rsi: 60, macd: 1, sma200: 10000, ema12: 10200, ema26: 10100, ema50: 10050, adx: 20, pdi: 25, mdi: 15, updatedAt: '2024-01-01T00:00:00Z' });
+      }
+      return JSON.stringify(null);
+    });
+    const data = await getPortfolioData('testuser');
+    expect(data.historicalPrices['BTCUSDT']).toEqual([
+      { date: '2024-01-01', open: 10000, high: 11000, low: 9000, close: 10500, volume: 1 },
+    ]);
+    expect(data.technicals['BTCUSDT']).toEqual({ rsi: 60, macd: 1, sma200: 10000, ema12: 10200, ema26: 10100, ema50: 10050, adx: 20, pdi: 25, mdi: 15, updatedAt: '2024-01-01T00:00:00Z' });
   });
 }); 

@@ -176,6 +176,7 @@ export interface StrategyRecommendation {
   reason: string;
   priority: 'high' | 'medium' | 'low';
   expectedImpact: 'positive' | 'neutral' | 'negative';
+  suggestedAssets?: string[];
 }
 
 export interface InvestmentStrategy {
@@ -186,6 +187,7 @@ export interface InvestmentStrategy {
     bonds: number; // Percentage
     deposits: number; // Percentage
     cash: number; // Percentage
+    crypto?: number; // Percentage
   };
   recommendations: StrategyRecommendation[];
   riskLevel: RiskAppetite;

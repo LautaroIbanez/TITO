@@ -11,17 +11,17 @@ import {
 } from 'technicalindicators';
 
 // Helper: Read JSON file safely
-async function readJsonSafe(filePath: string) {
+async function readJsonSafe<T = unknown>(filePath: string): Promise<T | null> {
   try {
     const data = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(data);
+    return JSON.parse(data) as T;
   } catch {
     return null;
   }
 }
 
 // Helper: Write JSON file
-async function writeJson(filePath: string, data: any) {
+async function writeJson(filePath: string, data: unknown) {
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   await fs.writeFile(filePath, JSON.stringify(data, null, 2));
 }
@@ -30,7 +30,7 @@ async function writeJson(filePath: string, data: any) {
 async function canRequestCrypto(symbol: string, type: 'history' | 'technicals', minIntervalSec = 5) {
   const logPath = path.join(process.cwd(), 'data', 'request-log.json');
   const now = dayjs();
-  let log = await readJsonSafe(logPath) || {};
+  const log = (await readJsonSafe<Record<string, any>>(logPath)) || {};
   const last = log?.[`crypto-${symbol}`]?.[type];
   if (last && now.diff(dayjs(last), 'second') < minIntervalSec) {
     return false;
@@ -43,19 +43,20 @@ async function canRequestCrypto(symbol: string, type: 'history' | 'technicals', 
 }
 
 // Helper: Convert Binance kline to PriceData format
-function binanceKlineToPriceData(kline: any): PriceData {
+function binanceKlineToPriceData(kline: unknown): PriceData {
+  const arr = kline as [number, string, string, string, string, string];
   return {
-    date: new Date(kline[0]).toISOString().split('T')[0], // Convert timestamp to date string
-    open: parseFloat(kline[1]),
-    high: parseFloat(kline[2]),
-    low: parseFloat(kline[3]),
-    close: parseFloat(kline[4]),
-    volume: parseFloat(kline[5]),
+    date: new Date(arr[0]).toISOString().split('T')[0], // Convert timestamp to date string
+    open: parseFloat(arr[1]),
+    high: parseFloat(arr[2]),
+    low: parseFloat(arr[3]),
+    close: parseFloat(arr[4]),
+    volume: parseFloat(arr[5]),
   };
 }
 
 // Helper: Fetch data from Binance API
-async function fetchBinanceData(symbol: string, interval: string, limit: number = 1000) {
+async function fetchBinanceData(symbol: string, interval: string, limit: number = 1000): Promise<unknown[][]> {
   const baseUrl = 'https://api.binance.com/api/v3/klines';
   const params = new URLSearchParams({
     symbol: symbol.toUpperCase(),
@@ -69,7 +70,7 @@ async function fetchBinanceData(symbol: string, interval: string, limit: number 
   }
   
   const data = await response.json();
-  return data;
+  return data as unknown[][];
 }
 
 export async function getCryptoPrices(symbol: string, interval: '1d' | '1wk' = '1d'): Promise<PriceData[]> {
@@ -108,7 +109,7 @@ export async function getCryptoPrices(symbol: string, interval: '1d' | '1wk' = '
     }
   } else {
     // File exists, check last date
-    prices = (await readJsonSafe(filePath)) || [];
+    prices = (await readJsonSafe<PriceData[]>(filePath)) || [];
     if (!prices.length) return [];
     
     const lastDate = dayjs(prices[prices.length - 1].date);
@@ -153,7 +154,7 @@ export async function getCryptoTechnicals(symbol: string, interval: '1d' | '1wk'
 
   // Check for recent file first
   try {
-    const fileContent = await readJsonSafe(filePath);
+    const fileContent = await readJsonSafe<Technicals & { updatedAt: string }>(filePath);
     if (fileContent && dayjs().diff(dayjs(fileContent.updatedAt), interval === '1d' ? 'day' : 'week') < 1) {
       return fileContent;
     }

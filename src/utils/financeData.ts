@@ -12,10 +12,10 @@ import {
 } from 'technicalindicators';
 
 // Helper: Read JSON file safely
-async function readJsonSafe(filePath: string) {
+async function readJsonSafe<T = unknown>(filePath: string): Promise<T | null> {
   try {
     const data = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(data);
+    return JSON.parse(data) as T;
   } catch {
     return null;
   }
@@ -31,7 +31,7 @@ async function writeJson(filePath: string, data: any) {
 async function canRequest(symbol: string, type: 'history' | 'fundamentals', minIntervalSec = 10) {
   const logPath = path.join(process.cwd(), 'data', 'request-log.json');
   const now = dayjs();
-  let log = await readJsonSafe(logPath) || {};
+  const log = (await readJsonSafe<Record<string, any>>(logPath)) || {};
   const last = log?.[symbol]?.[type];
   if (last && now.diff(dayjs(last), 'second') < minIntervalSec) {
     return false;
@@ -204,8 +204,13 @@ export async function getTechnicals(symbol: string, interval: '1d' | '1wk' = '1d
 
   // Check for recent file first
   try {
-    const fileContent = await readJsonSafe(filePath);
-    if (fileContent && dayjs().diff(dayjs(fileContent.updatedAt), interval === '1d' ? 'day' : 'week') < 1) {
+    const fileContent = await readJsonSafe<Technicals>(filePath);
+    if (
+      fileContent &&
+      typeof fileContent === 'object' &&
+      'updatedAt' in fileContent &&
+      dayjs().diff(dayjs(fileContent.updatedAt), interval === '1d' ? 'day' : 'week') < 1
+    ) {
       return fileContent;
     }
   } catch {}
