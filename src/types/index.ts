@@ -112,6 +112,7 @@ export interface DepositTransaction {
   type: 'Deposit';
   amount: number;
   currency: 'ARS' | 'USD';
+  source?: 'FixedTermPayout';
 }
 
 export interface WithdrawalTransaction {

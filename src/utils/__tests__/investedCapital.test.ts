@@ -56,6 +56,75 @@ describe('calculateInvestedCapital', () => {
     ];
     expect(calculateInvestedCapital(transactions, 'ARS')).toBe(-500);
   });
+
+  it('should account for commissionPct and purchaseFeePct in Buy and Sell transactions', () => {
+    const transactions: PortfolioTransaction[] = [
+      // Buy: 10 * 100 * (1 + 0.01 + 0.02) = 1000 * 1.03 = 1030
+      { id: '1', type: 'Buy', symbol: 'BTC', quantity: 10, price: 100, date: '2023-01-01', assetType: 'Crypto', currency: 'USD', commissionPct: 1, purchaseFeePct: 2 },
+      // Sell: 5 * 120 * (1 - 0.01) = 600 * 0.99 = 594
+      { id: '2', type: 'Sell', symbol: 'BTC', quantity: 5, price: 120, date: '2023-01-02', assetType: 'Crypto', currency: 'USD', commissionPct: 1 },
+      // Buy without commission/fee: 2 * 200 = 400
+      { id: '3', type: 'Buy', symbol: 'ETH', quantity: 2, price: 200, date: '2023-01-03', assetType: 'Crypto', currency: 'USD' },
+      // Sell without commission: 1 * 250 = 250
+      { id: '4', type: 'Sell', symbol: 'ETH', quantity: 1, price: 250, date: '2023-01-04', assetType: 'Crypto', currency: 'USD' },
+    ];
+    // 1030 (buy) - 594 (sell) + 400 (buy) - 250 (sell) = 586
+    expect(calculateInvestedCapital(transactions, 'USD')).toBeCloseTo(586);
+  });
+
+  it('should offset invested capital when a fixed-term deposit is closed and payout is deposited', () => {
+    const transactions: PortfolioTransaction[] = [
+      // Create a fixed-term deposit
+      { id: 'ftd1', type: 'Create', assetType: 'FixedTermDeposit', provider: 'Bank', amount: 1000, annualRate: 0.1, termDays: 30, maturityDate: '2023-02-01', date: '2023-01-01', currency: 'ARS' },
+      // Deposit payout (principal only)
+      { id: 'dep1', type: 'Deposit', amount: 1000, date: '2023-02-01', currency: 'ARS' },
+    ];
+    // 1000 (create) - 1000 (deposit) = 0
+    expect(calculateInvestedCapital(transactions, 'ARS')).toBe(0);
+
+    // Now with interest payout
+    const transactionsWithInterest: PortfolioTransaction[] = [
+      { id: 'ftd1', type: 'Create', assetType: 'FixedTermDeposit', provider: 'Bank', amount: 1000, annualRate: 0.1, termDays: 30, maturityDate: '2023-02-01', date: '2023-01-01', currency: 'ARS' },
+      { id: 'dep1', type: 'Deposit', amount: 1010, date: '2023-02-01', currency: 'ARS' },
+    ];
+    // 1000 (create) - 1010 (deposit) = -10 (ganancia)
+    expect(calculateInvestedCapital(transactionsWithInterest, 'ARS')).toBe(-10);
+  });
+
+  it('should add ARS invested capital for crypto buys paid in ARS but recorded in USD', () => {
+    const transactions: PortfolioTransaction[] = [
+      // Buy 0.5 BTC, pagado en ARS, registrado en USD
+      {
+        id: 'crypto1',
+        type: 'Buy',
+        assetType: 'Crypto',
+        symbol: 'BTCUSDT',
+        quantity: 0.5,
+        price: 20000, // USD
+        date: '2023-01-01',
+        currency: 'USD',
+        commissionPct: 1,
+        purchaseFeePct: 2,
+        originalCurrency: 'ARS',
+        originalAmount: 5000000, // ARS gastados
+      },
+    ];
+    // El capital invertido en ARS debe reflejar el gasto real en ARS
+    expect(calculateInvestedCapital(transactions, 'ARS')).toBe(5000000);
+    // El capital invertido en USD debe ser 0 (no suma nada)
+    expect(calculateInvestedCapital(transactions, 'USD')).toBe(0);
+  });
+
+  it('should treat FixedTermPayout deposits as reducing invested capital but not as net contributions', () => {
+    const transactions: PortfolioTransaction[] = [
+      { id: 'ftd1', type: 'Create', assetType: 'FixedTermDeposit', provider: 'Bank', amount: 1000, annualRate: 0.1, termDays: 30, maturityDate: '2023-02-01', date: '2023-01-01', currency: 'ARS' },
+      { id: 'dep1', type: 'Deposit', amount: 1010, date: '2023-02-01', currency: 'ARS', source: 'FixedTermPayout' },
+    ];
+    // Capital invertido: 1000 (create) - 1010 (deposit) = -10
+    expect(calculateInvestedCapital(transactions, 'ARS')).toBe(-10);
+    // Net contributions: solo el create cuenta, el deposit se ignora
+    expect(calculateNetContributions(transactions, 'ARS')).toBe(0);
+  });
 });
 
 describe('calculateNetContributions', () => {

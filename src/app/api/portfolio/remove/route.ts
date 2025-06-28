@@ -127,7 +127,8 @@ export async function POST(request: NextRequest) {
         date: new Date().toISOString(),
         type: 'Deposit',
         amount: payout,
-        currency: positionCurrency
+        currency: positionCurrency,
+        source: 'FixedTermPayout',
       };
       user.transactions.push(tx);
     }

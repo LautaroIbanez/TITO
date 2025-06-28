@@ -17,18 +17,42 @@ export function calculateInvestedCapital(transactions: PortfolioTransaction[], c
     }
 
     switch (tx.type) {
-      case 'Buy':
-        investedCapital += tx.price * tx.quantity;
+      case 'Buy': {
+        const commission = tx.commissionPct ?? 0;
+        const purchaseFee = tx.purchaseFeePct ?? 0;
+        // Manejo especial para compras de cripto pagadas en ARS pero registradas en USD
+        if (
+          tx.assetType === 'Crypto' &&
+          'originalCurrency' in tx &&
+          'originalAmount' in tx &&
+          typeof tx.originalCurrency === 'string' &&
+          typeof tx.originalAmount === 'number'
+        ) {
+          // Sumar el gasto real en la moneda original
+          if (currency === tx.originalCurrency) {
+            investedCapital += tx.originalAmount;
+          }
+        } else {
+          investedCapital += tx.price * tx.quantity * (1 + commission / 100 + purchaseFee / 100);
+        }
         break;
-      case 'Sell':
-        investedCapital -= tx.price * tx.quantity;
+      }
+      case 'Sell': {
+        const commission = tx.commissionPct ?? 0;
+        investedCapital -= tx.price * tx.quantity * (1 - commission / 100);
         break;
+      }
       case 'Create':
         if (tx.assetType === 'FixedTermDeposit') {
           investedCapital += tx.amount;
         }
         break;
-      // Deposit and other transaction types are explicitly ignored.
+      case 'Deposit':
+        if (tx.source === 'FixedTermPayout') {
+          investedCapital -= tx.amount;
+        }
+        break;
+      // Withdrawal y otros tipos siguen ignorados
     }
   }
 
@@ -47,12 +71,26 @@ export function calculateNetContributions(transactions: PortfolioTransaction[], 
 
   for (const tx of transactions) {
     if (tx.currency !== currency) {
+      // Excepción: para crypto pagada en ARS pero registrada en USD
+      if (
+        tx.type === 'Buy' &&
+        tx.assetType === 'Crypto' &&
+        'originalCurrency' in tx &&
+        'originalAmount' in tx &&
+        typeof tx.originalCurrency === 'string' &&
+        typeof tx.originalAmount === 'number' &&
+        tx.originalCurrency === currency
+      ) {
+        netContributions += tx.originalAmount;
+      }
       continue;
     }
 
     switch (tx.type) {
       case 'Deposit':
-        netContributions += tx.amount;
+        if (!(tx as any).source || (tx as any).source !== 'FixedTermPayout') {
+          netContributions += tx.amount;
+        }
         break;
       case 'Withdrawal':
         netContributions -= tx.amount;
