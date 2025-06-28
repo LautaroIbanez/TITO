@@ -46,6 +46,13 @@
       "averagePrice": 497.45001220703125,
       "currency": "USD",
       "market": "NASDAQ"
+    },
+    {
+      "type": "Crypto",
+      "symbol": "BTCUSDT",
+      "quantity": 0.001,
+      "averagePrice": 107179.21,
+      "currency": "USD"
     }
   ],
   "transactions": [
@@ -135,6 +142,18 @@
       "currency": "ARS",
       "market": "BCBA",
       "commissionPct": 1
+    },
+    {
+      "id": "1751069333234",
+      "date": "2025-06-28T00:08:53.234Z",
+      "type": "Buy",
+      "assetType": "Crypto",
+      "symbol": "BTCUSDT",
+      "quantity": 0.001,
+      "price": 107179.21,
+      "currency": "USD",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
     }
   ],
   "goals": [
@@ -159,7 +178,7 @@
   ],
   "cash": {
     "ARS": 841290.5625,
-    "USD": 3827.9210253295896
+    "USD": 3719.6164336245897
   },
   "profile": {
     "instrumentsUsed": [
@@ -178,8 +197,8 @@
     "initialBalanceUSD": 5000
   },
   "investmentStrategy": {
-    "id": "strategy-91c2ab29-7dc1-41cf-b7bf-9f324bb1ce64",
-    "createdAt": "2025-06-27T22:16:29.402Z",
+    "id": "strategy-a0a9e76f-3fd6-42ae-a1e5-d62c8fa5ef77",
+    "createdAt": "2025-06-28T11:24:39.667Z",
     "targetAllocation": {
       "stocks": 59.4,
       "bonds": 29.7,
@@ -189,7 +208,7 @@
     },
     "recommendations": [
       {
-        "id": "alloc-97008df9-e336-43b7-bf75-70a9c906a78c",
+        "id": "alloc-38ec97c7-12bf-44f6-af29-35bd18e661d3",
         "action": "increase",
         "assetClass": "stocks",
         "reason": "Tu portafolio tiene 9.2% en acciones, pero tu estrategia objetivo es 59.4%",
@@ -197,7 +216,7 @@
         "expectedImpact": "positive"
       },
       {
-        "id": "alloc-534bc6d2-1761-48ce-b4ca-58bb7b71909d",
+        "id": "alloc-f8c2fa38-f9bb-4781-b0d2-c4d9653d4016",
         "action": "increase",
         "assetClass": "bonds",
         "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 29.7%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
@@ -210,7 +229,7 @@
         ]
       },
       {
-        "id": "cash-invest-aa6b006c-0c97-4ed3-9f25-c135ca916f46",
+        "id": "cash-invest-b603eae8-de13-4149-9248-10e84c0b0c00",
         "action": "buy",
         "reason": "Tienes un 83.8% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
         "priority": "high",

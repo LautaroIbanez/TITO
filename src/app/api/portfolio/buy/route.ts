@@ -12,6 +12,7 @@ import {
   CryptoTradeTransaction
 } from '@/types';
 import { DEFAULT_COMMISSION_PCT, DEFAULT_PURCHASE_FEE_PCT } from '@/utils/constants';
+import { convertCurrency } from '@/utils/currency';
 
 async function getUserData(username: string): Promise<UserData | null> {
   const userFile = path.join(process.cwd(), 'data', 'users', `${username}.json`);
@@ -133,13 +134,21 @@ export async function POST(request: NextRequest) {
       }
       
       case 'Crypto': {
-        const { symbol, quantity, price, commissionPct = DEFAULT_COMMISSION_PCT, purchaseFeePct = DEFAULT_PURCHASE_FEE_PCT } = body;
+        const { symbol, quantity, price, currency = 'USD', commissionPct = DEFAULT_COMMISSION_PCT, purchaseFeePct = DEFAULT_PURCHASE_FEE_PCT } = body;
         if (!symbol || !quantity || !price) return NextResponse.json({ error: 'Missing fields for Crypto purchase' }, { status: 400 });
         
-        const currency = 'USD' as const; // Crypto is always in USD
+        const validatedCurrency = currency as 'ARS' | 'USD';
         const baseCost = quantity * price;
         totalCost = baseCost * (1 + commissionPct / 100 + purchaseFeePct / 100);
-        if (user.cash[currency] < totalCost) return NextResponse.json({ error: 'Insufficient funds' }, { status: 400 });
+        
+        // Check if user has sufficient funds in the selected currency
+        if (user.cash[validatedCurrency] < totalCost) return NextResponse.json({ error: 'Insufficient funds' }, { status: 400 });
+
+        // Convert ARS to USD if needed for crypto position
+        let usdAmount = totalCost;
+        if (validatedCurrency === 'ARS') {
+          usdAmount = await convertCurrency(totalCost, 'ARS', 'USD');
+        }
 
         const pos = user.positions.find((p): p is CryptoPosition => p.type === 'Crypto' && p.symbol === symbol);
         if (pos) {
@@ -147,7 +156,7 @@ export async function POST(request: NextRequest) {
           pos.quantity += quantity;
           pos.averagePrice = newTotalValue / pos.quantity;
         } else {
-          const newPosition: CryptoPosition = { type: 'Crypto', symbol, quantity, averagePrice: price, currency };
+          const newPosition: CryptoPosition = { type: 'Crypto', symbol, quantity, averagePrice: price, currency: 'USD' };
           user.positions.push(newPosition);
         }
         
@@ -159,12 +168,18 @@ export async function POST(request: NextRequest) {
           symbol, 
           quantity, 
           price,
-          currency,
+          currency: 'USD', // Crypto positions are always recorded in USD
           commissionPct,
-          purchaseFeePct
+          purchaseFeePct,
+          // Add conversion info if ARS was used
+          ...(validatedCurrency === 'ARS' && {
+            originalCurrency: 'ARS',
+            originalAmount: totalCost,
+            convertedAmount: usdAmount
+          })
         };
         user.transactions.push(tx);
-        user.cash[currency] -= totalCost;
+        user.cash[validatedCurrency] -= totalCost;
         break;
       }
       

@@ -159,6 +159,10 @@ export interface CryptoTradeTransaction {
   commissionPct?: number; // Commission percentage (optional)
   purchaseFeePct?: number; // Purchase fee percentage (optional)
   currency: 'USD';
+  // Optional conversion tracking for ARS purchases
+  originalCurrency?: 'ARS';
+  originalAmount?: number;
+  convertedAmount?: number;
 }
 
 export type PortfolioTransaction = StockTradeTransaction | BondTradeTransaction | DepositTransaction | FixedTermDepositCreationTransaction | CaucionCreationTransaction | WithdrawalTransaction | CryptoTradeTransaction;

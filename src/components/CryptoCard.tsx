@@ -11,6 +11,7 @@ import {
   Filler,
 } from 'chart.js';
 import { Technicals, PriceData } from '../types/finance';
+import { getTradeSignal, TradeSignal } from '@/utils/tradeSignal';
 import TradeModal, { TradeModalProps } from './TradeModal';
 import TechnicalDisplay from './TechnicalDisplay';
 import { usePortfolio } from '@/contexts/PortfolioContext';
@@ -25,12 +26,32 @@ interface CryptoCardProps {
   onTrade: () => void;
 }
 
+const SignalBadge = ({ signal }: { signal: TradeSignal }) => {
+  const badgeStyles: Record<TradeSignal, string> = {
+    buy: 'bg-green-100 text-green-700',
+    sell: 'bg-red-100 text-red-700',
+    hold: 'bg-gray-100 text-gray-700',
+  };
+  const signalText: Record<TradeSignal, string> = {
+    buy: 'Comprar',
+    sell: 'Vender',
+    hold: 'Mantener',
+  };
+  return (
+    <span className={`px-2 py-1 rounded text-xs font-semibold capitalize ${badgeStyles[signal]}`}>
+      {signalText[signal]}
+    </span>
+  );
+};
+
 export default function CryptoCard({ symbol, prices, technicals, cash, onTrade }: CryptoCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tradeType, setTradeType] = useState<'Buy' | 'Sell'>('Buy');
+  const [selectedCurrency, setSelectedCurrency] = useState<'ARS' | 'USD'>('USD');
   const { refreshPortfolio } = usePortfolio();
 
   const currentPrice = prices.length > 0 ? prices[prices.length - 1].close : 0;
+  const signal = getTradeSignal(technicals, currentPrice);
 
   const chartData = {
     labels: prices.map((p) => p.date),
@@ -92,10 +113,23 @@ export default function CryptoCard({ symbol, prices, technicals, cash, onTrade }
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-xl mx-auto">
+    <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-xl mx-auto text-black">
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-lg font-bold text-gray-900">{symbol}</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-bold text-black">{symbol}</h2>
+          <SignalBadge signal={signal} />
+        </div>
         <div className="flex gap-2">
+          {tradeType === 'Buy' && (
+            <select
+              value={selectedCurrency}
+              onChange={(e) => setSelectedCurrency(e.target.value as 'ARS' | 'USD')}
+              className="px-2 py-1 border border-gray-300 rounded text-xs bg-white text-black"
+            >
+              <option value="USD">USD</option>
+              <option value="ARS">ARS</option>
+            </select>
+          )}
           <button
             className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs font-semibold"
             onClick={() => { setTradeType('Buy'); setIsModalOpen(true); }}
@@ -107,8 +141,13 @@ export default function CryptoCard({ symbol, prices, technicals, cash, onTrade }
         </div>
       </div>
       <div className="mb-2">
-        <span className="text-gray-700 text-sm">Precio actual: </span>
-        <span className="font-mono text-lg text-gray-900">US${currentPrice?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+        <span className="text-black text-sm">Precio actual: </span>
+        <span className="font-mono text-lg text-black">US${currentPrice?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+        {selectedCurrency === 'ARS' && (
+          <div className="text-xs text-black mt-1">
+            💱 Las compras en ARS se convertirán automáticamente a USD
+          </div>
+        )}
       </div>
       <div className="h-32 mb-4">
         <Line data={chartData} options={chartOptions} height={120} />
@@ -132,7 +171,7 @@ export default function CryptoCard({ symbol, prices, technicals, cash, onTrade }
         identifier={symbol}
         price={currentPrice}
         cash={cash}
-        currency="USD"
+        currency={selectedCurrency}
       />
     </div>
   );

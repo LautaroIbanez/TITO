@@ -102,6 +102,10 @@ export default function TradeModal({
   const labelText = isAmountBased ? "Monto a Invertir" : "Cantidad";
   const inputType = isAmountBased ? "number" : "number";
   const showFees = tradeType === 'Buy' && (assetType === 'Stock' || assetType === 'Bond' || assetType === 'Crypto');
+  
+  // Configure input attributes based on asset type
+  const inputMin = assetType === 'Crypto' && !isAmountBased ? "0.000001" : "1";
+  const inputStep = assetType === 'Crypto' && !isAmountBased ? "0.000001" : "1";
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -117,8 +121,8 @@ export default function TradeModal({
             <input
               id="value"
               type={inputType}
-              min="1"
-              step="1"
+              min={inputMin}
+              step={inputStep}
               max={tradeType === 'Sell' ? maxShares : undefined}
               value={value}
               onChange={(e) => setValue(Number(e.target.value))}

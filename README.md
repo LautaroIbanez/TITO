@@ -349,3 +349,43 @@ This will download daily price history for the following symbols:
 - DOGEUSDT
 
 The data is saved as JSON files in `data/crypto/` (e.g., `data/crypto/BTCUSDT.json`).
+
+## Crypto Currency Conversion
+
+TITO supports purchasing cryptocurrencies using either USD or ARS. When ARS is selected for crypto purchases, the system automatically converts the ARS amount to USD using the current exchange rate.
+
+### How it works
+
+- **Currency Selection**: Users can choose between USD and ARS when buying cryptocurrencies
+- **Automatic Conversion**: When ARS is selected, the system:
+  - Deducts the ARS amount from the user's ARS balance
+  - Converts the ARS amount to USD using the current exchange rate
+  - Records the crypto position in USD (crypto positions are always denominated in USD)
+  - Stores conversion details in the transaction history for transparency
+
+### Fractional Quantities
+
+Cryptocurrencies support fractional quantities with precision up to 6 decimal places (0.000001):
+- **Minimum quantity**: 0.000001 units
+- **Step increment**: 0.000001 units
+- **Examples**: You can buy 0.5 BTC, 0.001 ETH, or 0.000001 of any cryptocurrency
+- **Other assets**: Stocks and bonds still use whole number quantities (minimum 1 unit)
+
+### Transaction Tracking
+
+Crypto transactions include conversion information when ARS is used:
+- `originalCurrency`: 'ARS' (when applicable)
+- `originalAmount`: The ARS amount deducted
+- `convertedAmount`: The USD equivalent used for the crypto position
+
+### Exchange Rate
+
+The conversion uses the same dynamic exchange rate system as other currency conversions in TITO, fetched from [exchangerate.host](https://exchangerate.host/) and cached for 10 minutes.
+
+### Example
+
+If a user buys 0.1 BTC at $50,000 USD using ARS:
+- ARS balance is reduced by the equivalent ARS amount
+- USD equivalent is calculated using current exchange rate
+- Crypto position shows 0.1 BTC at $50,000 USD
+- Transaction history includes both ARS deduction and USD conversion details

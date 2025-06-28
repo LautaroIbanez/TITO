@@ -31,9 +31,10 @@ interface TechnicalDisplayProps {
   indicatorKey: TechnicalIndicatorKey;
   value: number | null | undefined;
   currentPrice?: number;
+  className?: string;
 }
 
-const TechnicalDisplay = ({ label, indicatorKey, value, currentPrice }: TechnicalDisplayProps) => {
+const TechnicalDisplay = ({ label, indicatorKey, value, currentPrice, className }: TechnicalDisplayProps) => {
   const tooltip = TECHNICAL_TOOLTIPS[indicatorKey];
   const colorClass = value != null ? getTechnicalColor(label, value, currentPrice) : 'text-gray-600';
   
@@ -41,7 +42,7 @@ const TechnicalDisplay = ({ label, indicatorKey, value, currentPrice }: Technica
     <div className="group relative">
       <div className="flex items-center gap-1">
           <span className='font-medium'>{label}:</span>
-          <span className={`font-mono ${colorClass}`}>
+          <span className={`font-mono ${className ? className : colorClass}`}>
             {value?.toFixed(2) ?? '—'}
           </span>
       </div>

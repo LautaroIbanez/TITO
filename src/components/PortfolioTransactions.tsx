@@ -73,7 +73,7 @@ export default function PortfolioTransactions({ transactions }: Props) {
 
   const getTransactionDisplay = (tx: PortfolioTransaction) => {
     if (tx.type === 'Buy' || tx.type === 'Sell') {
-      if (tx.assetType === 'Stock') {
+      if ('symbol' in tx && tx.assetType === 'Stock') {
         return {
           symbol: tx.symbol,
           quantity: tx.quantity,
@@ -83,12 +83,22 @@ export default function PortfolioTransactions({ transactions }: Props) {
           commissionPct: tx.commissionPct,
           purchaseFeePct: tx.purchaseFeePct
         };
-      } else if (tx.assetType === 'Bond') {
+      } else if ('ticker' in tx && tx.assetType === 'Bond') {
         return {
           symbol: tx.ticker,
           quantity: tx.quantity,
           price: tx.price,
           typeLabel: tx.type === 'Buy' ? 'Compra Bono' : 'Venta Bono',
+          typeColor: tx.type === 'Buy' ? 'text-green-600' : 'text-red-600',
+          commissionPct: tx.commissionPct,
+          purchaseFeePct: tx.purchaseFeePct
+        };
+      } else if ('symbol' in tx && tx.assetType === 'Crypto') {
+        return {
+          symbol: tx.symbol,
+          quantity: Number(tx.quantity).toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 }),
+          price: tx.price,
+          typeLabel: tx.type === 'Buy' ? 'Compra Cripto' : 'Venta Cripto',
           typeColor: tx.type === 'Buy' ? 'text-green-600' : 'text-red-600',
           commissionPct: tx.commissionPct,
           purchaseFeePct: tx.purchaseFeePct
@@ -174,10 +184,12 @@ export default function PortfolioTransactions({ transactions }: Props) {
                      ? formatCurrency(tx.amount, tx.currency) : '—'}
                   </td>
                   <td className="px-4 py-2 text-left text-gray-800">
-                    {tx.currency ? tx.currency : '—'}
+                    {'assetType' in tx && tx.assetType === 'Crypto' ? 'USD' : (tx.currency ? tx.currency : '—')}
                   </td>
                   <td className="px-4 py-2 text-right text-gray-800">
-                    {display.price !== null ? formatCurrency(display.price, tx.currency) : '—'}
+                    {'assetType' in tx && tx.assetType === 'Crypto'
+                      ? `US$${Number(display.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      : (display.price !== null ? formatCurrency(display.price, tx.currency) : '—')}
                   </td>
                   <td className="px-4 py-2 text-right text-gray-800">
                     {hasFees ? (
