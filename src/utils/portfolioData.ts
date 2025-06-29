@@ -85,4 +85,10 @@ export async function saveUserData(username: string, data: UserData): Promise<vo
     console.error(`Failed to save data for user ${username}:`, error);
     throw new Error('Failed to save user data');
   }
+}
+
+// Remove leading entries where both invested and total are zero
+export function trimHistory<T extends { invested:number; total:number }>(hist:T[]) {
+    const first = hist.findIndex(h => h.invested !== 0 || h.total !== 0);
+    return first > 0 ? hist.slice(first) : hist;
 } 

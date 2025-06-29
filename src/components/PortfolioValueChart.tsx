@@ -28,7 +28,7 @@ ChartJS.register(
 );
 
 interface Props {
-  valueHistory: { date: string; value: number }[];
+  valueHistory: { date: string; invested: number; total: number }[];
   currency: 'ARS' | 'USD';
   title?: string;
 }
@@ -46,10 +46,22 @@ export default function PortfolioValueChart({ valueHistory, currency, title = 'E
   const chartData = {
     datasets: [
       {
-        label: `Valor del Portafolio (${currency})`,
+        label: `Valor del Portafolio Invertido (${currency})`,
         data: valueHistory.map((d) => ({
           x: dayjs(d.date).toDate(),
-          y: d.value
+          y: d.invested
+        })),
+        fill: false,
+        borderColor: '#dc2626',
+        backgroundColor: 'rgba(220,38,38,0.1)',
+        pointRadius: 0,
+        tension: 0.2,
+      },
+      {
+        label: `Valor Total del Portafolio (${currency})`,
+        data: valueHistory.map((d) => ({
+          x: dayjs(d.date).toDate(),
+          y: d.total
         })),
         fill: true,
         borderColor: '#2563eb',
@@ -110,22 +122,32 @@ export default function PortfolioValueChart({ valueHistory, currency, title = 'E
     layout: { padding: 0 },
   };
 
-  const currentValue = valueHistory[valueHistory.length - 1]?.value || 0;
-  const firstValue = valueHistory[0]?.value || 0;
-  const change = currentValue - firstValue;
-  const changePercentage = firstValue > 0 ? (change / firstValue) * 100 : 0;
+  const currentTotal = valueHistory[valueHistory.length - 1]?.total || 0;
+  const currentInvested = valueHistory[valueHistory.length - 1]?.invested || 0;
+  const firstTotal = valueHistory[0]?.total || 0;
+  const firstInvested = valueHistory[0]?.invested || 0;
+  const totalChange = currentTotal - firstTotal;
+  const investedChange = currentInvested - firstInvested;
+  const totalChangePercentage = firstTotal > 0 ? (totalChange / firstTotal) * 100 : 0;
+  const investedChangePercentage = firstInvested > 0 ? (investedChange / firstInvested) * 100 : 0;
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-          <p className="text-sm text-gray-600">Evolución del valor total del portafolio en el tiempo</p>
+          <p className="text-sm text-gray-600">Evolución del valor del portafolio en el tiempo</p>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-bold text-gray-900">{formatCurrency(currentValue, currency)}</div>
-          <div className={`text-sm ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {change >= 0 ? '+' : ''}{formatCurrency(change, currency)} ({changePercentage >= 0 ? '+' : ''}{changePercentage.toFixed(2)}%)
+          <div className="text-2xl font-bold text-gray-900">{formatCurrency(currentTotal, currency)}</div>
+          <div className={`text-sm ${totalChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            {totalChange >= 0 ? '+' : ''}{formatCurrency(totalChange, currency)} ({totalChangePercentage >= 0 ? '+' : ''}{totalChangePercentage.toFixed(2)}%)
+          </div>
+          <div className="text-sm text-gray-600">
+            Invertido: {formatCurrency(currentInvested, currency)}
+            <span className={`ml-2 ${investedChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              ({investedChangePercentage >= 0 ? '+' : ''}{investedChangePercentage.toFixed(2)}%)
+            </span>
           </div>
         </div>
       </div>

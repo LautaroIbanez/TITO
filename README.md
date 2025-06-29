@@ -173,6 +173,12 @@ Cada posición se identifica únicamente por la combinación de:
 
 El proyecto incluye tests unitarios para verificar la lógica de negocio crítica, como el manejo de depósitos, compras y ventas.
 
+> **Nota:** Antes de ejecutar los tests, asegúrate de instalar las dependencias con:
+> ```bash
+> npm install
+> ```
+> Es posible que necesites acceso a internet para instalar los paquetes si no están en caché localmente.
+
 Para ejecutar los tests, usa el siguiente comando:
 
 ```bash

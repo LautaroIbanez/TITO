@@ -10,6 +10,7 @@ import { usePortfolio } from '@/contexts/PortfolioContext';
 import GoalProgress from './GoalProgress';
 import PortfolioValueChart from './PortfolioValueChart';
 import { formatCurrency, calculateFixedIncomeGains, calculateFixedIncomeValueHistory } from '@/utils/goalCalculator';
+import { trimHistory } from '@/utils/portfolioData';
 
 export default function DashboardSummary() {
   const [portfolioValueARS, setPortfolioValueARS] = useState(0);
@@ -308,28 +309,24 @@ export default function DashboardSummary() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Valor Total del Portafolio (ARS) */}
         <PortfolioValueChart 
-          valueHistory={portfolioValueHistory.map(h => ({ date: h.date, value: h.valueARS }))}
+          valueHistory={trimHistory(portfolioValueHistory.map(h => ({
+            date: h.date,
+            invested: h.valueARSRaw - h.cashARS,
+            total: h.valueARSRaw,
+          })))}
           currency="ARS"
           title="Evolución del Portafolio (ARS)"
         />
         {/* Valor Total del Portafolio (USD) */}
         <PortfolioValueChart 
-          valueHistory={portfolioValueHistory.map(h => ({ date: h.date, value: h.valueUSD }))}
+          valueHistory={trimHistory(portfolioValueHistory.map(h => ({
+            date: h.date,
+            invested: h.valueUSDRaw - h.cashUSD,
+            total: h.valueUSDRaw,
+          })))}
           currency="USD"
           title="Evolución del Portafolio (USD)"
         />
-        {/* Capital Invertido (ARS) - TODO: Multi-line chart support */}
-        {/* <PortfolioValueChart 
-          valueHistory={investedCapitalHistory.map(h => ({ date: h.date, value: h.investedARS }))}
-          currency="ARS"
-          title="Capital Invertido (ARS)"
-        /> */}
-        {/* Capital Invertido (USD) - TODO: Multi-line chart support */}
-        {/* <PortfolioValueChart 
-          valueHistory={investedCapitalHistory.map(h => ({ date: h.date, value: h.investedUSD }))}
-          currency="USD"
-          title="Capital Invertido (USD)"
-        /> */}
       </div>
 
       {/* Performance Metrics */}
