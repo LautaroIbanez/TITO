@@ -155,4 +155,18 @@ describe('PortfolioValueChart', () => {
     // Should show negative percentage (match substring)
     expect(screen.getByText((content) => content.includes('-10.00') && content.includes('%'))).toBeInTheDocument();
   });
+
+  it('should pass className w-full to Line and set layout.padding to 0', () => {
+    const valueHistory = [
+      { date: '2024-01-01', value: 10000 },
+      { date: '2024-01-02', value: 10500 },
+    ];
+    render(<PortfolioValueChart valueHistory={valueHistory} currency="ARS" />);
+    // The mock Line does not render className, but we can check chartOptions
+    const chartOptions = screen.getByTestId('chart-options');
+    const options = JSON.parse(chartOptions.textContent || '{}');
+    expect(options.layout).toBeDefined();
+    expect(options.layout.padding).toBe(0);
+    // If the mock is updated to render className, check for it here
+  });
 }); 

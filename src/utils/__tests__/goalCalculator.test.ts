@@ -1,5 +1,9 @@
-import { calculateFixedIncomeGains, calculateFixedIncomeValueHistory } from '../goalCalculator';
-import { PortfolioPosition, PortfolioTransaction } from '@/types';
+import { calculateFixedIncomeGains, calculateFixedIncomeValueHistory, distributeFixedIncomeReturns } from '../goalCalculator';
+import { PortfolioPosition, PortfolioTransaction, InvestmentGoal } from '@/types';
+import { Bond } from '@/types/finance';
+import dayjs from 'dayjs';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+dayjs.extend(isSameOrBefore);
 
 describe('calculateFixedIncomeGains', () => {
   it('should return 0 when no positions exist', () => {
@@ -465,5 +469,369 @@ describe('calculateFixedIncomeValueHistory', () => {
     // Should return 0 for positions that haven't started yet
     expect(result).toHaveLength(5);
     expect(result[0].value).toBe(0);
+  });
+});
+
+describe('distributeFixedIncomeReturns', () => {
+  it('should extend projection past targetDate until targetAmount is reached, but not beyond 5 years', () => {
+    const positions: PortfolioPosition[] = [
+      {
+        type: 'FixedTermDeposit',
+        id: 'fd1',
+        provider: 'Banco Test',
+        amount: 10000,
+        annualRate: 10,
+        startDate: '2024-01-01',
+        maturityDate: '2024-12-31',
+        currency: 'ARS',
+      },
+    ];
+    const bonds: Bond[] = [];
+    const today = dayjs();
+    const goal: InvestmentGoal = {
+      id: 'g1',
+      name: 'Meta Lenta',
+      targetAmount: 20000, // Un monto que no se alcanza en 1 año con 10% anual
+      targetDate: today.add(1, 'year').format('YYYY-MM-DD'),
+      initialDeposit: 10000,
+      monthlyContribution: 0,
+      currency: 'ARS',
+    };
+    const distributed = distributeFixedIncomeReturns(positions, bonds, [goal], 10000);
+    const projection = distributed[goal.id];
+    // Debe extenderse más allá de la fecha objetivo
+    const lastDate = dayjs(projection[projection.length - 1].date);
+    expect(lastDate.isAfter(dayjs(goal.targetDate))).toBe(true);
+    // Debe alcanzar el monto objetivo o llegar al límite
+    const reached = projection.some(p => p.value >= goal.targetAmount);
+    const maxEndDate = today.add(5, 'year');
+    // La proyección debe terminar por alcanzar el objetivo o por llegar al límite
+    expect(reached || lastDate.isSameOrBefore(maxEndDate.add(1, 'day'))).toBe(true);
+    // Nunca debe superar 5 años desde hoy
+    expect(lastDate.isSameOrBefore(maxEndDate.add(1, 'day'))).toBe(true);
+  });
+
+  it('should handle USD-denominated positions and goals correctly', () => {
+    const positions: PortfolioPosition[] = [
+      {
+        type: 'FixedTermDeposit',
+        id: 'fd1',
+        provider: 'US Bank',
+        amount: 1000,
+        annualRate: 4, // 4% annual rate
+        startDate: '2024-01-01',
+        maturityDate: '2024-12-31',
+        currency: 'USD',
+      },
+    ];
+    const bonds: Bond[] = [];
+    const today = dayjs();
+    const usdGoal: InvestmentGoal = {
+      id: 'usd-goal',
+      name: 'USD Goal',
+      targetAmount: 2000,
+      targetDate: today.add(1, 'year').format('YYYY-MM-DD'),
+      initialDeposit: 1000,
+      monthlyContribution: 0,
+      currency: 'USD',
+    };
+    
+    const distributed = distributeFixedIncomeReturns(positions, bonds, [usdGoal], 1000);
+    const projection = distributed[usdGoal.id];
+    
+    expect(projection).toBeDefined();
+    expect(projection.length).toBeGreaterThan(0);
+    
+    // First value should be the initial value in ARS divided by number of goals, converted to USD
+    expect(projection[0].value).toBeCloseTo(1, 2);
+    
+    // Values should increase over time
+    for (let i = 1; i < projection.length; i++) {
+      expect(projection[i].value).toBeGreaterThan(projection[i - 1].value);
+    }
+  });
+
+  it('should handle mixed currency positions with USD goal', () => {
+    const positions: PortfolioPosition[] = [
+      {
+        type: 'FixedTermDeposit',
+        id: 'fd1',
+        provider: 'Banco Test',
+        amount: 10000,
+        annualRate: 60, // 60% annual rate
+        startDate: '2024-01-01',
+        maturityDate: '2024-12-31',
+        currency: 'ARS',
+      },
+      {
+        type: 'FixedTermDeposit',
+        id: 'fd2',
+        provider: 'US Bank',
+        amount: 1000,
+        annualRate: 4, // 4% annual rate
+        startDate: '2024-01-01',
+        maturityDate: '2024-12-31',
+        currency: 'USD',
+      },
+    ];
+    const bonds: Bond[] = [];
+    const today = dayjs();
+    const usdGoal: InvestmentGoal = {
+      id: 'usd-goal',
+      name: 'USD Goal',
+      targetAmount: 2000,
+      targetDate: today.add(1, 'year').format('YYYY-MM-DD'),
+      initialDeposit: 1000,
+      monthlyContribution: 0,
+      currency: 'USD',
+    };
+    
+    const distributed = distributeFixedIncomeReturns(positions, bonds, [usdGoal], 1000);
+    const projection = distributed[usdGoal.id];
+    
+    expect(projection).toBeDefined();
+    expect(projection.length).toBeGreaterThan(0);
+    
+    // First value should be the initial value in ARS divided by number of goals, converted to USD
+    expect(projection[0].value).toBeCloseTo(1, 2);
+    
+    // Values should increase over time (both ARS and USD interest converted to USD)
+    for (let i = 1; i < projection.length; i++) {
+      expect(projection[i].value).toBeGreaterThan(projection[i - 1].value);
+    }
+  });
+
+  it('should handle mixed currency positions with ARS goal', () => {
+    const positions: PortfolioPosition[] = [
+      {
+        type: 'FixedTermDeposit',
+        id: 'fd1',
+        provider: 'Banco Test',
+        amount: 10000,
+        annualRate: 60, // 60% annual rate
+        startDate: '2024-01-01',
+        maturityDate: '2024-12-31',
+        currency: 'ARS',
+      },
+      {
+        type: 'FixedTermDeposit',
+        id: 'fd2',
+        provider: 'US Bank',
+        amount: 1000,
+        annualRate: 4, // 4% annual rate
+        startDate: '2024-01-01',
+        maturityDate: '2024-12-31',
+        currency: 'USD',
+      },
+    ];
+    const bonds: Bond[] = [];
+    const today = dayjs();
+    const arsGoal: InvestmentGoal = {
+      id: 'ars-goal',
+      name: 'ARS Goal',
+      targetAmount: 20000,
+      targetDate: today.add(1, 'year').format('YYYY-MM-DD'),
+      initialDeposit: 10000,
+      monthlyContribution: 0,
+      currency: 'ARS',
+    };
+    
+    const distributed = distributeFixedIncomeReturns(positions, bonds, [arsGoal], 10000);
+    const projection = distributed[arsGoal.id];
+    
+    expect(projection).toBeDefined();
+    expect(projection.length).toBeGreaterThan(0);
+    
+    // First value should be the initial value
+    expect(projection[0].value).toBe(10000);
+    
+    // Values should increase over time (both ARS and USD interest converted to ARS)
+    for (let i = 1; i < projection.length; i++) {
+      expect(projection[i].value).toBeGreaterThan(projection[i - 1].value);
+    }
+  });
+
+  it('should distribute returns equally among multiple goals with different currencies', () => {
+    const positions: PortfolioPosition[] = [
+      {
+        type: 'FixedTermDeposit',
+        id: 'fd1',
+        provider: 'Banco Test',
+        amount: 10000,
+        annualRate: 60, // 60% annual rate
+        startDate: '2024-01-01',
+        maturityDate: '2024-12-31',
+        currency: 'ARS',
+      },
+      {
+        type: 'FixedTermDeposit',
+        id: 'fd2',
+        provider: 'US Bank',
+        amount: 1000,
+        annualRate: 4, // 4% annual rate
+        startDate: '2024-01-01',
+        maturityDate: '2024-12-31',
+        currency: 'USD',
+      },
+    ];
+    const bonds: Bond[] = [];
+    const today = dayjs();
+    const arsGoal: InvestmentGoal = {
+      id: 'ars-goal',
+      name: 'ARS Goal',
+      targetAmount: 20000,
+      targetDate: today.add(1, 'year').format('YYYY-MM-DD'),
+      initialDeposit: 10000,
+      monthlyContribution: 0,
+      currency: 'ARS',
+    };
+    const usdGoal: InvestmentGoal = {
+      id: 'usd-goal',
+      name: 'USD Goal',
+      targetAmount: 2000,
+      targetDate: today.add(1, 'year').format('YYYY-MM-DD'),
+      initialDeposit: 1000,
+      monthlyContribution: 0,
+      currency: 'USD',
+    };
+    
+    const distributed = distributeFixedIncomeReturns(positions, bonds, [arsGoal, usdGoal], 10000);
+    
+    // Both goals should have projections
+    expect(distributed[arsGoal.id]).toBeDefined();
+    expect(distributed[usdGoal.id]).toBeDefined();
+    
+    const arsProjection = distributed[arsGoal.id];
+    const usdProjection = distributed[usdGoal.id];
+    
+    // Each goal should start with half the initial value in their currency
+    expect(arsProjection[0].value).toBe(5000); // Half of 10000 ARS
+    expect(usdProjection[0].value).toBeCloseTo(5, 2); // Half of 10000 ARS converted to USD
+    
+    // Both projections should increase over time
+    expect(arsProjection[1].value).toBeGreaterThan(arsProjection[0].value);
+    expect(usdProjection[1].value).toBeGreaterThan(usdProjection[0].value);
+  });
+
+  it('should handle bond positions with currency conversion', () => {
+    const positions: PortfolioPosition[] = [
+      {
+        type: 'Bond',
+        ticker: 'BOND1',
+        quantity: 100,
+        averagePrice: 100,
+        currency: 'ARS',
+      },
+      {
+        type: 'Bond',
+        ticker: 'BOND2',
+        quantity: 10,
+        averagePrice: 100,
+        currency: 'USD',
+      },
+    ];
+    const bonds: Bond[] = [
+      {
+        id: 'bond1',
+        ticker: 'BOND1',
+        name: 'ARS Bond',
+        issuer: 'Test Issuer',
+        maturityDate: '2025-12-31',
+        couponRate: 10, // 10% annual rate
+        price: 100,
+        currency: 'ARS',
+      },
+      {
+        id: 'bond2',
+        ticker: 'BOND2',
+        name: 'USD Bond',
+        issuer: 'Test Issuer',
+        maturityDate: '2025-12-31',
+        couponRate: 5, // 5% annual rate
+        price: 100,
+        currency: 'USD',
+      },
+    ];
+    const today = dayjs();
+    const usdGoal: InvestmentGoal = {
+      id: 'usd-goal',
+      name: 'USD Goal',
+      targetAmount: 2000,
+      targetDate: today.add(1, 'year').format('YYYY-MM-DD'),
+      initialDeposit: 1000,
+      monthlyContribution: 0,
+      currency: 'USD',
+    };
+    
+    const distributed = distributeFixedIncomeReturns(positions, bonds, [usdGoal], 1000);
+    const projection = distributed[usdGoal.id];
+    
+    expect(projection).toBeDefined();
+    expect(projection.length).toBeGreaterThan(0);
+    
+    // First value should be the initial value in ARS divided by number of goals, converted to USD
+    expect(projection[0].value).toBeCloseTo(1, 2);
+    
+    // Values should increase over time (both ARS and USD bond interest converted to USD)
+    for (let i = 1; i < projection.length; i++) {
+      expect(projection[i].value).toBeGreaterThan(projection[i - 1].value);
+    }
+  });
+
+  it('should return empty object for empty goals array', () => {
+    const positions: PortfolioPosition[] = [
+      {
+        type: 'FixedTermDeposit',
+        id: 'fd1',
+        provider: 'Banco Test',
+        amount: 10000,
+        annualRate: 60,
+        startDate: '2024-01-01',
+        maturityDate: '2024-12-31',
+        currency: 'ARS',
+      },
+    ];
+    const bonds: Bond[] = [];
+    
+    const distributed = distributeFixedIncomeReturns(positions, bonds, [], 10000);
+    
+    expect(distributed).toEqual({});
+  });
+
+  it('should handle positions with no daily interest', () => {
+    const positions: PortfolioPosition[] = [
+      {
+        type: 'FixedTermDeposit',
+        id: 'fd1',
+        provider: 'Banco Test',
+        amount: 10000,
+        annualRate: 0, // 0% rate
+        startDate: '2024-01-01',
+        maturityDate: '2024-12-31',
+        currency: 'ARS',
+      },
+    ];
+    const bonds: Bond[] = [];
+    const today = dayjs();
+    const goal: InvestmentGoal = {
+      id: 'goal1',
+      name: 'Test Goal',
+      targetAmount: 20000,
+      targetDate: today.add(1, 'year').format('YYYY-MM-DD'),
+      initialDeposit: 10000,
+      monthlyContribution: 0,
+      currency: 'ARS',
+    };
+    
+    const distributed = distributeFixedIncomeReturns(positions, bonds, [goal], 10000);
+    const projection = distributed[goal.id];
+    
+    expect(projection).toBeDefined();
+    expect(projection.length).toBeGreaterThan(0);
+    
+    // All values should be the same since there's no interest
+    projection.forEach(point => {
+      expect(point.value).toBe(10000);
+    });
   });
 }); 

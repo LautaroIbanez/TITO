@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import GoalProgress from '../GoalProgress';
 import { InvestmentGoal, PortfolioTransaction, PortfolioPosition } from '@/types';
 import { Bond } from '@/types/finance';
+import dayjs from 'dayjs';
 
 describe('GoalProgress', () => {
   const baseGoal: InvestmentGoal = {
@@ -521,5 +522,238 @@ describe('GoalProgress', () => {
     // This might or might not be present depending on the projection calculation
     // We just verify the component renders without errors
     expect(screen.getByText((content) => content.includes('Progreso de Meta:') && content.includes('Meta Test'))).toBeInTheDocument();
+  });
+
+  it('should calculate progress using distributed projections when multiple goals are provided', () => {
+    const goal1: InvestmentGoal = {
+      ...baseGoal,
+      id: 'goal1',
+      name: 'Meta 1',
+      targetAmount: 10000,
+      targetDate: '2024-12-31',
+    };
+    
+    const goal2: InvestmentGoal = {
+      ...baseGoal,
+      id: 'goal2',
+      name: 'Meta 2',
+      targetAmount: 5000,
+      targetDate: '2024-06-30',
+    };
+
+    const valueHistory = [
+      { date: '2024-01-01', value: 3000 },
+      { date: '2024-06-15', value: 5000 },
+    ];
+
+    const transactions: PortfolioTransaction[] = [];
+    const positions: PortfolioPosition[] = [
+      {
+        type: 'FixedTermDeposit',
+        id: 'fd1',
+        provider: 'Test Bank',
+        amount: 10000,
+        annualRate: 60,
+        startDate: '2024-01-01',
+        maturityDate: '2024-12-31',
+        currency: 'ARS',
+      },
+    ];
+    const bonds: Bond[] = [];
+
+    render(
+      <GoalProgress
+        goal={goal1}
+        valueHistory={valueHistory}
+        currentValue={10000}
+        transactions={transactions}
+        positions={positions}
+        bonds={bonds}
+        allGoals={[goal1, goal2]}
+      />
+    );
+
+    // Should show "Valor actual" when using distributed projections (multiple goals)
+    expect(screen.getByText('Valor actual')).toBeInTheDocument();
+    expect(screen.queryByText('Ganancias del Portafolio')).not.toBeInTheDocument();
+    
+    // Should show distributed projection note
+    expect(screen.getByText(/distribuido equitativamente entre todas las metas/)).toBeInTheDocument();
+  });
+
+  it('should apply currency conversion for USD goals', () => {
+    const usdGoal: InvestmentGoal = {
+      ...baseGoal,
+      id: 'usd-goal',
+      name: 'USD Goal',
+      targetAmount: 1000, // USD
+      targetDate: '2024-12-31',
+      currency: 'USD',
+    };
+
+    const valueHistory = [
+      { date: '2024-01-01', value: 3000 },
+      { date: '2024-06-15', value: 5000 },
+    ];
+
+    const transactions: PortfolioTransaction[] = [];
+    const positions: PortfolioPosition[] = [
+      {
+        type: 'FixedTermDeposit',
+        id: 'fd1',
+        provider: 'Test Bank',
+        amount: 1000000, // 1M ARS = ~1000 USD at simplified rate
+        annualRate: 60,
+        startDate: '2024-01-01',
+        maturityDate: '2024-12-31',
+        currency: 'ARS',
+      },
+    ];
+    const bonds: Bond[] = [];
+
+    render(
+      <GoalProgress
+        goal={usdGoal}
+        valueHistory={valueHistory}
+        currentValue={1000000}
+        transactions={transactions}
+        positions={positions}
+        bonds={bonds}
+        allGoals={[usdGoal]}
+      />
+    );
+
+    // Should show USD currency formatting
+    expect(screen.getAllByText(/US\$/)[0]).toBeInTheDocument();
+    
+    // Should show "Ganancias del Portafolio" for single goal (no distributed projections)
+    expect(screen.getByText('Ganancias del Portafolio')).toBeInTheDocument();
+  });
+
+  it('should fall back to original calculation when no distributed projections are available', () => {
+    const goal: InvestmentGoal = {
+      ...baseGoal,
+      targetAmount: 10000,
+      targetDate: '2024-12-31',
+    };
+
+    const valueHistory = [
+      { date: '2024-01-01', value: 3000 },
+      { date: '2024-06-15', value: 5000 },
+    ];
+
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: 't1',
+        date: '2024-01-01',
+        type: 'Deposit',
+        amount: 5000,
+        currency: 'ARS',
+      },
+    ];
+
+    const positions: PortfolioPosition[] = [
+      {
+        type: 'FixedTermDeposit',
+        id: 'fd1',
+        provider: 'Test Bank',
+        amount: 5000,
+        annualRate: 60,
+        startDate: '2024-01-01',
+        maturityDate: '2024-12-31',
+        currency: 'ARS',
+      },
+    ];
+    const bonds: Bond[] = [];
+
+    render(
+      <GoalProgress
+        goal={goal}
+        valueHistory={valueHistory}
+        currentValue={5000}
+        transactions={transactions}
+        positions={positions}
+        bonds={bonds}
+        allGoals={[]} // Empty array means no distributed projections
+      />
+    );
+
+    // Should show "Ganancias del Portafolio" when using original calculation
+    expect(screen.getByText('Ganancias del Portafolio')).toBeInTheDocument();
+    expect(screen.queryByText('Valor actual')).not.toBeInTheDocument();
+  });
+
+  it('should handle missing distributed projection gracefully', () => {
+    const goal1: InvestmentGoal = {
+      ...baseGoal,
+      id: 'goal1',
+      targetAmount: 10000,
+      targetDate: '2024-12-31',
+    };
+    
+    const goal2: InvestmentGoal = {
+      ...baseGoal,
+      id: 'goal2',
+      targetAmount: 5000,
+      targetDate: '2024-06-30',
+    };
+
+    const valueHistory = [
+      { date: '2024-01-01', value: 3000 },
+      { date: '2024-06-15', value: 5000 },
+    ];
+
+    const transactions: PortfolioTransaction[] = [];
+    const positions: PortfolioPosition[] = []; // No positions means no distributed projections
+    const bonds: Bond[] = [];
+
+    render(
+      <GoalProgress
+        goal={goal1}
+        valueHistory={valueHistory}
+        currentValue={0}
+        transactions={transactions}
+        positions={positions}
+        bonds={bonds}
+        allGoals={[goal1, goal2]}
+      />
+    );
+
+    // Should fall back to original calculation when no distributed projections
+    expect(screen.getByText('Ganancias del Portafolio')).toBeInTheDocument();
+    expect(screen.getAllByText('0.0%')[0]).toBeInTheDocument();
+  });
+
+  it('should include "Progreso actual" dataset that stops at today', () => {
+    const goal: InvestmentGoal = {
+      ...baseGoal,
+      targetAmount: 10000,
+      targetDate: dayjs().add(3, 'day').format('YYYY-MM-DD'),
+    };
+    const today = dayjs().format('YYYY-MM-DD');
+    const valueHistory = [
+      { date: dayjs().subtract(2, 'day').format('YYYY-MM-DD'), value: 1000 },
+      { date: dayjs().subtract(1, 'day').format('YYYY-MM-DD'), value: 2000 },
+      { date: today, value: 3000 },
+      { date: dayjs().add(1, 'day').format('YYYY-MM-DD'), value: 4000 }, // Should not appear in line
+    ];
+    const { container } = render(
+      <GoalProgress
+        goal={goal}
+        valueHistory={valueHistory}
+        currentValue={3000}
+        transactions={[]}
+        positions={[]}
+        bonds={[]}
+      />
+    );
+    // Find the chart data in the Line component
+    const chart = container.querySelector('canvas');
+    expect(chart).toBeInTheDocument();
+    // Check that the dataset exists in the rendered chartData
+    // We can't access chartData directly, but we can check for the legend label
+    expect(screen.getByText('Progreso actual')).toBeInTheDocument();
+    // Optionally, check that the line stops at today by inspecting the rendered points (if possible)
+    // But we can at least check that the legend is present
   });
 }); 

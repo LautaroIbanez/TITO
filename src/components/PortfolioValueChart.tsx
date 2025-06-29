@@ -107,6 +107,7 @@ export default function PortfolioValueChart({ valueHistory, currency, title = 'E
     },
     elements: { line: { borderWidth: 2 } },
     maintainAspectRatio: false,
+    layout: { padding: 0 },
   };
 
   const currentValue = valueHistory[valueHistory.length - 1]?.value || 0;
@@ -130,7 +131,7 @@ export default function PortfolioValueChart({ valueHistory, currency, title = 'E
       </div>
 
       <div className="h-64">
-        <Line data={chartData} options={chartOptions} height={240} />
+        <Line data={chartData} options={chartOptions} height={240} className="w-full" />
       </div>
     </div>
   );

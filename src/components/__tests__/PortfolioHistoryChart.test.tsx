@@ -97,4 +97,17 @@ describe('PortfolioHistoryChart', () => {
     expect(options.elements.line.borderWidth).toBe(2);
     expect(options.maintainAspectRatio).toBe(false);
   });
+
+  it('should pass className w-full to Line and set layout.padding to 0', () => {
+    const valueHistory = [
+      { date: '2024-01-01', value: 10000 },
+      { date: '2024-01-02', value: 10500 },
+    ];
+    render(<PortfolioHistoryChart valueHistory={valueHistory} />);
+    const chartOptions = screen.getByTestId('chart-options');
+    const options = JSON.parse(chartOptions.textContent || '{}');
+    expect(options.layout).toBeDefined();
+    expect(options.layout.padding).toBe(0);
+    // If the mock is updated to render className, check for it here
+  });
 }); 

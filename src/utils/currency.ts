@@ -55,4 +55,15 @@ export async function getExchangeRate(from: 'USD' | 'ARS', to: 'USD' | 'ARS'): P
 export async function convertCurrency(amount: number, from: 'USD' | 'ARS', to: 'USD' | 'ARS'): Promise<number> {
   const rate = await getExchangeRate(from, to);
   return amount * rate;
+}
+
+/**
+ * Synchronous currency conversion for use in sync code and tests.
+ * Uses the default hardcoded exchange rate.
+ */
+export function convertCurrencySync(amount: number, from: 'USD' | 'ARS', to: 'USD' | 'ARS'): number {
+  if (from === to) return amount;
+  if (from === 'USD' && to === 'ARS') return amount * DEFAULT_EXCHANGE_RATE_USD_TO_ARS;
+  if (from === 'ARS' && to === 'USD') return amount / DEFAULT_EXCHANGE_RATE_USD_TO_ARS;
+  return amount;
 } 

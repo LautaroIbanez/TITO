@@ -2,8 +2,10 @@ import { PortfolioTransaction, FixedTermDepositCreationTransaction } from '@/typ
 import { PriceData } from '@/types/finance';
 import dayjs from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import { getExchangeRate } from './currency';
 dayjs.extend(isSameOrBefore);
+dayjs.extend(isSameOrAfter);
 
 interface ActiveFixedTermDeposit extends FixedTermDepositCreationTransaction {
   isMatured?: boolean;
@@ -58,23 +60,73 @@ export async function calculatePortfolioValueHistory(
   const activeDeposits: ActiveFixedTermDeposit[] = [];
   const maturedDeposits: ActiveFixedTermDeposit[] = [];
   
-  // Initialize positions up to the start date
+  // Initialize cash balances and positions up to the start date
+  let cashARS = 0;
+  let cashUSD = 0;
+  
   for (const tx of txs) {
     const txDate = dayjs(tx.date);
     if (txDate.isSameOrBefore(startDate)) {
       if (tx.type === 'Buy' || tx.type === 'Sell') {
-        const identifier = tx.assetType === 'Stock' ? tx.symbol : tx.assetType === 'Bond' ? tx.ticker : null;
+        let identifier: string | null = null;
+        if (tx.assetType === 'Stock' && 'symbol' in tx) {
+          identifier = tx.symbol;
+        } else if (tx.assetType === 'Bond' && 'ticker' in tx) {
+          identifier = tx.ticker;
+        }
+        
         if (identifier) {
           const key = `${identifier}_${tx.currency}`;
           const currentQuantity = positions[key]?.quantity || 0;
           if (tx.type === 'Buy') {
             positions[key] = { quantity: currentQuantity + tx.quantity, currency: tx.currency };
+            // Reduce cash by the purchase amount (including fees)
+            const totalCost = tx.quantity * tx.price;
+            const commission = tx.commissionPct ? totalCost * (tx.commissionPct / 100) : 0;
+            const purchaseFee = tx.purchaseFeePct ? totalCost * (tx.purchaseFeePct / 100) : 0;
+            const totalAmount = totalCost + commission + purchaseFee;
+            
+            if (tx.currency === 'ARS') {
+              cashARS -= totalAmount;
+            } else {
+              cashUSD -= totalAmount;
+            }
           } else if (tx.type === 'Sell') {
             positions[key] = { quantity: currentQuantity - tx.quantity, currency: tx.currency };
+            // Add cash from the sale (minus fees)
+            const totalProceeds = tx.quantity * tx.price;
+            const commission = tx.commissionPct ? totalProceeds * (tx.commissionPct / 100) : 0;
+            const totalAmount = totalProceeds - commission;
+            
+            if (tx.currency === 'ARS') {
+              cashARS += totalAmount;
+            } else {
+              cashUSD += totalAmount;
+            }
           }
         }
       } else if (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit') {
         activeDeposits.push(tx as ActiveFixedTermDeposit);
+        // Reduce cash by the deposit amount
+        if (tx.currency === 'ARS') {
+          cashARS -= tx.amount;
+        } else {
+          cashUSD -= tx.amount;
+        }
+      } else if (tx.type === 'Deposit') {
+        // Add cash from deposit
+        if (tx.currency === 'ARS') {
+          cashARS += tx.amount;
+        } else {
+          cashUSD += tx.amount;
+        }
+      } else if (tx.type === 'Withdrawal') {
+        // Remove cash from withdrawal
+        if (tx.currency === 'ARS') {
+          cashARS -= tx.amount;
+        } else {
+          cashUSD -= tx.amount;
+        }
       }
     }
   }
@@ -88,18 +140,58 @@ export async function calculatePortfolioValueHistory(
     const dailyTxs = transactionsByDate.get(dateStr) || [];
     for (const tx of dailyTxs) {
       if (tx.type === 'Buy' || tx.type === 'Sell') {
-        const identifier = tx.assetType === 'Stock' ? tx.symbol : tx.assetType === 'Bond' ? tx.ticker : null;
+        let identifier: string | null = null;
+        if (tx.assetType === 'Stock' && 'symbol' in tx) {
+          identifier = tx.symbol;
+        } else if (tx.assetType === 'Bond' && 'ticker' in tx) {
+          identifier = tx.ticker;
+        }
+        
         if (identifier) {
           const key = `${identifier}_${tx.currency}`;
           const currentQuantity = positions[key]?.quantity || 0;
           if (tx.type === 'Buy') {
             positions[key] = { quantity: currentQuantity + tx.quantity, currency: tx.currency };
+            // Reduce cash by the purchase amount (including fees)
+            const totalCost = tx.quantity * tx.price;
+            const commission = tx.commissionPct ? totalCost * (tx.commissionPct / 100) : 0;
+            const purchaseFee = tx.purchaseFeePct ? totalCost * (tx.purchaseFeePct / 100) : 0;
+            const totalAmount = totalCost + commission + purchaseFee;
+            
+            if (tx.currency === 'ARS') {
+              cashARS -= totalAmount;
+            } else {
+              cashUSD -= totalAmount;
+            }
           } else if (tx.type === 'Sell') {
             positions[key] = { quantity: currentQuantity - tx.quantity, currency: tx.currency };
+            // Add cash from the sale (minus fees)
+            const totalProceeds = tx.quantity * tx.price;
+            const commission = tx.commissionPct ? totalProceeds * (tx.commissionPct / 100) : 0;
+            const totalAmount = totalProceeds - commission;
+            
+            if (tx.currency === 'ARS') {
+              cashARS += totalAmount;
+            } else {
+              cashUSD += totalAmount;
+            }
           }
         }
       } else if (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit') {
         activeDeposits.push(tx as ActiveFixedTermDeposit);
+        // Reduce cash by the deposit amount
+        if (tx.currency === 'ARS') {
+          cashARS -= tx.amount;
+        } else {
+          cashUSD -= tx.amount;
+        }
+      } else if (tx.type === 'Deposit') {
+        // Add cash from deposit
+        if (tx.currency === 'ARS') {
+          cashARS += tx.amount;
+        } else {
+          cashUSD += tx.amount;
+        }
       } else if (tx.type === 'Withdrawal') {
         // Remove matured deposits that match the withdrawal amount and currency
         const withdrawalAmount = tx.amount;
@@ -123,11 +215,18 @@ export async function calculatePortfolioValueHistory(
             }
           }
         }
+        
+        // Remove cash from withdrawal
+        if (tx.currency === 'ARS') {
+          cashARS -= tx.amount;
+        } else {
+          cashUSD -= tx.amount;
+        }
       }
     }
 
-    let dailyValueARS = 0;
-    let dailyValueUSD = 0;
+    let dailyValueARS = cashARS; // Start with cash balance
+    let dailyValueUSD = cashUSD; // Start with cash balance
 
     // Stocks and Bonds
     for (const key in positions) {
@@ -174,7 +273,7 @@ export async function calculatePortfolioValueHistory(
       if (deposit.isMatured) continue;
 
       let value = deposit.amount;
-      if (today.isAfter(startDate)) {
+      if (today.isSameOrAfter(startDate)) {
         const daysActive = today.diff(startDate, 'day');
         const dailyRate = deposit.annualRate / 100 / 365;
         const interest = deposit.amount * dailyRate * daysActive;

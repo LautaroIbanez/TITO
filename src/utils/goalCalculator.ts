@@ -1,6 +1,8 @@
 import { PortfolioPosition, InvestmentGoal, PortfolioTransaction, DepositTransaction } from '@/types';
 import { Bond } from '@/types/finance';
 import dayjs from 'dayjs';
+import { calculateDailyInterest } from './fixedIncomeProjection';
+import { convertCurrencySync } from './currency';
 
 interface MonthlyProjection {
   date: string;
@@ -379,7 +381,7 @@ export function calculateIntersectionDate(
  * @param bonds - Available bond information.
  * @param goals - Array of all active investment goals.
  * @param currentValue - Current fixed income value.
- * @returns Object containing distributed projections for each goal.
+ * @returns Object containing distributed projections for each goal, in each goal's currency.
  */
 export function distributeFixedIncomeReturns(
   positions: PortfolioPosition[],
@@ -387,68 +389,86 @@ export function distributeFixedIncomeReturns(
   goals: InvestmentGoal[],
   currentValue: number
 ): Record<string, { date: string; value: number }[]> {
-  if (goals.length === 0) return {};
-  
-  // Calculate total daily interest from all fixed income positions
-  let totalDailyInterest = 0;
-  
-  positions.forEach(position => {
-    if (position.currency !== 'ARS') return;
-    
-    if (position.type === 'FixedTermDeposit') {
-      const dailyRate = position.annualRate / 100 / 365;
-      totalDailyInterest += position.amount * dailyRate;
-    } else if (position.type === 'Caucion') {
-      const dailyRate = position.annualRate / 100 / 365;
-      totalDailyInterest += position.amount * dailyRate;
-    } else if (position.type === 'Bond') {
-      const bondInfo = bonds.find(b => b.ticker === position.ticker);
-      if (bondInfo) {
-        const dailyRate = bondInfo.couponRate / 100 / 365;
-        totalDailyInterest += position.quantity * position.averagePrice * dailyRate;
-      }
-    }
-  });
-  
-  // Distribute daily interest equally among all goals
-  const dailyInterestPerGoal = totalDailyInterest / goals.length;
-  
+  if (goals.length === 0) {
+    return {};
+  }
+
   const distributedProjections: Record<string, { date: string; value: number }[]> = {};
-  
+
+  // Calculate daily interest for each goal's currency
+  const dailyInterestByCurrency: Record<'ARS' | 'USD', number> = {
+    ARS: calculateDailyInterest(positions, bonds, 'ARS'),
+    USD: calculateDailyInterest(positions, bonds, 'USD'),
+  };
+
+  // Distribute equally among all goals
+  const dailyInterestPerGoal = {
+    ARS: dailyInterestByCurrency.ARS / goals.length,
+    USD: dailyInterestByCurrency.USD / goals.length,
+  };
+
+  // For each goal, create a projection in its own currency
   goals.forEach(goal => {
-    const projection: { date: string; value: number }[] = [];
-    let goalCurrentValue = currentValue / goals.length; // Distribute current value equally
-    let currentDate = dayjs();
+    const goalDailyInterest = dailyInterestPerGoal[goal.currency];
+    // Distribute the current value equally among all goals, then convert to the goal's currency
+    const perGoalValueARS = currentValue / goals.length;
+    const goalCurrentValue = convertCurrencySync(perGoalValueARS, 'ARS', goal.currency);
     
-    // Start with today
+    const projection: { date: string; value: number }[] = [];
+    let currentDate = dayjs();
+    let cumulativeValue = goalCurrentValue;
+
+    // Start with today's value
     projection.push({
       date: currentDate.format('YYYY-MM-DD'),
-      value: goalCurrentValue,
+      value: cumulativeValue,
     });
+
+    // Find the farthest goal date
+    const farthestGoalDate = goals.reduce((farthest, g) => {
+      const goalDate = dayjs(g.targetDate);
+      return goalDate.isAfter(farthest) ? goalDate : farthest;
+    }, dayjs());
+
+    // Calculate the maximum projection date: 5 years beyond the farthest goal date
+    const maxProjectionDate = farthestGoalDate.add(5, 'year');
+
+    // Project until the goal's target amount is reached or max horizon is hit
+    let projectionEndDate = farthestGoalDate;
     
-    // Project until goal target date or until target amount is reached
-    const targetDate = dayjs(goal.targetDate);
+    if (goalDailyInterest > 0) {
+      // Calculate when this goal's target amount will be reached
+      if (goal.targetAmount > cumulativeValue) {
+        const remainingAmount = goal.targetAmount - cumulativeValue;
+        const daysToReach = Math.ceil(remainingAmount / goalDailyInterest);
+        const goalReachedDate = currentDate.add(daysToReach, 'day');
+        
+        // Use the later date between goal target date and calculated reach date
+        projectionEndDate = goalReachedDate.isAfter(farthestGoalDate) ? goalReachedDate : farthestGoalDate;
+      }
+    }
+
+    // Limit to max projection date
+    if (projectionEndDate.isAfter(maxProjectionDate)) {
+      projectionEndDate = maxProjectionDate;
+    }
+
+    // Start from tomorrow since we already added today
     currentDate = currentDate.add(1, 'day');
-    goalCurrentValue += dailyInterestPerGoal;
-    
-    while (currentDate.isBefore(targetDate) || currentDate.isSame(targetDate)) {
+    cumulativeValue += goalDailyInterest;
+
+    while (currentDate.isBefore(projectionEndDate) || currentDate.isSame(projectionEndDate, 'day')) {
       projection.push({
         date: currentDate.format('YYYY-MM-DD'),
-        value: goalCurrentValue,
+        value: cumulativeValue,
       });
-      
-      // Stop if we've reached the target amount
-      if (goalCurrentValue >= goal.targetAmount) {
-        break;
-      }
-      
-      goalCurrentValue += dailyInterestPerGoal;
+      cumulativeValue += goalDailyInterest;
       currentDate = currentDate.add(1, 'day');
     }
-    
+
     distributedProjections[goal.id] = projection;
   });
-  
+
   return distributedProjections;
 }
 

@@ -106,6 +106,40 @@ export default function GoalProgress({
     return calculateEstimatedCompletionDate(goal, distributedProjections[goal.id]);
   }, [goal, distributedProjections]);
 
+  // Calculate today's value from distributed projections when allGoals is provided
+  const todaysValue = useMemo(() => {
+    if (!goal) return 0;
+    
+    if (allGoals.length > 1 && distributedProjections[goal.id]) {
+      const today = dayjs().format('YYYY-MM-DD');
+      const todaysProjection = distributedProjections[goal.id].find(p => p.date === today);
+      return todaysProjection ? todaysProjection.value : 0;
+    }
+    
+    // Fall back to original calculation
+    return calculateFixedIncomeGains(positions, transactions);
+  }, [goal, allGoals, distributedProjections, positions, transactions]);
+
+  // Apply currency conversion if goal uses USD
+  const convertedTodaysValue = useMemo(() => {
+    if (!goal || goal.currency !== 'USD') return todaysValue;
+    
+    // For USD goals, we need to convert from ARS to USD
+    // This is a simplified conversion - in a real app, you'd use current exchange rates
+    const exchangeRate = 1000; // Simplified ARS to USD rate
+    return todaysValue / exchangeRate;
+  }, [todaysValue, goal]);
+
+  // Determine if we're using distributed projections
+  const isUsingDistributedProjections = useMemo(() => {
+    if (allGoals.length <= 1) return false;
+    const arr = distributedProjections[goal?.id || ''];
+    if (!Array.isArray(arr) || arr.length === 0) return false;
+    const today = dayjs().format('YYYY-MM-DD');
+    const todayEntry = arr.find(p => p.date === today);
+    return todayEntry && todayEntry.value > 0;
+  }, [allGoals.length, distributedProjections, goal]);
+
   if (!goal) {
     return (
       <div className="bg-white rounded-lg shadow p-6 mb-8">
@@ -123,11 +157,10 @@ export default function GoalProgress({
     );
   }
 
-  const portfolioGains = calculateFixedIncomeGains(positions, transactions);
   const progressPercentage = (!goal.targetAmount || goal.targetAmount === 0)
     ? 0
-    : Math.min((portfolioGains / goal.targetAmount) * 100, 100);
-  const remainingAmount = Math.max(goal.targetAmount - portfolioGains, 0);
+    : Math.min((convertedTodaysValue / goal.targetAmount) * 100, 100);
+  const remainingAmount = Math.max(goal.targetAmount - convertedTodaysValue, 0);
   
   // Create value arrays that match the unified timeline
   const createValueArray = (projection: { date: string; value: number }[]) => {
@@ -137,6 +170,14 @@ export default function GoalProgress({
     });
   };
   
+  // Progreso actual: accumulated value up to today, null after today
+  const todayStr = dayjs().format('YYYY-MM-DD');
+  const progresoActualData = unifiedDates.map(date => {
+    if (dayjs(date).isAfter(todayStr)) return null;
+    const entry = valueHistory.find(v => v.date === date);
+    return entry ? entry.value : 0;
+  });
+
   const chartData = {
     labels: unifiedDates,
     datasets: [
@@ -168,6 +209,16 @@ export default function GoalProgress({
         backgroundColor: 'rgba(245,158,11,0.1)',
         borderDash: [4, 4],
         pointRadius: 0,
+        tension: 0.2,
+      },
+      {
+        label: 'Progreso actual',
+        data: progresoActualData,
+        fill: false,
+        borderColor: '#2563eb',
+        backgroundColor: 'rgba(37,99,235,0.1)',
+        borderDash: [],
+        pointRadius: 2,
         tension: 0.2,
       },
     ],
@@ -234,8 +285,10 @@ export default function GoalProgress({
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="text-center p-4 bg-gray-50 rounded-lg">
-          <div className="text-2xl font-bold text-gray-900">{formatCurrency(portfolioGains, goal.currency)}</div>
-          <div className="text-sm text-gray-700">Ganancias del Portafolio</div>
+          <div className="text-2xl font-bold text-gray-900">{formatCurrency(convertedTodaysValue, goal.currency)}</div>
+          <div className="text-sm text-gray-700">
+            {isUsingDistributedProjections ? 'Valor actual' : 'Ganancias del Portafolio'}
+          </div>
         </div>
         <div className="text-center p-4 bg-gray-50 rounded-lg">
           <div className="text-2xl font-bold text-gray-900">{progressPercentage.toFixed(1)}%</div>
