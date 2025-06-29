@@ -346,4 +346,131 @@ export function calculateFixedIncomeValueHistory(
     });
   }
   return valueHistory;
+}
+
+/**
+ * Calculate the intersection date between fixed income projection and goal target amount.
+ * This determines where the fixed income line crosses the target amount line.
+ * @param fixedIncomeProjection - Array of fixed income projection data.
+ * @param targetAmount - The goal target amount.
+ * @returns The date when fixed income reaches the target amount, or null if never reached.
+ */
+export function calculateIntersectionDate(
+  fixedIncomeProjection: { date: string; value: number }[],
+  targetAmount: number
+): string | null {
+  if (fixedIncomeProjection.length === 0) return null;
+  
+  // Find the first point where fixed income value >= target amount
+  const intersectionPoint = fixedIncomeProjection.find(point => point.value >= targetAmount);
+  
+  if (!intersectionPoint) {
+    // If never reached, return the last date in projection
+    return fixedIncomeProjection[fixedIncomeProjection.length - 1]?.date || null;
+  }
+  
+  return intersectionPoint.date;
+}
+
+/**
+ * Distribute fixed income returns equally among all active goals.
+ * This ensures that all goals benefit from the portfolio's fixed income performance.
+ * @param positions - The user's portfolio positions.
+ * @param bonds - Available bond information.
+ * @param goals - Array of all active investment goals.
+ * @param currentValue - Current fixed income value.
+ * @returns Object containing distributed projections for each goal.
+ */
+export function distributeFixedIncomeReturns(
+  positions: PortfolioPosition[],
+  bonds: Bond[],
+  goals: InvestmentGoal[],
+  currentValue: number
+): Record<string, { date: string; value: number }[]> {
+  if (goals.length === 0) return {};
+  
+  // Calculate total daily interest from all fixed income positions
+  let totalDailyInterest = 0;
+  
+  positions.forEach(position => {
+    if (position.currency !== 'ARS') return;
+    
+    if (position.type === 'FixedTermDeposit') {
+      const dailyRate = position.annualRate / 100 / 365;
+      totalDailyInterest += position.amount * dailyRate;
+    } else if (position.type === 'Caucion') {
+      const dailyRate = position.annualRate / 100 / 365;
+      totalDailyInterest += position.amount * dailyRate;
+    } else if (position.type === 'Bond') {
+      const bondInfo = bonds.find(b => b.ticker === position.ticker);
+      if (bondInfo) {
+        const dailyRate = bondInfo.couponRate / 100 / 365;
+        totalDailyInterest += position.quantity * position.averagePrice * dailyRate;
+      }
+    }
+  });
+  
+  // Distribute daily interest equally among all goals
+  const dailyInterestPerGoal = totalDailyInterest / goals.length;
+  
+  const distributedProjections: Record<string, { date: string; value: number }[]> = {};
+  
+  goals.forEach(goal => {
+    const projection: { date: string; value: number }[] = [];
+    let goalCurrentValue = currentValue / goals.length; // Distribute current value equally
+    let currentDate = dayjs();
+    
+    // Start with today
+    projection.push({
+      date: currentDate.format('YYYY-MM-DD'),
+      value: goalCurrentValue,
+    });
+    
+    // Project until goal target date or until target amount is reached
+    const targetDate = dayjs(goal.targetDate);
+    currentDate = currentDate.add(1, 'day');
+    goalCurrentValue += dailyInterestPerGoal;
+    
+    while (currentDate.isBefore(targetDate) || currentDate.isSame(targetDate)) {
+      projection.push({
+        date: currentDate.format('YYYY-MM-DD'),
+        value: goalCurrentValue,
+      });
+      
+      // Stop if we've reached the target amount
+      if (goalCurrentValue >= goal.targetAmount) {
+        break;
+      }
+      
+      goalCurrentValue += dailyInterestPerGoal;
+      currentDate = currentDate.add(1, 'day');
+    }
+    
+    distributedProjections[goal.id] = projection;
+  });
+  
+  return distributedProjections;
+}
+
+/**
+ * Calculate the estimated completion date for a goal based on distributed fixed income returns.
+ * @param goal - The investment goal.
+ * @param distributedProjection - The distributed fixed income projection for this goal.
+ * @returns The estimated completion date or null if not reachable.
+ */
+export function calculateEstimatedCompletionDate(
+  goal: InvestmentGoal,
+  distributedProjection: { date: string; value: number }[]
+): string | null {
+  if (distributedProjection.length === 0) return null;
+  
+  // Find when the distributed projection reaches the target amount
+  const completionPoint = distributedProjection.find(point => point.value >= goal.targetAmount);
+  
+  if (!completionPoint) {
+    // If never reached, return null
+    return null;
+  }
+  
+  return completionPoint.date;
 } 

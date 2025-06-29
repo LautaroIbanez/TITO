@@ -18,8 +18,10 @@
     "@binance/connector": "^3.6.1",
     "@types/recharts": "^2.0.1",
     "chart.js": "^4.5.0",
+    "chartjs-adapter-dayjs-4": "^1.0.4",
     "dayjs": "^1.11.13",
     "html2canvas": "^1.4.1",
+    "jest": "^30.0.2",
     "jspdf": "^3.0.1",
     "next": "15.3.3",
     "node-cache": "^5.1.2",
@@ -29,8 +31,7 @@
     "react-dom": "^19.0.0",
     "recharts": "^2.15.3",
     "technicalindicators": "^3.1.0",
-    "yahoo-finance2": "^2.13.3",
-    "jest": "^30.0.2"
+    "yahoo-finance2": "^2.13.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

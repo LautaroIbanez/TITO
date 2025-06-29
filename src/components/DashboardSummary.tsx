@@ -81,6 +81,26 @@ export default function DashboardSummary() {
           { days: 365 }
         );
         setPortfolioValueHistory(valueHistory);
+        
+        // Verify that the last value in history matches current portfolio value
+        if (valueHistory.length > 0) {
+          const lastEntry = valueHistory[valueHistory.length - 1];
+          const arsDifference = Math.abs(lastEntry.valueARS - ARS);
+          const usdDifference = Math.abs(lastEntry.valueUSD - USD);
+          
+          // Log warning if there's a significant difference (more than 1 peso/dollar)
+          if (arsDifference > 1 || usdDifference > 1) {
+            console.warn('Portfolio value mismatch detected:', {
+              currentARS: ARS,
+              historyARS: lastEntry.valueARS,
+              differenceARS: arsDifference,
+              currentUSD: USD,
+              historyUSD: lastEntry.valueUSD,
+              differenceUSD: usdDifference
+            });
+          }
+        }
+        
         const performance = calculatePortfolioPerformance(valueHistory, inflationData || undefined);
         setPerformanceMetrics(performance);
       }
@@ -399,6 +419,7 @@ export default function DashboardSummary() {
                 transactions={portfolioData.transactions}
                 positions={portfolioData.positions}
                 bonds={bonds}
+                allGoals={goals}
                 showManageLink={true}
               />
             );

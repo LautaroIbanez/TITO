@@ -1,9 +1,31 @@
 import React from 'react';
 import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler, TooltipItem } from 'chart.js';
+import { 
+  Chart as ChartJS, 
+  CategoryScale, 
+  LinearScale, 
+  PointElement, 
+  LineElement, 
+  Tooltip, 
+  Legend, 
+  Filler, 
+  TooltipItem,
+  TimeScale
+} from 'chart.js';
+import 'chartjs-adapter-dayjs-4';
+import dayjs from 'dayjs';
 import { formatCurrency } from '@/utils/goalCalculator';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
+ChartJS.register(
+  CategoryScale, 
+  LinearScale, 
+  PointElement, 
+  LineElement, 
+  Tooltip, 
+  Legend, 
+  Filler,
+  TimeScale
+);
 
 interface Props {
   valueHistory: { date: string; value: number }[];
@@ -22,11 +44,13 @@ export default function PortfolioValueChart({ valueHistory, currency, title = 'E
   }
 
   const chartData = {
-    labels: valueHistory.map((d) => d.date),
     datasets: [
       {
         label: `Valor del Portafolio (${currency})`,
-        data: valueHistory.map((d) => d.value),
+        data: valueHistory.map((d) => ({
+          x: dayjs(d.date).toDate(),
+          y: d.value
+        })),
         fill: true,
         borderColor: '#2563eb',
         backgroundColor: 'rgba(37,99,235,0.1)',
@@ -54,11 +78,22 @@ export default function PortfolioValueChart({ valueHistory, currency, title = 'E
     },
     scales: { 
       x: { 
-        type: 'category' as const,
+        type: 'time' as const,
         display: true,
+        time: {
+          parser: 'YYYY-MM-DD',
+          unit: 'day' as const,
+          displayFormats: {
+            day: 'YYYY-MM-DD'
+          }
+        },
         title: {
           display: true,
           text: 'Fecha'
+        },
+        ticks: {
+          source: 'auto' as const,
+          maxTicksLimit: 10
         }
       }, 
       y: { 

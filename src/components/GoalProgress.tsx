@@ -5,7 +5,19 @@ import Link from 'next/link';
 import { InvestmentGoal, PortfolioTransaction, PortfolioPosition } from '@/types';
 import { Bond } from '@/types/finance';
 import { projectFixedIncome } from '@/utils/fixedIncomeProjection';
-import { calculateEffectiveYield, projectGoalPlan, formatCurrency, calculateFixedIncomeGains } from '@/utils/goalCalculator';
+import { 
+  calculateEffectiveYield, 
+  projectGoalPlan, 
+  formatCurrency, 
+  calculateFixedIncomeGains,
+  calculateIntersectionDate,
+  distributeFixedIncomeReturns,
+  calculateEstimatedCompletionDate
+} from '@/utils/goalCalculator';
+import dayjs from 'dayjs';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+
+dayjs.extend(isSameOrBefore);
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
@@ -16,15 +28,70 @@ interface Props {
   transactions: PortfolioTransaction[];
   positions: PortfolioPosition[];
   bonds: Bond[];
+  allGoals?: InvestmentGoal[]; // Add all goals for equitable distribution
   actionButtons?: React.ReactNode;
   showManageLink?: boolean;
 }
 
-export default function GoalProgress({ goal, valueHistory, currentValue, transactions, positions, bonds, actionButtons, showManageLink }: Props) {
+export default function GoalProgress({ 
+  goal, 
+  valueHistory, 
+  currentValue, 
+  transactions, 
+  positions, 
+  bonds, 
+  allGoals = [], 
+  actionButtons, 
+  showManageLink 
+}: Props) {
+  // Calculate distributed fixed income returns if we have all goals
+  const distributedProjections = useMemo(() => {
+    if (allGoals.length === 0) return {};
+    return distributeFixedIncomeReturns(positions, bonds, allGoals, currentValue);
+  }, [positions, bonds, allGoals, currentValue]);
+
+  // Use distributed projection for this goal if available, otherwise fall back to original
   const fixedIncomeProjection = useMemo(() => {
-    if (!goal || !positions || !bonds) return [];
+    if (!goal) return [];
+    
+    if (allGoals.length > 0 && distributedProjections[goal.id]) {
+      return distributedProjections[goal.id];
+    }
+    
+    // Fall back to original calculation
     return projectFixedIncome(currentValue, positions, bonds, [goal]);
-  }, [currentValue, positions, bonds, goal]);
+  }, [goal, currentValue, positions, bonds, allGoals, distributedProjections]);
+
+  // Calculate intersection date to determine chart range
+  const intersectionDate = useMemo(() => {
+    if (!goal || fixedIncomeProjection.length === 0) return null;
+    return calculateIntersectionDate(fixedIncomeProjection, goal.targetAmount);
+  }, [goal, fixedIncomeProjection]);
+
+  // Create unified date array from earliest value history date through intersection date or goal target date
+  const unifiedDates = useMemo(() => {
+    if (!goal || valueHistory.length === 0) return [];
+    
+    const earliestDate = valueHistory.reduce((earliest, current) => {
+      return dayjs(current.date).isBefore(dayjs(earliest)) ? current.date : earliest;
+    }, valueHistory[0].date);
+    
+    // Use intersection date if available, otherwise use goal target date
+    const endDate = intersectionDate ? dayjs(intersectionDate) : dayjs(goal.targetDate);
+    const startDate = dayjs(earliestDate);
+    
+    if (!startDate.isValid() || !endDate.isValid()) return [];
+    
+    const dates: string[] = [];
+    let currentDate = startDate;
+    
+    while (currentDate.isSameOrBefore(endDate)) {
+      dates.push(currentDate.format('YYYY-MM-DD'));
+      currentDate = currentDate.add(1, 'day');
+    }
+    
+    return dates;
+  }, [goal, valueHistory, intersectionDate]);
 
   const goalPlanProjection = useMemo(() => {
     if (!goal || valueHistory.length === 0) return [];
@@ -32,6 +99,12 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
     const dates = valueHistory.map(p => p.date);
     return projectGoalPlan(goal, dates, annualReturn);
   }, [goal, valueHistory, positions, bonds]);
+
+  // Calculate estimated completion date
+  const estimatedCompletionDate = useMemo(() => {
+    if (!goal || !distributedProjections[goal.id]) return null;
+    return calculateEstimatedCompletionDate(goal, distributedProjections[goal.id]);
+  }, [goal, distributedProjections]);
 
   if (!goal) {
     return (
@@ -56,12 +129,20 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
     : Math.min((portfolioGains / goal.targetAmount) * 100, 100);
   const remainingAmount = Math.max(goal.targetAmount - portfolioGains, 0);
   
+  // Create value arrays that match the unified timeline
+  const createValueArray = (projection: { date: string; value: number }[]) => {
+    return unifiedDates.map(date => {
+      const projectionEntry = projection.find(p => p.date === date);
+      return projectionEntry ? projectionEntry.value : 0;
+    });
+  };
+  
   const chartData = {
-    labels: valueHistory.map((d) => d.date),
+    labels: unifiedDates,
     datasets: [
       {
         label: 'Monto Objetivo',
-        data: Array(valueHistory.length).fill(goal.targetAmount),
+        data: Array(unifiedDates.length).fill(goal.targetAmount),
         fill: false,
         borderColor: '#dc2626',
         backgroundColor: 'rgba(220,38,38,0.1)',
@@ -70,8 +151,8 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
         tension: 0,
       },
       {
-        label: 'Proyección (Ingresos Pasivos)',
-        data: fixedIncomeProjection.map(p => p.value),
+        label: 'Retorno estimado por renta fija',
+        data: createValueArray(fixedIncomeProjection),
         fill: false,
         borderColor: '#059669',
         backgroundColor: 'rgba(5,150,105,0.1)',
@@ -80,8 +161,8 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
         tension: 0.2,
       },
       {
-        label: 'Proyección (Plan de Aportes)',
-        data: goalPlanProjection.map(p => p.value),
+        label: 'Inversión mensual programada',
+        data: createValueArray(goalPlanProjection),
         fill: false,
         borderColor: '#f59e0b',
         backgroundColor: 'rgba(245,158,11,0.1)',
@@ -99,13 +180,28 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
         display: true,
         position: 'top' as const,
       }, 
-      tooltip: { enabled: true } 
+      tooltip: { 
+        enabled: true,
+        callbacks: {
+          label: function(context: any) {
+            const label = context.dataset.label || '';
+            const value = context.parsed.y;
+            const currency = goal?.currency || 'ARS';
+            return `${label}: ${formatCurrency(value, currency)}`;
+          }
+        }
+      }
     },
     scales: { 
       x: { 
         type: 'category' as const,
-        labels: valueHistory.map(p => p.date),
-        display: false 
+        display: true,
+        ticks: {
+          callback: function(value: any, index: number) {
+            const date = unifiedDates[index];
+            return date ? dayjs(date).format('YYYY-MM-DD') : '';
+          }
+        }
       }, 
       y: { 
         display: true,
@@ -122,6 +218,11 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-1">Progreso de Meta: {goal.name}</h3>
           <p className="text-sm text-gray-700">Objetivo: {formatCurrency(Number(goal.targetAmount || 0), goal.currency)}</p>
+          {estimatedCompletionDate && (
+            <p className="text-sm text-green-600">
+              Fecha estimada de cumplimiento: {dayjs(estimatedCompletionDate).format('DD/MM/YYYY')}
+            </p>
+          )}
         </div>
         <div className="flex items-center space-x-2">
           {actionButtons}
@@ -161,6 +262,11 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
 
       <div className="h-64">
         <Line data={chartData} options={chartOptions} height={240} />
+      </div>
+      <div className="mt-2 text-xs text-gray-600">
+        <div><span className="font-semibold" style={{color: '#059669'}}>Retorno estimado por renta fija</span>: Proyección de crecimiento del portafolio solo por intereses de plazos fijos y cauciones {allGoals.length > 1 ? '(distribuido equitativamente entre todas las metas)' : ''}.</div>
+        <div><span className="font-semibold" style={{color: '#f59e0b'}}>Inversión mensual programada</span>: Proyección considerando aportes mensuales según tu plan de inversión.</div>
+        <div><span className="font-semibold" style={{color: '#dc2626'}}>Monto Objetivo</span>: Meta de capital a alcanzar para la fecha objetivo.</div>
       </div>
     </div>
   );
