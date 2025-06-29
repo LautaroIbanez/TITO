@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2024-01-15T10:00:00Z",
+  "lastUpdated": "2025-06-28T23:01:47.642Z",
   "rates": [
     {
       "term": 1,
@@ -11,7 +11,7 @@
     {
       "term": 7,
       "annualRate": 120.2,
-      "currency": "ARS", 
+      "currency": "ARS",
       "provider": "BYMA",
       "description": "Caución a 7 días"
     },
@@ -19,7 +19,7 @@
       "term": 14,
       "annualRate": 121.8,
       "currency": "ARS",
-      "provider": "BYMA", 
+      "provider": "BYMA",
       "description": "Caución a 14 días"
     },
     {
@@ -58,4 +58,4 @@
       "description": "Caución a 365 días"
     }
   ]
-} 
+}
