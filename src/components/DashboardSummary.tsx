@@ -10,7 +10,7 @@ import { usePortfolio } from '@/contexts/PortfolioContext';
 import GoalProgress from './GoalProgress';
 import PortfolioValueChart from './PortfolioValueChart';
 import { formatCurrency, calculateFixedIncomeGains, calculateFixedIncomeValueHistory } from '@/utils/goalCalculator';
-import { trimHistory } from '@/utils/portfolioData';
+import { trimHistory } from '@/utils/history';
 
 export default function DashboardSummary() {
   const [portfolioValueARS, setPortfolioValueARS] = useState(0);
@@ -22,7 +22,6 @@ export default function DashboardSummary() {
   const [inflationData, setInflationData] = useState<InflationData | null>(null);
   const [goalValueHistories, setGoalValueHistories] = useState<Record<string, { date: string, value: number }[]>>({});
   const [portfolioValueHistory, setPortfolioValueHistory] = useState<PortfolioValueHistory[]>([]);
-  const [investedCapitalHistory, setInvestedCapitalHistory] = useState<{ date: string; investedARS: number; investedUSD: number }[]>([]);
   
   const { portfolioData, strategy, loading, error, portfolioVersion } = usePortfolio();
 
@@ -83,20 +82,6 @@ export default function DashboardSummary() {
           { days: 365 }
         );
         setPortfolioValueHistory(valueHistory);
-        
-        // Compute invested capital history for the same date range
-        if (valueHistory.length > 0) {
-          const startDate = valueHistory[0].date;
-          const endDate = valueHistory[valueHistory.length - 1].date;
-          const investedHistory = calculateDailyInvestedCapital(
-            portfolioData.transactions || [],
-            startDate,
-            endDate
-          );
-          setInvestedCapitalHistory(investedHistory);
-        } else {
-          setInvestedCapitalHistory([]);
-        }
         
         // Verify that the last value in history matches current portfolio value
         if (valueHistory.length > 0) {

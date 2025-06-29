@@ -2,7 +2,7 @@ import '@testing-library/jest-dom';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import PortfolioValueChart from '../PortfolioValueChart';
-import { trimHistory } from '@/utils/portfolioData';
+import { trimHistory } from '@/utils/history';
 
 // Mock react-chartjs-2
 jest.mock('react-chartjs-2', () => ({
