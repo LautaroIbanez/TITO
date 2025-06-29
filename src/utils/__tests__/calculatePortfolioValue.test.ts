@@ -10,9 +10,8 @@ jest.mock('../currency', () => ({
 
 describe('calculatePortfolioValueHistory', () => {
   it('should correctly calculate portfolio value with a fixed-term deposit', async () => {
-    const today = dayjs();
-    const depositDate = today.subtract(30, 'days');
-    const maturityDate = today;
+    const depositDate = dayjs('2024-01-01');
+    const maturityDate = dayjs('2024-01-31');
     
     const transactions: PortfolioTransaction[] = [
       {
@@ -39,47 +38,55 @@ describe('calculatePortfolioValueHistory', () => {
     // Calculate history from 35 days before deposit to 10 days after maturity
     const startDate = depositDate.subtract(5, 'days');
     const endDate = maturityDate.add(10, 'days');
-    const days = endDate.diff(startDate, 'day') + 1;
     
-    const history = await calculatePortfolioValueHistory(transactions, {}, { days });
+    const history = await calculatePortfolioValueHistory(transactions, {}, { startDate: startDate.format('YYYY-MM-DD'), endDate: endDate.format('YYYY-MM-DD') });
 
     // History should include the expected range
-    expect(history.length).toBe(days);
+    expect(history.length).toBe(endDate.diff(startDate, 'day') + 1);
 
     // Day before deposit - value should be 0
     const dayBefore = history.find(h => h.date === depositDate.subtract(1, 'day').format('YYYY-MM-DD'));
     expect(dayBefore).toBeDefined();
     expect(dayBefore!.valueARS).toBe(0);
+    expect(dayBefore!.valueARSRaw).toBe(0);
+    expect(dayBefore!.cashARS).toBe(0);
 
     // First day of deposit - value should be the principal (cash deposit - fixed term creation = 0, but fixed term value = 10000)
     const firstDay = history.find(h => h.date === depositDate.format('YYYY-MM-DD'));
     expect(firstDay).toBeDefined();
     expect(firstDay!.valueARS).toBe(10000);
+    expect(firstDay!.valueARSRaw).toBe(10000);
+    expect(firstDay!.cashARS).toBe(0); // Cash was used to create the deposit
 
     // Mid-term (15 days in) - value should include accrued interest
     const midDay = history.find(h => h.date === depositDate.add(15, 'days').format('YYYY-MM-DD'));
     expect(midDay).toBeDefined();
     const expectedMidValue = 10000 + (10000 * (0.365 / 365) * 15);
     expect(midDay!.valueARS).toBeCloseTo(expectedMidValue);
+    expect(midDay!.valueARSRaw).toBeCloseTo(expectedMidValue);
+    expect(midDay!.cashARS).toBe(0);
 
     // Maturity day - value should include full interest
     const maturityDay = history.find(h => h.date === maturityDate.format('YYYY-MM-DD'));
     expect(maturityDay).toBeDefined();
     const expectedFinalValue = 10000 + (10000 * (0.365 / 365) * 30);
     expect(maturityDay!.valueARS).toBeCloseTo(expectedFinalValue);
+    expect(maturityDay!.valueARSRaw).toBeCloseTo(expectedFinalValue);
+    expect(maturityDay!.cashARS).toBe(0);
 
     // Day after maturity - deposit value should remain constant (not drop to 0)
     const dayAfter = history.find(h => h.date === maturityDate.add(1, 'day').format('YYYY-MM-DD'));
     if(dayAfter) {
       expect(dayAfter.valueARS).toBeCloseTo(expectedFinalValue); // Should remain the same
+      expect(dayAfter.valueARSRaw).toBeCloseTo(expectedFinalValue);
+      expect(dayAfter.cashARS).toBe(0);
     }
   });
 
   it('should remove matured deposit value when withdrawal transaction occurs', async () => {
-    const today = dayjs();
-    const depositDate = today.subtract(30, 'days');
-    const maturityDate = today;
-    const withdrawalDate = today.add(5, 'days');
+    const depositDate = dayjs('2024-01-01');
+    const maturityDate = dayjs('2024-01-31');
+    const withdrawalDate = dayjs('2024-02-05');
     
     const transactions: PortfolioTransaction[] = [
       {
@@ -113,32 +120,36 @@ describe('calculatePortfolioValueHistory', () => {
     // Calculate history from 5 days before deposit to 10 days after withdrawal
     const startDate = depositDate.subtract(5, 'days');
     const endDate = withdrawalDate.add(10, 'days');
-    const days = endDate.diff(startDate, 'day') + 1;
     
-    const history = await calculatePortfolioValueHistory(transactions, {}, { days });
+    const history = await calculatePortfolioValueHistory(transactions, {}, { startDate: startDate.format('YYYY-MM-DD'), endDate: endDate.format('YYYY-MM-DD') });
 
     // Day before withdrawal - value should still include matured deposit
     const dayBeforeWithdrawal = history.find(h => h.date === withdrawalDate.subtract(1, 'day').format('YYYY-MM-DD'));
     expect(dayBeforeWithdrawal).toBeDefined();
     const expectedFinalValue = 10000 + (10000 * (0.365 / 365) * 30);
     expect(dayBeforeWithdrawal!.valueARS).toBeCloseTo(expectedFinalValue);
+    expect(dayBeforeWithdrawal!.valueARSRaw).toBeCloseTo(expectedFinalValue);
+    expect(dayBeforeWithdrawal!.cashARS).toBe(0);
 
     // Day of withdrawal - value should drop to 0
     const withdrawalDay = history.find(h => h.date === withdrawalDate.format('YYYY-MM-DD'));
     expect(withdrawalDay).toBeDefined();
     expect(withdrawalDay!.valueARS).toBe(0);
+    expect(withdrawalDay!.valueARSRaw).toBe(0);
+    expect(withdrawalDay!.cashARS).toBe(0);
 
     // Day after withdrawal - value should remain 0
     const dayAfterWithdrawal = history.find(h => h.date === withdrawalDate.add(1, 'day').format('YYYY-MM-DD'));
     expect(dayAfterWithdrawal).toBeDefined();
     expect(dayAfterWithdrawal!.valueARS).toBe(0);
+    expect(dayAfterWithdrawal!.valueARSRaw).toBe(0);
+    expect(dayAfterWithdrawal!.cashARS).toBe(0);
   });
 
   it('should handle multiple deposits and withdrawals correctly', async () => {
-    const today = dayjs();
-    const deposit1Date = today.subtract(30, 'days');
-    const deposit2Date = today.subtract(15, 'days');
-    const maturityDate = today;
+    const deposit1Date = dayjs('2024-01-01');
+    const deposit2Date = dayjs('2024-01-16');
+    const maturityDate = dayjs('2024-01-31');
     
     const transactions: PortfolioTransaction[] = [
       {
@@ -177,9 +188,8 @@ describe('calculatePortfolioValueHistory', () => {
     // Calculate history from 5 days before first deposit to 10 days after maturity
     const startDate = deposit1Date.subtract(5, 'days');
     const endDate = maturityDate.add(10, 'days');
-    const days = endDate.diff(startDate, 'day') + 1;
     
-    const history = await calculatePortfolioValueHistory(transactions, {}, { days });
+    const history = await calculatePortfolioValueHistory(transactions, {}, { startDate: startDate.format('YYYY-MM-DD'), endDate: endDate.format('YYYY-MM-DD') });
 
     // Day after both deposits mature - should include both matured deposits plus remaining cash
     const dayAfterMaturity = history.find(h => h.date === maturityDate.add(1, 'day').format('YYYY-MM-DD'));
@@ -188,13 +198,14 @@ describe('calculatePortfolioValueHistory', () => {
     const expectedValue2 = 5000 + (5000 * (0.365 / 365) * 15);
     const remainingCash = 15000 - 10000 - 5000; // Initial deposit minus both fixed term deposits
     expect(dayAfterMaturity!.valueARS).toBeCloseTo(expectedValue1 + expectedValue2 + remainingCash);
+    expect(dayAfterMaturity!.valueARSRaw).toBeCloseTo(expectedValue1 + expectedValue2 + remainingCash);
+    expect(dayAfterMaturity!.cashARS).toBe(remainingCash);
   });
 
   it('should handle partial withdrawals correctly', async () => {
-    const today = dayjs();
-    const depositDate = today.subtract(30, 'days');
-    const maturityDate = today;
-    const withdrawalDate = today.add(5, 'days');
+    const depositDate = dayjs('2024-01-01');
+    const maturityDate = dayjs('2024-01-31');
+    const withdrawalDate = dayjs('2024-02-05');
     
     const transactions: PortfolioTransaction[] = [
       {
@@ -228,9 +239,8 @@ describe('calculatePortfolioValueHistory', () => {
     // Calculate history from 5 days before deposit to 10 days after withdrawal
     const startDate = depositDate.subtract(5, 'days');
     const endDate = withdrawalDate.add(10, 'days');
-    const days = endDate.diff(startDate, 'day') + 1;
     
-    const history = await calculatePortfolioValueHistory(transactions, {}, { days });
+    const history = await calculatePortfolioValueHistory(transactions, {}, { startDate: startDate.format('YYYY-MM-DD'), endDate: endDate.format('YYYY-MM-DD') });
 
     // Day after partial withdrawal - value should still include remaining amount
     const dayAfterPartialWithdrawal = history.find(h => h.date === withdrawalDate.add(1, 'day').format('YYYY-MM-DD'));
@@ -238,12 +248,13 @@ describe('calculatePortfolioValueHistory', () => {
     const expectedFinalValue = 10000 + (10000 * (0.365 / 365) * 30);
     const remainingValue = expectedFinalValue - 5000;
     expect(dayAfterPartialWithdrawal!.valueARS).toBeCloseTo(remainingValue);
+    expect(dayAfterPartialWithdrawal!.valueARSRaw).toBeCloseTo(remainingValue);
+    expect(dayAfterPartialWithdrawal!.cashARS).toBe(0);
   });
 
   it('should track cash balances correctly with deposits and withdrawals', async () => {
-    const today = dayjs();
-    const depositDate = today.subtract(10, 'days');
-    const withdrawalDate = today.subtract(5, 'days');
+    const depositDate = dayjs('2024-01-01');
+    const withdrawalDate = dayjs('2024-01-06');
     
     const transactions: PortfolioTransaction[] = [
       {
@@ -265,41 +276,49 @@ describe('calculatePortfolioValueHistory', () => {
     // Calculate history from 15 days before deposit to 5 days after withdrawal
     const startDate = depositDate.subtract(5, 'days');
     const endDate = withdrawalDate.add(5, 'days');
-    const days = endDate.diff(startDate, 'day') + 1;
     
-    const history = await calculatePortfolioValueHistory(transactions, {}, { days });
+    const history = await calculatePortfolioValueHistory(transactions, {}, { startDate: startDate.format('YYYY-MM-DD'), endDate: endDate.format('YYYY-MM-DD') });
 
     // Day before deposit - value should be 0
     const dayBeforeDeposit = history.find(h => h.date === depositDate.subtract(1, 'day').format('YYYY-MM-DD'));
     expect(dayBeforeDeposit).toBeDefined();
     expect(dayBeforeDeposit!.valueARS).toBe(0);
+    expect(dayBeforeDeposit!.valueARSRaw).toBe(0);
+    expect(dayBeforeDeposit!.cashARS).toBe(0);
 
     // Day of deposit - value should be 50000
     const dayOfDeposit = history.find(h => h.date === depositDate.format('YYYY-MM-DD'));
     expect(dayOfDeposit).toBeDefined();
     expect(dayOfDeposit!.valueARS).toBe(50000);
+    expect(dayOfDeposit!.valueARSRaw).toBe(50000);
+    expect(dayOfDeposit!.cashARS).toBe(50000);
 
     // Day before withdrawal - value should still be 50000
     const dayBeforeWithdrawal = history.find(h => h.date === withdrawalDate.subtract(1, 'day').format('YYYY-MM-DD'));
     expect(dayBeforeWithdrawal).toBeDefined();
     expect(dayBeforeWithdrawal!.valueARS).toBe(50000);
+    expect(dayBeforeWithdrawal!.valueARSRaw).toBe(50000);
+    expect(dayBeforeWithdrawal!.cashARS).toBe(50000);
 
     // Day of withdrawal - value should be 30000 (50000 - 20000)
     const dayOfWithdrawal = history.find(h => h.date === withdrawalDate.format('YYYY-MM-DD'));
     expect(dayOfWithdrawal).toBeDefined();
     expect(dayOfWithdrawal!.valueARS).toBe(30000);
+    expect(dayOfWithdrawal!.valueARSRaw).toBe(30000);
+    expect(dayOfWithdrawal!.cashARS).toBe(30000);
 
     // Day after withdrawal - value should remain 30000
     const dayAfterWithdrawal = history.find(h => h.date === withdrawalDate.add(1, 'day').format('YYYY-MM-DD'));
     expect(dayAfterWithdrawal).toBeDefined();
     expect(dayAfterWithdrawal!.valueARS).toBe(30000);
+    expect(dayAfterWithdrawal!.valueARSRaw).toBe(30000);
+    expect(dayAfterWithdrawal!.cashARS).toBe(30000);
   });
 
   it('should track cash balances correctly with buy and sell transactions', async () => {
-    const today = dayjs();
-    const depositDate = today.subtract(10, 'days');
-    const buyDate = today.subtract(8, 'days');
-    const sellDate = today.subtract(5, 'days');
+    const depositDate = dayjs('2024-01-01');
+    const buyDate = dayjs('2024-01-03');
+    const sellDate = dayjs('2024-01-06');
     
     const transactions: PortfolioTransaction[] = [
       {
@@ -345,14 +364,15 @@ describe('calculatePortfolioValueHistory', () => {
     // Calculate history from 15 days before deposit to 5 days after sell
     const startDate = depositDate.subtract(5, 'days');
     const endDate = sellDate.add(5, 'days');
-    const days = endDate.diff(startDate, 'day') + 1;
     
-    const history = await calculatePortfolioValueHistory(transactions, priceHistory, { days });
+    const history = await calculatePortfolioValueHistory(transactions, priceHistory, { startDate: startDate.format('YYYY-MM-DD'), endDate: endDate.format('YYYY-MM-DD') });
 
     // Day of deposit - value should be 100000
     const dayOfDeposit = history.find(h => h.date === depositDate.format('YYYY-MM-DD'));
     expect(dayOfDeposit).toBeDefined();
     expect(dayOfDeposit!.valueARS).toBe(100000);
+    expect(dayOfDeposit!.valueARSRaw).toBe(100000);
+    expect(dayOfDeposit!.cashARS).toBe(100000);
 
     // Day of buy - cash should be reduced by purchase amount + commission
     const dayOfBuy = history.find(h => h.date === buyDate.format('YYYY-MM-DD'));
@@ -363,6 +383,8 @@ describe('calculatePortfolioValueHistory', () => {
     const expectedCashAfterBuy = 100000 - totalBuyCost; // 49500
     const expectedStockValue = 10 * 5000; // 50000
     expect(dayOfBuy!.valueARS).toBeCloseTo(expectedCashAfterBuy + expectedStockValue);
+    expect(dayOfBuy!.valueARSRaw).toBeCloseTo(expectedCashAfterBuy + expectedStockValue);
+    expect(dayOfBuy!.cashARS).toBeCloseTo(expectedCashAfterBuy);
 
     // Day of sell - cash should be increased by sale proceeds - commission, stock value reduced
     const dayOfSell = history.find(h => h.date === sellDate.format('YYYY-MM-DD'));
@@ -373,12 +395,13 @@ describe('calculatePortfolioValueHistory', () => {
     const expectedCashAfterSell = expectedCashAfterBuy + netSellProceeds; // 75240
     const expectedStockValueAfterSell = 5 * 5200; // 26000 (5 remaining shares)
     expect(dayOfSell!.valueARS).toBeCloseTo(expectedCashAfterSell + expectedStockValueAfterSell);
+    expect(dayOfSell!.valueARSRaw).toBeCloseTo(expectedCashAfterSell + expectedStockValueAfterSell);
+    expect(dayOfSell!.cashARS).toBeCloseTo(expectedCashAfterSell);
   });
 
   it('should handle USD transactions correctly', async () => {
-    const today = dayjs();
-    const depositDate = today.subtract(10, 'days');
-    const buyDate = today.subtract(5, 'days');
+    const depositDate = dayjs('2024-01-01');
+    const buyDate = dayjs('2024-01-06');
     
     const transactions: PortfolioTransaction[] = [
       {
@@ -411,14 +434,15 @@ describe('calculatePortfolioValueHistory', () => {
     // Calculate history from 15 days before deposit to 5 days after buy
     const startDate = depositDate.subtract(5, 'days');
     const endDate = buyDate.add(5, 'days');
-    const days = endDate.diff(startDate, 'day') + 1;
     
-    const history = await calculatePortfolioValueHistory(transactions, priceHistory, { days });
+    const history = await calculatePortfolioValueHistory(transactions, priceHistory, { startDate: startDate.format('YYYY-MM-DD'), endDate: endDate.format('YYYY-MM-DD') });
 
     // Day of deposit - value should be 10000 USD
     const dayOfDeposit = history.find(h => h.date === depositDate.format('YYYY-MM-DD'));
     expect(dayOfDeposit).toBeDefined();
     expect(dayOfDeposit!.valueUSD).toBe(10000);
+    expect(dayOfDeposit!.valueUSDRaw).toBe(10000);
+    expect(dayOfDeposit!.cashUSD).toBe(10000);
 
     // Day of buy - cash should be reduced, stock value added
     const dayOfBuy = history.find(h => h.date === buyDate.format('YYYY-MM-DD'));
@@ -429,14 +453,15 @@ describe('calculatePortfolioValueHistory', () => {
     const expectedCashAfterBuy = 10000 - totalBuyCost; // 9242.5
     const expectedStockValue = 5 * 150; // 750
     expect(dayOfBuy!.valueUSD).toBeCloseTo(expectedCashAfterBuy + expectedStockValue);
+    expect(dayOfBuy!.valueUSDRaw).toBeCloseTo(expectedCashAfterBuy + expectedStockValue);
+    expect(dayOfBuy!.cashUSD).toBeCloseTo(expectedCashAfterBuy);
   });
 
   it('should handle mixed ARS and USD transactions correctly', async () => {
-    const today = dayjs();
-    const arsDepositDate = today.subtract(10, 'days');
-    const usdDepositDate = today.subtract(8, 'days');
-    const arsBuyDate = today.subtract(5, 'days');
-    const usdBuyDate = today.subtract(3, 'days');
+    const arsDepositDate = dayjs('2024-01-01');
+    const usdDepositDate = dayjs('2024-01-03');
+    const arsBuyDate = dayjs('2024-01-06');
+    const usdBuyDate = dayjs('2024-01-08');
     
     const transactions: PortfolioTransaction[] = [
       {
@@ -491,9 +516,8 @@ describe('calculatePortfolioValueHistory', () => {
     // Calculate history from 15 days before first deposit to 5 days after last buy
     const startDate = arsDepositDate.subtract(5, 'days');
     const endDate = usdBuyDate.add(5, 'days');
-    const days = endDate.diff(startDate, 'day') + 1;
     
-    const history = await calculatePortfolioValueHistory(transactions, priceHistory, { days });
+    const history = await calculatePortfolioValueHistory(transactions, priceHistory, { startDate: startDate.format('YYYY-MM-DD'), endDate: endDate.format('YYYY-MM-DD') });
 
     // Day after both deposits - should have both cash balances
     const dayAfterDeposits = history.find(h => h.date === usdDepositDate.add(1, 'day').format('YYYY-MM-DD'));
@@ -501,6 +525,10 @@ describe('calculatePortfolioValueHistory', () => {
     // The total value will be converted using exchange rate, so we check individual currencies
     expect(dayAfterDeposits!.valueARS).toBeGreaterThan(0);
     expect(dayAfterDeposits!.valueUSD).toBeGreaterThan(0);
+    expect(dayAfterDeposits!.valueARSRaw).toBe(50000);
+    expect(dayAfterDeposits!.valueUSDRaw).toBe(5000);
+    expect(dayAfterDeposits!.cashARS).toBe(50000);
+    expect(dayAfterDeposits!.cashUSD).toBe(5000);
 
     // Day after ARS buy - ARS cash reduced, USD cash unchanged
     const dayAfterArsBuy = history.find(h => h.date === arsBuyDate.add(1, 'day').format('YYYY-MM-DD'));
@@ -511,7 +539,11 @@ describe('calculatePortfolioValueHistory', () => {
     const expectedArsCashAfterBuy = 50000 - totalArsBuyCost; // -51000 (negative cash)
     const expectedArsStockValue = 100 * 1000; // 100000
     expect(dayAfterArsBuy!.valueARS).toBeCloseTo(expectedArsCashAfterBuy + expectedArsStockValue);
+    expect(dayAfterArsBuy!.valueARSRaw).toBeCloseTo(expectedArsCashAfterBuy + expectedArsStockValue);
+    expect(dayAfterArsBuy!.cashARS).toBeCloseTo(expectedArsCashAfterBuy);
     expect(dayAfterArsBuy!.valueUSD).toBe(5000);
+    expect(dayAfterArsBuy!.valueUSDRaw).toBe(5000);
+    expect(dayAfterArsBuy!.cashUSD).toBe(5000);
 
     // Day after USD buy - USD cash reduced, ARS unchanged
     const dayAfterUsdBuy = history.find(h => h.date === usdBuyDate.add(1, 'day').format('YYYY-MM-DD'));
@@ -522,6 +554,10 @@ describe('calculatePortfolioValueHistory', () => {
     const expectedUsdCashAfterBuy = 5000 - totalUsdBuyCost; // 3485
     const expectedUsdStockValue = 10 * 150; // 1500
     expect(dayAfterUsdBuy!.valueUSD).toBeCloseTo(expectedUsdCashAfterBuy + expectedUsdStockValue);
+    expect(dayAfterUsdBuy!.valueUSDRaw).toBeCloseTo(expectedUsdCashAfterBuy + expectedUsdStockValue);
+    expect(dayAfterUsdBuy!.cashUSD).toBeCloseTo(expectedUsdCashAfterBuy);
     expect(dayAfterUsdBuy!.valueARS).toBeCloseTo(expectedArsCashAfterBuy + expectedArsStockValue);
+    expect(dayAfterUsdBuy!.valueARSRaw).toBeCloseTo(expectedArsCashAfterBuy + expectedArsStockValue);
+    expect(dayAfterUsdBuy!.cashARS).toBeCloseTo(expectedArsCashAfterBuy);
   });
 }); 

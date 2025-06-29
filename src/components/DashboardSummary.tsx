@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { InvestmentGoal, StrategyRecommendation } from '@/types';
 import { Bond } from '@/types/finance';
 import { calculatePortfolioValueHistory, PortfolioValueHistory, calculateCurrentValueByCurrency } from '@/utils/calculatePortfolioValue';
-import { calculateInvestedCapital } from '@/utils/investedCapital';
+import { calculateInvestedCapital, calculateDailyInvestedCapital } from '@/utils/investedCapital';
 import { calculatePortfolioPerformance, fetchInflationData, formatPerformance, PerformanceMetrics, InflationData } from '@/utils/portfolioPerformance';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import GoalProgress from './GoalProgress';
@@ -21,6 +21,7 @@ export default function DashboardSummary() {
   const [inflationData, setInflationData] = useState<InflationData | null>(null);
   const [goalValueHistories, setGoalValueHistories] = useState<Record<string, { date: string, value: number }[]>>({});
   const [portfolioValueHistory, setPortfolioValueHistory] = useState<PortfolioValueHistory[]>([]);
+  const [investedCapitalHistory, setInvestedCapitalHistory] = useState<{ date: string; investedARS: number; investedUSD: number }[]>([]);
   
   const { portfolioData, strategy, loading, error, portfolioVersion } = usePortfolio();
 
@@ -81,6 +82,20 @@ export default function DashboardSummary() {
           { days: 365 }
         );
         setPortfolioValueHistory(valueHistory);
+        
+        // Compute invested capital history for the same date range
+        if (valueHistory.length > 0) {
+          const startDate = valueHistory[0].date;
+          const endDate = valueHistory[valueHistory.length - 1].date;
+          const investedHistory = calculateDailyInvestedCapital(
+            portfolioData.transactions || [],
+            startDate,
+            endDate
+          );
+          setInvestedCapitalHistory(investedHistory);
+        } else {
+          setInvestedCapitalHistory([]);
+        }
         
         // Verify that the last value in history matches current portfolio value
         if (valueHistory.length > 0) {
@@ -291,16 +306,30 @@ export default function DashboardSummary() {
 
       {/* Portfolio Value Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Valor Total del Portafolio (ARS) */}
         <PortfolioValueChart 
           valueHistory={portfolioValueHistory.map(h => ({ date: h.date, value: h.valueARS }))}
           currency="ARS"
           title="Evolución del Portafolio (ARS)"
         />
+        {/* Valor Total del Portafolio (USD) */}
         <PortfolioValueChart 
           valueHistory={portfolioValueHistory.map(h => ({ date: h.date, value: h.valueUSD }))}
           currency="USD"
           title="Evolución del Portafolio (USD)"
         />
+        {/* Capital Invertido (ARS) - TODO: Multi-line chart support */}
+        {/* <PortfolioValueChart 
+          valueHistory={investedCapitalHistory.map(h => ({ date: h.date, value: h.investedARS }))}
+          currency="ARS"
+          title="Capital Invertido (ARS)"
+        /> */}
+        {/* Capital Invertido (USD) - TODO: Multi-line chart support */}
+        {/* <PortfolioValueChart 
+          valueHistory={investedCapitalHistory.map(h => ({ date: h.date, value: h.investedUSD }))}
+          currency="USD"
+          title="Capital Invertido (USD)"
+        /> */}
       </div>
 
       {/* Performance Metrics */}

@@ -15,10 +15,16 @@ export interface PortfolioValueHistory {
   date: string;
   valueARS: number;
   valueUSD: number;
+  valueARSRaw: number;
+  valueUSDRaw: number;
+  cashARS: number;
+  cashUSD: number;
 }
 
 export interface PortfolioValueOptions {
   days?: number; // If provided, calculate last N days. If not, calculate from first transaction to today
+  startDate?: string; // YYYY-MM-DD
+  endDate?: string;   // YYYY-MM-DD
 }
 
 export async function calculatePortfolioValueHistory(
@@ -28,32 +34,39 @@ export async function calculatePortfolioValueHistory(
 ): Promise<PortfolioValueHistory[]> {
   if (!transactions || transactions.length === 0) return [];
 
-  const txs = [...transactions].sort((a, b) => dayjs(a.date).diff(dayjs(b.date)));
+  const txs = [...transactions].sort((a, b) => dayjs(a.date).startOf('day').diff(dayjs(b.date).startOf('day')));
   
   const transactionsByDate = new Map<string, PortfolioTransaction[]>();
   for(const tx of txs) {
-    const dateStr = dayjs(tx.date).format('YYYY-MM-DD');
+    const dateStr = dayjs(tx.date).startOf('day').format('YYYY-MM-DD');
     if (!transactionsByDate.has(dateStr)) {
       transactionsByDate.set(dateStr, []);
     }
     transactionsByDate.get(dateStr)!.push(tx);
   }
 
-  const firstDate = dayjs(txs[0].date).startOf('day');
-  const lastDate = dayjs().startOf('day');
-  
+  // --- Date range logic ---
   let startDate: dayjs.Dayjs;
-  if (options.days && options.days > 0) {
-    startDate = lastDate.subtract(options.days - 1, 'day');
+  let lastDate: dayjs.Dayjs;
+  if (options.startDate && options.endDate) {
+    startDate = dayjs(options.startDate).startOf('day');
+    lastDate = dayjs(options.endDate).startOf('day');
   } else {
-    startDate = firstDate;
+    const firstDate = dayjs(txs[0].date).startOf('day');
+    lastDate = dayjs().startOf('day');
+    if (options.days && options.days > 0) {
+      startDate = lastDate.subtract(options.days - 1, 'day').startOf('day');
+    } else {
+      startDate = firstDate;
+    }
   }
-  
+  // --- End date range logic ---
+
   const allDates: string[] = [];
   let currentDate = startDate;
   while (currentDate.isSameOrBefore(lastDate)) {
     allDates.push(currentDate.format('YYYY-MM-DD'));
-    currentDate = currentDate.add(1, 'day');
+    currentDate = currentDate.add(1, 'day').startOf('day');
   }
   
   const positions: Record<string, { quantity: number; currency: 'ARS' | 'USD' }> = {};
@@ -65,7 +78,7 @@ export async function calculatePortfolioValueHistory(
   let cashUSD = 0;
   
   for (const tx of txs) {
-    const txDate = dayjs(tx.date);
+    const txDate = dayjs(tx.date).startOf('day');
     if (txDate.isSameOrBefore(startDate)) {
       if (tx.type === 'Buy' || tx.type === 'Sell') {
         let identifier: string | null = null;
@@ -136,7 +149,7 @@ export async function calculatePortfolioValueHistory(
   let lastKnownValueUSD = 0;
 
   for (const dateStr of allDates) {
-    const today = dayjs(dateStr);
+    const today = dayjs(dateStr).startOf('day');
     const dailyTxs = transactionsByDate.get(dateStr) || [];
     for (const tx of dailyTxs) {
       if (tx.type === 'Buy' || tx.type === 'Sell') {
@@ -202,8 +215,8 @@ export async function calculatePortfolioValueHistory(
           const deposit = maturedDeposits[i];
           if (deposit.currency === withdrawalCurrency) {
             // Calculate the final value of the deposit (principal + full interest)
-            const startDate = dayjs(deposit.date);
-            const maturityDate = dayjs(deposit.maturityDate);
+            const startDate = dayjs(deposit.date).startOf('day');
+            const maturityDate = dayjs(deposit.maturityDate).startOf('day');
             const days = maturityDate.diff(startDate, 'day');
             const dailyRate = deposit.annualRate / 100 / 365;
             const fullInterest = deposit.amount * dailyRate * days;
@@ -254,8 +267,8 @@ export async function calculatePortfolioValueHistory(
     
     // Fixed-Term Deposits
     for (const deposit of activeDeposits) {
-      const startDate = dayjs(deposit.date);
-      const maturityDate = dayjs(deposit.maturityDate);
+      const startDate = dayjs(deposit.date).startOf('day');
+      const maturityDate = dayjs(deposit.maturityDate).startOf('day');
 
       if (today.isBefore(startDate)) continue;
 
@@ -289,8 +302,8 @@ export async function calculatePortfolioValueHistory(
     
     // Matured Deposits (keep their final value until withdrawn)
     for (const deposit of maturedDeposits) {
-      const startDate = dayjs(deposit.date);
-      const maturityDate = dayjs(deposit.maturityDate);
+      const startDate = dayjs(deposit.date).startOf('day');
+      const maturityDate = dayjs(deposit.maturityDate).startOf('day');
       const days = maturityDate.diff(startDate, 'day');
       const dailyRate = deposit.annualRate / 100 / 365;
       const fullInterest = deposit.amount * dailyRate * days;
@@ -303,14 +316,39 @@ export async function calculatePortfolioValueHistory(
       }
     }
     
+    // Store raw values before conversion
+    const valueARSRaw = dailyValueARS;
+    const valueUSDRaw = dailyValueUSD;
+    
     const exchangeRate = await getExchangeRate('USD', 'ARS');
     const totalARS = dailyValueARS + dailyValueUSD * exchangeRate;
     const totalUSD = dailyValueUSD + dailyValueARS / exchangeRate;
     
-    if (totalARS === 0 && (Object.keys(positions).length > 0 || activeDeposits.length > 0)) {
-      valueHistory.push({ date: dateStr, valueARS: lastKnownValueARS, valueUSD: lastKnownValueUSD });
+    // Only use last known value if we have no positions/deposits but still have a value
+    // This prevents the value from dropping to 0 when we have active positions
+    if (totalARS === 0 && lastKnownValueARS > 0 && 
+        Object.keys(positions).length === 0 && 
+        activeDeposits.length === 0 && 
+        maturedDeposits.length === 0) {
+      valueHistory.push({ 
+        date: dateStr, 
+        valueARS: lastKnownValueARS, 
+        valueUSD: lastKnownValueUSD,
+        valueARSRaw: lastKnownValueARS,
+        valueUSDRaw: lastKnownValueUSD,
+        cashARS: cashARS,
+        cashUSD: cashUSD
+      });
     } else {
-      valueHistory.push({ date: dateStr, valueARS: totalARS, valueUSD: totalUSD });
+      valueHistory.push({ 
+        date: dateStr, 
+        valueARS: totalARS, 
+        valueUSD: totalUSD,
+        valueARSRaw: valueARSRaw,
+        valueUSDRaw: valueUSDRaw,
+        cashARS: cashARS,
+        cashUSD: cashUSD
+      });
       lastKnownValueARS = totalARS;
       lastKnownValueUSD = totalUSD;
     }
@@ -325,7 +363,7 @@ export async function getDailyPortfolioValue(
   priceHistory: Record<string, PriceData[]>
 ): Promise<{ date: string; valueARS: number; valueUSD: number }[]> {
   const history = await calculatePortfolioValueHistory(transactions, priceHistory, {});
-  // Now returns both ARS and USD values for each day.
+  // Return only the converted values for backward compatibility
   return history.map(h => ({ date: h.date, valueARS: h.valueARS, valueUSD: h.valueUSD }));
 }
 

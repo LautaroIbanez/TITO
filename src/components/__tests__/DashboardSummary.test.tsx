@@ -148,9 +148,9 @@ describe('DashboardSummary', () => {
     // Mock the portfolio value history calculation
     // Let's say the current total value is 7000
     mockCalculatePortfolioValueHistory.mockReturnValue([
-      { date: '2023-01-01', valueARS: 5000, valueUSD: 0 },
-      { date: '2023-02-01', valueARS: 6000, valueUSD: 0 },
-      { date: '2023-03-31', valueARS: 7000, valueUSD: 0 }
+      { date: '2023-01-01', valueARS: 5000, valueUSD: 0, valueARSRaw: 5000, valueUSDRaw: 0, cashARS: 2500, cashUSD: 0 },
+      { date: '2023-02-01', valueARS: 6000, valueUSD: 0, valueARSRaw: 6000, valueUSDRaw: 0, cashARS: 3000, cashUSD: 0 },
+      { date: '2023-03-31', valueARS: 7000, valueUSD: 0, valueARSRaw: 7000, valueUSDRaw: 0, cashARS: 3500, cashUSD: 0 }
     ]);
     
     // Mock performance calculations

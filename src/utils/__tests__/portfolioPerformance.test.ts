@@ -21,7 +21,7 @@ describe('portfolioPerformance', () => {
 
     it('should return zero metrics for single data point', () => {
       const history: PortfolioValueHistory[] = [
-        { date: '2024-01-01', valueARS: 1000, valueUSD: 100 }
+        { date: '2024-01-01', valueARS: 1000, valueUSD: 100, valueARSRaw: 1000, valueUSDRaw: 100, cashARS: 500, cashUSD: 50 }
       ];
       
       const result = calculatePortfolioPerformance(history);
@@ -34,8 +34,8 @@ describe('portfolioPerformance', () => {
 
     it('should calculate monthly returns correctly', () => {
       const history: PortfolioValueHistory[] = [
-        { date: '2024-01-01', valueARS: 1000, valueUSD: 100 },
-        { date: '2024-02-01', valueARS: 1100, valueUSD: 105 }
+        { date: '2024-01-01', valueARS: 1000, valueUSD: 100, valueARSRaw: 1000, valueUSDRaw: 100, cashARS: 500, cashUSD: 50 },
+        { date: '2024-02-01', valueARS: 1100, valueUSD: 105, valueARSRaw: 1100, valueUSDRaw: 105, cashARS: 550, cashUSD: 52.5 }
       ];
       
       const result = calculatePortfolioPerformance(history);
@@ -46,8 +46,8 @@ describe('portfolioPerformance', () => {
 
     it('should calculate annual returns correctly', () => {
       const history: PortfolioValueHistory[] = [
-        { date: '2023-01-01', valueARS: 1000, valueUSD: 100 },
-        { date: '2024-01-01', valueARS: 1200, valueUSD: 110 }
+        { date: '2023-01-01', valueARS: 1000, valueUSD: 100, valueARSRaw: 1000, valueUSDRaw: 100, cashARS: 500, cashUSD: 50 },
+        { date: '2024-01-01', valueARS: 1200, valueUSD: 110, valueARSRaw: 1200, valueUSDRaw: 110, cashARS: 600, cashUSD: 55 }
       ];
       
       const result = calculatePortfolioPerformance(history);
@@ -58,8 +58,8 @@ describe('portfolioPerformance', () => {
 
     it('should calculate real returns when inflation data is provided', () => {
       const history: PortfolioValueHistory[] = [
-        { date: '2024-01-01', valueARS: 1000, valueUSD: 100 },
-        { date: '2024-02-01', valueARS: 1100, valueUSD: 105 }
+        { date: '2024-01-01', valueARS: 1000, valueUSD: 100, valueARSRaw: 1000, valueUSDRaw: 100, cashARS: 500, cashUSD: 50 },
+        { date: '2024-02-01', valueARS: 1100, valueUSD: 105, valueARSRaw: 1100, valueUSDRaw: 105, cashARS: 550, cashUSD: 52.5 }
       ];
       
       const inflationData: InflationData = {
@@ -80,8 +80,8 @@ describe('portfolioPerformance', () => {
 
     it('should handle negative returns correctly', () => {
       const history: PortfolioValueHistory[] = [
-        { date: '2024-01-01', valueARS: 1000, valueUSD: 100 },
-        { date: '2024-02-01', valueARS: 900, valueUSD: 95 }
+        { date: '2024-01-01', valueARS: 1000, valueUSD: 100, valueARSRaw: 1000, valueUSDRaw: 100, cashARS: 500, cashUSD: 50 },
+        { date: '2024-02-01', valueARS: 900, valueUSD: 95, valueARSRaw: 900, valueUSDRaw: 95, cashARS: 450, cashUSD: 47.5 }
       ];
       
       const result = calculatePortfolioPerformance(history);
@@ -92,8 +92,8 @@ describe('portfolioPerformance', () => {
 
     it('should sort history by date before calculations', () => {
       const history: PortfolioValueHistory[] = [
-        { date: '2024-02-01', valueARS: 1100, valueUSD: 105 }, // Later date first
-        { date: '2024-01-01', valueARS: 1000, valueUSD: 100 } // Earlier date second
+        { date: '2024-02-01', valueARS: 1100, valueUSD: 105, valueARSRaw: 1100, valueUSDRaw: 105, cashARS: 550, cashUSD: 52.5 }, // Later date first
+        { date: '2024-01-01', valueARS: 1000, valueUSD: 100, valueARSRaw: 1000, valueUSDRaw: 100, cashARS: 500, cashUSD: 50 } // Earlier date second
       ];
       
       const result = calculatePortfolioPerformance(history);
@@ -104,8 +104,8 @@ describe('portfolioPerformance', () => {
 
     it('should handle zero values in the past without producing Infinity', () => {
       const history: PortfolioValueHistory[] = [
-        { date: '2024-01-01', valueARS: 0, valueUSD: 0 }, // Zero starting value
-        { date: '2024-02-01', valueARS: 1000, valueUSD: 100 } // Current value
+        { date: '2024-01-01', valueARS: 0, valueUSD: 0, valueARSRaw: 0, valueUSDRaw: 0, cashARS: 0, cashUSD: 0 }, // Zero starting value
+        { date: '2024-02-01', valueARS: 1000, valueUSD: 100, valueARSRaw: 1000, valueUSDRaw: 100, cashARS: 500, cashUSD: 50 } // Current value
       ];
       
       const result = calculatePortfolioPerformance(history);
@@ -119,8 +119,8 @@ describe('portfolioPerformance', () => {
 
     it('should handle negative values in the past correctly', () => {
       const history: PortfolioValueHistory[] = [
-        { date: '2024-01-01', valueARS: -1000, valueUSD: -100 }, // Negative starting value
-        { date: '2024-02-01', valueARS: 1000, valueUSD: 100 } // Current value
+        { date: '2024-01-01', valueARS: -1000, valueUSD: -100, valueARSRaw: -1000, valueUSDRaw: -100, cashARS: -500, cashUSD: -50 }, // Negative starting value
+        { date: '2024-02-01', valueARS: 1000, valueUSD: 100, valueARSRaw: 1000, valueUSDRaw: 100, cashARS: 500, cashUSD: 50 } // Current value
       ];
       
       const result = calculatePortfolioPerformance(history);
@@ -132,10 +132,10 @@ describe('portfolioPerformance', () => {
 
     it('should use reverse search to find the correct reference point', () => {
       const history: PortfolioValueHistory[] = [
-        { date: '2024-01-01', valueARS: 1000, valueUSD: 100 },
-        { date: '2024-01-15', valueARS: 1100, valueUSD: 105 }, // Should be ignored
-        { date: '2024-01-31', valueARS: 1200, valueUSD: 110 }, // Should be ignored
-        { date: '2024-02-01', valueARS: 1300, valueUSD: 115 } // Current value
+        { date: '2024-01-01', valueARS: 1000, valueUSD: 100, valueARSRaw: 1000, valueUSDRaw: 100, cashARS: 500, cashUSD: 50 },
+        { date: '2024-01-15', valueARS: 1100, valueUSD: 105, valueARSRaw: 1100, valueUSDRaw: 105, cashARS: 550, cashUSD: 52.5 }, // Should be ignored
+        { date: '2024-01-31', valueARS: 1200, valueUSD: 110, valueARSRaw: 1200, valueUSDRaw: 110, cashARS: 600, cashUSD: 55 }, // Should be ignored
+        { date: '2024-02-01', valueARS: 1300, valueUSD: 115, valueARSRaw: 1300, valueUSDRaw: 115, cashARS: 650, cashUSD: 57.5 } // Current value
       ];
       
       const result = calculatePortfolioPerformance(history);
@@ -147,9 +147,9 @@ describe('portfolioPerformance', () => {
 
     it('should handle sparse data with gaps correctly', () => {
       const history: PortfolioValueHistory[] = [
-        { date: '2023-01-01', valueARS: 1000, valueUSD: 100 }, // 1 year ago
-        { date: '2024-01-01', valueARS: 1200, valueUSD: 110 }, // 1 month ago
-        { date: '2024-02-01', valueARS: 1300, valueUSD: 115 } // Current
+        { date: '2023-01-01', valueARS: 1000, valueUSD: 100, valueARSRaw: 1000, valueUSDRaw: 100, cashARS: 500, cashUSD: 50 }, // 1 year ago
+        { date: '2024-01-01', valueARS: 1200, valueUSD: 110, valueARSRaw: 1200, valueUSDRaw: 110, cashARS: 600, cashUSD: 55 }, // 1 month ago
+        { date: '2024-02-01', valueARS: 1300, valueUSD: 115, valueARSRaw: 1300, valueUSDRaw: 115, cashARS: 650, cashUSD: 57.5 } // Current
       ];
       
       const result = calculatePortfolioPerformance(history);

@@ -205,4 +205,86 @@ describe('calculateNetContributions', () => {
     expect(calculateNetContributions(transactions, 'ARS')).toBe(11500); // 10000 + 1500
     expect(calculateNetContributions(transactions, 'USD')).toBe(6000); // 5000 + 1000
   });
+});
+
+describe('calculateDailyInvestedCapital', () => {
+  it('should return all zeros for no transactions', () => {
+    const result = require('../investedCapital').calculateDailyInvestedCapital([], '2023-01-01', '2023-01-03');
+    expect(result).toEqual([
+      { date: '2023-01-01', investedARS: 0, investedUSD: 0 },
+      { date: '2023-01-02', investedARS: 0, investedUSD: 0 },
+      { date: '2023-01-03', investedARS: 0, investedUSD: 0 },
+    ]);
+  });
+
+  it('should accumulate only ARS transactions', () => {
+    const txs = [
+      { id: '1', type: 'Buy', symbol: 'AAPL', quantity: 2, price: 100, date: '2023-01-01', assetType: 'Stock', currency: 'ARS', market: 'NASDAQ' }, // +200
+      { id: '2', type: 'Sell', symbol: 'AAPL', quantity: 1, price: 120, date: '2023-01-02', assetType: 'Stock', currency: 'ARS', market: 'NASDAQ' }, // -120
+      { id: '3', type: 'Create', amount: 500, date: '2023-01-03', assetType: 'FixedTermDeposit', provider: 'Bank', annualRate: 0.05, termDays: 365, maturityDate: '2024-01-03', currency: 'ARS' }, // +500
+    ];
+    const result = require('../investedCapital').calculateDailyInvestedCapital(txs, '2023-01-01', '2023-01-03');
+    expect(result).toEqual([
+      { date: '2023-01-01', investedARS: 200, investedUSD: 0 },
+      { date: '2023-01-02', investedARS: 80, investedUSD: 0 },
+      { date: '2023-01-03', investedARS: 580, investedUSD: 0 },
+    ]);
+  });
+
+  it('should accumulate only USD transactions', () => {
+    const txs = [
+      { id: '1', type: 'Buy', symbol: 'AAPL', quantity: 2, price: 50, date: '2023-01-01', assetType: 'Stock', currency: 'USD', market: 'NASDAQ' }, // +100
+      { id: '2', type: 'Sell', symbol: 'AAPL', quantity: 1, price: 60, date: '2023-01-02', assetType: 'Stock', currency: 'USD', market: 'NASDAQ' }, // -60
+      { id: '3', type: 'Create', amount: 200, date: '2023-01-03', assetType: 'FixedTermDeposit', provider: 'Bank', annualRate: 0.05, termDays: 365, maturityDate: '2024-01-03', currency: 'USD' }, // +200
+    ];
+    const result = require('../investedCapital').calculateDailyInvestedCapital(txs, '2023-01-01', '2023-01-03');
+    expect(result).toEqual([
+      { date: '2023-01-01', investedARS: 0, investedUSD: 100 },
+      { date: '2023-01-02', investedARS: 0, investedUSD: 40 },
+      { date: '2023-01-03', investedARS: 0, investedUSD: 240 },
+    ]);
+  });
+
+  it('should accumulate mixed ARS and USD transactions', () => {
+    const txs = [
+      { id: '1', type: 'Buy', symbol: 'AAPL', quantity: 2, price: 100, date: '2023-01-01', assetType: 'Stock', currency: 'ARS', market: 'NASDAQ' }, // +200
+      { id: '2', type: 'Buy', symbol: 'AAPL', quantity: 1, price: 50, date: '2023-01-01', assetType: 'Stock', currency: 'USD', market: 'NASDAQ' }, // +50
+      { id: '3', type: 'Sell', symbol: 'AAPL', quantity: 1, price: 120, date: '2023-01-02', assetType: 'Stock', currency: 'ARS', market: 'NASDAQ' }, // -120
+      { id: '4', type: 'Sell', symbol: 'AAPL', quantity: 1, price: 60, date: '2023-01-02', assetType: 'Stock', currency: 'USD', market: 'NASDAQ' }, // -60
+      { id: '5', type: 'Create', amount: 500, date: '2023-01-03', assetType: 'FixedTermDeposit', provider: 'Bank', annualRate: 0.05, termDays: 365, maturityDate: '2024-01-03', currency: 'ARS' }, // +500
+      { id: '6', type: 'Create', amount: 200, date: '2023-01-03', assetType: 'FixedTermDeposit', provider: 'Bank', annualRate: 0.05, termDays: 365, maturityDate: '2024-01-03', currency: 'USD' }, // +200
+    ];
+    const result = require('../investedCapital').calculateDailyInvestedCapital(txs, '2023-01-01', '2023-01-03');
+    expect(result).toEqual([
+      { date: '2023-01-01', investedARS: 200, investedUSD: 50 },
+      { date: '2023-01-02', investedARS: 80, investedUSD: -10 },
+      { date: '2023-01-03', investedARS: 580, investedUSD: 190 },
+    ]);
+  });
+
+  it('should handle commission and purchaseFee in Buy and Sell', () => {
+    const txs = [
+      { id: '1', type: 'Buy', symbol: 'BTC', quantity: 1, price: 100, date: '2023-01-01', assetType: 'Crypto', currency: 'USD', commissionPct: 1, purchaseFeePct: 2 }, // 100 * 1.03 = 103
+      { id: '2', type: 'Sell', symbol: 'BTC', quantity: 1, price: 120, date: '2023-01-02', assetType: 'Crypto', currency: 'USD', commissionPct: 1 }, // 120 * 0.99 = 118.8
+    ];
+    const result = require('../investedCapital').calculateDailyInvestedCapital(txs, '2023-01-01', '2023-01-02');
+    expect(result).toEqual([
+      { date: '2023-01-01', investedARS: 0, investedUSD: 103 },
+      { date: '2023-01-02', investedARS: 0, investedUSD: -15.8 },
+    ]);
+  });
+
+  it('should return correct values when there are days with no transactions', () => {
+    const txs = [
+      { id: '1', type: 'Buy', symbol: 'AAPL', quantity: 2, price: 100, date: '2023-01-01', assetType: 'Stock', currency: 'ARS', market: 'NASDAQ' }, // +200
+      { id: '2', type: 'Sell', symbol: 'AAPL', quantity: 1, price: 120, date: '2023-01-03', assetType: 'Stock', currency: 'ARS', market: 'NASDAQ' }, // -120
+    ];
+    const result = require('../investedCapital').calculateDailyInvestedCapital(txs, '2023-01-01', '2023-01-04');
+    expect(result).toEqual([
+      { date: '2023-01-01', investedARS: 200, investedUSD: 0 },
+      { date: '2023-01-02', investedARS: 200, investedUSD: 0 },
+      { date: '2023-01-03', investedARS: 80, investedUSD: 0 },
+      { date: '2023-01-04', investedARS: 80, investedUSD: 0 },
+    ]);
+  });
 }); 
