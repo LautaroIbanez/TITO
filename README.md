@@ -389,3 +389,18 @@ If a user buys 0.1 BTC at $50,000 USD using ARS:
 - USD equivalent is calculated using current exchange rate
 - Crypto position shows 0.1 BTC at $50,000 USD
 - Transaction history includes both ARS deduction and USD conversion details
+
+## Refreshing Caución Data
+
+To manually refresh the caución (repo) rates used by the app, run the following script:
+
+```bash
+node scripts/update-cauciones.ts
+```
+
+This script fetches the latest caución rates from official sources (BYMA, BCRA) and updates `data/cauciones.json` with the new rates and timestamp. The API and UI will automatically use the latest data after this update.
+
+**When to run this script:**
+- If you want to ensure the app displays the most up-to-date caución rates.
+- If you suspect the rates are stale or outdated.
+- The API will also attempt to auto-refresh if the data is older than 2 hours, but you can run this manually for immediate updates.

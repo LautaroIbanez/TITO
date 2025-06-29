@@ -14,6 +14,7 @@ interface CaucionRate {
 interface CaucionesData {
   lastUpdated: string;
   rates: CaucionRate[];
+  source?: string;
 }
 
 export default function CaucionesPage() {
@@ -190,7 +191,8 @@ export default function CaucionesPage() {
         
         {caucionesData && (
           <div className="text-xs text-gray-500 text-center">
-            Última actualización: {new Date(caucionesData.lastUpdated).toLocaleString()}
+            Última actualización: {new Date(caucionesData.lastUpdated).toLocaleString()}<br />
+            Fuente: {caucionesData.source || caucionesData.rates[0]?.provider || 'Desconocida'}
           </div>
         )}
       </div>

@@ -1,6 +1,7 @@
 import { InvestmentGoal, PortfolioTransaction, PortfolioPosition } from '@/types';
 import { Bond } from '@/types/finance';
 import GoalProgress from './GoalProgress';
+import { calculateFixedIncomeGains, calculateFixedIncomeValueHistory } from '@/utils/goalCalculator';
 
 interface Props {
   goals: InvestmentGoal[];
@@ -15,15 +16,15 @@ export default function GoalListWithProgress({ goals, transactions, positions, b
   return (
     <div className="space-y-8">
       {goals.map((goal) => {
-        // For now, use all transactions for valueHistory and currentValue
-        // In the future, filter transactions by goal if such linkage exists
-        // Compute valueHistory as a simple array with one value: initialDeposit + sum of deposits
-        const deposits = transactions.filter(t => t.type === 'Deposit');
-        const totalDeposits = deposits.reduce((sum, t) => sum + t.amount, 0);
-        const valueHistory = [
-          { date: goal.targetDate, value: goal.initialDeposit + totalDeposits }
-        ];
-        const currentValue = goal.initialDeposit + totalDeposits;
+        // Calculate fixed-income value history for consistent goal progress tracking
+        const valueHistory = calculateFixedIncomeValueHistory(positions, transactions, 90);
+        
+        // Calculate current fixed-income value for progress calculation
+        const fixedIncomeGains = calculateFixedIncomeGains(positions, transactions);
+        const totalDeposits = transactions
+          .filter(t => t.type === 'Deposit')
+          .reduce((sum, t) => sum + t.amount, 0);
+        const currentValue = totalDeposits + fixedIncomeGains;
         
         const actionButtons = (
           <>

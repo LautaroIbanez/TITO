@@ -1,4 +1,4 @@
-import { PortfolioPosition, InvestmentGoal } from '@/types';
+import { PortfolioPosition, InvestmentGoal, PortfolioTransaction, DepositTransaction } from '@/types';
 import { Bond } from '@/types/finance';
 import dayjs from 'dayjs';
 
@@ -239,4 +239,111 @@ export function projectGoalPlan(
       value: fvInitial + fvContributions,
     };
   });
+}
+
+/**
+ * Calculate portfolio gains from only FixedTermDeposit and Caucion positions.
+ * This excludes gains from stocks, bonds, and crypto which are not considered
+ * reliable for goal progress tracking.
+ * @param positions - The user's portfolio positions.
+ * @param transactions - The user's portfolio transactions.
+ * @returns The total gains from fixed-income positions only.
+ */
+export function calculateFixedIncomeGains(
+  positions: PortfolioPosition[],
+  transactions: PortfolioTransaction[]
+): number {
+  // Calculate total deposits (initial capital)
+  const totalDeposits = transactions
+    .filter((t): t is DepositTransaction => t.type === 'Deposit')
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  // If no deposits, return 0
+  if (totalDeposits === 0) {
+    return 0;
+  }
+
+  // Calculate current value of fixed-income positions only
+  let fixedIncomeValue = 0;
+  
+  positions.forEach(pos => {
+    if (pos.type === 'FixedTermDeposit' || pos.type === 'Caucion') {
+      // For fixed-term deposits and cauciones, the current value is the amount
+      // plus accrued interest since the start date
+      const startDate = new Date(pos.startDate);
+      const maturityDate = new Date(pos.maturityDate);
+      const currentDate = new Date();
+      
+      // If the position has matured, the value is the amount plus full interest
+      if (currentDate >= maturityDate) {
+        const termDays = Math.ceil((maturityDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        const interest = pos.amount * (pos.annualRate / 100) * (termDays / 365);
+        fixedIncomeValue += pos.amount + interest;
+      } else {
+        // If not matured, calculate accrued interest up to current date
+        const daysElapsed = Math.ceil((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        const accruedInterest = pos.amount * (pos.annualRate / 100) * (daysElapsed / 365);
+        fixedIncomeValue += pos.amount + accruedInterest;
+      }
+    }
+  });
+
+  // Calculate gains as the difference between fixed-income value and deposits
+  // We assume that deposits are used for fixed-income investments
+  if (fixedIncomeValue <= totalDeposits) {
+    return 0;
+  }
+  return fixedIncomeValue - totalDeposits;
+}
+
+/**
+ * Calculate fixed-income value history for goal progress tracking.
+ * This creates a simplified value history based on fixed-income positions only.
+ * @param positions - The user's portfolio positions.
+ * @param transactions - The user's portfolio transactions.
+ * @param days - Number of days to look back (default: 90).
+ * @returns Array of value history entries with date and value.
+ */
+export function calculateFixedIncomeValueHistory(
+  positions: PortfolioPosition[],
+  transactions: PortfolioTransaction[],
+  days: number = 90
+): { date: string; value: number }[] {
+  const today = new Date();
+  const startDate = new Date(today.getTime() - (days - 1) * 24 * 60 * 60 * 1000);
+  // Get all fixed-income positions
+  const fixedIncomePositions = positions.filter(pos => 
+    pos.type === 'FixedTermDeposit' || pos.type === 'Caucion'
+  );
+  const valueHistory: { date: string; value: number }[] = [];
+  for (let i = 0; i < days; i++) {
+    const currentDate = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000);
+    let dailyValue = 0;
+    if (fixedIncomePositions.length > 0) {
+      fixedIncomePositions.forEach(pos => {
+        if (pos.type === 'FixedTermDeposit' || pos.type === 'Caucion') {
+          const positionStartDate = new Date(pos.startDate);
+          const positionMaturityDate = new Date(pos.maturityDate);
+          if (currentDate >= positionStartDate) {
+            let positionValue = pos.amount;
+            if (currentDate >= positionMaturityDate) {
+              const termDays = Math.ceil((positionMaturityDate.getTime() - positionStartDate.getTime()) / (1000 * 60 * 60 * 24));
+              const interest = pos.amount * (pos.annualRate / 100) * (termDays / 365);
+              positionValue = pos.amount + interest;
+            } else {
+              const daysElapsed = Math.ceil((currentDate.getTime() - positionStartDate.getTime()) / (1000 * 60 * 60 * 24));
+              const accruedInterest = pos.amount * (pos.annualRate / 100) * (daysElapsed / 365);
+              positionValue = pos.amount + accruedInterest;
+            }
+            dailyValue += positionValue;
+          }
+        }
+      });
+    }
+    valueHistory.push({
+      date: currentDate.toISOString().split('T')[0],
+      value: dailyValue
+    });
+  }
+  return valueHistory;
 } 

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { InvestmentGoal, PortfolioTransaction, DepositTransaction, PortfolioPosition } from '@/types';
 import { Bond } from '@/types/finance';
 import { projectFixedIncome } from '@/utils/fixedIncomeProjection';
-import { calculateEffectiveYield, projectGoalPlan, formatCurrency } from '@/utils/goalCalculator';
+import { calculateEffectiveYield, projectGoalPlan, formatCurrency, calculateFixedIncomeGains } from '@/utils/goalCalculator';
 import dayjs from 'dayjs';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
@@ -51,11 +51,7 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
     );
   }
 
-  const totalDeposits = transactions
-    .filter((t): t is DepositTransaction => t.type === 'Deposit')
-    .reduce((sum, t) => sum + t.amount, 0);
-  
-  const portfolioGains = Math.max(0, currentValue - totalDeposits);
+  const portfolioGains = calculateFixedIncomeGains(positions, transactions);
   const progressPercentage = (!goal.targetAmount || goal.targetAmount === 0)
     ? 0
     : Math.min((portfolioGains / goal.targetAmount) * 100, 100);

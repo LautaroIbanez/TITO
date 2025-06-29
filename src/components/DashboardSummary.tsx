@@ -8,7 +8,7 @@ import { calculateInvestedCapital } from '@/utils/investedCapital';
 import { calculatePortfolioPerformance, fetchInflationData, formatPerformance, PerformanceMetrics, InflationData } from '@/utils/portfolioPerformance';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import GoalProgress from './GoalProgress';
-import { formatCurrency } from '@/utils/goalCalculator';
+import { formatCurrency, calculateFixedIncomeGains, calculateFixedIncomeValueHistory } from '@/utils/goalCalculator';
 
 export default function DashboardSummary() {
   const [portfolioValueARS, setPortfolioValueARS] = useState(0);
@@ -90,12 +90,13 @@ export default function DashboardSummary() {
       if (!portfolioData || goals.length === 0) return;
       const histories: Record<string, { date: string, value: number }[]> = {};
       for (const goal of goals) {
-        const valueHistory = await calculatePortfolioValueHistory(
+        // Use fixed-income value history for consistent goal progress tracking
+        const valueHistory = calculateFixedIncomeValueHistory(
+          portfolioData.positions || [],
           portfolioData.transactions || [],
-          portfolioData.historicalPrices || {},
-          { days: 90 }
+          90
         );
-        histories[goal.id] = valueHistory.map(h => ({ date: h.date, value: h.valueARS }));
+        histories[goal.id] = valueHistory;
       }
       setGoalValueHistories(histories);
     }
@@ -361,18 +362,30 @@ export default function DashboardSummary() {
 
       {goals.length > 0 && (
         <div className="space-y-8">
-          {goals.map(goal => (
-            <GoalProgress
-              key={goal.id}
-              goal={goal}
-              valueHistory={goalValueHistories[goal.id] || []}
-              currentValue={portfolioValueARS}
-              transactions={portfolioData.transactions}
-              positions={portfolioData.positions}
-              bonds={bonds}
-              showManageLink={true}
-            />
-          ))}
+          {goals.map(goal => {
+            // Calculate fixed-income value for consistent goal progress tracking
+            const fixedIncomeGains = calculateFixedIncomeGains(
+              portfolioData.positions || [],
+              portfolioData.transactions || []
+            );
+            const totalDeposits = (portfolioData.transactions || [])
+              .filter(t => t.type === 'Deposit')
+              .reduce((sum, t) => sum + t.amount, 0);
+            const currentFixedIncomeValue = totalDeposits + fixedIncomeGains;
+            
+            return (
+              <GoalProgress
+                key={goal.id}
+                goal={goal}
+                valueHistory={goalValueHistories[goal.id] || []}
+                currentValue={currentFixedIncomeValue}
+                transactions={portfolioData.transactions}
+                positions={portfolioData.positions}
+                bonds={bonds}
+                showManageLink={true}
+              />
+            );
+          })}
         </div>
       )}
       
