@@ -1,13 +1,14 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { InvestmentGoal, PortfolioTransaction, StrategyRecommendation, PortfolioPosition } from '@/types';
+import { InvestmentGoal, StrategyRecommendation } from '@/types';
 import { Bond } from '@/types/finance';
 import { calculatePortfolioValueHistory, PortfolioValueHistory, calculateCurrentValueByCurrency } from '@/utils/calculatePortfolioValue';
 import { calculateInvestedCapital } from '@/utils/investedCapital';
 import { calculatePortfolioPerformance, fetchInflationData, formatPerformance, PerformanceMetrics, InflationData } from '@/utils/portfolioPerformance';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import GoalProgress from './GoalProgress';
+import PortfolioValueChart from './PortfolioValueChart';
 import { formatCurrency, calculateFixedIncomeGains, calculateFixedIncomeValueHistory } from '@/utils/goalCalculator';
 
 export default function DashboardSummary() {
@@ -19,6 +20,7 @@ export default function DashboardSummary() {
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
   const [inflationData, setInflationData] = useState<InflationData | null>(null);
   const [goalValueHistories, setGoalValueHistories] = useState<Record<string, { date: string, value: number }[]>>({});
+  const [portfolioValueHistory, setPortfolioValueHistory] = useState<PortfolioValueHistory[]>([]);
   
   const { portfolioData, strategy, loading, error, portfolioVersion } = usePortfolio();
 
@@ -78,6 +80,7 @@ export default function DashboardSummary() {
           portfolioData.historicalPrices || {},
           { days: 365 }
         );
+        setPortfolioValueHistory(valueHistory);
         const performance = calculatePortfolioPerformance(valueHistory, inflationData || undefined);
         setPerformanceMetrics(performance);
       }
@@ -264,6 +267,20 @@ export default function DashboardSummary() {
           <p className="text-xl font-semibold text-blue-600">{formatCurrency(portfolioData.cash?.ARS ?? 0, 'ARS')}</p>
           <p className="text-xl font-semibold text-green-600">{formatCurrency(portfolioData.cash?.USD ?? 0, 'USD')}</p>
         </div>
+      </div>
+
+      {/* Portfolio Value Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <PortfolioValueChart 
+          valueHistory={portfolioValueHistory.map(h => ({ date: h.date, value: h.valueARS }))}
+          currency="ARS"
+          title="Evolución del Portafolio (ARS)"
+        />
+        <PortfolioValueChart 
+          valueHistory={portfolioValueHistory.map(h => ({ date: h.date, value: h.valueUSD }))}
+          currency="USD"
+          title="Evolución del Portafolio (USD)"
+        />
       </div>
 
       {/* Performance Metrics */}

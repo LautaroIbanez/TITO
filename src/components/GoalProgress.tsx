@@ -2,11 +2,10 @@ import React, { useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler } from 'chart.js';
 import Link from 'next/link';
-import { InvestmentGoal, PortfolioTransaction, DepositTransaction, PortfolioPosition } from '@/types';
+import { InvestmentGoal, PortfolioTransaction, PortfolioPosition } from '@/types';
 import { Bond } from '@/types/finance';
 import { projectFixedIncome } from '@/utils/fixedIncomeProjection';
 import { calculateEffectiveYield, projectGoalPlan, formatCurrency, calculateFixedIncomeGains } from '@/utils/goalCalculator';
-import dayjs from 'dayjs';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
@@ -60,15 +59,6 @@ export default function GoalProgress({ goal, valueHistory, currentValue, transac
   const chartData = {
     labels: valueHistory.map((d) => d.date),
     datasets: [
-      {
-        label: 'Valor del Portafolio',
-        data: valueHistory.map((d) => d.value),
-        fill: true,
-        borderColor: '#2563eb',
-        backgroundColor: 'rgba(37,99,235,0.1)',
-        pointRadius: 0,
-        tension: 0.2,
-      },
       {
         label: 'Monto Objetivo',
         data: Array(valueHistory.length).fill(goal.targetAmount),
