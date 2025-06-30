@@ -65,4 +65,37 @@ export function getTickerDisplayName(symbol: string): string {
  */
 export function isSameAsset(ticker1: string, ticker2: string): boolean {
   return getBaseTicker(ticker1) === getBaseTicker(ticker2);
+}
+
+/**
+ * Returns a hint suggesting to try the BCBA version of a symbol if it lacks a .BA or .AR suffix
+ * @param symbol - The ticker symbol (e.g., 'AAPL', 'GGAL')
+ * @returns A hint string or empty string if symbol already has BCBA suffix
+ */
+export function getBcbaHint(symbol: string): string {
+  if (!symbol) return '';
+  
+  // Check if symbol already has BCBA suffix
+  if (symbol.match(/\.(BA|AR)$/i)) {
+    return '';
+  }
+  
+  return ` Try '${symbol}.BA' if it's listed on the BCBA.`;
+}
+
+/**
+ * Ensures a symbol has a .BA suffix for BCBA market
+ * @param symbol - The ticker symbol (e.g., 'AAPL', 'GGAL.BA', 'YPF.AR')
+ * @returns The symbol with .BA suffix, or unchanged if it already has .BA or .AR suffix
+ */
+export function ensureBaSuffix(symbol: string): string {
+  if (!symbol) return '';
+  
+  // If already has .BA or .AR suffix, return as is
+  if (symbol.match(/\.(BA|AR)$/i)) {
+    return symbol;
+  }
+  
+  // Add .BA suffix
+  return `${symbol}.BA`;
 } 

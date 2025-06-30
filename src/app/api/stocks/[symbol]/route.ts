@@ -4,7 +4,7 @@ import NodeCache from 'node-cache';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { getFundamentals, getTechnicals, getHistoricalPrices } from '@/utils/financeData';
-import { getBaseTicker } from '@/utils/tickers';
+import { getBaseTicker, getBcbaHint } from '@/utils/tickers';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,21 +26,21 @@ export async function GET(
       case 'fundamentals':
         const fundamentals = await getFundamentals(getBaseTicker(symbol));
         if (fundamentals === null) {
-          return NextResponse.json({ error: `Symbol ${symbol} not supported on Yahoo Finance` }, { status: 404 });
+          return NextResponse.json({ error: `Symbol ${symbol} not supported on Yahoo Finance${getBcbaHint(symbol)}` }, { status: 404 });
         }
         return NextResponse.json(fundamentals);
       
       case 'technicals':
         const technicals = await getTechnicals(symbol);
         if (technicals === null) {
-          return NextResponse.json({ error: `Symbol ${symbol} not supported on Yahoo Finance` }, { status: 404 });
+          return NextResponse.json({ error: `Symbol ${symbol} not supported on Yahoo Finance${getBcbaHint(symbol)}` }, { status: 404 });
         }
         return NextResponse.json(technicals);
 
       case 'prices':
         const prices = await getHistoricalPrices(symbol);
         if (prices.length === 0) {
-          return NextResponse.json({ error: `Symbol ${symbol} not supported on Yahoo Finance` }, { status: 404 });
+          return NextResponse.json({ error: `Symbol ${symbol} not supported on Yahoo Finance${getBcbaHint(symbol)}` }, { status: 404 });
         }
         return NextResponse.json(prices);
 
@@ -55,7 +55,7 @@ export async function GET(
         try {
           const quote = await yahooFinance.quote(symbol);
           if (!quote) {
-            return NextResponse.json({ error: `Symbol ${symbol} not supported on Yahoo Finance` }, { status: 404 });
+            return NextResponse.json({ error: `Symbol ${symbol} not supported on Yahoo Finance${getBcbaHint(symbol)}` }, { status: 404 });
           }
           
           cache.set(cacheKey, quote);
@@ -66,7 +66,7 @@ export async function GET(
               errorMessage.includes('Invalid symbol') || 
               errorMessage.includes('not found') ||
               errorMessage.includes('No data available')) {
-            return NextResponse.json({ error: `Symbol ${symbol} not supported on Yahoo Finance` }, { status: 404 });
+            return NextResponse.json({ error: `Symbol ${symbol} not supported on Yahoo Finance${getBcbaHint(symbol)}` }, { status: 404 });
           }
           throw quoteError;
         }
