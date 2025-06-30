@@ -63,6 +63,11 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
   const lastPriceDate = prices.length > 0 ? prices[prices.length - 1].date : null;
   const fundamentalsDate = fundamentals?.updatedAt;
 
+  // Check if data is available
+  const hasPriceData = prices.length > 0;
+  const hasFundamentals = fundamentals !== null;
+  const hasTechnicals = technicals !== null;
+
   const handleOpenModal = (type: 'Buy' | 'Sell') => {
     setTradeType(type);
     setTradeModalOpen(true);
@@ -145,7 +150,7 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
         <div className="flex items-center gap-2 justify-between">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-gray-900">{symbol}</h2>
-            <SignalBadge signal={signal} />
+            {hasTechnicals && <SignalBadge signal={signal} />}
           </div>
           <div className="flex gap-2">
             <button onClick={() => handleOpenModal('Buy')} className="px-3 py-1 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-700">Comprar</button>
@@ -153,44 +158,82 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
           </div>
         </div>
 
-        {fundamentals && <StockBadges fundamentals={fundamentals} />}
+        {hasFundamentals && <StockBadges fundamentals={fundamentals} />}
 
         {/* Price Chart */}
         <div className="h-24 flex items-center justify-center bg-gray-50 rounded">
-          {last90.length > 0 ? (
+          {hasPriceData ? (
             <Line data={chartData} options={chartOptions} height={80} />
           ) : (
-            <span className="text-gray-900 text-sm">[Gráfico de Precios]</span>
+            <span className="text-gray-500 text-sm">Datos no disponibles</span>
           )}
+        </div>
+
+        {/* Position Summary */}
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="text-gray-600">Cantidad:</span>
+            <span className="ml-2 font-semibold">{position.quantity}</span>
+          </div>
+          <div>
+            <span className="text-gray-600">Precio Promedio:</span>
+            <span className="ml-2 font-semibold">${position.averagePrice.toFixed(2)}</span>
+          </div>
+          <div>
+            <span className="text-gray-600">Precio Actual:</span>
+            <span className="ml-2 font-semibold">
+              {hasPriceData ? `$${currentPrice.toFixed(2)}` : 'Datos no disponibles'}
+            </span>
+          </div>
+          <div>
+            <span className="text-gray-600">Valor:</span>
+            <span className="ml-2 font-semibold">
+              {hasPriceData ? formatCurrency(value, position.currency) : 'Datos no disponibles'}
+            </span>
+          </div>
+          <div>
+            <span className="text-gray-600">Ganancia:</span>
+            <span className={`ml-2 font-semibold ${gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {hasPriceData ? `${gain >= 0 ? '+' : ''}${gain.toFixed(2)}%` : 'Datos no disponibles'}
+            </span>
+          </div>
         </div>
 
         {/* Fundamentals */}
         <div>
           <h3 className="text-sm font-semibold text-gray-900 mb-2">Fundamentales</h3>
-          <div className="grid grid-cols-2 gap-x-4 text-xs text-gray-700">
-            <RatioRow label="PE" value={fundamentals?.peRatio} metric="peRatio" />
-            <RatioRow label="PB" value={fundamentals?.pbRatio} metric="pbRatio" />
-            <RatioRow label="EV/EBITDA" value={fundamentals?.evToEbitda} metric="evToEbitda" />
-            <RatioRow label="P/FCF" value={fundamentals?.priceToFCF} metric="priceToFCF" />
-            <RatioRow label="ROE" value={fundamentals?.roe} metric="roe" />
-            <RatioRow label="ROA" value={fundamentals?.roa} metric="roa" />
-            <RatioRow label="Net Margin" value={fundamentals?.netMargin} metric="netMargin" />
-            <RatioRow label="D/EBITDA" value={fundamentals?.debtToEbitda} metric="debtToEbitda" />
-            <RatioRow label="D/E" value={fundamentals?.debtToEquity} metric="debtToEquity" />
-            <RatioRow label="FCF (M)" value={fundamentals?.freeCashFlow} metric="freeCashFlow" />
-          </div>
+          {hasFundamentals ? (
+            <div className="grid grid-cols-2 gap-x-4 text-xs text-gray-700">
+              <RatioRow label="PE" value={fundamentals?.peRatio} metric="peRatio" />
+              <RatioRow label="PB" value={fundamentals?.pbRatio} metric="pbRatio" />
+              <RatioRow label="EV/EBITDA" value={fundamentals?.evToEbitda} metric="evToEbitda" />
+              <RatioRow label="P/FCF" value={fundamentals?.priceToFCF} metric="priceToFCF" />
+              <RatioRow label="ROE" value={fundamentals?.roe} metric="roe" />
+              <RatioRow label="ROA" value={fundamentals?.roa} metric="roa" />
+              <RatioRow label="Net Margin" value={fundamentals?.netMargin} metric="netMargin" />
+              <RatioRow label="D/EBITDA" value={fundamentals?.debtToEbitda} metric="debtToEbitda" />
+              <RatioRow label="D/E" value={fundamentals?.debtToEquity} metric="debtToEquity" />
+              <RatioRow label="FCF (M)" value={fundamentals?.freeCashFlow} metric="freeCashFlow" />
+            </div>
+          ) : (
+            <span className="text-gray-500 text-sm">Datos no disponibles</span>
+          )}
         </div>
 
         {/* Technicals */}
         <div>
           <h3 className="text-sm font-semibold text-gray-900 mb-2">Técnicos</h3>
-          <div className="grid grid-cols-2 gap-x-4 text-xs text-gray-700">
-            <TechnicalDisplay label="RSI" indicatorKey="RSI" value={technicals?.rsi} />
-            <TechnicalDisplay label="MACD" indicatorKey="MACD" value={technicals?.macd} />
-            <TechnicalDisplay label="SMA 200" indicatorKey="SMA" value={technicals?.sma200} currentPrice={currentPrice} />
-            <TechnicalDisplay label="EMA 50" indicatorKey="EMA" value={technicals?.ema50} currentPrice={currentPrice} />
-            <TechnicalDisplay label="ADX" indicatorKey="ADX" value={technicals?.adx} />
-          </div>
+          {hasTechnicals ? (
+            <div className="grid grid-cols-2 gap-x-4 text-xs text-gray-700">
+              <TechnicalDisplay label="RSI" indicatorKey="RSI" value={technicals?.rsi} />
+              <TechnicalDisplay label="MACD" indicatorKey="MACD" value={technicals?.macd} />
+              <TechnicalDisplay label="SMA 200" indicatorKey="SMA" value={technicals?.sma200} currentPrice={currentPrice} />
+              <TechnicalDisplay label="EMA 50" indicatorKey="EMA" value={technicals?.ema50} currentPrice={currentPrice} />
+              <TechnicalDisplay label="ADX" indicatorKey="ADX" value={technicals?.adx} />
+            </div>
+          ) : (
+            <span className="text-gray-500 text-sm">Datos no disponibles</span>
+          )}
         </div>
 
         {/* Data Update Footer */}
@@ -198,28 +241,6 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
           <div className="text-xs text-gray-500 flex justify-between">
             <span>Precio: {lastPriceDate ? formatDate(lastPriceDate) : '—'}</span>
             <span>Fundamentales: {fundamentalsDate ? formatDate(fundamentalsDate) : '—'}</span>
-          </div>
-        </div>
-
-        {/* Position Info */}
-        <div className="bg-gray-50 p-3 rounded-lg">
-          <div className="text-sm text-gray-700">
-            <div className="flex justify-between">
-              <span>Cantidad:</span>
-              <span className="font-mono">{position.quantity}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Precio Promedio:</span>
-              <span className="font-mono">{formatCurrency(position.averagePrice, position.currency)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Valor Actual:</span>
-              <span className="font-mono">{formatCurrency(value, position.currency)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Gan/Pérd:</span>
-              <span className={`font-mono ${gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>{gain.toFixed(2)}%</span>
-            </div>
           </div>
         </div>
       </div>

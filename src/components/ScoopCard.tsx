@@ -22,7 +22,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip,
 
 interface ScoopCardProps {
   stockData: any;
-  fundamentals: Fundamentals;
+  fundamentals: Fundamentals | null;
   technicals: Technicals | null;
   isSuggested: boolean;
   isTrending: boolean;
@@ -67,7 +67,7 @@ export default function ScoopCard({
   
   // Display states for current market data
   const [displayPrices, setDisplayPrices] = useState<any[]>(stockData?.prices || []);
-  const [displayFundamentals, setDisplayFundamentals] = useState<Fundamentals>(fundamentals);
+  const [displayFundamentals, setDisplayFundamentals] = useState<Fundamentals | null>(fundamentals);
   const [displayTechnicals, setDisplayTechnicals] = useState<Technicals | null>(technicals);
   
   // BCBA caches
@@ -198,8 +198,10 @@ export default function ScoopCard({
     }
   };
 
-  const currency = market === 'BCBA' ? 'ARS' : 'USD';
-  const inPortfolio = market === 'BCBA' ? inPortfolioARS : inPortfolioUSD;
+  // Check if data is available
+  const hasPriceData = displayPrices.length > 0;
+  const hasFundamentals = displayFundamentals !== null;
+  const hasTechnicals = displayTechnicals !== null;
 
   return (
     <>
@@ -208,104 +210,106 @@ export default function ScoopCard({
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleBuy}
         tradeType="Buy"
-        assetName={market === 'BCBA' ? `${stockData.symbol}.BA` : stockData.symbol}
+        assetName={stockData.companyName || stockData.symbol}
         assetType="Stock"
         identifier={stockData.symbol}
         price={currentPrice}
         cash={cash}
-        currency={currency}
+        currency={market === 'BCBA' ? 'ARS' : 'USD'}
       />
+      
       <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col gap-4 relative">
-        <div className="flex items-center gap-2">
-          <h2 className="text-xl font-bold text-gray-900">
-            {stockData?.companyName || stockData?.symbol || '—'}
-          </h2>
-          <span className="text-sm font-mono text-gray-900">{stockData?.symbol}</span>
-          <SignalBadge signal={signal} />
-          {inPortfolioUSD && (
-            <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold">En cartera USD</span>
-          )}
-          {inPortfolioARS && (
-            <span className="ml-2 px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs font-semibold">En cartera ARS</span>
-          )}
-          {isSuggested && (
-            <span className="ml-auto px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-semibold">
-              Sugerido
-            </span>
-          )}
-          {isTrending && (
-            <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-semibold">
-              Trending
-            </span>
-          )}
-        </div>
-        
-        {displayFundamentals?.sector && (
-          <div className="text-xs text-gray-700 -mt-3">
-            {displayFundamentals.sector} / {displayFundamentals.industry}
+        {/* Header */}
+        <div className="flex items-center gap-2 justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-bold text-gray-900">{stockData.symbol}</h2>
+            {isSuggested && <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold">Sugerido</span>}
+            {isTrending && <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-semibold">Trending</span>}
+            {inPortfolioUSD && <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-semibold">USD</span>}
+            {inPortfolioARS && <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-semibold">ARS</span>}
           </div>
-        )}
+          <button onClick={() => setIsModalOpen(true)} className="px-3 py-1 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-700">
+            Comprar
+          </button>
+        </div>
 
-        <StockBadges fundamentals={displayFundamentals} />
-        
+        {/* Market Selector */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleMarketChange('NASDAQ')}
+            className={`px-3 py-1 rounded text-xs font-semibold ${
+              market === 'NASDAQ' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+            }`}
+          >
+            NASDAQ
+          </button>
+          <button
+            onClick={() => handleMarketChange('BCBA')}
+            className={`px-3 py-1 rounded text-xs font-semibold ${
+              market === 'BCBA' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+            }`}
+          >
+            BCBA
+          </button>
+        </div>
+
+        {/* Company Name */}
+        <p className="text-sm text-gray-600">{stockData.companyName || 'Nombre no disponible'}</p>
+
         {/* Price Chart */}
-        <div className="h-32 flex items-center justify-center bg-gray-50 rounded">
-          {displayPrices.length > 0 ? (
-            <Line data={chartData} options={chartOptions} height={100} />
+        <div className="h-24 flex items-center justify-center bg-gray-50 rounded">
+          {hasPriceData ? (
+            <Line data={chartData} options={chartOptions} height={80} />
           ) : (
-            <span className="text-gray-900 text-sm">[Gráfico de Precios]</span>
+            <span className="text-gray-500 text-sm">Datos no disponibles</span>
           )}
         </div>
 
-        {/* Fundamentals Sections */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+        {/* Current Price and Signal */}
+        <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">Valuación</h3>
-            <div className="space-y-1 text-xs text-gray-700">
+            <span className="text-2xl font-bold text-gray-900">
+              {hasPriceData ? `$${currentPrice.toFixed(2)}` : 'Datos no disponibles'}
+            </span>
+          </div>
+          {hasTechnicals && <SignalBadge signal={signal} />}
+        </div>
+
+        {/* Fundamentals */}
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900 mb-2">Fundamentales</h3>
+          {hasFundamentals ? (
+            <div className="grid grid-cols-2 gap-x-4 text-xs text-gray-700">
               <RatioRow label="PE" value={displayFundamentals?.peRatio} metric="peRatio" />
               <RatioRow label="PB" value={displayFundamentals?.pbRatio} metric="pbRatio" />
               <RatioRow label="EV/EBITDA" value={displayFundamentals?.evToEbitda} metric="evToEbitda" />
               <RatioRow label="P/FCF" value={displayFundamentals?.priceToFCF} metric="priceToFCF" />
-            </div>
-          </div>
-          
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">Rentabilidad</h3>
-            <div className="space-y-1 text-xs text-gray-700">
-              <RatioRow label="ROE" value={displayFundamentals?.roe} metric="roe" format="percent" />
-              <RatioRow label="ROA" value={displayFundamentals?.roa} metric="roa" format="percent" />
-              <RatioRow label="Net Margin" value={displayFundamentals?.netMargin} metric="netMargin" format="percent" />
-              <RatioRow label="FCF (M)" value={displayFundamentals?.freeCashFlow} metric="freeCashFlow" format="currency" />
-            </div>
-          </div>
-          
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">Deuda</h3>
-            <div className="space-y-1 text-xs text-gray-700">
+              <RatioRow label="ROE" value={displayFundamentals?.roe} metric="roe" />
+              <RatioRow label="ROA" value={displayFundamentals?.roa} metric="roa" />
+              <RatioRow label="Net Margin" value={displayFundamentals?.netMargin} metric="netMargin" />
               <RatioRow label="D/EBITDA" value={displayFundamentals?.debtToEbitda} metric="debtToEbitda" />
               <RatioRow label="D/E" value={displayFundamentals?.debtToEquity} metric="debtToEquity" />
+              <RatioRow label="FCF (M)" value={displayFundamentals?.freeCashFlow} metric="freeCashFlow" />
             </div>
-          </div>
-          
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">Crecimiento</h3>
-            <div className="space-y-1 text-xs text-gray-700">
-              <RatioRow label="Revenue Growth" value={displayFundamentals?.revenueGrowth} metric="revenueGrowth" format="percent" />
-              <RatioRow label="EPS Growth" value={displayFundamentals?.epsGrowth} metric="epsGrowth" format="percent" />
-            </div>
-          </div>
+          ) : (
+            <span className="text-gray-500 text-sm">Datos no disponibles</span>
+          )}
         </div>
 
         {/* Technicals */}
         <div>
           <h3 className="text-sm font-semibold text-gray-900 mb-2">Técnicos</h3>
-          <div className="grid grid-cols-2 gap-x-4 text-xs text-gray-700">
-            <TechnicalDisplay label="RSI" indicatorKey="RSI" value={displayTechnicals?.rsi} />
-            <TechnicalDisplay label="MACD" indicatorKey="MACD" value={displayTechnicals?.macd} />
-            <TechnicalDisplay label="SMA 200" indicatorKey="SMA" value={displayTechnicals?.sma200} currentPrice={currentPrice} />
-            <TechnicalDisplay label="EMA 50" indicatorKey="EMA" value={displayTechnicals?.ema50} currentPrice={currentPrice} />
-            <TechnicalDisplay label="ADX" indicatorKey="ADX" value={displayTechnicals?.adx} />
-          </div>
+          {hasTechnicals ? (
+            <div className="grid grid-cols-2 gap-x-4 text-xs text-gray-700">
+              <TechnicalDisplay label="RSI" indicatorKey="RSI" value={displayTechnicals?.rsi} />
+              <TechnicalDisplay label="MACD" indicatorKey="MACD" value={displayTechnicals?.macd} />
+              <TechnicalDisplay label="SMA 200" indicatorKey="SMA" value={displayTechnicals?.sma200} currentPrice={currentPrice} />
+              <TechnicalDisplay label="EMA 50" indicatorKey="EMA" value={displayTechnicals?.ema50} currentPrice={currentPrice} />
+              <TechnicalDisplay label="ADX" indicatorKey="ADX" value={displayTechnicals?.adx} />
+            </div>
+          ) : (
+            <span className="text-gray-500 text-sm">Datos no disponibles</span>
+          )}
         </div>
 
         {/* Data Update Footer */}
@@ -314,31 +318,6 @@ export default function ScoopCard({
             <span>Precio: {lastPriceDate ? formatDate(lastPriceDate) : '—'}</span>
             <span>Fundamentales: {fundamentalsDate ? formatDate(fundamentalsDate) : '—'}</span>
           </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center gap-1 rounded-full bg-gray-100 p-1 text-xs">
-            <button 
-              onClick={() => handleMarketChange('NASDAQ')}
-              className={`px-3 py-1 rounded-full ${market === 'NASDAQ' ? 'bg-white shadow' : 'text-gray-600'}`}
-            >
-              USD
-            </button>
-            <button
-              onClick={() => handleMarketChange('BCBA')}
-              className={`px-3 py-1 rounded-full ${market === 'BCBA' ? 'bg-white shadow' : 'text-gray-600'}`}
-            >
-              ARS (.BA)
-            </button>
-          </div>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            disabled={inPortfolio || cash[currency] < 1}
-            className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {inPortfolio ? 'En Portafolio' : 'Comprar'}
-          </button>
         </div>
       </div>
     </>

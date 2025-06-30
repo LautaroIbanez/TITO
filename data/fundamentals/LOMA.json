@@ -1,0 +1,19 @@
+{
+  "peRatio": null,
+  "pbRatio": 0.0014990261,
+  "evToEbitda": null,
+  "roe": 0.13898,
+  "roa": 0.054190002,
+  "debtToEquity": 22.71,
+  "debtToEbitda": 1.1943420699019236,
+  "netMargin": 0.14072,
+  "freeCashFlow": -10691885056,
+  "priceToFCF": -0.12377087791992065,
+  "ebitda": 167775043584,
+  "revenueGrowth": -0.089,
+  "epsGrowth": null,
+  "beta": 1.063,
+  "sector": "Basic Materials",
+  "industry": "Building Materials",
+  "updatedAt": "2025-06-30T12:14:26.485Z"
+}

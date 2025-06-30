@@ -1,0 +1,19 @@
+{
+  "peRatio": null,
+  "pbRatio": 500.42953,
+  "evToEbitda": null,
+  "roe": 0.39835,
+  "roa": 0.17879999,
+  "debtToEquity": 26.763,
+  "debtToEbitda": 0.5628438512419195,
+  "netMargin": 0.39113998,
+  "freeCashFlow": 36658999296,
+  "priceToFCF": null,
+  "ebitda": 87979999232,
+  "revenueGrowth": 0.161,
+  "epsGrowth": null,
+  "beta": 1.266,
+  "sector": "Communication Services",
+  "industry": "Internet Content & Information",
+  "updatedAt": "2025-06-30T12:16:37.926Z"
+}

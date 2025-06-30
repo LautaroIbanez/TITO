@@ -22,14 +22,23 @@ export async function GET(
     switch (dataType) {
       case 'fundamentals':
         const fundamentals = await getFundamentals(symbol);
+        if (fundamentals === null) {
+          return NextResponse.json({ error: `Symbol ${symbol} not supported on Yahoo Finance` }, { status: 404 });
+        }
         return NextResponse.json(fundamentals);
       
       case 'technicals':
         const technicals = await getTechnicals(symbol);
+        if (technicals === null) {
+          return NextResponse.json({ error: `Symbol ${symbol} not supported on Yahoo Finance` }, { status: 404 });
+        }
         return NextResponse.json(technicals);
 
       case 'prices':
         const prices = await getHistoricalPrices(symbol);
+        if (prices.length === 0) {
+          return NextResponse.json({ error: `Symbol ${symbol} not supported on Yahoo Finance` }, { status: 404 });
+        }
         return NextResponse.json(prices);
 
       default:
@@ -40,13 +49,24 @@ export async function GET(
           return NextResponse.json(cachedData);
         }
 
-        const quote = await yahooFinance.quote(symbol);
-        if (!quote) {
-          return NextResponse.json({ error: 'Stock not found' }, { status: 404 });
+        try {
+          const quote = await yahooFinance.quote(symbol);
+          if (!quote) {
+            return NextResponse.json({ error: `Symbol ${symbol} not supported on Yahoo Finance` }, { status: 404 });
+          }
+          
+          cache.set(cacheKey, quote);
+          return NextResponse.json(quote);
+        } catch (quoteError) {
+          const errorMessage = quoteError instanceof Error ? quoteError.message : String(quoteError);
+          if (errorMessage.includes('No data found') || 
+              errorMessage.includes('Invalid symbol') || 
+              errorMessage.includes('not found') ||
+              errorMessage.includes('No data available')) {
+            return NextResponse.json({ error: `Symbol ${symbol} not supported on Yahoo Finance` }, { status: 404 });
+          }
+          throw quoteError;
         }
-        
-        cache.set(cacheKey, quote);
-        return NextResponse.json(quote);
     }
   } catch (error) {
     console.error(`Error fetching data for ${symbol} (type: ${dataType}):`, error);

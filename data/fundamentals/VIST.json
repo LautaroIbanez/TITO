@@ -1,0 +1,19 @@
+{
+  "peRatio": null,
+  "pbRatio": 2.883443,
+  "evToEbitda": null,
+  "roe": 0.32689998,
+  "roa": 0.109469995,
+  "debtToEquity": 108.359,
+  "debtToEbitda": 1.6202442016986354,
+  "netMargin": 0.2723,
+  "freeCashFlow": 183576128,
+  "priceToFCF": 28.070343612433092,
+  "ebitda": 1098203008,
+  "revenueGrowth": 0.382,
+  "epsGrowth": null,
+  "beta": -0.278,
+  "sector": "Energy",
+  "industry": "Oil & Gas E&P",
+  "updatedAt": "2025-06-30T12:14:08.888Z"
+}

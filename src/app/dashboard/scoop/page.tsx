@@ -7,8 +7,22 @@ import { calculateRequiredReturn } from '@/utils/goalCalculator';
 import dayjs from 'dayjs';
 import { useScoop } from '@/contexts/ScoopContext';
 import { usePortfolio } from '@/contexts/PortfolioContext';
+import { STOCK_CATEGORIES } from '@/utils/assetCategories';
 
-const FIXED_LIST = ["AAPL", "MSFT", "TSLA", "AMZN", "NVDA", "BABA", "GOOGL", "JPM", "KO", "PFE"];
+// Category display names
+const CATEGORY_NAMES: Record<string, string> = {
+  etfs: 'ETFs',
+  tech: 'Tecnología',
+  semiconductors: 'Semiconductores',
+  communication: 'Comunicaciones',
+  industrials: 'Industriales',
+  defensive: 'Defensivas',
+  materials: 'Materiales',
+  healthcare: 'Salud',
+  financials: 'Financieros',
+  cyclical: 'Cíclicas',
+  merval: 'Merval'
+};
 
 function getSuggestedStocks(
   profile: InvestorProfile | null,
@@ -54,7 +68,7 @@ function getSuggestedStocks(
 }
 
 export default function ScoopPage() {
-  const [stocks, setStocks] = useState<any[]>([]);
+  const [stocksByCategory, setStocksByCategory] = useState<Record<string, any[]>>({});
   const [profile, setProfile] = useState<InvestorProfile | null>(null);
   const [portfolioSymbols, setPortfolioSymbols] = useState<{ USD: string[]; ARS: string[] }>({ USD: [], ARS: [] });
   const [loading, setLoading] = useState(true);
@@ -115,31 +129,44 @@ export default function ScoopPage() {
     const trendingData = await trendingRes.json();
     const trendingSymbols = (trendingData.quotes || []).map((q: any) => q.symbol);
 
-    // Usar FIXED_LIST como base, excluir los símbolos presentes en cualquiera de los arrays
-    const stocksToShowSymbols = FIXED_LIST.filter(symbol =>
-      !portfolioSymbols.USD.includes(symbol) && !portfolioSymbols.ARS.includes(symbol)
-    );
-
-    // Enrich the stocks with all necessary data
-    const enrichedStocks = await Promise.all(
-        stocksToShowSymbols.map(async (symbol: string) => {
-            const [fundamentals, technicals, prices] = await Promise.all([
-                fetch(`/api/stocks/${symbol}?type=fundamentals`).then(res => res.ok ? res.json() : null),
-                fetch(`/api/stocks/${symbol}?type=technicals`).then(res => res.ok ? res.json() : null),
-                fetch(`/api/stocks/${symbol}?type=prices`).then(res => res.ok ? res.json() : [])
-            ]);
-            return {
-                symbol,
-                companyName: fundamentals?.longName || symbol,
-                prices,
-                fundamentals,
-                technicals,
-                isTrending: trendingSymbols.includes(symbol)
-            };
-        })
-    );
+    // Process each category
+    const stocksByCategoryData: Record<string, any[]> = {};
     
-    setStocks(getSuggestedStocks(userProfile, enrichedStocks, requiredReturn));
+    for (const [categoryKey, tickers] of Object.entries(STOCK_CATEGORIES)) {
+      // Skip empty categories
+      if (tickers.length === 0) continue;
+      
+      // Filter out symbols already in portfolio
+      const stocksToShowSymbols = tickers.filter(symbol =>
+        !portfolioSymbols.USD.includes(symbol) && !portfolioSymbols.ARS.includes(symbol)
+      );
+      
+      // Skip categories with no available stocks
+      if (stocksToShowSymbols.length === 0) continue;
+
+      // Enrich the stocks with all necessary data
+      const enrichedStocks = await Promise.all(
+        stocksToShowSymbols.map(async (symbol: string) => {
+          const [fundamentals, technicals, prices] = await Promise.all([
+            fetch(`/api/stocks/${symbol}?type=fundamentals`).then(res => res.ok ? res.json() : null),
+            fetch(`/api/stocks/${symbol}?type=technicals`).then(res => res.ok ? res.json() : null),
+            fetch(`/api/stocks/${symbol}?type=prices`).then(res => res.ok ? res.json() : [])
+          ]);
+          return {
+            symbol,
+            companyName: fundamentals?.longName || symbol,
+            prices,
+            fundamentals,
+            technicals,
+            isTrending: trendingSymbols.includes(symbol)
+          };
+        })
+      );
+      
+      stocksByCategoryData[categoryKey] = getSuggestedStocks(userProfile, enrichedStocks, requiredReturn);
+    }
+    
+    setStocksByCategory(stocksByCategoryData);
     setLoading(false);
   };
 
@@ -147,10 +174,8 @@ export default function ScoopPage() {
     loadData();
   }, []);
 
-  const suggestedStocks = stocks.filter(s => s.isSuggested);
-  const otherStocks = stocks.filter(s => !s.isSuggested);
-
-  const displayedStocks = filterMode === 'suggested' ? suggestedStocks : stocks;
+  // Get all suggested stocks across all categories
+  const allSuggestedStocks = Object.values(stocksByCategory).flat().filter(s => s.isSuggested);
 
   return (
     <div className="space-y-8">
@@ -170,11 +195,11 @@ export default function ScoopPage() {
         <div className="text-center text-gray-700 py-10">Cargando Oportunidades...</div>
       ) : (
         <>
-          {filterMode === 'all' && suggestedStocks.length > 0 && (
+          {filterMode === 'all' && allSuggestedStocks.length > 0 && (
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Sugerencias para ti</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {suggestedStocks.map((stock) => (
+                {allSuggestedStocks.map((stock) => (
                   <ScoopCard
                     key={stock.symbol}
                     stockData={stock}
@@ -193,10 +218,10 @@ export default function ScoopPage() {
           )}
 
           {filterMode === 'suggested' && (
-             <div>
+            <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Sugerencias para ti</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {suggestedStocks.map((stock) => (
+                {allSuggestedStocks.map((stock) => (
                   <ScoopCard
                     key={stock.symbol}
                     stockData={stock}
@@ -214,29 +239,40 @@ export default function ScoopPage() {
             </div>
           )}
           
-          {filterMode === 'all' && otherStocks.length > 0 && (
-            <div className="mt-12">
-               <h2 className="text-2xl font-bold text-gray-900 mb-6">Otras Oportunidades</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {otherStocks.map((stock) => (
-                    <ScoopCard
-                      key={stock.symbol}
-                      stockData={stock}
-                      fundamentals={stock.fundamentals}
-                      technicals={stock.technicals}
-                      isSuggested={stock.isSuggested}
-                      isTrending={stock.isTrending}
-                      inPortfolioUSD={portfolioSymbols.USD.includes(stock.symbol)}
-                      inPortfolioARS={portfolioSymbols.ARS.includes(stock.symbol)}
-                      onTrade={loadData}
-                      cash={portfolioData?.cash ?? { ARS: 0, USD: 0 }}
-                    />
-                  ))}
-                </div>
+          {filterMode === 'all' && Object.keys(stocksByCategory).length > 0 && (
+            <div className="mt-12 space-y-12">
+              {Object.entries(stocksByCategory).map(([categoryKey, stocks]) => {
+                const categoryName = CATEGORY_NAMES[categoryKey] || categoryKey;
+                const categoryStocks = stocks.filter(s => !s.isSuggested);
+                
+                if (categoryStocks.length === 0) return null;
+                
+                return (
+                  <div key={categoryKey}>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6">{categoryName}</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {categoryStocks.map((stock) => (
+                        <ScoopCard
+                          key={stock.symbol}
+                          stockData={stock}
+                          fundamentals={stock.fundamentals}
+                          technicals={stock.technicals}
+                          isSuggested={stock.isSuggested}
+                          isTrending={stock.isTrending}
+                          inPortfolioUSD={portfolioSymbols.USD.includes(stock.symbol)}
+                          inPortfolioARS={portfolioSymbols.ARS.includes(stock.symbol)}
+                          onTrade={loadData}
+                          cash={portfolioData?.cash ?? { ARS: 0, USD: 0 }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
 
-          {!loading && displayedStocks.length === 0 && (
+          {!loading && Object.keys(stocksByCategory).length === 0 && (
             <div className="text-center text-gray-700 py-10">
               <h3 className="text-xl font-semibold">
                 {filterMode === 'suggested' ? 'No hay sugerencias por ahora.' : 'No hay nuevas oportunidades por ahora.'}

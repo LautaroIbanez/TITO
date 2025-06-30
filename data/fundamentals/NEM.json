@@ -1,0 +1,19 @@
+{
+  "peRatio": null,
+  "pbRatio": 2.0344086,
+  "evToEbitda": null,
+  "roe": 0.1666,
+  "roa": 0.07857,
+  "debtToEquity": 25.408,
+  "debtToEbitda": 0.8101856050559855,
+  "netMargin": 0.25772,
+  "freeCashFlow": 7086374912,
+  "priceToFCF": 8.914836492354075,
+  "ebitda": 9857000448,
+  "revenueGrowth": 0.245,
+  "epsGrowth": null,
+  "beta": 0.322,
+  "sector": "Basic Materials",
+  "industry": "Gold",
+  "updatedAt": "2025-06-30T12:14:08.254Z"
+}

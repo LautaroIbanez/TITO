@@ -1,0 +1,19 @@
+{
+  "peRatio": null,
+  "pbRatio": 10.030244,
+  "evToEbitda": null,
+  "roe": 0.55646,
+  "roa": 0.09403,
+  "debtToEquity": 213.547,
+  "debtToEbitda": 2.6090601223718113,
+  "netMargin": 0.15712,
+  "freeCashFlow": 6817750016,
+  "priceToFCF": 26.538797250028125,
+  "ebitda": 14789999616,
+  "revenueGrowth": -0.098,
+  "epsGrowth": null,
+  "beta": 1.368,
+  "sector": "Industrials",
+  "industry": "Farm & Heavy Construction Machinery",
+  "updatedAt": "2025-06-30T12:13:58.638Z"
+}

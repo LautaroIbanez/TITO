@@ -1,0 +1,19 @@
+{
+  "peRatio": null,
+  "pbRatio": 17.605675,
+  "evToEbitda": null,
+  "roe": 0.50655,
+  "roa": 0.16936001,
+  "debtToEquity": 54.594,
+  "debtToEbitda": 0.7916872833298035,
+  "netMargin": 0.52859,
+  "freeCashFlow": 14747499520,
+  "priceToFCF": 46.17797137938134,
+  "ebitda": 26225000448,
+  "revenueGrowth": 0.093,
+  "epsGrowth": null,
+  "beta": 0.943,
+  "sector": "Financial Services",
+  "industry": "Credit Services",
+  "updatedAt": "2025-06-30T12:14:19.994Z"
+}

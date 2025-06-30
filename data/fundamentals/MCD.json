@@ -1,0 +1,19 @@
+{
+  "peRatio": null,
+  "pbRatio": null,
+  "evToEbitda": null,
+  "roe": null,
+  "roa": 0.13416,
+  "debtToEquity": null,
+  "debtToEbitda": 3.799294813560661,
+  "netMargin": 0.3175,
+  "freeCashFlow": 5306375168,
+  "priceToFCF": 39.28630432185831,
+  "ebitda": 13895999488,
+  "revenueGrowth": -0.035,
+  "epsGrowth": null,
+  "beta": 0.556,
+  "sector": "Consumer Cyclical",
+  "industry": "Restaurants",
+  "updatedAt": "2025-06-30T12:14:05.801Z"
+}

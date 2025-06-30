@@ -1,0 +1,19 @@
+{
+  "peRatio": null,
+  "pbRatio": 0.20574567,
+  "evToEbitda": null,
+  "roe": 0.15003,
+  "roa": 0.07763,
+  "debtToEquity": 51.02,
+  "debtToEbitda": 1.4384303627419464,
+  "netMargin": 0.14875,
+  "freeCashFlow": 20958375936,
+  "priceToFCF": 1.9838330312885557,
+  "ebitda": 74029998080,
+  "revenueGrowth": 0.132,
+  "epsGrowth": null,
+  "beta": 1.051,
+  "sector": "Basic Materials",
+  "industry": "Other Industrial Metals & Mining",
+  "updatedAt": "2025-06-30T12:14:08.274Z"
+}

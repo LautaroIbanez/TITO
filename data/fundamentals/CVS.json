@@ -1,0 +1,19 @@
+{
+  "peRatio": null,
+  "pbRatio": 1.1235604,
+  "evToEbitda": null,
+  "roe": 0.06934,
+  "roa": 0.02309,
+  "debtToEquity": 105.321,
+  "debtToEbitda": 5.822972592673029,
+  "netMargin": 0.01401,
+  "freeCashFlow": 6530874880,
+  "priceToFCF": 13.266403540715206,
+  "ebitda": 13946999808,
+  "revenueGrowth": 0.069,
+  "epsGrowth": null,
+  "beta": 0.561,
+  "sector": "Healthcare",
+  "industry": "Healthcare Plans",
+  "updatedAt": "2025-06-30T12:14:12.171Z"
+}

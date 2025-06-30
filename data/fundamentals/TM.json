@@ -1,0 +1,19 @@
+{
+  "peRatio": null,
+  "pbRatio": 0.063833825,
+  "evToEbitda": null,
+  "roe": 0.13283,
+  "roa": 0.03263,
+  "debtToEquity": 105.19,
+  "debtToEbitda": 5.505019700922739,
+  "netMargin": 0.0992,
+  "freeCashFlow": -19988683423744,
+  "priceToFCF": -0.011458317814365588,
+  "ebitda": 7046819217408,
+  "revenueGrowth": 0.117,
+  "epsGrowth": null,
+  "beta": 0.248,
+  "sector": "Consumer Cyclical",
+  "industry": "Auto Manufacturers",
+  "updatedAt": "2025-06-30T12:14:00.354Z"
+}

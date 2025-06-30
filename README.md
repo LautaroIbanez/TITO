@@ -11,6 +11,45 @@ TITO es una aplicación web construida con Next.js diseñada para ayudarte a ges
 - **Manejo de Efectivo**: Deposita fondos y úsalos para comprar activos.
 - **Estrategia de Inversión Personalizada**: Recibe una estrategia de asignación de activos y recomendaciones de rebalanceo según tu perfil y metas (ver más abajo).
 
+## Lista de Activos
+
+TITO incluye una lista completa de activos organizados por categorías para facilitar el análisis y la diversificación de tu portafolio.
+
+### Categorías de ETFs
+
+- **ETFs**: SPY, DIA, QQQ, EWZ, XLF, XLE, GLD, ARKK, BITO
+- **Tecnología**: AAPL, GOOGL, MSFT, ADBE, META
+- **Semiconductores**: ASML, TSM, MU, NVDA, AMD, INTC, ARM
+- **Comunicaciones**: DIS, NFLX, T, VZ
+- **Industriales**: CAT, DE, MMM, TM
+- **Defensivas**: KO, PEP, MCD, SBUX, MDLZ
+- **Materiales**: NEM, VALE, VIST, OXY
+- **Salud**: ABBV, CVS, PFE, PG, UL, JNJ
+- **Financieros**: BAC, BRK.B, C, JPM, V, NU
+- **Cíclicas**: AMZN, MELI, WMT
+- **Merval**: ALUAR, BBAR, BYMA, CAPU, GGAL, LOMA, PAMP, TGNO4, TGSU2, TRAN, YPFD, COME, CRES
+
+### Bonos Soberanos Argentinos
+
+La aplicación también incluye bonos soberanos argentinos:
+- **Bonos Soberanos**: AL29D, GD29D, AL30D, GD30D, AE38D, GD38D, AL35D, GD35D, AL41D, GD41D, GD46D
+
+### Actualización de Datos
+
+El comando `npm run update-data` ahora descarga automáticamente datos para todos los tickers definidos en `src/utils/assetCategories.ts`, incluyendo:
+
+- **Precios históricos** de los últimos 5 años
+- **Datos fundamentales** (ratios financieros, métricas de rentabilidad)
+- **Indicadores técnicos** (RSI, MACD, medias móviles, ADX)
+
+### Compatibilidad con Yahoo Finance
+
+**Importante**: Algunos símbolos argentinos (especialmente los del Merval) pueden no estar disponibles en Yahoo Finance. En estos casos, la aplicación mostrará "Datos no disponibles" en lugar de datos incorrectos o faltantes.
+
+- **Símbolos compatibles**: La mayoría de acciones estadounidenses y algunos ADRs argentinos
+- **Símbolos limitados**: Algunos bonos soberanos y acciones del Merval pueden tener datos limitados
+- **Manejo de errores**: La aplicación detecta automáticamente símbolos no soportados y muestra advertencias apropiadas
+
 ## Estrategia de Inversión y Recomendaciones
 
 TITO genera automáticamente una **estrategia de inversión personalizada** para cada usuario, basada en su perfil de riesgo, horizonte de inversión, nivel de conocimiento y metas financieras.
@@ -195,7 +234,15 @@ La aplicación utiliza datos de mercado (precios históricos, fundamentales y t�
 npm run update-data
 ```
 
-Este comando iterará sobre la lista de acciones definida en `data/stocks-list.json` y descargará los últimos datos para cada una.
+Este comando descarga automáticamente datos para todos los tickers definidos en `src/utils/assetCategories.ts`, incluyendo todas las categorías de ETFs, acciones y bonos soberanos argentinos. El sistema:
+
+- **Descarga datos completos**: Precios históricos, fundamentales e indicadores técnicos
+- **Maneja errores**: Detecta símbolos no soportados en Yahoo Finance y los registra
+- **Control de concurrencia**: Procesa múltiples símbolos simultáneamente sin sobrecargar las APIs
+- **Reintentos automáticos**: Reintenta operaciones fallidas hasta 3 veces
+- **Logging detallado**: Muestra progreso en tiempo real y resumen final
+
+**Nota**: Algunos símbolos argentinos pueden no estar disponibles en Yahoo Finance. En estos casos, el script registrará el error pero continuará procesando los demás símbolos.
 
 ### Actualización de Datos de Benchmarks
 

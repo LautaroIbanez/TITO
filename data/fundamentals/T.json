@@ -1,0 +1,19 @@
+{
+  "peRatio": null,
+  "pbRatio": 1.9475656,
+  "evToEbitda": null,
+  "roe": 0.10885,
+  "roa": 0.041739997,
+  "debtToEquity": 119.246,
+  "debtToEbitda": 3.2826770268994636,
+  "netMargin": 0.096429996,
+  "freeCashFlow": 14413375488,
+  "priceToFCF": 14.028412648816438,
+  "ebitda": 44259000320,
+  "revenueGrowth": 0.02,
+  "epsGrowth": null,
+  "beta": 0.604,
+  "sector": "Communication Services",
+  "industry": "Telecom Services",
+  "updatedAt": "2025-06-30T12:13:56.689Z"
+}

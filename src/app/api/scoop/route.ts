@@ -3,8 +3,18 @@ import yahooFinance from 'yahoo-finance2';
 import NodeCache from 'node-cache';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { STOCK_CATEGORIES } from '@/utils/assetCategories';
 
 const cache = new NodeCache({ stdTTL: 600 }); // 10 minutos
+
+// Build a single ticker array from all category values
+const getAllTickers = () => {
+  const tickers = new Set<string>();
+  Object.values(STOCK_CATEGORIES).forEach(category => {
+    category.forEach(ticker => tickers.add(ticker));
+  });
+  return Array.from(tickers);
+};
 
 export async function GET(req: NextRequest) {
   const cacheKey = 'scoop-trending';
@@ -17,14 +27,12 @@ export async function GET(req: NextRequest) {
     cache.set(cacheKey, trending);
     return NextResponse.json(trending);
   } catch (e) {
-    // Fallback: leer archivo local
+    // Fallback: usar la lista de categorías
     try {
-      const filePath = path.join(process.cwd(), 'data', 'stocks-list.json');
-      const file = await fs.readFile(filePath, 'utf-8');
-      const data = JSON.parse(file);
+      const data = getAllTickers();
       return NextResponse.json(data);
     } catch {
-      return NextResponse.json({ error: 'No se pudo obtener los trending stocks en vivo ni el archivo local.' }, { status: 500 });
+      return NextResponse.json({ error: 'No se pudo obtener los trending stocks en vivo ni la lista local.' }, { status: 500 });
     }
   }
 } 

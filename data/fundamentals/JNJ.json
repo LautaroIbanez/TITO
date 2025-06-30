@@ -1,0 +1,19 @@
+{
+  "peRatio": null,
+  "pbRatio": 4.6940155,
+  "evToEbitda": null,
+  "roe": 0.29447,
+  "roa": 0.0777,
+  "debtToEquity": 66.896,
+  "debtToEbitda": 1.7402830503023572,
+  "netMargin": 0.24415001,
+  "freeCashFlow": 16797124608,
+  "priceToFCF": 21.831661915834495,
+  "ebitda": 30025000960,
+  "revenueGrowth": 0.024,
+  "epsGrowth": null,
+  "beta": 0.41,
+  "sector": "Healthcare",
+  "industry": "Drug Manufacturers - General",
+  "updatedAt": "2025-06-30T12:14:13.837Z"
+}

@@ -1,4 +1,15 @@
 [
-  "AAPL", "MSFT", "TSLA", "AMZN", "NVDA", "BABA", "GOOGL", "JPM", "KO", "PFE",
+  "SPY", "DIA", "QQQ", "EWZ", "XLF", "XLE", "GLD", "ARKK", "BITO",
+  "AAPL", "GOOGL", "MSFT", "ADBE", "META",
+  "ASML", "TSM", "MU", "NVDA", "AMD", "INTC", "ARM",
+  "DIS", "NFLX", "T", "VZ",
+  "CAT", "DE", "MMM", "TM",
+  "KO", "PEP", "MCD", "SBUX", "MDLZ",
+  "NEM", "VALE", "VIST", "OXY",
+  "ABBV", "CVS", "PFE", "PG", "UL", "JNJ",
+  "BAC", "BRK.B", "C", "JPM", "V", "NU",
+  "AMZN", "MELI", "WMT",
+  "ALUAR", "BBAR", "BYMA", "CAPU", "GGAL", "LOMA", "PAMP", "TGNO4", "TGSU2", "TRAN", "YPFD", "COME", "CRES",
+  "TSLA", "BABA",
   "AAPL.BA", "MSFT.BA", "TSLA.BA", "AMZN.BA", "NVDA.BA", "BABA.BA", "GOOGL.BA", "JPM.BA", "KO.BA", "PFE.BA"
 ] 

@@ -2,8 +2,17 @@ import path from 'path';
 import { promises as fs } from 'fs';
 import pLimit from 'p-limit';
 import { getFundamentals } from '../src/utils/financeData';
+import { ensureStocksData } from '../src/utils/financeData';
+import { STOCK_CATEGORIES } from '../src/utils/assetCategories';
 
-const stocksListPath = path.join(process.cwd(), 'data', 'stocks-list.json');
+// Build a single ticker array from all category values
+const getAllTickers = () => {
+  const tickers = new Set<string>();
+  Object.values(STOCK_CATEGORIES).forEach(category => {
+    category.forEach(ticker => tickers.add(ticker));
+  });
+  return Array.from(tickers);
+};
 
 // Limit concurrent requests to avoid rate limiting
 const limit = pLimit(2); // Process 2 stocks at a time for more conservative rate limiting
@@ -40,8 +49,7 @@ async function updateFundamentals() {
   const startTime = Date.now();
 
   try {
-    const stocksFile = await fs.readFile(stocksListPath, 'utf-8');
-    const stocksList = JSON.parse(stocksFile);
+    const stocksList = getAllTickers();
     
     if (!Array.isArray(stocksList) || stocksList.length === 0) {
       console.error('❌ Error: stock list is empty or invalid.');
@@ -52,20 +60,24 @@ async function updateFundamentals() {
     console.log(`⚡ Processing with concurrency limit: 2 stocks at a time`);
     console.log(`🔄 Max retries per operation: ${MAX_RETRIES}`);
 
-    // Create an array of promises with concurrency limiting
+    // Use ensureStocksData for each ticker
     const updatePromises = stocksList.map((symbol, index) => 
       limit(async () => {
         const symbolStartTime = Date.now();
         console.log(`\n📊 [${index + 1}/${stocksList.length}] --- Updating ${symbol} ---`);
         
         try {
-          // Fetch fundamentals for each symbol
-          console.log(`  📊 Fetching fundamentals for ${symbol}...`);
-          const fundamentals = await retryOperation(() => getFundamentals(symbol));
+          // Use ensureStocksData to fetch all data types (including fundamentals)
+          const success = await retryOperation(() => ensureStocksData([symbol]));
           
           const symbolDuration = ((Date.now() - symbolStartTime) / 1000).toFixed(1);
-          console.log(`✅ Successfully updated fundamentals for ${symbol} (${symbolDuration}s)`);
-          return { symbol, success: true, duration: symbolDuration };
+          if (success[0]) {
+            console.log(`✅ Successfully updated fundamentals for ${symbol} (${symbolDuration}s)`);
+            return { symbol, success: true, duration: symbolDuration };
+          } else {
+            console.error(`❌ Failed to update fundamentals for ${symbol} (${symbolDuration}s)`);
+            return { symbol, success: false, error: 'ensureStocksData returned false', duration: symbolDuration };
+          }
         } catch (error) {
           const symbolDuration = ((Date.now() - symbolStartTime) / 1000).toFixed(1);
           console.error(`❌ Failed to update fundamentals for ${symbol} after ${MAX_RETRIES} retries (${symbolDuration}s):`, error);

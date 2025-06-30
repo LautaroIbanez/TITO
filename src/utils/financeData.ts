@@ -77,6 +77,15 @@ export async function getHistoricalPrices(symbol: string, interval: '1d' | '1wk'
       console.log(`[${symbol}] Fetched and saved 5y history (${interval}).`);
       return prices;
     } catch (err) {
+      // Check if it's an unsupported symbol error
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      if (errorMessage.includes('No data found') || 
+          errorMessage.includes('Invalid symbol') || 
+          errorMessage.includes('not found') ||
+          errorMessage.includes('No data available')) {
+        console.log(`Symbol ${symbol} not supported on Yahoo Finance`);
+        return [];
+      }
       console.error(`[${symbol}] Error fetching history (${interval}):`, err);
       return [];
     }
@@ -119,6 +128,15 @@ export async function getHistoricalPrices(symbol: string, interval: '1d' | '1wk'
         console.log(`[${symbol}] Appended ${newPrices.length} new ${interval === '1d' ? 'days' : 'weeks'} to history.`);
         return merged;
       } catch (err) {
+        // Check if it's an unsupported symbol error
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        if (errorMessage.includes('No data found') || 
+            errorMessage.includes('Invalid symbol') || 
+            errorMessage.includes('not found') ||
+            errorMessage.includes('No data available')) {
+          console.log(`Symbol ${symbol} not supported on Yahoo Finance`);
+          return [];
+        }
         console.error(`[${symbol}] Error fetching incremental history (${interval}):`, err);
         return prices;
       }
@@ -192,6 +210,15 @@ export async function getFundamentals(symbol: string): Promise<Fundamentals | nu
     console.log(`[${symbol}] Fetched and saved fundamentals.`);
     return fundamentals;
   } catch (err) {
+    // Check if it's an unsupported symbol error
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    if (errorMessage.includes('No data found') || 
+        errorMessage.includes('Invalid symbol') || 
+        errorMessage.includes('not found') ||
+        errorMessage.includes('No data available')) {
+      console.log(`Symbol ${symbol} not supported on Yahoo Finance`);
+      return null;
+    }
     console.error(`[${symbol}] Error fetching fundamentals:`, err);
     return fundamentals;
   }
@@ -271,7 +298,38 @@ export async function getTechnicals(symbol: string, interval: '1d' | '1wk' = '1d
     console.log(`[${symbol}] Calculated and saved technicals (${interval}).`);
     return technicals;
   } catch (err) {
+    // Check if it's an unsupported symbol error
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    if (errorMessage.includes('No data found') || 
+        errorMessage.includes('Invalid symbol') || 
+        errorMessage.includes('not found') ||
+        errorMessage.includes('No data available')) {
+      console.log(`Symbol ${symbol} not supported on Yahoo Finance`);
+      return null;
+    }
     console.error(`[${symbol}] Error calculating technicals (${interval}):`, err);
     return null;
   }
+}
+
+export async function ensureStockData(symbol: string): Promise<boolean> {
+  try {
+    await getHistoricalPrices(symbol);
+    await getFundamentals(symbol);
+    await getTechnicals(symbol);
+    return true;
+  } catch (error) {
+    console.error(`[${symbol}] Error ensuring stock data:`, error);
+    return false;
+  }
+}
+
+export async function ensureStocksData(symbols: string[]): Promise<boolean[]> {
+  const results = await Promise.allSettled(
+    symbols.map(symbol => ensureStockData(symbol))
+  );
+  
+  return results.map(result => 
+    result.status === 'fulfilled' ? result.value : false
+  );
 } 
