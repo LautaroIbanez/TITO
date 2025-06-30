@@ -1,4 +1,4 @@
-import { PortfolioTransaction, FixedTermDepositCreationTransaction } from '@/types';
+import { PortfolioTransaction, FixedTermDepositCreationTransaction, CaucionCreationTransaction } from '@/types';
 import { PriceData } from '@/types/finance';
 import dayjs from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
@@ -8,6 +8,10 @@ dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 
 interface ActiveFixedTermDeposit extends FixedTermDepositCreationTransaction {
+  isMatured?: boolean;
+}
+
+interface ActiveCaucion extends CaucionCreationTransaction {
   isMatured?: boolean;
 }
 
@@ -72,6 +76,8 @@ export async function calculatePortfolioValueHistory(
   const positions: Record<string, { quantity: number; currency: 'ARS' | 'USD' }> = {};
   const activeDeposits: ActiveFixedTermDeposit[] = [];
   const maturedDeposits: ActiveFixedTermDeposit[] = [];
+  const activeCauciones: ActiveCaucion[] = [];
+  const maturedCauciones: ActiveCaucion[] = [];
   
   // Initialize cash balances and positions up to the start date
   let cashARS = 0;
@@ -86,6 +92,8 @@ export async function calculatePortfolioValueHistory(
           identifier = tx.symbol;
         } else if (tx.assetType === 'Bond' && 'ticker' in tx) {
           identifier = tx.ticker;
+        } else if (tx.assetType === 'Crypto' && 'symbol' in tx) {
+          identifier = tx.symbol;
         }
         
         if (identifier) {
@@ -126,6 +134,14 @@ export async function calculatePortfolioValueHistory(
         } else {
           cashUSD -= tx.amount;
         }
+      } else if (tx.type === 'Create' && tx.assetType === 'Caucion') {
+        activeCauciones.push(tx as ActiveCaucion);
+        // Reduce cash by the caucion amount
+        if (tx.currency === 'ARS') {
+          cashARS -= tx.amount;
+        } else {
+          cashUSD -= tx.amount;
+        }
       } else if (tx.type === 'Deposit') {
         // Add cash from deposit
         if (tx.currency === 'ARS') {
@@ -134,11 +150,58 @@ export async function calculatePortfolioValueHistory(
           cashUSD += tx.amount;
         }
       } else if (tx.type === 'Withdrawal') {
-        // Remove cash from withdrawal
-        if (tx.currency === 'ARS') {
-          cashARS -= tx.amount;
-        } else {
-          cashUSD -= tx.amount;
+        // Remove matured deposits that match the withdrawal amount and currency
+        const withdrawalAmount = tx.amount;
+        const withdrawalCurrency = tx.currency;
+        let withdrawalHandled = false;
+        
+        // Find and remove matching matured deposits
+        for (let i = maturedDeposits.length - 1; i >= 0; i--) {
+          const deposit = maturedDeposits[i];
+          if (deposit.currency === withdrawalCurrency) {
+            // Calculate the final value of the deposit (principal + full interest)
+            const startDate = dayjs(deposit.date).startOf('day');
+            const maturityDate = dayjs(deposit.maturityDate).startOf('day');
+            const days = maturityDate.diff(startDate, 'day');
+            const dailyRate = deposit.annualRate / 100 / 365;
+            const fullInterest = deposit.amount * dailyRate * days;
+            const finalValue = deposit.amount + fullInterest;
+            
+            if (Math.abs(finalValue - withdrawalAmount) < 1) { // Allow small rounding differences
+              maturedDeposits.splice(i, 1);
+              withdrawalHandled = true;
+              break; // Remove only one deposit per withdrawal
+            }
+          }
+        }
+        
+        // Find and remove matching matured cauciones
+        for (let i = maturedCauciones.length - 1; i >= 0; i--) {
+          const caucion = maturedCauciones[i];
+          if (caucion.currency === withdrawalCurrency) {
+            // Calculate the final value of the caucion (principal + full interest)
+            const startDate = dayjs(caucion.date).startOf('day');
+            const maturityDate = dayjs(caucion.maturityDate).startOf('day');
+            const days = maturityDate.diff(startDate, 'day');
+            const dailyRate = caucion.annualRate / 100 / 365;
+            const fullInterest = caucion.amount * dailyRate * days;
+            const finalValue = caucion.amount + fullInterest;
+            
+            if (Math.abs(finalValue - withdrawalAmount) < 1) { // Allow small rounding differences
+              maturedCauciones.splice(i, 1);
+              withdrawalHandled = true;
+              break; // Remove only one caucion per withdrawal
+            }
+          }
+        }
+        
+        // Only remove cash if the withdrawal wasn't handled by a matured asset
+        if (!withdrawalHandled) {
+          if (tx.currency === 'ARS') {
+            cashARS -= tx.amount;
+          } else {
+            cashUSD -= tx.amount;
+          }
         }
       }
     }
@@ -158,6 +221,8 @@ export async function calculatePortfolioValueHistory(
           identifier = tx.symbol;
         } else if (tx.assetType === 'Bond' && 'ticker' in tx) {
           identifier = tx.ticker;
+        } else if (tx.assetType === 'Crypto' && 'symbol' in tx) {
+          identifier = tx.symbol;
         }
         
         if (identifier) {
@@ -198,6 +263,14 @@ export async function calculatePortfolioValueHistory(
         } else {
           cashUSD -= tx.amount;
         }
+      } else if (tx.type === 'Create' && tx.assetType === 'Caucion') {
+        activeCauciones.push(tx as ActiveCaucion);
+        // Reduce cash by the caucion amount
+        if (tx.currency === 'ARS') {
+          cashARS -= tx.amount;
+        } else {
+          cashUSD -= tx.amount;
+        }
       } else if (tx.type === 'Deposit') {
         // Add cash from deposit
         if (tx.currency === 'ARS') {
@@ -209,6 +282,7 @@ export async function calculatePortfolioValueHistory(
         // Remove matured deposits that match the withdrawal amount and currency
         const withdrawalAmount = tx.amount;
         const withdrawalCurrency = tx.currency;
+        let withdrawalHandled = false;
         
         // Find and remove matching matured deposits
         for (let i = maturedDeposits.length - 1; i >= 0; i--) {
@@ -224,16 +298,39 @@ export async function calculatePortfolioValueHistory(
             
             if (Math.abs(finalValue - withdrawalAmount) < 1) { // Allow small rounding differences
               maturedDeposits.splice(i, 1);
+              withdrawalHandled = true;
               break; // Remove only one deposit per withdrawal
             }
           }
         }
         
-        // Remove cash from withdrawal
-        if (tx.currency === 'ARS') {
-          cashARS -= tx.amount;
-        } else {
-          cashUSD -= tx.amount;
+        // Find and remove matching matured cauciones
+        for (let i = maturedCauciones.length - 1; i >= 0; i--) {
+          const caucion = maturedCauciones[i];
+          if (caucion.currency === withdrawalCurrency) {
+            // Calculate the final value of the caucion (principal + full interest)
+            const startDate = dayjs(caucion.date).startOf('day');
+            const maturityDate = dayjs(caucion.maturityDate).startOf('day');
+            const days = maturityDate.diff(startDate, 'day');
+            const dailyRate = caucion.annualRate / 100 / 365;
+            const fullInterest = caucion.amount * dailyRate * days;
+            const finalValue = caucion.amount + fullInterest;
+            
+            if (Math.abs(finalValue - withdrawalAmount) < 1) { // Allow small rounding differences
+              maturedCauciones.splice(i, 1);
+              withdrawalHandled = true;
+              break; // Remove only one caucion per withdrawal
+            }
+          }
+        }
+        
+        // Only remove cash if the withdrawal wasn't handled by a matured asset
+        if (!withdrawalHandled) {
+          if (tx.currency === 'ARS') {
+            cashARS -= tx.amount;
+          } else {
+            cashUSD -= tx.amount;
+          }
         }
       }
     }
@@ -300,6 +397,41 @@ export async function calculatePortfolioValueHistory(
       }
     }
     
+    // Cauciones
+    for (const caucion of activeCauciones) {
+      const startDate = dayjs(caucion.date).startOf('day');
+      const maturityDate = dayjs(caucion.maturityDate).startOf('day');
+
+      if (today.isBefore(startDate)) continue;
+
+      if (today.isAfter(maturityDate) && !caucion.isMatured) {
+        caucion.isMatured = true;
+        // Move to matured cauciones array
+        maturedCauciones.push(caucion);
+        // Remove from active cauciones
+        const index = activeCauciones.indexOf(caucion);
+        if (index > -1) {
+          activeCauciones.splice(index, 1);
+        }
+      }
+
+      if (caucion.isMatured) continue;
+
+      let value = caucion.amount;
+      if (today.isSameOrAfter(startDate)) {
+        const daysActive = today.diff(startDate, 'day');
+        const dailyRate = caucion.annualRate / 100 / 365;
+        const interest = caucion.amount * dailyRate * daysActive;
+        value += interest;
+      }
+      
+      if (caucion.currency === 'ARS') {
+        dailyValueARS += value;
+      } else {
+        dailyValueUSD += value;
+      }
+    }
+    
     // Matured Deposits (keep their final value until withdrawn)
     for (const deposit of maturedDeposits) {
       const startDate = dayjs(deposit.date).startOf('day');
@@ -310,6 +442,22 @@ export async function calculatePortfolioValueHistory(
       const finalValue = deposit.amount + fullInterest;
       
       if (deposit.currency === 'ARS') {
+        dailyValueARS += finalValue;
+      } else {
+        dailyValueUSD += finalValue;
+      }
+    }
+    
+    // Matured Cauciones (keep their final value until withdrawn)
+    for (const caucion of maturedCauciones) {
+      const startDate = dayjs(caucion.date).startOf('day');
+      const maturityDate = dayjs(caucion.maturityDate).startOf('day');
+      const days = maturityDate.diff(startDate, 'day');
+      const dailyRate = caucion.annualRate / 100 / 365;
+      const fullInterest = caucion.amount * dailyRate * days;
+      const finalValue = caucion.amount + fullInterest;
+      
+      if (caucion.currency === 'ARS') {
         dailyValueARS += finalValue;
       } else {
         dailyValueUSD += finalValue;
@@ -329,7 +477,9 @@ export async function calculatePortfolioValueHistory(
     if (totalARS === 0 && lastKnownValueARS > 0 && 
         Object.keys(positions).length === 0 && 
         activeDeposits.length === 0 && 
-        maturedDeposits.length === 0) {
+        maturedDeposits.length === 0 &&
+        activeCauciones.length === 0 &&
+        maturedCauciones.length === 0) {
       valueHistory.push({ 
         date: dateStr, 
         valueARS: lastKnownValueARS, 
@@ -372,7 +522,7 @@ export async function getDailyPortfolioValue(
  * Sums the value of each position in its own currency plus the cash in that currency.
  * @param positions Portfolio positions
  * @param cash { ARS: number, USD: number }
- * @param priceHistory Price data for stocks/bonds
+ * @param priceHistory Price data for stocks/bonds/crypto
  * @returns { ARS: number, USD: number }
  */
 export function calculateCurrentValueByCurrency(
@@ -397,7 +547,36 @@ export function calculateCurrentValueByCurrency(
           valueUSD += pos.quantity * currentPrice;
         }
       }
+    } else if (pos.type === 'Crypto') {
+      const prices = priceHistory[pos.symbol];
+      if (prices && prices.length > 0) {
+        const currentPrice = prices[prices.length - 1].close;
+        // Crypto is always valued in USD
+        valueUSD += pos.quantity * currentPrice;
+      }
     } else if (pos.type === 'FixedTermDeposit') {
+      const startDate = new Date(pos.startDate);
+      const maturityDate = new Date(pos.maturityDate);
+      let value = pos.amount;
+      let interest = 0;
+      if (today >= maturityDate) {
+        // Full interest
+        const days = Math.round((maturityDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        const dailyRate = pos.annualRate / 100 / 365;
+        interest = pos.amount * dailyRate * days;
+      } else if (today > startDate) {
+        // Accrued interest up to today
+        const days = Math.round((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        const dailyRate = pos.annualRate / 100 / 365;
+        interest = pos.amount * dailyRate * days;
+      }
+      value += interest;
+      if (pos.currency === 'ARS') {
+        valueARS += value;
+      } else if (pos.currency === 'USD') {
+        valueUSD += value;
+      }
+    } else if (pos.type === 'Caucion') {
       const startDate = new Date(pos.startDate);
       const maturityDate = new Date(pos.maturityDate);
       let value = pos.amount;

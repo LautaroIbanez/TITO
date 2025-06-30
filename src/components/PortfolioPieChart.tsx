@@ -20,6 +20,8 @@ export default function PortfolioPieChart({ positions, prices }: Props) {
       return { label: pos.ticker, value: pos.quantity * pos.averagePrice };
     } else if (pos.type === 'FixedTermDeposit') {
       return { label: pos.provider, value: pos.amount };
+    } else if (pos.type === 'Caucion') {
+      return { label: pos.provider, value: pos.amount };
     } else if (pos.type === 'Crypto') {
       const currPrice = prices[pos.symbol]?.[prices[pos.symbol].length - 1]?.close || 0;
       cryptoValue += pos.quantity * currPrice;
@@ -38,7 +40,7 @@ export default function PortfolioPieChart({ positions, prices }: Props) {
       {
         data: dataArr.map((d) => d.value),
         backgroundColor: [
-          '#2563eb', '#f59e42', '#10b981', '#f43f5e', '#6366f1', '#fbbf24', '#14b8a6', '#a21caf', '#eab308', '#0ea5e9', '#6e44ff' // last color for crypto
+          '#2563eb', '#f59e42', '#10b981', '#f43f5e', '#6366f1', '#fbbf24', '#14b8a6', '#a21caf', '#eab308', '#0ea5e9', '#6e44ff', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316', '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'
         ],
       },
     ],

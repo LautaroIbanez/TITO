@@ -71,11 +71,11 @@ export async function POST(request: NextRequest) {
         
         if (pos) {
           // If the position exists, update it. This now differentiates by currency and market.
-          const newTotalValue = pos.averagePrice * pos.quantity + price * quantity;
+          const prevTotalCost = pos.averagePrice * pos.quantity;
           pos.quantity += quantity;
-          pos.averagePrice = newTotalValue / pos.quantity;
+          pos.averagePrice = (prevTotalCost + totalCost) / pos.quantity;
         } else {
-          const newPosition: StockPosition = { type: 'Stock', symbol, quantity, averagePrice: price, currency: validatedCurrency, market };
+          const newPosition: StockPosition = { type: 'Stock', symbol, quantity, averagePrice: totalCost / quantity, currency: validatedCurrency, market };
           user.positions.push(newPosition);
         }
         
@@ -108,11 +108,11 @@ export async function POST(request: NextRequest) {
 
         const pos = user.positions.find((p): p is BondPosition => p.type === 'Bond' && p.ticker === ticker && p.currency === validatedCurrency);
         if (pos) {
-          const newTotalValue = pos.averagePrice * pos.quantity + price * quantity;
+          const prevTotalCost = pos.averagePrice * pos.quantity;
           pos.quantity += quantity;
-          pos.averagePrice = newTotalValue / pos.quantity;
+          pos.averagePrice = (prevTotalCost + totalCost) / pos.quantity;
         } else {
-          const newPosition: BondPosition = { type: 'Bond', ticker, quantity, averagePrice: price, currency: validatedCurrency };
+          const newPosition: BondPosition = { type: 'Bond', ticker, quantity, averagePrice: totalCost / quantity, currency: validatedCurrency };
           user.positions.push(newPosition);
         }
         
@@ -152,11 +152,11 @@ export async function POST(request: NextRequest) {
 
         const pos = user.positions.find((p): p is CryptoPosition => p.type === 'Crypto' && p.symbol === symbol);
         if (pos) {
-          const newTotalValue = pos.averagePrice * pos.quantity + price * quantity;
+          const prevTotalCost = pos.averagePrice * pos.quantity;
           pos.quantity += quantity;
-          pos.averagePrice = newTotalValue / pos.quantity;
+          pos.averagePrice = (prevTotalCost + usdAmount) / pos.quantity;
         } else {
-          const newPosition: CryptoPosition = { type: 'Crypto', symbol, quantity, averagePrice: price, currency: 'USD' };
+          const newPosition: CryptoPosition = { type: 'Crypto', symbol, quantity, averagePrice: usdAmount / quantity, currency: 'USD' };
           user.positions.push(newPosition);
         }
         

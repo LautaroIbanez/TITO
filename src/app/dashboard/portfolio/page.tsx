@@ -5,7 +5,7 @@ import ReturnComparison from '@/components/ReturnComparison';
 import { compareWithBenchmarks } from '@/utils/returnCalculator';
 import PortfolioTable from '@/components/PortfolioTable';
 import PortfolioPieChart from '@/components/PortfolioPieChart';
-import PortfolioHistoryChart from '@/components/PortfolioHistoryChart';
+import PortfolioValueChart from '@/components/PortfolioValueChart';
 import PortfolioTransactions from '@/components/PortfolioTransactions';
 import { calculatePortfolioValueHistory } from '@/utils/calculatePortfolioValue';
 import { calculateInvestedCapital } from '@/utils/investedCapital';
@@ -268,7 +268,24 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <PortfolioPieChart positions={portfolioData.positions} prices={portfolioData.historicalPrices} />
-        <PortfolioHistoryChart valueHistory={valueHistory.map(h => ({date: h.date, value: h.valueARS}))} />
+        <PortfolioValueChart
+          valueHistory={valueHistory.map(h => ({
+            date: h.date,
+            invested: h.valueARSRaw - h.cashARS,
+            total: h.valueARSRaw,
+          }))}
+          currency="ARS"
+          title="Evolución del Portafolio (ARS)"
+        />
+        <PortfolioValueChart
+          valueHistory={valueHistory.map(h => ({
+            date: h.date,
+            invested: h.valueUSDRaw - h.cashUSD,
+            total: h.valueUSDRaw,
+          }))}
+          currency="USD"
+          title="Evolución del Portafolio (USD)"
+        />
       </div>
 
       <PortfolioTransactions transactions={portfolioData.transactions} />

@@ -1,241 +1,211 @@
 {
   "username": "tito",
-  "createdAt": "2025-06-22T00:53:48.569Z",
+  "createdAt": "2025-06-30T11:22:55.788Z",
   "profileCompleted": true,
   "positions": [
     {
       "type": "Stock",
-      "symbol": "GOOGL",
-      "quantity": 3,
-      "averagePrice": 166.63999938964844,
+      "symbol": "KO",
+      "quantity": 16,
+      "averagePrice": 71.06846685028076,
+      "currency": "USD",
+      "market": "NASDAQ"
+    },
+    {
+      "type": "Stock",
+      "symbol": "BABA.BA",
+      "quantity": 13,
+      "averagePrice": 15384.8625,
+      "currency": "ARS",
+      "market": "BCBA"
+    },
+    {
+      "type": "Stock",
+      "symbol": "MSFT.BA",
+      "quantity": 9,
+      "averagePrice": 20033.1625,
+      "currency": "ARS",
+      "market": "BCBA"
+    },
+    {
+      "type": "Bond",
+      "ticker": "AL30",
+      "quantity": 5,
+      "averagePrice": 50525,
       "currency": "ARS"
     },
     {
       "type": "Bond",
       "ticker": "GD30",
-      "quantity": 9,
-      "averagePrice": 55,
+      "quantity": 15,
+      "averagePrice": 55.57749999999999,
+      "currency": "USD"
+    },
+    {
+      "type": "FixedTermDeposit",
+      "id": "ftd-1751283006064",
+      "provider": "Banco Galicia",
+      "amount": 73000,
+      "annualRate": 75,
+      "startDate": "2025-06-30T11:30:06.063Z",
+      "maturityDate": "2025-07-30T11:30:06.063Z",
       "currency": "ARS"
     },
     {
-      "type": "Bond",
-      "ticker": "YMC2O",
-      "quantity": 2,
-      "averagePrice": 98,
-      "currency": "ARS"
-    },
-    {
-      "type": "Stock",
-      "symbol": "TSLA",
-      "quantity": 1,
-      "averagePrice": 322.1600036621094,
-      "currency": "ARS"
+      "type": "FixedTermDeposit",
+      "id": "ftd-1751283017130",
+      "provider": "Banco Nación",
+      "amount": 100,
+      "annualRate": 1.5,
+      "startDate": "2025-06-30T11:30:17.130Z",
+      "maturityDate": "2026-06-30T11:30:17.130Z",
+      "currency": "USD"
     }
   ],
   "transactions": [
     {
-      "id": "1750553745801",
-      "date": "2025-06-22T00:55:45.801Z",
+      "id": "1751282718238",
+      "date": "2025-06-30T11:25:18.238Z",
       "type": "Buy",
       "assetType": "Stock",
-      "symbol": "MSFT",
-      "quantity": 1,
-      "price": 477.3999938964844,
-      "currency": "ARS"
+      "symbol": "KO",
+      "quantity": 16,
+      "price": 70.33000183105469,
+      "currency": "USD",
+      "market": "NASDAQ",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
     },
     {
-      "id": "1750617417830",
-      "date": "2025-06-22T18:36:57.830Z",
+      "id": "1751282775584",
+      "date": "2025-06-30T11:26:15.584Z",
       "type": "Buy",
       "assetType": "Stock",
-      "symbol": "GOOGL",
+      "symbol": "BABA.BA",
+      "quantity": 13,
+      "price": 15225,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1751282837300",
+      "date": "2025-06-30T11:27:17.300Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "MSFT.BA",
+      "quantity": 9,
+      "price": 19825,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1751282920991",
+      "date": "2025-06-30T11:28:40.991Z",
+      "type": "Buy",
+      "assetType": "Bond",
+      "ticker": "AL30",
       "quantity": 5,
-      "price": 166.63999938964844,
-      "currency": "ARS"
-    },
-    {
-      "id": "1750617456627",
-      "date": "2025-06-22T18:37:36.627Z",
-      "type": "Buy",
-      "assetType": "Bond",
-      "ticker": "GD30",
-      "quantity": 5,
-      "price": 55,
-      "currency": "ARS"
-    },
-    {
-      "date": "2025-06-22T18:38:28.394Z",
-      "type": "Sell",
-      "symbol": "GOOGL",
-      "quantity": 1,
-      "price": 166.63999938964844,
-      "currency": "ARS"
-    },
-    {
-      "id": "1750617571241",
-      "date": "2025-06-22T18:39:31.241Z",
-      "type": "Buy",
-      "assetType": "Bond",
-      "ticker": "YMC2O",
-      "quantity": 2,
-      "price": 98,
-      "currency": "ARS"
-    },
-    {
-      "id": "1750617598557",
-      "date": "2025-06-22T18:39:58.557Z",
-      "type": "Buy",
-      "assetType": "Bond",
-      "ticker": "GD30",
-      "quantity": 2,
-      "price": 55,
-      "currency": "ARS"
-    },
-    {
-      "id": "txn_1750617767526",
-      "date": "2025-06-22T18:42:47.526Z",
-      "type": "Sell",
-      "assetType": "Stock",
-      "symbol": "GOOGL",
-      "quantity": 1,
-      "price": 166.63999938964844,
-      "currency": "ARS"
-    },
-    {
-      "id": "txn_1750619945608",
-      "date": "2025-06-22T19:19:05.608Z",
-      "type": "Sell",
-      "assetType": "Stock",
-      "symbol": "MSFT",
-      "quantity": 1,
-      "price": 477.3999938964844,
-      "currency": "ARS"
-    },
-    {
-      "id": "1750622675749",
-      "date": "2025-06-22T20:04:35.749Z",
-      "type": "Buy",
-      "assetType": "Stock",
-      "symbol": "TSLA",
-      "quantity": 1,
-      "price": 322.1600036621094,
+      "price": 50000,
+      "currency": "ARS",
       "commissionPct": 1,
-      "purchaseFeePct": 0.05,
-      "currency": "ARS"
+      "purchaseFeePct": 0.05
     },
     {
-      "id": "1750622982036",
-      "date": "2025-06-22T20:09:42.036Z",
+      "id": "1751282940011",
+      "date": "2025-06-30T11:29:00.011Z",
       "type": "Buy",
       "assetType": "Bond",
       "ticker": "GD30",
-      "quantity": 1,
+      "quantity": 15,
       "price": 55,
+      "currency": "USD",
       "commissionPct": 1,
-      "purchaseFeePct": 0.05,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1751283006064",
+      "date": "2025-06-30T11:30:06.064Z",
+      "type": "Create",
+      "assetType": "FixedTermDeposit",
+      "provider": "Banco Galicia",
+      "amount": 73000,
+      "annualRate": 75,
+      "termDays": 30,
+      "maturityDate": "2025-07-30T11:30:06.063Z",
       "currency": "ARS"
     },
     {
-      "id": "1750628587125",
-      "date": "2025-06-22T21:43:07.125Z",
-      "type": "Buy",
-      "assetType": "Bond",
-      "ticker": "GD30",
-      "quantity": 1,
-      "price": 55,
-      "commissionPct": 1,
-      "purchaseFeePct": 0.05,
-      "currency": "ARS"
-    },
-    {
-      "id": "1750628676314",
-      "type": "Deposit",
-      "date": "2025-06-22T21:44:36.314Z",
-      "amount": 1000,
-      "currency": "ARS"
-    },
-    {
-      "id": "1750628743233",
-      "type": "Deposit",
-      "date": "2025-06-22T21:45:43.233Z",
-      "amount": 500,
-      "currency": "ARS"
-    },
-    {
-      "id": "dep_1750636152493",
-      "date": "2025-06-22",
-      "type": "Deposit",
-      "amount": 200,
-      "currency": "ARS"
+      "id": "1751283017130",
+      "date": "2025-06-30T11:30:17.130Z",
+      "type": "Create",
+      "assetType": "FixedTermDeposit",
+      "provider": "Banco Nación",
+      "amount": 100,
+      "annualRate": 1.5,
+      "termDays": 365,
+      "maturityDate": "2026-06-30T11:30:17.130Z",
+      "currency": "USD"
     }
   ],
-  "goals": [
-    {
-      "name": "Vacaciones ",
-      "targetAmount": 100000,
-      "targetDate": "2030-07-22",
-      "initialDeposit": 0,
-      "monthlyContribution": 1522,
-      "id": "1750635388567",
-      "currency": "ARS"
-    }
-  ],
+  "goals": [],
   "cash": {
-    "ARS": 2182.3823181304933,
-    "USD": 0
+    "ARS": 294073.32499999995,
+    "USD": 929.242030395508
   },
   "profile": {
     "instrumentsUsed": [
       "Plazo Fijo",
-      "Acciones",
       "Fondos Comunes de Inversión"
     ],
     "knowledgeLevels": {
-      "Plazo Fijo": "Bajo",
-      "Acciones": "Bajo",
+      "Plazo Fijo": "Alto",
       "Fondos Comunes de Inversión": "Bajo"
     },
     "holdingPeriod": "1 a 5 años",
-    "ageGroup": "30 a 40",
-    "riskAppetite": "Balanceado",
-    "investmentAmount": 2000
+    "ageGroup": "Más de 50",
+    "riskAppetite": "Conservador",
+    "investmentAmount": 1003000,
+    "initialBalanceARS": 1000000,
+    "initialBalanceUSD": 3000
   },
   "investmentStrategy": {
-    "id": "strategy-d3ac31ed-b89d-45e6-baf3-986fad5bab1a",
-    "createdAt": "2025-06-24T12:39:10.946Z",
+    "id": "strategy-3332afcb-df72-46bf-bfa7-bd9a4001c0ab",
+    "createdAt": "2025-06-30T11:30:44.399Z",
     "targetAllocation": {
-      "stocks": 60,
-      "bonds": 30,
-      "deposits": 5,
-      "cash": 5
+      "stocks": 40,
+      "bonds": 45,
+      "deposits": 10,
+      "cash": 5,
+      "crypto": 0
     },
     "recommendations": [
       {
-        "id": "alloc-8e9fb1d2-518b-445e-9e98-0f180e12b640",
-        "action": "increase",
-        "assetClass": "stocks",
-        "reason": "Tu portafolio tiene 22.2% en acciones, pero tu estrategia objetivo es 60%",
-        "priority": "high",
-        "expectedImpact": "positive"
-      },
-      {
-        "id": "alloc-880afa07-091a-4f1f-ae8e-5022399c10d7",
+        "id": "alloc-bf7c6b97-0e3b-41c2-bdbe-a8d0124d25b9",
         "action": "increase",
         "assetClass": "bonds",
-        "reason": "Tu portafolio tiene 18.7% en bonos, pero tu estrategia objetivo es 30%",
+        "reason": "Tu portafolio tiene 25.3% en bonos, pero tu estrategia objetivo es 45%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
         "priority": "high",
-        "expectedImpact": "positive"
+        "expectedImpact": "positive",
+        "suggestedAssets": [
+          "GOV-BOND-2025",
+          "CORP-BOND-2026",
+          "MUNI-BOND-2027"
+        ]
       },
       {
-        "id": "cash-invest-0619993e-b5d8-42db-8a47-87046dd407d2",
+        "id": "cash-invest-00500ad8-5691-4c2e-9b46-abb1af245bf8",
         "action": "buy",
-        "reason": "Tienes un 59.1% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
+        "reason": "Tienes un 29.4% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
         "priority": "high",
         "expectedImpact": "positive"
       }
     ],
-    "riskLevel": "Balanceado",
-    "timeHorizon": "Mediano plazo (3-7 años)",
-    "notes": "Estrategia alineada con 1 meta(s) de inversión"
+    "riskLevel": "Conservador",
+    "timeHorizon": "5-10 años",
+    "notes": "Estrategia conservadora: prioriza la preservación de capital"
   }
 }

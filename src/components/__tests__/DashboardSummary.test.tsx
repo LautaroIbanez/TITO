@@ -14,7 +14,7 @@ import { calculateInvestedCapital } from '../../utils/investedCapital';
 jest.mock('../../contexts/PortfolioContext');
 jest.mock('../../utils/calculatePortfolioValue');
 jest.mock('../../utils/portfolioPerformance');
-jest.mock('../../../utils/investedCapital');
+jest.mock('../../utils/investedCapital');
 jest.mock('../../utils/currency');
 
 const mockUsePortfolio = usePortfolio as jest.Mock;

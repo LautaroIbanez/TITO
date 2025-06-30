@@ -1,4 +1,4 @@
-import { calculatePortfolioValueHistory } from '../calculatePortfolioValue';
+import { calculatePortfolioValueHistory, calculateCurrentValueByCurrency } from '../calculatePortfolioValue';
 import { PortfolioTransaction } from '@/types';
 import dayjs from 'dayjs';
 import * as currencyUtils from '../currency';
@@ -559,5 +559,750 @@ describe('calculatePortfolioValueHistory', () => {
     expect(dayAfterUsdBuy!.valueARS).toBeCloseTo(expectedArsCashAfterBuy + expectedArsStockValue);
     expect(dayAfterUsdBuy!.valueARSRaw).toBeCloseTo(expectedArsCashAfterBuy + expectedArsStockValue);
     expect(dayAfterUsdBuy!.cashARS).toBeCloseTo(expectedArsCashAfterBuy);
+  });
+
+  it('should correctly calculate portfolio value with crypto positions', async () => {
+    const buyDate = dayjs('2024-01-01');
+    const sellDate = dayjs('2024-01-15');
+    
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '1',
+        date: buyDate.toISOString(),
+        type: 'Deposit',
+        amount: 10000,
+        currency: 'USD',
+      },
+      {
+        id: '2',
+        date: buyDate.toISOString(),
+        type: 'Buy',
+        assetType: 'Crypto',
+        symbol: 'BTCUSDT',
+        quantity: 0.5,
+        price: 50000,
+        currency: 'USD',
+        commissionPct: 1,
+      },
+      {
+        id: '3',
+        date: sellDate.toISOString(),
+        type: 'Sell',
+        assetType: 'Crypto',
+        symbol: 'BTCUSDT',
+        quantity: 0.2,
+        price: 60000,
+        currency: 'USD',
+        commissionPct: 1,
+      },
+    ];
+
+    const priceHistory = {
+      'BTCUSDT': [
+        { date: '2024-01-01', open: 50000, high: 51000, low: 49000, close: 50000, volume: 1000000 },
+        { date: '2024-01-15', open: 60000, high: 61000, low: 59000, close: 60000, volume: 1200000 },
+        { date: '2024-01-31', open: 55000, high: 56000, low: 54000, close: 55000, volume: 1100000 },
+      ]
+    };
+
+    const startDate = buyDate.subtract(5, 'days');
+    const endDate = buyDate.add(30, 'days');
+    
+    const history = await calculatePortfolioValueHistory(transactions, priceHistory, { 
+      startDate: startDate.format('YYYY-MM-DD'), 
+      endDate: endDate.format('YYYY-MM-DD') 
+    });
+
+    // Day before buy - value should be 0
+    const dayBefore = history.find(h => h.date === buyDate.subtract(1, 'day').format('YYYY-MM-DD'));
+    expect(dayBefore).toBeDefined();
+    expect(dayBefore!.valueUSD).toBe(0);
+    expect(dayBefore!.valueUSDRaw).toBe(0);
+
+    // Day of buy - should have 0.5 BTC worth $25,000 + remaining cash
+    const buyDay = history.find(h => h.date === buyDate.format('YYYY-MM-DD'));
+    expect(buyDay).toBeDefined();
+    const expectedBuyValue = 0.5 * 50000 + (10000 - 0.5 * 50000 * 1.01); // BTC value + remaining cash after fees
+    expect(buyDay!.valueUSD).toBeCloseTo(expectedBuyValue);
+    expect(buyDay!.valueUSDRaw).toBeCloseTo(expectedBuyValue);
+
+    // Day of sell - should have 0.3 BTC worth $18,000 + cash from sale
+    const sellDay = history.find(h => h.date === sellDate.format('YYYY-MM-DD'));
+    expect(sellDay).toBeDefined();
+    const cashFromSale = 0.2 * 60000 * 0.99; // Sale proceeds minus commission
+    const expectedSellValue = 0.3 * 60000 + cashFromSale;
+    expect(sellDay!.valueUSD).toBeCloseTo(expectedSellValue);
+    expect(sellDay!.valueUSDRaw).toBeCloseTo(expectedSellValue);
+  });
+
+  it('should correctly calculate portfolio value with caucion positions', async () => {
+    const caucionDate = dayjs('2024-01-01');
+    const maturityDate = dayjs('2024-01-31');
+    const withdrawalDate = dayjs('2024-02-05');
+    
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '1',
+        date: caucionDate.toISOString(),
+        type: 'Deposit',
+        amount: 10000,
+        currency: 'ARS',
+      },
+      {
+        id: '2',
+        date: caucionDate.toISOString(),
+        type: 'Create',
+        assetType: 'Caucion',
+        provider: 'Test Broker',
+        amount: 10000,
+        annualRate: 36.5, // 0.1% daily rate for simplicity
+        termDays: 30,
+        maturityDate: maturityDate.toISOString(),
+        currency: 'ARS',
+      },
+      {
+        id: '3',
+        date: withdrawalDate.toISOString(),
+        type: 'Withdrawal',
+        amount: 10000 + (10000 * (0.365 / 365) * 30), // Full value including interest
+        currency: 'ARS',
+      },
+    ];
+
+    const startDate = caucionDate.subtract(5, 'days');
+    const endDate = withdrawalDate.add(10, 'days');
+    
+    const history = await calculatePortfolioValueHistory(transactions, {}, { 
+      startDate: startDate.format('YYYY-MM-DD'), 
+      endDate: endDate.format('YYYY-MM-DD') 
+    });
+
+    // Day before caucion - value should be 0
+    const dayBefore = history.find(h => h.date === caucionDate.subtract(1, 'day').format('YYYY-MM-DD'));
+    expect(dayBefore).toBeDefined();
+    expect(dayBefore!.valueARS).toBe(0);
+    expect(dayBefore!.valueARSRaw).toBe(0);
+
+    // First day of caucion - value should be the principal
+    const firstDay = history.find(h => h.date === caucionDate.format('YYYY-MM-DD'));
+    expect(firstDay).toBeDefined();
+    expect(firstDay!.valueARS).toBe(10000);
+    expect(firstDay!.valueARSRaw).toBe(10000);
+    expect(firstDay!.cashARS).toBe(0);
+
+    // Mid-term (15 days in) - value should include accrued interest
+    const midDay = history.find(h => h.date === caucionDate.add(15, 'days').format('YYYY-MM-DD'));
+    expect(midDay).toBeDefined();
+    const expectedMidValue = 10000 + (10000 * (0.365 / 365) * 15);
+    expect(midDay!.valueARS).toBeCloseTo(expectedMidValue);
+    expect(midDay!.valueARSRaw).toBeCloseTo(expectedMidValue);
+
+    // Maturity day - value should include full interest
+    const maturityDay = history.find(h => h.date === maturityDate.format('YYYY-MM-DD'));
+    expect(maturityDay).toBeDefined();
+    const expectedFinalValue = 10000 + (10000 * (0.365 / 365) * 30);
+    expect(maturityDay!.valueARS).toBeCloseTo(expectedFinalValue);
+    expect(maturityDay!.valueARSRaw).toBeCloseTo(expectedFinalValue);
+
+    // Day after withdrawal - value should be 0
+    const dayAfterWithdrawal = history.find(h => h.date === withdrawalDate.add(1, 'day').format('YYYY-MM-DD'));
+    expect(dayAfterWithdrawal).toBeDefined();
+    expect(dayAfterWithdrawal!.valueARS).toBe(0);
+    expect(dayAfterWithdrawal!.valueARSRaw).toBe(0);
+  });
+
+  it('should handle mixed portfolio with crypto, cauciones, and other assets', async () => {
+    const startDate = dayjs('2024-01-01');
+    
+    const transactions: PortfolioTransaction[] = [
+      // Initial deposits
+      {
+        id: '1',
+        date: startDate.toISOString(),
+        type: 'Deposit',
+        amount: 10000,
+        currency: 'USD',
+      },
+      {
+        id: '2',
+        date: startDate.toISOString(),
+        type: 'Deposit',
+        amount: 50000,
+        currency: 'ARS',
+      },
+      // Crypto purchase
+      {
+        id: '3',
+        date: startDate.toISOString(),
+        type: 'Buy',
+        assetType: 'Crypto',
+        symbol: 'ETHUSDT',
+        quantity: 2,
+        price: 3000,
+        currency: 'USD',
+      },
+      // Caucion creation
+      {
+        id: '4',
+        date: startDate.toISOString(),
+        type: 'Create',
+        assetType: 'Caucion',
+        provider: 'Test Broker',
+        amount: 30000,
+        annualRate: 36.5,
+        termDays: 30,
+        maturityDate: startDate.add(30, 'days').toISOString(),
+        currency: 'ARS',
+      },
+    ];
+
+    const priceHistory = {
+      'ETHUSDT': [
+        { date: '2024-01-01', open: 3000, high: 3100, low: 2900, close: 3000, volume: 500000 },
+        { date: '2024-01-15', open: 3500, high: 3600, low: 3400, close: 3500, volume: 600000 },
+        { date: '2024-01-31', open: 3200, high: 3300, low: 3100, close: 3200, volume: 550000 },
+      ]
+    };
+
+    const endDate = startDate.add(35, 'days');
+    
+    const history = await calculatePortfolioValueHistory(transactions, priceHistory, { 
+      startDate: startDate.format('YYYY-MM-DD'), 
+      endDate: endDate.format('YYYY-MM-DD') 
+    });
+
+    // Day after creation - should have crypto value + caucion value + remaining cash
+    const dayAfter = history.find(h => h.date === startDate.add(1, 'day').format('YYYY-MM-DD'));
+    expect(dayAfter).toBeDefined();
+    
+    const cryptoValue = 2 * 3000; // 2 ETH at $3000
+    const caucionValue = 30000; // Principal only on first day
+    const remainingUSDCash = 10000 - cryptoValue; // Initial USD minus crypto purchase
+    const remainingARSCash = 50000 - 30000; // Initial ARS minus caucion
+    
+    expect(dayAfter!.valueUSD).toBeCloseTo(cryptoValue + remainingUSDCash);
+    expect(dayAfter!.valueARSRaw).toBeCloseTo(caucionValue + remainingARSCash);
+  });
+
+  it('should handle crypto buy and sell transactions correctly', async () => {
+    const depositDate = dayjs('2024-01-01');
+    const buyDate = dayjs('2024-01-03');
+    const sellDate = dayjs('2024-01-06');
+    
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '1',
+        date: depositDate.toISOString(),
+        type: 'Deposit',
+        amount: 10000,
+        currency: 'USD',
+      },
+      {
+        id: '2',
+        date: buyDate.toISOString(),
+        type: 'Buy',
+        assetType: 'Crypto',
+        symbol: 'BTCUSDT',
+        quantity: 0.5,
+        price: 50000,
+        commissionPct: 0.1,
+        currency: 'USD',
+      },
+      {
+        id: '3',
+        date: sellDate.toISOString(),
+        type: 'Sell',
+        assetType: 'Crypto',
+        symbol: 'BTCUSDT',
+        quantity: 0.2,
+        price: 52000,
+        commissionPct: 0.1,
+        currency: 'USD',
+      },
+    ];
+
+    const priceHistory = {
+      'BTCUSDT': [
+        { date: buyDate.format('YYYY-MM-DD'), open: 50000, high: 50000, low: 50000, close: 50000, volume: 1000 },
+        { date: sellDate.format('YYYY-MM-DD'), open: 52000, high: 52000, low: 52000, close: 52000, volume: 1000 },
+      ]
+    };
+
+    // Calculate history from 5 days before deposit to 5 days after sell
+    const startDate = depositDate.subtract(5, 'days');
+    const endDate = sellDate.add(5, 'days');
+    
+    const history = await calculatePortfolioValueHistory(transactions, priceHistory, { startDate: startDate.format('YYYY-MM-DD'), endDate: endDate.format('YYYY-MM-DD') });
+
+    // Day of deposit - value should be 10000 USD
+    const dayOfDeposit = history.find(h => h.date === depositDate.format('YYYY-MM-DD'));
+    expect(dayOfDeposit).toBeDefined();
+    expect(dayOfDeposit!.valueUSD).toBe(10000);
+    expect(dayOfDeposit!.valueUSDRaw).toBe(10000);
+    expect(dayOfDeposit!.cashUSD).toBe(10000);
+
+    // Day of buy - cash should be reduced by purchase amount + commission
+    const dayOfBuy = history.find(h => h.date === buyDate.format('YYYY-MM-DD'));
+    expect(dayOfBuy).toBeDefined();
+    const buyAmount = 0.5 * 50000; // 25000
+    const buyCommission = buyAmount * 0.001; // 25
+    const totalBuyCost = buyAmount + buyCommission; // 25025
+    const expectedCashAfterBuy = 10000 - totalBuyCost; // 74975
+    const expectedCryptoValue = 0.5 * 50000; // 25000
+    expect(dayOfBuy!.valueUSD).toBeCloseTo(expectedCashAfterBuy + expectedCryptoValue);
+    expect(dayOfBuy!.valueUSDRaw).toBeCloseTo(expectedCashAfterBuy + expectedCryptoValue);
+    expect(dayOfBuy!.cashUSD).toBeCloseTo(expectedCashAfterBuy);
+
+    // Day of sell - cash should be increased by sale proceeds - commission, crypto value reduced
+    const dayOfSell = history.find(h => h.date === sellDate.format('YYYY-MM-DD'));
+    expect(dayOfSell).toBeDefined();
+    const sellAmount = 0.2 * 52000; // 10400
+    const sellCommission = sellAmount * 0.001; // 10.4
+    const netSellProceeds = sellAmount - sellCommission; // 10389.6
+    const expectedCashAfterSell = expectedCashAfterBuy + netSellProceeds; // 85364.6
+    const expectedCryptoValueAfterSell = 0.3 * 52000; // 15600 (0.3 remaining shares)
+    expect(dayOfSell!.valueUSD).toBeCloseTo(expectedCashAfterSell + expectedCryptoValueAfterSell);
+    expect(dayOfSell!.valueUSDRaw).toBeCloseTo(expectedCashAfterSell + expectedCryptoValueAfterSell);
+    expect(dayOfSell!.cashUSD).toBeCloseTo(expectedCashAfterSell);
+  });
+
+  it('should handle caucion creation and maturity correctly', async () => {
+    const depositDate = dayjs('2024-01-01');
+    const caucionDate = dayjs('2024-01-02');
+    const maturityDate = dayjs('2024-01-17'); // 15 days later
+    
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '1',
+        date: depositDate.toISOString(),
+        type: 'Deposit',
+        amount: 10000,
+        currency: 'ARS',
+      },
+      {
+        id: '2',
+        date: caucionDate.toISOString(),
+        type: 'Create',
+        assetType: 'Caucion',
+        provider: 'Test Broker',
+        amount: 8000,
+        annualRate: 73, // 0.2% daily rate for simplicity
+        termDays: 15,
+        maturityDate: maturityDate.toISOString(),
+        currency: 'ARS',
+      },
+    ];
+
+    // Calculate history from 5 days before deposit to 10 days after maturity
+    const startDate = depositDate.subtract(5, 'days');
+    const endDate = maturityDate.add(10, 'days');
+    
+    const history = await calculatePortfolioValueHistory(transactions, {}, { startDate: startDate.format('YYYY-MM-DD'), endDate: endDate.format('YYYY-MM-DD') });
+
+    // Day before caucion - value should be 10000 (just cash)
+    const dayBeforeCaucion = history.find(h => h.date === caucionDate.subtract(1, 'day').format('YYYY-MM-DD'));
+    expect(dayBeforeCaucion).toBeDefined();
+    expect(dayBeforeCaucion!.valueARS).toBe(10000);
+    expect(dayBeforeCaucion!.valueARSRaw).toBe(10000);
+    expect(dayBeforeCaucion!.cashARS).toBe(10000);
+
+    // Day of caucion creation - value should be 10000 (cash reduced by 8000, caucion worth 8000)
+    const dayOfCaucion = history.find(h => h.date === caucionDate.format('YYYY-MM-DD'));
+    expect(dayOfCaucion).toBeDefined();
+    expect(dayOfCaucion!.valueARS).toBe(10000);
+    expect(dayOfCaucion!.valueARSRaw).toBe(10000);
+    expect(dayOfCaucion!.cashARS).toBe(2000); // 10000 - 8000
+
+    // Mid-term (7 days in) - value should include accrued interest
+    const midDay = history.find(h => h.date === caucionDate.add(7, 'days').format('YYYY-MM-DD'));
+    expect(midDay).toBeDefined();
+    const expectedMidValue = 8000 + (8000 * (0.73 / 365) * 7); // Principal + 7 days interest
+    const totalExpectedValue = 2000 + expectedMidValue; // Cash + caucion value
+    expect(midDay!.valueARS).toBeCloseTo(totalExpectedValue);
+    expect(midDay!.valueARSRaw).toBeCloseTo(totalExpectedValue);
+    expect(midDay!.cashARS).toBe(2000);
+
+    // Maturity day - value should include full interest
+    const maturityDay = history.find(h => h.date === maturityDate.format('YYYY-MM-DD'));
+    expect(maturityDay).toBeDefined();
+    const expectedFinalCaucionValue = 8000 + (8000 * (0.73 / 365) * 15); // Principal + full interest
+    const totalExpectedFinalValue = 2000 + expectedFinalCaucionValue; // Cash + matured caucion value
+    expect(maturityDay!.valueARS).toBeCloseTo(totalExpectedFinalValue);
+    expect(maturityDay!.valueARSRaw).toBeCloseTo(totalExpectedFinalValue);
+    expect(maturityDay!.cashARS).toBe(2000);
+
+    // Day after maturity - caucion value should remain constant (not drop to 0)
+    const dayAfter = history.find(h => h.date === maturityDate.add(1, 'day').format('YYYY-MM-DD'));
+    expect(dayAfter).toBeDefined();
+    expect(dayAfter!.valueARS).toBeCloseTo(totalExpectedFinalValue); // Should remain the same
+    expect(dayAfter!.valueARSRaw).toBeCloseTo(totalExpectedFinalValue);
+    expect(dayAfter!.cashARS).toBe(2000);
+  });
+
+  it('should remove matured caucion value when withdrawal transaction occurs', async () => {
+    const depositDate = dayjs('2024-01-01');
+    const caucionDate = dayjs('2024-01-02');
+    const maturityDate = dayjs('2024-01-17');
+    const withdrawalDate = dayjs('2024-01-20'); // 3 days after maturity
+    
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '1',
+        date: depositDate.toISOString(),
+        type: 'Deposit',
+        amount: 10000,
+        currency: 'ARS',
+      },
+      {
+        id: '2',
+        date: caucionDate.toISOString(),
+        type: 'Create',
+        assetType: 'Caucion',
+        provider: 'Test Broker',
+        amount: 8000,
+        annualRate: 73,
+        termDays: 15,
+        maturityDate: maturityDate.toISOString(),
+        currency: 'ARS',
+      },
+      {
+        id: '3',
+        date: withdrawalDate.toISOString(),
+        type: 'Withdrawal',
+        amount: 8000 + (8000 * (0.73 / 365) * 15), // Full value including interest
+        currency: 'ARS',
+      },
+    ];
+
+    // Calculate history from 5 days before deposit to 10 days after withdrawal
+    const startDate = depositDate.subtract(5, 'days');
+    const endDate = withdrawalDate.add(10, 'days');
+    
+    const history = await calculatePortfolioValueHistory(transactions, {}, { startDate: startDate.format('YYYY-MM-DD'), endDate: endDate.format('YYYY-MM-DD') });
+
+    // Day before withdrawal - value should still include matured caucion
+    const dayBeforeWithdrawal = history.find(h => h.date === withdrawalDate.subtract(1, 'day').format('YYYY-MM-DD'));
+    expect(dayBeforeWithdrawal).toBeDefined();
+    const expectedFinalCaucionValue = 8000 + (8000 * (0.73 / 365) * 15);
+    const totalExpectedValue = 2000 + expectedFinalCaucionValue; // Cash + matured caucion
+    expect(dayBeforeWithdrawal!.valueARS).toBeCloseTo(totalExpectedValue);
+    expect(dayBeforeWithdrawal!.valueARSRaw).toBeCloseTo(totalExpectedValue);
+    expect(dayBeforeWithdrawal!.cashARS).toBe(2000);
+
+    // Day of withdrawal - value should drop to just cash
+    const withdrawalDay = history.find(h => h.date === withdrawalDate.format('YYYY-MM-DD'));
+    expect(withdrawalDay).toBeDefined();
+    expect(withdrawalDay!.valueARS).toBe(2000); // Just remaining cash
+    expect(withdrawalDay!.valueARSRaw).toBe(2000);
+    expect(withdrawalDay!.cashARS).toBe(2000);
+
+    // Day after withdrawal - value should remain just cash
+    const dayAfterWithdrawal = history.find(h => h.date === withdrawalDate.add(1, 'day').format('YYYY-MM-DD'));
+    expect(dayAfterWithdrawal).toBeDefined();
+    expect(dayAfterWithdrawal!.valueARS).toBe(2000);
+    expect(dayAfterWithdrawal!.valueARSRaw).toBe(2000);
+    expect(dayAfterWithdrawal!.cashARS).toBe(2000);
+  });
+
+  it('should handle mixed portfolio with crypto, caucion, and stocks', async () => {
+    const depositDate = dayjs('2024-01-01');
+    const buyDate = dayjs('2024-01-03');
+    const caucionDate = dayjs('2024-01-05');
+    const maturityDate = dayjs('2024-01-20');
+    
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '1',
+        date: depositDate.toISOString(),
+        type: 'Deposit',
+        amount: 50000,
+        currency: 'ARS',
+      },
+      {
+        id: '2',
+        date: depositDate.toISOString(),
+        type: 'Deposit',
+        amount: 10000,
+        currency: 'USD',
+      },
+      {
+        id: '3',
+        date: buyDate.toISOString(),
+        type: 'Buy',
+        assetType: 'Stock',
+        symbol: 'AAPL',
+        quantity: 5,
+        price: 4000,
+        commissionPct: 1,
+        currency: 'ARS',
+        market: 'BCBA',
+      },
+      {
+        id: '4',
+        date: buyDate.toISOString(),
+        type: 'Buy',
+        assetType: 'Crypto',
+        symbol: 'BTCUSDT',
+        quantity: 0.1,
+        price: 50000,
+        commissionPct: 0.1,
+        currency: 'USD',
+      },
+      {
+        id: '5',
+        date: caucionDate.toISOString(),
+        type: 'Create',
+        assetType: 'Caucion',
+        provider: 'Test Broker',
+        amount: 15000,
+        annualRate: 73,
+        termDays: 15,
+        maturityDate: maturityDate.toISOString(),
+        currency: 'ARS',
+      },
+    ];
+
+    const priceHistory = {
+      'AAPL': [
+        { date: buyDate.format('YYYY-MM-DD'), open: 4000, high: 4000, low: 4000, close: 4000, volume: 1000 },
+      ],
+      'BTCUSDT': [
+        { date: buyDate.format('YYYY-MM-DD'), open: 50000, high: 50000, low: 50000, close: 50000, volume: 1000 },
+      ]
+    };
+
+    // Calculate history from 5 days before deposit to 10 days after maturity
+    const startDate = depositDate.subtract(5, 'days');
+    const endDate = maturityDate.add(10, 'days');
+    
+    const history = await calculatePortfolioValueHistory(transactions, priceHistory, { startDate: startDate.format('YYYY-MM-DD'), endDate: endDate.format('YYYY-MM-DD') });
+
+    // Day after all transactions - should include all positions
+    const dayAfterAll = history.find(h => h.date === caucionDate.add(1, 'day').format('YYYY-MM-DD'));
+    expect(dayAfterAll).toBeDefined();
+    
+    // Calculate expected values
+    const stockBuyAmount = 5 * 4000; // 20000
+    const stockCommission = stockBuyAmount * 0.01; // 200
+    const stockCost = stockBuyAmount + stockCommission; // 20200
+    
+    const cryptoBuyAmount = 0.1 * 50000; // 5000
+    const cryptoCommission = cryptoBuyAmount * 0.001; // 5
+    const cryptoCost = cryptoBuyAmount + cryptoCommission; // 5005
+    
+    const expectedCashARS = 50000 - stockCost - 15000; // 14800 (50000 - 20200 - 15000)
+    const expectedCashUSD = 10000 - cryptoCost; // 4995
+    const expectedStockValue = 5 * 4000; // 20000
+    const expectedCryptoValue = 0.1 * 50000; // 5000
+    const expectedCaucionValue = 15000; // Initial value (no interest yet)
+    
+    const totalExpectedARS = expectedCashARS + expectedStockValue + expectedCaucionValue;
+    const totalExpectedUSD = expectedCashUSD + expectedCryptoValue;
+    
+    expect(dayAfterAll!.valueARSRaw).toBeCloseTo(totalExpectedARS);
+    expect(dayAfterAll!.valueUSDRaw).toBeCloseTo(totalExpectedUSD);
+    expect(dayAfterAll!.cashARS).toBeCloseTo(expectedCashARS);
+    expect(dayAfterAll!.cashUSD).toBeCloseTo(expectedCashUSD);
+  });
+});
+
+describe('calculateCurrentValueByCurrency', () => {
+  it('should calculate current value for crypto positions', () => {
+    const positions = [
+      {
+        type: 'Crypto',
+        symbol: 'BTCUSDT',
+        quantity: 0.5,
+        averagePrice: 50000,
+        currency: 'USD',
+      },
+      {
+        type: 'Crypto',
+        symbol: 'ETHUSDT',
+        quantity: 2,
+        averagePrice: 3000,
+        currency: 'USD',
+      },
+    ];
+
+    const cash = { ARS: 10000, USD: 5000 };
+    const priceHistory = {
+      'BTCUSDT': [
+        { date: '2024-01-01', open: 50000, high: 50000, low: 50000, close: 50000, volume: 1000 },
+        { date: '2024-01-02', open: 52000, high: 52000, low: 52000, close: 52000, volume: 1000 },
+      ],
+      'ETHUSDT': [
+        { date: '2024-01-01', open: 3000, high: 3000, low: 3000, close: 3000, volume: 1000 },
+        { date: '2024-01-02', open: 3200, high: 3200, low: 3200, close: 3200, volume: 1000 },
+      ],
+    };
+
+    const result = calculateCurrentValueByCurrency(positions, cash, priceHistory);
+
+    const expectedBTCValue = 0.5 * 52000; // 26000
+    const expectedETHValue = 2 * 3200; // 6400
+    const expectedUSDValue = 5000 + expectedBTCValue + expectedETHValue; // 37400
+
+    expect(result.ARS).toBe(10000);
+    expect(result.USD).toBe(expectedUSDValue);
+  });
+
+  it('should calculate current value for caucion positions', () => {
+    const positions = [
+      {
+        type: 'Caucion',
+        id: '1',
+        provider: 'Test Broker',
+        amount: 10000,
+        annualRate: 73,
+        startDate: '2024-01-01',
+        maturityDate: '2024-01-16',
+        currency: 'ARS',
+        term: 15,
+      },
+      {
+        type: 'Caucion',
+        id: '2',
+        provider: 'Test Broker',
+        amount: 5000,
+        annualRate: 73,
+        startDate: '2024-01-05',
+        maturityDate: '2024-01-20',
+        currency: 'USD',
+        term: 15,
+      },
+    ];
+
+    const cash = { ARS: 5000, USD: 2000 };
+    const priceHistory = {};
+
+    // Mock current date to be 10 days after first caucion start
+    const originalDate = global.Date;
+    global.Date = class extends Date {
+      constructor() {
+        super('2024-01-11');
+      }
+    } as any;
+
+    const result = calculateCurrentValueByCurrency(positions, cash, priceHistory);
+
+    // Calculate expected values
+    const caucion1Days = 10; // 10 days active
+    const caucion1Interest = 10000 * (0.73 / 365) * caucion1Days;
+    const caucion1Value = 10000 + caucion1Interest;
+
+    const caucion2Days = 6; // 6 days active
+    const caucion2Interest = 5000 * (0.73 / 365) * caucion2Days;
+    const caucion2Value = 5000 + caucion2Interest;
+
+    expect(result.ARS).toBeCloseTo(5000 + caucion1Value);
+    expect(result.USD).toBeCloseTo(2000 + caucion2Value);
+
+    // Restore original Date
+    global.Date = originalDate;
+  });
+
+  it('should calculate current value for matured caucion positions', () => {
+    const positions = [
+      {
+        type: 'Caucion',
+        id: '1',
+        provider: 'Test Broker',
+        amount: 10000,
+        annualRate: 73,
+        startDate: '2024-01-01',
+        maturityDate: '2024-01-16',
+        currency: 'ARS',
+        term: 15,
+      },
+    ];
+
+    const cash = { ARS: 5000, USD: 2000 };
+    const priceHistory = {};
+
+    // Mock current date to be after maturity
+    const originalDate = global.Date;
+    global.Date = class extends Date {
+      constructor() {
+        super('2024-01-20');
+      }
+    } as any;
+
+    const result = calculateCurrentValueByCurrency(positions, cash, priceHistory);
+
+    // Calculate expected value (full interest)
+    const caucionDays = 15; // Full term
+    const caucionInterest = 10000 * (0.73 / 365) * caucionDays;
+    const caucionValue = 10000 + caucionInterest;
+
+    expect(result.ARS).toBeCloseTo(5000 + caucionValue);
+    expect(result.USD).toBe(2000);
+
+    // Restore original Date
+    global.Date = originalDate;
+  });
+
+  it('should handle mixed portfolio with all asset types', () => {
+    const positions = [
+      {
+        type: 'Stock',
+        symbol: 'AAPL',
+        quantity: 10,
+        averagePrice: 4000,
+        currency: 'ARS',
+        market: 'BCBA',
+      },
+      {
+        type: 'Crypto',
+        symbol: 'BTCUSDT',
+        quantity: 0.1,
+        averagePrice: 50000,
+        currency: 'USD',
+      },
+      {
+        type: 'Caucion',
+        id: '1',
+        provider: 'Test Broker',
+        amount: 15000,
+        annualRate: 73,
+        startDate: '2024-01-01',
+        maturityDate: '2024-01-16',
+        currency: 'ARS',
+        term: 15,
+      },
+    ];
+
+    const cash = { ARS: 10000, USD: 5000 };
+    const priceHistory = {
+      'AAPL': [
+        { date: '2024-01-15', open: 4000, high: 4000, low: 4000, close: 4200, volume: 1000 },
+      ],
+      'BTCUSDT': [
+        { date: '2024-01-15', open: 50000, high: 50000, low: 50000, close: 52000, volume: 1000 },
+      ],
+    };
+
+    // Mock current date to be 14 days after caucion start
+    const originalDate = global.Date;
+    global.Date = class extends Date {
+      constructor() {
+        super('2024-01-15');
+      }
+    } as any;
+
+    const result = calculateCurrentValueByCurrency(positions, cash, priceHistory);
+
+    // Calculate expected values
+    const stockValue = 10 * 4200; // 42000
+    const cryptoValue = 0.1 * 52000; // 5200
+    const caucionDays = 14;
+    const caucionInterest = 15000 * (0.73 / 365) * caucionDays;
+    const caucionValue = 15000 + caucionInterest;
+
+    expect(result.ARS).toBeCloseTo(10000 + stockValue + caucionValue);
+    expect(result.USD).toBeCloseTo(5000 + cryptoValue);
+
+    // Restore original Date
+    global.Date = originalDate;
   });
 }); 
