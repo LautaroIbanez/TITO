@@ -1,0 +1,74 @@
+{
+  "username": "warren",
+  "createdAt": "2025-06-30T12:46:31.448Z",
+  "profileCompleted": true,
+  "positions": [],
+  "transactions": [],
+  "goals": [],
+  "cash": {
+    "ARS": 1000000,
+    "USD": 3000
+  },
+  "profile": {
+    "instrumentsUsed": [
+      "Plazo Fijo",
+      "Acciones",
+      "Fondos Comunes de Inversión"
+    ],
+    "knowledgeLevels": {
+      "Plazo Fijo": "Alto",
+      "Acciones": "Bajo",
+      "Fondos Comunes de Inversión": "Bajo"
+    },
+    "holdingPeriod": "1 a 5 años",
+    "ageGroup": "Más de 50",
+    "riskAppetite": "Balanceado",
+    "investmentAmount": 1003000,
+    "initialBalanceARS": 1000000,
+    "initialBalanceUSD": 3000
+  },
+  "investmentStrategy": {
+    "id": "strategy-665e2848-ef02-4965-a346-8e1df14a2f78",
+    "createdAt": "2025-06-30T12:47:03.856Z",
+    "targetAllocation": {
+      "stocks": 59.4,
+      "bonds": 29.7,
+      "deposits": 4.95,
+      "cash": 4.95,
+      "crypto": 1
+    },
+    "recommendations": [
+      {
+        "id": "alloc-b173821d-43fa-41e8-97fa-8da1cd22fca3",
+        "action": "increase",
+        "assetClass": "stocks",
+        "reason": "Tu portafolio tiene 0.0% en acciones, pero tu estrategia objetivo es 59.4%",
+        "priority": "high",
+        "expectedImpact": "positive"
+      },
+      {
+        "id": "alloc-c343a68f-f9fd-40e6-a85f-cda8e3b5de74",
+        "action": "increase",
+        "assetClass": "bonds",
+        "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 29.7%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
+        "priority": "high",
+        "expectedImpact": "positive",
+        "suggestedAssets": [
+          "GOV-BOND-2025",
+          "CORP-BOND-2026",
+          "MUNI-BOND-2027"
+        ]
+      },
+      {
+        "id": "cash-invest-3190cece-b635-432d-8fc6-8406edb49a89",
+        "action": "buy",
+        "reason": "Tienes un 100.0% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
+        "priority": "high",
+        "expectedImpact": "positive"
+      }
+    ],
+    "riskLevel": "Balanceado",
+    "timeHorizon": "5-10 años",
+    "notes": ""
+  }
+}

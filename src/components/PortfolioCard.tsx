@@ -19,6 +19,7 @@ import { usePortfolio } from '@/contexts/PortfolioContext';
 import { RatioRow, StockBadges, formatDate } from './StockMetrics';
 import { formatCurrency } from '@/utils/goalCalculator';
 import { StockPosition, AssetType } from '@/types';
+import { getTickerCurrency } from '@/utils/tickers';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
@@ -67,6 +68,9 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
   const hasPriceData = prices.length > 0;
   const hasFundamentals = fundamentals !== null;
   const hasTechnicals = technicals !== null;
+
+  // Get currency info
+  const currency = getTickerCurrency(symbol);
 
   const handleOpenModal = (type: 'Buy' | 'Sell') => {
     setTradeType(type);
@@ -150,6 +154,11 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
         <div className="flex items-center gap-2 justify-between">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-gray-900">{symbol}</h2>
+            <span className={`px-2 py-1 rounded text-xs font-semibold ${
+              currency === 'ARS' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
+            }`}>
+              {currency}
+            </span>
             {hasTechnicals && <SignalBadge signal={signal} />}
           </div>
           <div className="flex gap-2">

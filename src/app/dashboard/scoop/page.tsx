@@ -8,6 +8,7 @@ import dayjs from 'dayjs';
 import { useScoop } from '@/contexts/ScoopContext';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import { STOCK_CATEGORIES } from '@/utils/assetCategories';
+import { getTickerCurrency, getTickerMarket } from '@/utils/tickers';
 
 // Category display names
 const CATEGORY_NAMES: Record<string, string> = {
@@ -91,13 +92,12 @@ export default function ScoopPage() {
       const data = await res.json();
       userProfile = data.profile || null;
       userPositions = data.positions || [];
-      // Clasificar símbolos por moneda
+      // Clasificar símbolos por moneda usando getTickerCurrency
       const symbolsByCurrency: { USD: string[]; ARS: string[] } = { USD: [], ARS: [] };
       userPositions.forEach((p: any) => {
         if (p.symbol) {
-          const baseSymbol = p.symbol.split('.')[0] || p.symbol;
-          if (p.currency === 'USD') symbolsByCurrency.USD.push(baseSymbol);
-          else if (p.currency === 'ARS') symbolsByCurrency.ARS.push(baseSymbol);
+          const currency = getTickerCurrency(p.symbol);
+          symbolsByCurrency[currency].push(p.symbol);
         }
       });
       setPortfolioSymbols(symbolsByCurrency);
@@ -136,10 +136,11 @@ export default function ScoopPage() {
       // Skip empty categories
       if (tickers.length === 0) continue;
       
-      // Filter out symbols already in portfolio
-      const stocksToShowSymbols = tickers.filter(symbol =>
-        !portfolioSymbols.USD.includes(symbol) && !portfolioSymbols.ARS.includes(symbol)
-      );
+      // Filter out symbols already in portfolio using currency detection
+      const stocksToShowSymbols = tickers.filter(symbol => {
+        const currency = getTickerCurrency(symbol);
+        return !portfolioSymbols[currency].includes(symbol);
+      });
       
       // Skip categories with no available stocks
       if (stocksToShowSymbols.length === 0) continue;
@@ -158,7 +159,9 @@ export default function ScoopPage() {
             prices,
             fundamentals,
             technicals,
-            isTrending: trendingSymbols.includes(symbol)
+            isTrending: trendingSymbols.includes(symbol),
+            currency: getTickerCurrency(symbol),
+            market: getTickerMarket(symbol)
           };
         })
       );

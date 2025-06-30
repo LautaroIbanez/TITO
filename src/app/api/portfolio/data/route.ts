@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPortfolioData } from '@/utils/portfolioData';
 import { getFundamentals, getHistoricalPrices, getTechnicals } from '@/utils/financeData';
+import { getBaseTicker } from '@/utils/tickers';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest) {
     await Promise.all(stockSymbols.map(async (symbol: string) => {
       const [prices, fund, tech] = await Promise.all([
         getHistoricalPrices(symbol),
-        getFundamentals(symbol),
+        getFundamentals(getBaseTicker(symbol)),
         getTechnicals(symbol)
       ]);
       historicalPrices[symbol] = prices;

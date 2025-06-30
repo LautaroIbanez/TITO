@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { UserData, StockPosition, CryptoPosition } from '@/types';
 import { Fundamentals, Technicals, PriceData } from '@/types/finance';
+import { getBaseTicker } from './tickers';
 
 async function readJsonSafe<T = unknown>(filePath: string): Promise<T | null> {
   try {
@@ -54,7 +55,9 @@ export async function getPortfolioData(username: string) {
     // Load stock data
     ...stockSymbols.map(async (symbol) => {
       historicalPrices[symbol] = await readJsonSafe<PriceData[]>(path.join(process.cwd(), 'data', 'stocks', `${symbol}.json`)) || [];
-      fundamentals[symbol] = await readJsonSafe<Fundamentals>(path.join(process.cwd(), 'data', 'fundamentals', `${symbol}.json`)) || null;
+      // Use base ticker for fundamentals to avoid duplication
+      const baseSymbol = getBaseTicker(symbol);
+      fundamentals[symbol] = await readJsonSafe<Fundamentals>(path.join(process.cwd(), 'data', 'fundamentals', `${baseSymbol}.json`)) || null;
       technicals[symbol] = await readJsonSafe<Technicals>(path.join(process.cwd(), 'data', 'technicals', `${symbol}.json`)) || null;
     }),
     // Load crypto data

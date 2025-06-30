@@ -10,6 +10,7 @@ import {
   EMA,
   ADX,
 } from 'technicalindicators';
+import { getBaseTicker } from './tickers';
 
 // Helper: Read JSON file safely
 async function readJsonSafe<T = unknown>(filePath: string): Promise<T | null> {
@@ -29,16 +30,17 @@ async function writeJson(filePath: string, data: any) {
 
 // Helper: Rate limit check
 async function canRequest(symbol: string, type: 'history' | 'fundamentals', minIntervalSec = 10) {
+  const baseSymbol = getBaseTicker(symbol);
   const logPath = path.join(process.cwd(), 'data', 'request-log.json');
   const now = dayjs();
   const log = (await readJsonSafe<Record<string, any>>(logPath)) || {};
-  const last = log?.[symbol]?.[type];
+  const last = log?.[baseSymbol]?.[type];
   if (last && now.diff(dayjs(last), 'second') < minIntervalSec) {
     return false;
   }
   // Update log
-  log[symbol] = log[symbol] || {};
-  log[symbol][type] = now.toISOString();
+  log[baseSymbol] = log[baseSymbol] || {};
+  log[baseSymbol][type] = now.toISOString();
   await writeJson(logPath, log);
   return true;
 }
@@ -145,7 +147,8 @@ export async function getHistoricalPrices(symbol: string, interval: '1d' | '1wk'
 }
 
 export async function getFundamentals(symbol: string): Promise<Fundamentals | null> {
-  const filePath = path.join(process.cwd(), 'data', 'fundamentals', `${symbol}.json`);
+  const baseSymbol = getBaseTicker(symbol);
+  const filePath = path.join(process.cwd(), 'data', 'fundamentals', `${baseSymbol}.json`);
   let fileExists = false;
   try {
     await fs.access(filePath);
@@ -166,11 +169,11 @@ export async function getFundamentals(symbol: string): Promise<Fundamentals | nu
 
   // Fetch new fundamentals
   if (!(await canRequest(symbol, 'fundamentals'))) {
-    console.log(`[${symbol}] Skipping fundamentals fetch due to rate limit.`);
+    console.log(`[${baseSymbol}] Skipping fundamentals fetch due to rate limit.`);
     return fundamentals;
   }
   try {
-    const summary: any = await yahooFinance.quoteSummary(symbol, { 
+    const summary: any = await yahooFinance.quoteSummary(baseSymbol, { 
       modules: [
         'defaultKeyStatistics', 
         'financialData', 
@@ -207,7 +210,7 @@ export async function getFundamentals(symbol: string): Promise<Fundamentals | nu
       updatedAt: dayjs().toISOString(),
     };
     await writeJson(filePath, fundamentals);
-    console.log(`[${symbol}] Fetched and saved fundamentals.`);
+    console.log(`[${baseSymbol}] Fetched and saved fundamentals.`);
     return fundamentals;
   } catch (err) {
     // Check if it's an unsupported symbol error
@@ -216,10 +219,10 @@ export async function getFundamentals(symbol: string): Promise<Fundamentals | nu
         errorMessage.includes('Invalid symbol') || 
         errorMessage.includes('not found') ||
         errorMessage.includes('No data available')) {
-      console.log(`Symbol ${symbol} not supported on Yahoo Finance`);
+      console.log(`Symbol ${baseSymbol} not supported on Yahoo Finance`);
       return null;
     }
-    console.error(`[${symbol}] Error fetching fundamentals:`, err);
+    console.error(`[${baseSymbol}] Error fetching fundamentals:`, err);
     return fundamentals;
   }
 }

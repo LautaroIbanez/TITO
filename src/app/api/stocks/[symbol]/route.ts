@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import yahooFinance from 'yahoo-finance2';
 import NodeCache from 'node-cache';
+import { promises as fs } from 'fs';
+import path from 'path';
 import { getFundamentals, getTechnicals, getHistoricalPrices } from '@/utils/financeData';
+import { getBaseTicker } from '@/utils/tickers';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +24,7 @@ export async function GET(
   try {
     switch (dataType) {
       case 'fundamentals':
-        const fundamentals = await getFundamentals(symbol);
+        const fundamentals = await getFundamentals(getBaseTicker(symbol));
         if (fundamentals === null) {
           return NextResponse.json({ error: `Symbol ${symbol} not supported on Yahoo Finance` }, { status: 404 });
         }

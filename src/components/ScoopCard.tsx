@@ -17,6 +17,7 @@ import TradeModal, { TradeModalProps } from './TradeModal';
 import TechnicalDisplay from './TechnicalDisplay';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import { RatioRow, StockBadges, formatDate } from './StockMetrics';
+import { getTickerCurrency, getTickerMarket } from '@/utils/tickers';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
@@ -62,7 +63,7 @@ export default function ScoopCard({
   cash,
 }: ScoopCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [market, setMarket] = useState<'NASDAQ' | 'BCBA'>('NASDAQ');
+  const [market, setMarket] = useState<'NASDAQ' | 'BCBA'>(getTickerMarket(stockData.symbol));
   const [localPrice, setLocalPrice] = useState<number | null>(null);
   
   // Display states for current market data
@@ -81,6 +82,10 @@ export default function ScoopCard({
   
   const lastPriceDate = displayPrices.length > 0 ? displayPrices[displayPrices.length - 1].date : null;
   const fundamentalsDate = displayFundamentals?.updatedAt;
+  
+  // Get currency and market info
+  const currency = getTickerCurrency(stockData.symbol);
+  const tickerMarket = getTickerMarket(stockData.symbol);
   
   const chartData = {
     labels: displayPrices.map((p: any) => p.date),
@@ -223,6 +228,11 @@ export default function ScoopCard({
         <div className="flex items-center gap-2 justify-between">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-gray-900">{stockData.symbol}</h2>
+            <span className={`px-2 py-1 rounded text-xs font-semibold ${
+              currency === 'ARS' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
+            }`}>
+              {currency}
+            </span>
             {isSuggested && <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold">Sugerido</span>}
             {isTrending && <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-semibold">Trending</span>}
             {inPortfolioUSD && <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-semibold">USD</span>}
@@ -233,25 +243,27 @@ export default function ScoopCard({
           </button>
         </div>
 
-        {/* Market Selector */}
-        <div className="flex gap-2">
-          <button
-            onClick={() => handleMarketChange('NASDAQ')}
-            className={`px-3 py-1 rounded text-xs font-semibold ${
-              market === 'NASDAQ' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
-            }`}
-          >
-            NASDAQ
-          </button>
-          <button
-            onClick={() => handleMarketChange('BCBA')}
-            className={`px-3 py-1 rounded text-xs font-semibold ${
-              market === 'BCBA' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
-            }`}
-          >
-            BCBA
-          </button>
-        </div>
+        {/* Market Selector - Only show if both markets are available */}
+        {currency === 'USD' && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleMarketChange('NASDAQ')}
+              className={`px-3 py-1 rounded text-xs font-semibold ${
+                market === 'NASDAQ' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+              }`}
+            >
+              NASDAQ
+            </button>
+            <button
+              onClick={() => handleMarketChange('BCBA')}
+              className={`px-3 py-1 rounded text-xs font-semibold ${
+                market === 'BCBA' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+              }`}
+            >
+              BCBA
+            </button>
+          </div>
+        )}
 
         {/* Company Name */}
         <p className="text-sm text-gray-600">{stockData.companyName || 'Nombre no disponible'}</p>
