@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPortfolioData } from '@/utils/portfolioData';
 import { getFundamentals, getHistoricalPrices, getTechnicals } from '@/utils/financeData';
 import { getBaseTicker } from '@/utils/tickers';
+import { getUserData } from '@/utils/userData';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -11,6 +12,12 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    // Validate username before proceeding
+    const user = await getUserData(username);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     const data = await getPortfolioData(username);
     const stockSymbols = data.positions
       .filter((pos: any) => pos.type === 'Stock')

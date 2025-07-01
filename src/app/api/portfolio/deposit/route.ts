@@ -1,18 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
 import { UserData, DepositTransaction } from '@/types';
-import { getPortfolioData, saveUserData } from '@/utils/portfolioData';
-
-async function readUserFile(username: string): Promise<UserData | null> {
-    const userFile = path.join(process.cwd(), 'data', 'users', `${username}.json`);
-    try {
-        const data = await fs.readFile(userFile, 'utf-8');
-        return JSON.parse(data);
-    } catch {
-        return null;
-    }
-}
+import { saveUserData } from '@/utils/portfolioData';
+import { getUserData } from '@/utils/userData';
+import { addDeposit } from '@/utils/portfolioActions';
 
 // Add a new deposit
 export async function POST(request: Request) {
@@ -21,33 +11,15 @@ export async function POST(request: Request) {
     if (!username || !amount || !date || !currency) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
-
-    const userData = await readUserFile(username);
-    if (!userData) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    try {
+      const result = await addDeposit(username, amount, date, currency);
+      return NextResponse.json({ message: 'Deposit added successfully', ...result });
+    } catch (error) {
+      if (error instanceof Error) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+      throw error;
     }
-
-    if (!userData.cash) {
-      userData.cash = { ARS: 0, USD: 0 };
-    }
-    if (!userData.transactions) {
-      userData.transactions = [];
-    }
-    
-    const newDeposit: DepositTransaction = {
-      id: `dep_${new Date().getTime()}`,
-      date: date,
-      type: 'Deposit',
-      amount: Number(amount),
-      currency: currency,
-    };
-
-    userData.transactions.push(newDeposit);
-    userData.cash[currency] = (userData.cash[currency] || 0) + Number(amount);
-
-    await saveUserData(username, userData);
-
-    return NextResponse.json({ message: 'Deposit added successfully', deposit: newDeposit, cash: userData.cash });
   } catch (error) {
     console.error('Failed to add deposit:', error);
     return NextResponse.json({ error: 'Failed to add deposit' }, { status: 500 });
@@ -62,7 +34,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const userData = await readUserFile(username);
+    const userData = await getUserData(username);
     if (!userData) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
@@ -116,7 +88,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Missing required query parameters' }, { status: 400 });
     }
 
-    const userData = await readUserFile(username);
+    const userData = await getUserData(username);
     if (!userData) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }

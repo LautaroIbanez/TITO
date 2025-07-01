@@ -459,3 +459,52 @@ This script fetches the latest caución rates from official sources (BYMA, BCRA)
 - If you want to ensure the app displays the most up-to-date caución rates.
 - If you suspect the rates are stale or outdated.
 - The API will also attempt to auto-refresh if the data is older than 2 hours, but you can run this manually for immediate updates.
+
+## Project Structure
+
+```
+TITO/
+├── src/
+│   ├── app/           # Next.js app directory (pages, API routes, dashboard, etc.)
+│   ├── components/    # Reusable React components
+│   ├── contexts/      # React context providers (e.g., PortfolioContext)
+│   ├── types/         # TypeScript type definitions
+│   ├── utils/         # Utility functions (data, finance, tickers, etc.)
+│
+├── data/              # User data, market data, fundamentals, technicals, etc. (JSON files)
+├── scripts/           # Data update and ETL scripts (Node/TypeScript)
+├── public/            # Static assets (SVGs, images)
+├── README.md          # Project documentation
+├── package.json       # Project dependencies and scripts
+├── ...
+```
+
+### Key Modules
+- **Contexts**: State management for portfolio, scoop, etc. (see `src/contexts/`)
+- **API Routes**: All backend endpoints are in `src/app/api/`. Each resource (e.g., `/portfolio`, `/login`) has its own folder and `route.ts` file.
+- **Utility Functions**: Shared helpers for data access, calculations, and formatting (see `src/utils/`).
+- **Execution Flow**: User interacts with the UI (`src/app`), which calls API routes (`src/app/api/**`). API routes read/write data from `data/` using utilities in `src/utils/`.
+
+## Adding New Pages or API Endpoints
+- **Pages**: Add a new folder with a `page.tsx` file under `src/app/` (e.g., `src/app/new-feature/page.tsx`).
+- **API Endpoints**: Add a new folder with a `route.ts` file under `src/app/api/` (e.g., `src/app/api/new-endpoint/route.ts`).
+- Use TypeScript for all new files. Follow the existing folder and naming conventions.
+
+## Running Unit Tests
+Before running tests, make sure to install all dependencies (including dev dependencies) by running:
+
+```
+npm install
+```
+
+The test suite depends on [Jest](https://jestjs.io/) being available. You can then run the tests with:
+
+```
+npm test
+```
+
+## Contributing
+- Use TypeScript for all code.
+- Follow the existing code style; ESLint is used for linting (run `npx eslint .` to check).
+- Propose changes via pull requests. Include a clear description and reference related issues if applicable.
+- Run `npm test` before submitting to ensure all tests pass.
