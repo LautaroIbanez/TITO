@@ -3,7 +3,6 @@ import { getUserData } from '../userData';
 import { UserData, StockPosition, BondPosition, CryptoPosition } from '@/types';
 
 // Mock the userData module
-jest.mock('../userData');
 const mockGetUserData = getUserData as jest.MockedFunction<typeof getUserData>;
 
 // Mock the saveUserData function (it's called internally by the functions we're testing)

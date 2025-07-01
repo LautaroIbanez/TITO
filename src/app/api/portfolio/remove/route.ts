@@ -1,22 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { UserData, StockPosition, BondPosition, PortfolioTransaction, StockTradeTransaction, BondTradeTransaction, FixedTermDepositPosition, DepositTransaction, WithdrawalTransaction } from '@/types';
+import { UserData, StockPosition, BondPosition, StockTradeTransaction, BondTradeTransaction, FixedTermDepositPosition, DepositTransaction, WithdrawalTransaction } from '@/types';
 import { getUserData, saveUserData } from '@/utils/userData';
 
-async function readJsonSafe(filePath: string): Promise<any | null> {
-  try {
-    const data = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    return null;
-  }
-}
 
-async function saveUserData(username: string, data: UserData) {
-  const userFile = path.join(process.cwd(), 'data', 'users', `${username}.json`);
-  await fs.writeFile(userFile, JSON.stringify(data, null, 2));
-}
+
+
 
 export async function POST(request: NextRequest) {
   try {
