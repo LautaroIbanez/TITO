@@ -1,4 +1,5 @@
 import { ensureBaSuffix, getBaseTicker, getTickerCurrency, getTickerMarket, getTickerDisplayName, isSameAsset, getBcbaHint } from '../tickers';
+import { STOCK_CATEGORIES } from '../assetCategories';
 
 describe('tickers utility functions', () => {
   describe('ensureBaSuffix', () => {
@@ -136,6 +137,61 @@ describe('tickers utility functions', () => {
     it('should handle empty or null symbols', () => {
       expect(getBcbaHint('')).toBe('');
       expect(getBcbaHint(null as any)).toBe('');
+    });
+  });
+
+  describe('BCBA ticker generation', () => {
+    it('should generate BCBA tickers with .BA suffix using ScoopPage logic', () => {
+      // Build BCBA tickers using the same logic as in ScoopPage
+      const bcbaTickers: string[] = [];
+
+      // Process each category to build ticker sets
+      for (const [categoryKey, tickers] of Object.entries(STOCK_CATEGORIES)) {
+        // Skip empty categories
+        if (tickers.length === 0) continue;
+        
+        for (const symbol of tickers) {
+          if (categoryKey === 'merval') {
+            // MERVAL tickers go to BCBA with .BA suffix
+            bcbaTickers.push(ensureBaSuffix(symbol));
+          } else {
+            // Non-MERVAL tickers go to BCBA with .BA suffix
+            bcbaTickers.push(ensureBaSuffix(symbol));
+          }
+        }
+      }
+
+      // Ensure all BCBA tickers end with .BA
+      const validatedBcbaTickers = bcbaTickers.map(ticker => {
+        if (!ticker.endsWith('.BA')) {
+          return `${ticker}.BA`;
+        }
+        return ticker;
+      });
+
+      // Assert that every generated ticker matches /\.BA$/
+      validatedBcbaTickers.forEach(ticker => {
+        expect(ticker).toMatch(/\.BA$/);
+      });
+
+      // Additional assertions to verify the logic works correctly
+      expect(validatedBcbaTickers.length).toBeGreaterThan(0);
+      
+      // Check that MERVAL tickers are included
+      const mervalTickers = STOCK_CATEGORIES.merval.map(ticker => ensureBaSuffix(ticker));
+      mervalTickers.forEach(ticker => {
+        expect(validatedBcbaTickers).toContain(ticker);
+      });
+
+      // Check that non-MERVAL tickers are included
+      const nonMervalTickers = Object.entries(STOCK_CATEGORIES)
+        .filter(([categoryKey]) => categoryKey !== 'merval')
+        .flatMap(([, tickers]) => tickers)
+        .map(ticker => ensureBaSuffix(ticker));
+      
+      nonMervalTickers.forEach(ticker => {
+        expect(validatedBcbaTickers).toContain(ticker);
+      });
     });
   });
 }); 

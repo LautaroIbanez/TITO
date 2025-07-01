@@ -8,7 +8,7 @@ import dayjs from 'dayjs';
 import { useScoop } from '@/contexts/ScoopContext';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import { STOCK_CATEGORIES } from '@/utils/assetCategories';
-import { getTickerCurrency, getTickerMarket } from '@/utils/tickers';
+import { getTickerCurrency, getTickerMarket, ensureBaSuffix } from '@/utils/tickers';
 
 // Category display names
 const CATEGORY_NAMES: Record<string, string> = {
@@ -69,7 +69,8 @@ function getSuggestedStocks(
 }
 
 export default function ScoopPage() {
-  const [stocksByCategory, setStocksByCategory] = useState<Record<string, any[]>>({});
+  const [nasdaqStocks, setNasdaqStocks] = useState<any[]>([]);
+  const [bcbaStocks, setBcbaStocks] = useState<any[]>([]);
   const [profile, setProfile] = useState<InvestorProfile | null>(null);
   const [portfolioSymbols, setPortfolioSymbols] = useState<{ USD: string[]; ARS: string[] }>({ USD: [], ARS: [] });
   const [loading, setLoading] = useState(true);
@@ -129,25 +130,43 @@ export default function ScoopPage() {
     const trendingData = await trendingRes.json();
     const trendingSymbols = (trendingData.quotes || []).map((q: any) => q.symbol);
 
-    // Process each category
-    const stocksByCategoryData: Record<string, any[]> = {};
-    
+    // Build ticker sets for NASDAQ and BCBA
+    const nasdaqTickers: string[] = [];
+    const bcbaTickers: string[] = [];
+
+    // Process each category to build ticker sets
     for (const [categoryKey, tickers] of Object.entries(STOCK_CATEGORIES)) {
       // Skip empty categories
       if (tickers.length === 0) continue;
       
-      // Filter out symbols already in portfolio using currency detection
-      const stocksToShowSymbols = tickers.filter(symbol => {
+      for (const symbol of tickers) {
+        // Skip symbols already in portfolio using currency detection
         const currency = getTickerCurrency(symbol);
-        return !portfolioSymbols[currency].includes(symbol);
-      });
-      
-      // Skip categories with no available stocks
-      if (stocksToShowSymbols.length === 0) continue;
+        if (portfolioSymbols[currency].includes(symbol)) continue;
 
-      // Enrich the stocks with all necessary data
-      const enrichedStocks = await Promise.all(
-        stocksToShowSymbols.map(async (symbol: string) => {
+        if (categoryKey === 'merval') {
+          // MERVAL tickers go to BCBA with .BA suffix
+          bcbaTickers.push(ensureBaSuffix(symbol));
+        } else {
+          // Non-MERVAL tickers go to both NASDAQ and BCBA
+          nasdaqTickers.push(symbol);
+          bcbaTickers.push(ensureBaSuffix(symbol));
+        }
+      }
+    }
+
+    // Ensure all BCBA tickers end with .BA
+    const validatedBcbaTickers = bcbaTickers.map(ticker => {
+      if (!ticker.endsWith('.BA')) {
+        return `${ticker}.BA`;
+      }
+      return ticker;
+    });
+
+    // Fetch data separately for each set using the existing enrichment logic
+    const enrichStocks = async (tickers: string[]) => {
+      return await Promise.all(
+        tickers.map(async (symbol: string) => {
           const [fundamentals, technicals, prices] = await Promise.all([
             fetch(`/api/stocks/${symbol}?type=fundamentals`).then(res => res.ok ? res.json() : null),
             fetch(`/api/stocks/${symbol}?type=technicals`).then(res => res.ok ? res.json() : null),
@@ -165,11 +184,18 @@ export default function ScoopPage() {
           };
         })
       );
-      
-      stocksByCategoryData[categoryKey] = getSuggestedStocks(userProfile, enrichedStocks, requiredReturn);
-    }
-    
-    setStocksByCategory(stocksByCategoryData);
+    };
+
+    // Fetch and process NASDAQ stocks
+    const enrichedNasdaqStocks = await enrichStocks(nasdaqTickers);
+    const suggestedNasdaqStocks = getSuggestedStocks(userProfile, enrichedNasdaqStocks, requiredReturn);
+    setNasdaqStocks(suggestedNasdaqStocks);
+
+    // Fetch and process BCBA stocks
+    const enrichedBcbaStocks = await enrichStocks(validatedBcbaTickers);
+    const suggestedBcbaStocks = getSuggestedStocks(userProfile, enrichedBcbaStocks, requiredReturn);
+    setBcbaStocks(suggestedBcbaStocks);
+
     setLoading(false);
   };
 
@@ -177,8 +203,11 @@ export default function ScoopPage() {
     loadData();
   }, []);
 
-  // Get all suggested stocks across all categories
-  const allSuggestedStocks = Object.values(stocksByCategory).flat().filter(s => s.isSuggested);
+  // Get all suggested stocks across both markets
+  const allSuggestedStocks = [
+    ...nasdaqStocks.filter(s => s.isSuggested),
+    ...bcbaStocks.filter(s => s.isSuggested)
+  ];
 
   return (
     <div className="space-y-8">
@@ -198,7 +227,7 @@ export default function ScoopPage() {
         <div className="text-center text-gray-700 py-10">Cargando Oportunidades...</div>
       ) : (
         <>
-          {filterMode === 'all' && allSuggestedStocks.length > 0 && (
+          {filterMode === 'suggested' && allSuggestedStocks.length > 0 && (
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Sugerencias para ti</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -220,62 +249,57 @@ export default function ScoopPage() {
             </div>
           )}
 
-          {filterMode === 'suggested' && (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Sugerencias para ti</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {allSuggestedStocks.map((stock) => (
-                  <ScoopCard
-                    key={stock.symbol}
-                    stockData={stock}
-                    fundamentals={stock.fundamentals}
-                    technicals={stock.technicals}
-                    isSuggested={stock.isSuggested}
-                    isTrending={stock.isTrending}
-                    inPortfolioUSD={portfolioSymbols.USD.includes(stock.symbol)}
-                    inPortfolioARS={portfolioSymbols.ARS.includes(stock.symbol)}
-                    onTrade={loadData}
-                    cash={portfolioData?.cash ?? { ARS: 0, USD: 0 }}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {filterMode === 'all' && Object.keys(stocksByCategory).length > 0 && (
-            <div className="mt-12 space-y-12">
-              {Object.entries(stocksByCategory).map(([categoryKey, stocks]) => {
-                const categoryName = CATEGORY_NAMES[categoryKey] || categoryKey;
-                const categoryStocks = stocks.filter(s => !s.isSuggested);
-                
-                if (categoryStocks.length === 0) return null;
-                
-                return (
-                  <div key={categoryKey}>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-6">{categoryName}</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {categoryStocks.map((stock) => (
-                        <ScoopCard
-                          key={stock.symbol}
-                          stockData={stock}
-                          fundamentals={stock.fundamentals}
-                          technicals={stock.technicals}
-                          isSuggested={stock.isSuggested}
-                          isTrending={stock.isTrending}
-                          inPortfolioUSD={portfolioSymbols.USD.includes(stock.symbol)}
-                          inPortfolioARS={portfolioSymbols.ARS.includes(stock.symbol)}
-                          onTrade={loadData}
-                          cash={portfolioData?.cash ?? { ARS: 0, USD: 0 }}
-                        />
-                      ))}
-                    </div>
+          {filterMode === 'all' && (
+            <>
+              {/* NASDAQ Stocks Section */}
+              {nasdaqStocks.length > 0 && (
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Acciones NASDAQ (USD)</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {nasdaqStocks.map((stock) => (
+                      <ScoopCard
+                        key={stock.symbol}
+                        stockData={stock}
+                        fundamentals={stock.fundamentals}
+                        technicals={stock.technicals}
+                        isSuggested={stock.isSuggested}
+                        isTrending={stock.isTrending}
+                        inPortfolioUSD={portfolioSymbols.USD.includes(stock.symbol)}
+                        inPortfolioARS={portfolioSymbols.ARS.includes(stock.symbol)}
+                        onTrade={loadData}
+                        cash={portfolioData?.cash ?? { ARS: 0, USD: 0 }}
+                      />
+                    ))}
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              )}
+
+              {/* BCBA Stocks Section */}
+              {bcbaStocks.length > 0 && (
+                <div className="mt-12">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Acciones BCBA (ARS)</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {bcbaStocks.map((stock) => (
+                      <ScoopCard
+                        key={stock.symbol}
+                        stockData={stock}
+                        fundamentals={stock.fundamentals}
+                        technicals={stock.technicals}
+                        isSuggested={stock.isSuggested}
+                        isTrending={stock.isTrending}
+                        inPortfolioUSD={portfolioSymbols.USD.includes(stock.symbol)}
+                        inPortfolioARS={portfolioSymbols.ARS.includes(stock.symbol)}
+                        onTrade={loadData}
+                        cash={portfolioData?.cash ?? { ARS: 0, USD: 0 }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
-          {!loading && Object.keys(stocksByCategory).length === 0 && (
+          {!loading && nasdaqStocks.length === 0 && bcbaStocks.length === 0 && (
             <div className="text-center text-gray-700 py-10">
               <h3 className="text-xl font-semibold">
                 {filterMode === 'suggested' ? 'No hay sugerencias por ahora.' : 'No hay nuevas oportunidades por ahora.'}
