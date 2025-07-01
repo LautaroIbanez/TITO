@@ -243,8 +243,8 @@ export default function ScoopCard({
           </button>
         </div>
 
-        {/* Market Selector - Only show if both markets are available */}
-        {currency === 'USD' && (
+        {/* Market Selector - Only show if symbol ends with .BA or getTickerMarket(symbol) === 'BCBA' */}
+        {(stockData.symbol.endsWith('.BA') || getTickerMarket(stockData.symbol) === 'BCBA') && (
           <div className="flex gap-2">
             <button
               onClick={() => handleMarketChange('NASDAQ')}

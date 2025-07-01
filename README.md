@@ -212,15 +212,17 @@ Cada posición se identifica únicamente por la combinación de:
 
 El proyecto incluye tests unitarios para verificar la lógica de negocio crítica, como el manejo de depósitos, compras y ventas.
 
-> **Nota:** Antes de ejecutar los tests, asegúrate de instalar las dependencias con:
-> ```bash
-> npm install
-> ```
-> Es posible que necesites acceso a internet para instalar los paquetes si no están en caché localmente.
+## Running Tests
 
-Para ejecutar los tests, usa el siguiente comando:
+Before running tests, make sure to install all dependencies (including dev dependencies) by running:
 
-```bash
+```
+npm install
+```
+
+The test suite depends on [Jest](https://jestjs.io/) being available. You can then run the tests with:
+
+```
 npm test
 ```
 

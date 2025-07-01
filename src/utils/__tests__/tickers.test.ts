@@ -47,6 +47,12 @@ describe('tickers utility functions', () => {
       expect(getBaseTicker('GGAL')).toBe('GGAL');
     });
 
+    it('should preserve class identifiers like .B, .A', () => {
+      expect(getBaseTicker('BRK.B')).toBe('BRK.B');
+      expect(getBaseTicker('BRK.A')).toBe('BRK.A');
+      expect(getBaseTicker('GOOGL')).toBe('GOOGL');
+    });
+
     it('should handle empty or null symbols', () => {
       expect(getBaseTicker('')).toBe('');
       expect(getBaseTicker(null as any)).toBe('');

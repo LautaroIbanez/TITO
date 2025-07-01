@@ -10,8 +10,8 @@
 export function getBaseTicker(symbol: string): string {
   if (!symbol) return '';
   
-  // Remove common suffixes
-  const baseTicker = symbol.replace(/\.(BA|AR|TO|V|N|O|P|Q|R|S|T|U|V|W|X|Y|Z)$/i, '');
+  // Remove known market suffixes only (not class identifiers like .B, .A)
+  const baseTicker = symbol.replace(/\.(BA|AR|TO)$/i, '');
   
   return baseTicker;
 }
