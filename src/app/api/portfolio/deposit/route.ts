@@ -1,7 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { UserData, DepositTransaction } from '@/types';
-import { saveUserData } from '@/utils/portfolioData';
-import { getUserData } from '@/utils/userData';
+import { NextResponse } from 'next/server';
+import { DepositTransaction } from '@/types';
+import { getUserData, saveUserData } from '@/utils/userData';
 import { addDeposit } from '@/utils/portfolioActions';
 
 // Add a new deposit

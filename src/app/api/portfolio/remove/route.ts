@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { UserData, StockPosition, BondPosition, PortfolioTransaction, StockTradeTransaction, BondTradeTransaction, FixedTermDepositPosition, DepositTransaction, WithdrawalTransaction } from '@/types';
+import { getUserData, saveUserData } from '@/utils/userData';
 
 async function readJsonSafe(filePath: string): Promise<any | null> {
   try {
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Username and assetType are required' }, { status: 400 });
     }
 
-    const user: UserData | null = await readJsonSafe(path.join(process.cwd(), 'data', 'users', `${username}.json`));
+    const user: UserData | null = await getUserData(username);
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -91,8 +92,8 @@ export async function POST(request: NextRequest) {
 
 
     if (position.type === 'Stock') {
-      const stockData = await readJsonSafe(path.join(process.cwd(), 'data', 'stocks', `${position.symbol}.json`));
-      const price = stockData?.[stockData.length - 1]?.close || 0;
+      const stockData = await fs.readFile(path.join(process.cwd(), 'data', 'stocks', `${position.symbol}.json`), 'utf-8');
+      const price = JSON.parse(stockData)?.[JSON.parse(stockData).length - 1]?.close || 0;
       if (!price) {
         return NextResponse.json({ error: `No price data for symbol ${position.symbol}` }, { status: 400 });
       }

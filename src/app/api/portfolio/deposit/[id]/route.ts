@@ -1,18 +1,6 @@
 import { NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
-import { UserData, DepositTransaction } from '@/types';
-import { saveUserData } from '@/utils/portfolioData';
-
-async function readUserFile(username: string): Promise<UserData | null> {
-    const userFile = path.join(process.cwd(), 'data', 'users', `${username}.json`);
-    try {
-        const data = await fs.readFile(userFile, 'utf-8');
-        return JSON.parse(data);
-    } catch {
-        return null;
-    }
-}
+import { DepositTransaction } from '@/types';
+import { getUserData, saveUserData } from '@/utils/userData';
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -28,7 +16,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Invalid currency specified' }, { status: 400 });
     }
 
-    const userData = await readUserFile(username);
+    const userData = await getUserData(username);
     if (!userData) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
@@ -82,7 +70,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       return NextResponse.json({ error: 'Missing required query parameters' }, { status: 400 });
     }
 
-    const userData = await readUserFile(username);
+    const userData = await getUserData(username);
     if (!userData) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }

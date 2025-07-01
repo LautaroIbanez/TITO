@@ -194,6 +194,7 @@ export async function sellAsset(username: string, assetType: string, body: any) 
   if (!user.transactions) user.transactions = [];
   if (!user.cash) user.cash = { ARS: 0, USD: 0 };
   let proceeds = 0;
+  let cashCurrency: 'ARS' | 'USD';
   const commissionPct = body.commissionPct ?? DEFAULT_COMMISSION_PCT;
   switch (assetType) {
     case 'Stock': {
@@ -204,6 +205,7 @@ export async function sellAsset(username: string, assetType: string, body: any) 
       const pos = user.positions[posIndex] as StockPosition;
       if (pos.quantity < quantity) throw new Error('Insufficient quantity');
       proceeds = quantity * price * (1 - commissionPct / 100);
+      cashCurrency = currency;
       pos.quantity -= quantity;
       if (pos.quantity < 1e-6) {
         user.positions.splice(posIndex, 1);
@@ -231,6 +233,7 @@ export async function sellAsset(username: string, assetType: string, body: any) 
       const pos = user.positions[posIndex] as BondPosition;
       if (pos.quantity < quantity) throw new Error('Insufficient quantity');
       proceeds = quantity * price * (1 - commissionPct / 100);
+      cashCurrency = currency;
       pos.quantity -= quantity;
       if (pos.quantity < 1e-6) {
         user.positions.splice(posIndex, 1);
@@ -257,6 +260,7 @@ export async function sellAsset(username: string, assetType: string, body: any) 
       const pos = user.positions[posIndex] as CryptoPosition;
       if (pos.quantity < quantity) throw new Error('Insufficient quantity');
       proceeds = quantity * price * (1 - commissionPct / 100);
+      cashCurrency = 'USD'; // Crypto proceeds always go to USD
       pos.quantity -= quantity;
       if (pos.quantity < 1e-6) {
         user.positions.splice(posIndex, 1);
@@ -278,7 +282,7 @@ export async function sellAsset(username: string, assetType: string, body: any) 
     default:
       throw new Error('Invalid asset type for selling');
   }
-  user.cash[body.currency] += proceeds;
+  user.cash[cashCurrency] += proceeds;
   await saveUserData(username, user);
   return { positions: user.positions, transactions: user.transactions, cash: user.cash };
 } 

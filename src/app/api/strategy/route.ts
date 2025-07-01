@@ -1,18 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
-import { UserData, InvestmentStrategy } from '@/types';
+import { getUserData, saveUserData } from '@/utils/userData';
+import { InvestmentStrategy } from '@/types';
 import { generateInvestmentStrategy } from '@/utils/strategyAdvisor';
-
-async function getUserData(username: string): Promise<UserData | null> {
-  const userFile = path.join(process.cwd(), 'data', 'users', `${username}.json`);
-  try {
-    const data = await fs.readFile(userFile, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    return null;
-  }
-}
 
 async function generateAndSaveStrategy(username: string): Promise<InvestmentStrategy> {
   const user = await getUserData(username);
@@ -36,7 +25,7 @@ async function generateAndSaveStrategy(username: string): Promise<InvestmentStra
 
   // Save strategy to user data
   user.investmentStrategy = strategy;
-  await fs.writeFile(path.join(process.cwd(), 'data', 'users', `${username}.json`), JSON.stringify(user, null, 2));
+  await saveUserData(username, user);
 
   return strategy;
 }

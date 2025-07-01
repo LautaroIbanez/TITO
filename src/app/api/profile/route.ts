@@ -1,17 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { getUserData, saveUserData } from '@/utils/userData';
 import { UserData, InvestorProfile } from '@/types';
-
-async function getUserData(username: string): Promise<UserData | null> {
-  const userFilePath = path.join(process.cwd(), 'data', 'users', `${username}.json`);
-  try {
-    const fileContent = await fs.readFile(userFilePath, 'utf-8');
-    return JSON.parse(fileContent);
-  } catch (error) {
-    return null;
-  }
-}
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -61,12 +50,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const userFilePath = path.join(process.cwd(), 'data', 'users', `${username}.json`);
-
     try {
       // Read existing user data
-      const fileContent = await fs.readFile(userFilePath, 'utf-8');
-      const userData: UserData = JSON.parse(fileContent);
+      const userData: UserData = await getUserData(username);
 
       // Update user data with profile and initial cash balances
       const updatedUserData: UserData = {
@@ -80,7 +66,7 @@ export async function POST(request: Request) {
       };
 
       // Save updated user data
-      await fs.writeFile(userFilePath, JSON.stringify(updatedUserData, null, 2));
+      await saveUserData(username, updatedUserData);
 
       return NextResponse.json(updatedUserData);
     } catch (error) {

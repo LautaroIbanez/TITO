@@ -1,24 +1,6 @@
 import { NextResponse } from 'next/server';
-import path from 'path';
-import { promises as fs } from 'fs';
-import { UserData, InvestmentGoal } from '@/types';
-
-const dataDir = path.join(process.cwd(), 'data', 'users');
-
-async function getUserData(username: string): Promise<UserData | null> {
-  const filePath = path.join(dataDir, `${username}.json`);
-  try {
-    const data = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(data);
-  } catch (error) {
-    return null;
-  }
-}
-
-async function saveUserData(username: string, data: UserData): Promise<void> {
-  const filePath = path.join(dataDir, `${username}.json`);
-  await fs.writeFile(filePath, JSON.stringify(data, null, 2));
-}
+import { getUserData, saveUserData } from '@/utils/userData';
+import { InvestmentGoal } from '@/types';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
