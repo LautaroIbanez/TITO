@@ -13,6 +13,8 @@ import { usePortfolio } from '@/contexts/PortfolioContext';
 import EditDepositModal from '@/components/EditDepositModal';
 import { formatCurrency } from '@/utils/goalCalculator';
 import { trimCategoryValueHistory } from '@/utils/history';
+import { generateInvestmentStrategy } from '@/utils/strategyAdvisor';
+import { InvestmentGoal, InvestorProfile, PortfolioPosition } from '@/types';
 
 export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange?: () => void }) {
   const [comparison, setComparison] = useState<any>(null);
@@ -157,6 +159,18 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
     setDepositLoading(false);
   };
 
+  // Sugerencias dinámicas
+  let suggestions: any[] = [];
+  if (portfolioData && portfolioData.profile && portfolioData.positions && portfolioData.cash) {
+    const strategy = generateInvestmentStrategy({
+      profile: portfolioData.profile as InvestorProfile,
+      goals: portfolioData.goals as InvestmentGoal[],
+      positions: portfolioData.positions as PortfolioPosition[],
+      cash: portfolioData.cash
+    });
+    suggestions = strategy.recommendations;
+  }
+
   if (loading) {
     return <div className="text-center text-gray-500">Loading portfolio...</div>;
   }
@@ -277,20 +291,43 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
         {depositSuccess && <div className="text-green-600 text-sm">{depositSuccess}</div>}
       </div>
       
-      {/* Charts Grid */}
+      {/* Nueva grilla con sugerencias y gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <PortfolioPieChart positions={portfolioData.positions} prices={portfolioData.historicalPrices} />
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-800 mb-4">Categorías del Portafolio (ARS)</h3>
-          <PortfolioCategoryChart 
-            history={trimCategoryValueHistory(categoryValueHistoryARS)}
-          />
+        {/* Gráfico de torta */}
+        <div className="bg-white rounded-lg shadow border border-gray-200 p-6 flex flex-col">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">Distribución de Activos</h3>
+          <PortfolioPieChart positions={portfolioData.positions} prices={portfolioData.historicalPrices} />
         </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-800 mb-4">Categorías del Portafolio (USD)</h3>
-          <PortfolioCategoryChart 
-            history={trimCategoryValueHistory(categoryValueHistoryUSD)}
-          />
+        {/* Sugerencias */}
+        <div className="bg-white rounded-lg shadow border border-gray-200 p-6 flex flex-col">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">Sugerencias</h3>
+          {suggestions.length === 0 ? (
+            <div className="text-gray-600">No hay sugerencias en este momento. ¡Tu portafolio está equilibrado!</div>
+          ) : (
+            <ul className="space-y-3">
+              {suggestions.map((rec) => (
+                <li key={rec.id} className="border-l-4 pl-3 py-2" style={{ borderColor: rec.priority === 'high' ? '#dc2626' : rec.priority === 'medium' ? '#f59e42' : '#22c55e' }}>
+                  <div className="font-semibold text-gray-900 mb-1">{rec.action === 'increase' ? 'Aumentar' : rec.action === 'decrease' ? 'Reducir' : rec.action === 'rotate' ? 'Rotar' : rec.action === 'buy' ? 'Comprar' : rec.action === 'sell' ? 'Vender' : 'Mantener'}</div>
+                  <div className="text-gray-700 text-sm">{rec.reason}</div>
+                  {rec.suggestedAssets && (
+                    <div className="text-xs text-gray-500 mt-1">Sugerencias: {rec.suggestedAssets.join(', ')}</div>
+                  )}
+                  {rec.symbol && rec.targetSymbol && (
+                    <div className="text-xs text-gray-500 mt-1">{rec.symbol} → {rec.targetSymbol}</div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        {/* Gráficos de categorías en filas siguientes */}
+        <div className="bg-white p-6 rounded-lg shadow border border-gray-200 lg:col-span-2">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">Categorías del Portafolio (ARS)</h3>
+          <PortfolioCategoryChart history={trimCategoryValueHistory(categoryValueHistoryARS)} />
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow border border-gray-200 lg:col-span-2">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">Categorías del Portafolio (USD)</h3>
+          <PortfolioCategoryChart history={trimCategoryValueHistory(categoryValueHistoryUSD)} />
         </div>
       </div>
 
