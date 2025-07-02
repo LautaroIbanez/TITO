@@ -1,0 +1,174 @@
+{
+  "username": "brian",
+  "createdAt": "2025-07-01T20:56:37.004Z",
+  "profileCompleted": true,
+  "positions": [
+    {
+      "type": "Stock",
+      "symbol": "EWZ.BA.BA",
+      "quantity": 50,
+      "averagePrice": 17619.635,
+      "currency": "ARS",
+      "market": "BCBA"
+    },
+    {
+      "type": "Stock",
+      "symbol": "AMD.BA.BA",
+      "quantity": 100,
+      "averagePrice": 17355.3375,
+      "currency": "ARS",
+      "market": "BCBA"
+    },
+    {
+      "type": "Stock",
+      "symbol": "NVDA.BA.BA",
+      "quantity": 170,
+      "averagePrice": 8063.79,
+      "currency": "ARS",
+      "market": "BCBA"
+    },
+    {
+      "type": "FixedTermDeposit",
+      "id": "ftd-1751404453524",
+      "provider": "Banco Nación",
+      "amount": 1000000,
+      "annualRate": 75,
+      "termDays": 30,
+      "currency": "ARS",
+      "startDate": "2025-07-01T21:14:13.524Z",
+      "maturityDate": "2025-07-31T21:14:13.524Z",
+      "status": "active"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "1751404127637",
+      "date": "2025-07-01T21:08:47.637Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "EWZ.BA.BA",
+      "quantity": 50,
+      "price": 17525,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 0.5,
+      "purchaseFeePct": 0.04
+    },
+    {
+      "id": "1751404173908",
+      "date": "2025-07-01T21:09:33.908Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "AMD.BA.BA",
+      "quantity": 100,
+      "price": 17175,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1751404239571",
+      "date": "2025-07-01T21:10:39.571Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "NVDA.BA.BA",
+      "quantity": 170,
+      "price": 7980,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1751404453524",
+      "date": "2025-07-01T21:14:13.524Z",
+      "type": "Buy",
+      "assetType": "FixedTermDeposit",
+      "provider": "Banco Nación",
+      "amount": 1000000,
+      "annualRate": 75,
+      "termDays": 30,
+      "currency": "ARS"
+    }
+  ],
+  "goals": [
+    {
+      "name": "Guitarra",
+      "targetAmount": 2600,
+      "targetDate": "2030-11-24",
+      "initialDeposit": 0,
+      "currency": "USD",
+      "monthlyContribution": 3,
+      "id": "1751406568521"
+    }
+  ],
+  "cash": {
+    "ARS": 12640.199999999953,
+    "USD": 0
+  },
+  "profile": {
+    "instrumentsUsed": [
+      "Acciones",
+      "Opciones",
+      "Futuros",
+      "Bonos"
+    ],
+    "knowledgeLevels": {
+      "Acciones": "Alto",
+      "Opciones": "Bajo",
+      "Futuros": "Medio",
+      "Bonos": "Alto"
+    },
+    "holdingPeriod": "Más de 5 años",
+    "ageGroup": "30 a 40",
+    "riskAppetite": "Balanceado",
+    "investmentAmount": 5000000,
+    "initialBalanceARS": 5000000,
+    "initialBalanceUSD": 0
+  },
+  "investmentStrategy": {
+    "id": "strategy-e4e95be8-7ebe-4ec5-9257-b018aedf2128",
+    "createdAt": "2025-07-01T21:50:03.260Z",
+    "targetAllocation": {
+      "stocks": 59.4,
+      "bonds": 29.7,
+      "deposits": 4.95,
+      "cash": 4.95,
+      "crypto": 1
+    },
+    "recommendations": [
+      {
+        "id": "alloc-3a825f7c-7b91-467a-8a2f-0f396dd60037",
+        "action": "decrease",
+        "assetClass": "stocks",
+        "reason": "Tu portafolio tiene 79.7% en acciones, pero tu estrategia objetivo es 59.4%",
+        "priority": "medium",
+        "expectedImpact": "neutral"
+      },
+      {
+        "id": "alloc-b96935a4-d235-41a8-a23d-bf550f7d68cd",
+        "action": "increase",
+        "assetClass": "bonds",
+        "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 29.7%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
+        "priority": "high",
+        "expectedImpact": "positive",
+        "suggestedAssets": [
+          "GOV-BOND-2025",
+          "CORP-BOND-2026",
+          "MUNI-BOND-2027"
+        ]
+      },
+      {
+        "id": "cash-reserve-6f3186b6-fc2c-4056-97dc-98c3f8edae05",
+        "action": "sell",
+        "reason": "Tienes menos de 2% de tu portafolio en efectivo. Considera vender algunas posiciones para tener una reserva de liquidez.",
+        "priority": "low",
+        "expectedImpact": "neutral"
+      }
+    ],
+    "riskLevel": "Balanceado",
+    "timeHorizon": "Mediano plazo (3-7 años)",
+    "notes": "Estrategia alineada con 1 meta(s) de inversión"
+  }
+}
