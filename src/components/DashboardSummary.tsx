@@ -4,11 +4,13 @@ import Link from 'next/link';
 import { InvestmentGoal, StrategyRecommendation } from '@/types';
 import { Bond } from '@/types/finance';
 import { calculatePortfolioValueHistory, PortfolioValueHistory, calculateCurrentValueByCurrency } from '@/utils/calculatePortfolioValue';
+import { calculateCategoryValueHistory } from '@/utils/categoryValueHistory';
 import { calculateInvestedCapital, calculateDailyInvestedCapital } from '@/utils/investedCapital';
 import { calculatePortfolioPerformance, fetchInflationData, formatPerformance, PerformanceMetrics, InflationData } from '@/utils/portfolioPerformance';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import GoalProgress from './GoalProgress';
 import PortfolioValueChart from './PortfolioValueChart';
+import PortfolioCategoryChart from './PortfolioCategoryChart';
 import { formatCurrency, calculateFixedIncomeGains, calculateFixedIncomeValueHistory } from '@/utils/goalCalculator';
 import { trimHistory } from '@/utils/history';
 
@@ -22,6 +24,8 @@ export default function DashboardSummary() {
   const [inflationData, setInflationData] = useState<InflationData | null>(null);
   const [goalValueHistories, setGoalValueHistories] = useState<Record<string, { date: string, value: number }[]>>({});
   const [portfolioValueHistory, setPortfolioValueHistory] = useState<PortfolioValueHistory[]>([]);
+  const [categoryValueHistoryARS, setCategoryValueHistoryARS] = useState<any[]>([]);
+  const [categoryValueHistoryUSD, setCategoryValueHistoryUSD] = useState<any[]>([]);
   
   const { portfolioData, strategy, loading, error, portfolioVersion } = usePortfolio();
 
@@ -82,6 +86,23 @@ export default function DashboardSummary() {
           { days: 365 }
         );
         setPortfolioValueHistory(valueHistory);
+        
+        // Calculate category value histories
+        const categoryHistoryARS = await calculateCategoryValueHistory(
+          portfolioData.transactions || [],
+          portfolioData.historicalPrices || {},
+          'ARS',
+          { days: 365 }
+        );
+        setCategoryValueHistoryARS(categoryHistoryARS);
+        
+        const categoryHistoryUSD = await calculateCategoryValueHistory(
+          portfolioData.transactions || [],
+          portfolioData.historicalPrices || {},
+          'USD',
+          { days: 365 }
+        );
+        setCategoryValueHistoryUSD(categoryHistoryUSD);
         
         // Verify that the last value in history matches current portfolio value
         if (valueHistory.length > 0) {
@@ -312,6 +333,24 @@ export default function DashboardSummary() {
           currency="USD"
           title="Evolución del Portafolio (USD)"
         />
+      </div>
+
+      {/* Portfolio Category Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Categorías del Portafolio (ARS) */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-medium text-gray-800 mb-4">Categorías del Portafolio (ARS)</h3>
+          <PortfolioCategoryChart 
+            history={trimHistory(categoryValueHistoryARS)}
+          />
+        </div>
+        {/* Categorías del Portafolio (USD) */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-medium text-gray-800 mb-4">Categorías del Portafolio (USD)</h3>
+          <PortfolioCategoryChart 
+            history={trimHistory(categoryValueHistoryUSD)}
+          />
+        </div>
       </div>
 
       {/* Performance Metrics */}

@@ -9,6 +9,7 @@ import { calculatePortfolioValueHistory, calculateCurrentValueByCurrency } from 
 import { calculatePortfolioPerformance, fetchInflationData } from '../../utils/portfolioPerformance';
 import { UserData, PortfolioTransaction, FixedTermDepositCreationTransaction } from '@/types';
 import { calculateInvestedCapital } from '../../utils/investedCapital';
+import { calculateCategoryValueHistory } from '../../utils/categoryValueHistory';
 
 // Mock the hooks and utilities
 jest.mock('../../contexts/PortfolioContext');
@@ -16,6 +17,7 @@ jest.mock('../../utils/calculatePortfolioValue');
 jest.mock('../../utils/portfolioPerformance');
 jest.mock('../../utils/investedCapital');
 jest.mock('../../utils/currency');
+jest.mock('../../utils/categoryValueHistory');
 
 const mockUsePortfolio = usePortfolio as jest.Mock;
 const mockCalculatePortfolioValueHistory = calculatePortfolioValueHistory as jest.Mock;
@@ -23,6 +25,7 @@ const mockCalculateCurrentValueByCurrency = calculateCurrentValueByCurrency as j
 const mockCalculatePortfolioPerformance = calculatePortfolioPerformance as jest.Mock;
 const mockFetchInflationData = fetchInflationData as jest.Mock;
 const mockCalculateInvestedCapital = calculateInvestedCapital as jest.Mock;
+const mockCalculateCategoryValueHistory = calculateCategoryValueHistory as jest.Mock;
 
 // Mock chart components to avoid canvas context issues
 jest.mock('../PortfolioHistoryChart', () => {
@@ -40,6 +43,12 @@ jest.mock('../PortfolioPieChart', () => {
 jest.mock('../ReturnComparison', () => {
   return function MockReturnComparison() {
     return <div data-testid="return-comparison">Return Comparison</div>;
+  };
+});
+
+jest.mock('../PortfolioCategoryChart', () => {
+  return function MockPortfolioCategoryChart() {
+    return <div data-testid="portfolio-category-chart">Portfolio Category Chart</div>;
   };
 });
 
@@ -151,6 +160,13 @@ describe('DashboardSummary', () => {
       { date: '2023-01-01', valueARS: 5000, valueUSD: 0, valueARSRaw: 5000, valueUSDRaw: 0, cashARS: 2500, cashUSD: 0 },
       { date: '2023-02-01', valueARS: 6000, valueUSD: 0, valueARSRaw: 6000, valueUSDRaw: 0, cashARS: 3000, cashUSD: 0 },
       { date: '2023-03-31', valueARS: 7000, valueUSD: 0, valueARSRaw: 7000, valueUSDRaw: 0, cashARS: 3500, cashUSD: 0 }
+    ]);
+    
+    // Mock the category value history calculation
+    mockCalculateCategoryValueHistory.mockReturnValue([
+      { date: '2023-01-01', totalValue: 5000, categories: { stocks: 3000, bonds: 1000, cash: 1000 } },
+      { date: '2023-02-01', totalValue: 6000, categories: { stocks: 3500, bonds: 1000, cash: 1500 } },
+      { date: '2023-03-31', totalValue: 7000, categories: { stocks: 4000, bonds: 1000, cash: 2000 } }
     ]);
     
     // Mock performance calculations

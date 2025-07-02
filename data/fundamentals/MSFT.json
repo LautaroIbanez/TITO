@@ -1,6 +1,6 @@
 {
   "peRatio": null,
-  "pbRatio": 11.318937,
+  "pbRatio": 11.363741,
   "evToEbitda": null,
   "roe": 0.3361,
   "roa": 0.14581999,
@@ -8,12 +8,12 @@
   "debtToEbitda": 0.7040081179184995,
   "netMargin": 0.35789,
   "freeCashFlow": 54817001472,
-  "priceToFCF": 66.45314594415909,
+  "priceToFCF": 66.7161842021595,
   "ebitda": 149172994048,
   "revenueGrowth": 0.133,
   "epsGrowth": null,
   "beta": 1.026,
   "sector": "Technology",
   "industry": "Software - Infrastructure",
-  "updatedAt": "2025-06-25T10:53:34.205Z"
+  "updatedAt": "2025-07-02T12:43:40.589Z"
 }

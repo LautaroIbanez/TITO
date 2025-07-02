@@ -6,8 +6,10 @@ import { compareWithBenchmarks } from '@/utils/returnCalculator';
 import PortfolioTable from '@/components/PortfolioTable';
 import PortfolioPieChart from '@/components/PortfolioPieChart';
 import PortfolioValueChart from '@/components/PortfolioValueChart';
+import PortfolioCategoryChart from '@/components/PortfolioCategoryChart';
 import PortfolioTransactions from '@/components/PortfolioTransactions';
 import { calculatePortfolioValueHistory } from '@/utils/calculatePortfolioValue';
+import { calculateCategoryValueHistory } from '@/utils/categoryValueHistory';
 import { calculateInvestedCapital } from '@/utils/investedCapital';
 import { StockPosition, PortfolioTransaction, DepositTransaction } from '@/types';
 import { usePortfolio } from '@/contexts/PortfolioContext';
@@ -25,6 +27,8 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
   const [editingDeposit, setEditingDeposit] = useState<DepositTransaction | null>(null);
   const [depositActionError, setDepositActionError] = useState<string | null>(null);
   const [valueHistory, setValueHistory] = useState<any[]>([]);
+  const [categoryValueHistoryARS, setCategoryValueHistoryARS] = useState<any[]>([]);
+  const [categoryValueHistoryUSD, setCategoryValueHistoryUSD] = useState<any[]>([]);
 
   const { portfolioData, loading, refreshPortfolio } = usePortfolio();
 
@@ -37,8 +41,27 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
           { days: 90 }
         );
         setValueHistory(history);
+        
+        // Calculate category value histories
+        const categoryHistoryARS = await calculateCategoryValueHistory(
+          portfolioData.transactions,
+          portfolioData.historicalPrices,
+          'ARS',
+          { days: 90 }
+        );
+        setCategoryValueHistoryARS(categoryHistoryARS);
+        
+        const categoryHistoryUSD = await calculateCategoryValueHistory(
+          portfolioData.transactions,
+          portfolioData.historicalPrices,
+          'USD',
+          { days: 90 }
+        );
+        setCategoryValueHistoryUSD(categoryHistoryUSD);
       } else {
         setValueHistory([]);
+        setCategoryValueHistoryARS([]);
+        setCategoryValueHistoryUSD([]);
       }
     }
     fetchValueHistory();
@@ -286,6 +309,18 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
           currency="USD"
           title="Evolución del Portafolio (USD)"
         />
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-medium text-gray-800 mb-4">Categorías del Portafolio (ARS)</h3>
+          <PortfolioCategoryChart 
+            history={categoryValueHistoryARS}
+          />
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-medium text-gray-800 mb-4">Categorías del Portafolio (USD)</h3>
+          <PortfolioCategoryChart 
+            history={categoryValueHistoryUSD}
+          />
+        </div>
       </div>
 
       <PortfolioTransactions transactions={portfolioData.transactions} />

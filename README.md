@@ -11,6 +11,18 @@ TITO es una aplicación web construida con Next.js diseñada para ayudarte a ges
 - **Manejo de Efectivo**: Deposita fondos y úsalos para comprar activos.
 - **Estrategia de Inversión Personalizada**: Recibe una estrategia de asignación de activos y recomendaciones de rebalanceo según tu perfil y metas (ver más abajo).
 
+### Gráfico de Rendimiento Histórico por Categorías
+
+TITO incluye un gráfico interactivo que muestra la evolución histórica del valor de tu portafolio desglosado por categorías de activos. Esta funcionalidad te permite:
+
+- **Visualizar tendencias**: Observa cómo cada categoría (acciones, bonos, depósitos, criptomonedas, cauciones y efectivo) ha evolucionado a lo largo del tiempo
+- **Análisis de diversificación**: Identifica qué categorías han contribuido más al crecimiento de tu portafolio
+- **Interactividad**: Puedes activar o desactivar categorías específicas haciendo clic en la leyenda del gráfico
+- **Múltiples monedas**: Los valores se muestran tanto en pesos argentinos (ARS) como en dólares estadounidenses (USD)
+- **Datos en tiempo real**: El gráfico se actualiza automáticamente con cada transacción y cambio en el portafolio
+
+El gráfico está disponible tanto en el dashboard principal como en la página detallada del portafolio, proporcionando una vista completa de la composición y evolución de tus inversiones.
+
 ## Lista de Activos
 
 TITO incluye una lista completa de activos organizados por categorías para facilitar el análisis y la diversificación de tu portafolio.

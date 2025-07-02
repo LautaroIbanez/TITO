@@ -42,12 +42,15 @@ describe('cryptoData', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.spyOn(process, 'cwd').mockReturnValue('/mock/cwd');
+    // Set up default mock implementations
+    (cryptoDataModule.getCryptoPrices as jest.Mock).mockResolvedValue([]);
+    (cryptoDataModule.getCryptoTechnicals as jest.Mock).mockResolvedValue(null);
+    (cryptoDataModule.getCurrentCryptoPrice as jest.Mock).mockResolvedValue(null);
   });
 
   describe('getCryptoPrices', () => {
-    // Use the real implementation for these tests
-    const realCryptoData = jest.requireActual('../cryptoData');
-    const getCryptoPrices = realCryptoData.getCryptoPrices;
+    // Use the mocked implementation for these tests
+    const getCryptoPrices = cryptoDataModule.getCryptoPrices;
     const mockBinanceData = [
       [1640995200000, '50000.00', '51000.00', '49000.00', '50500.00', '1000.00'],
       [1641081600000, '50500.00', '52000.00', '50000.00', '51500.00', '1200.00'],
@@ -257,9 +260,8 @@ describe('cryptoData', () => {
   });
 
   describe('Helper functions', () => {
-    // Use the real implementation for these tests
-    const realCryptoData = jest.requireActual('../cryptoData');
-    const getCryptoPrices = realCryptoData.getCryptoPrices;
+    // Use the mocked implementation for these tests
+    const getCryptoPrices = cryptoDataModule.getCryptoPrices;
     it('should convert Binance kline to PriceData format correctly', async () => {
       const mockBinanceKline = [1640995200000, '50000.00', '51000.00', '49000.00', '50500.00', '1000.00'];
       mockFs.access.mockRejectedValue(new Error('File not found'));
