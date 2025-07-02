@@ -5,11 +5,10 @@ import { InvestmentGoal, StrategyRecommendation } from '@/types';
 import { Bond } from '@/types/finance';
 import { calculatePortfolioValueHistory, PortfolioValueHistory, calculateCurrentValueByCurrency } from '@/utils/calculatePortfolioValue';
 import { calculateCategoryValueHistory } from '@/utils/categoryValueHistory';
-import { calculateInvestedCapital, calculateDailyInvestedCapital } from '@/utils/investedCapital';
+import { calculateInvestedCapital } from '@/utils/investedCapital';
 import { calculatePortfolioPerformance, fetchInflationData, formatPerformance, PerformanceMetrics, InflationData } from '@/utils/portfolioPerformance';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import GoalProgress from './GoalProgress';
-import PortfolioValueChart from './PortfolioValueChart';
 import PortfolioCategoryChart from './PortfolioCategoryChart';
 import { formatCurrency, calculateFixedIncomeGains, calculateFixedIncomeValueHistory } from '@/utils/goalCalculator';
 import { trimHistory } from '@/utils/history';
@@ -23,7 +22,6 @@ export default function DashboardSummary() {
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
   const [inflationData, setInflationData] = useState<InflationData | null>(null);
   const [goalValueHistories, setGoalValueHistories] = useState<Record<string, { date: string, value: number }[]>>({});
-  const [portfolioValueHistory, setPortfolioValueHistory] = useState<PortfolioValueHistory[]>([]);
   const [categoryValueHistoryARS, setCategoryValueHistoryARS] = useState<any[]>([]);
   const [categoryValueHistoryUSD, setCategoryValueHistoryUSD] = useState<any[]>([]);
   
@@ -85,7 +83,6 @@ export default function DashboardSummary() {
           portfolioData.historicalPrices || {},
           { days: 365 }
         );
-        setPortfolioValueHistory(valueHistory);
         
         // Calculate category value histories
         const categoryHistoryARS = await calculateCategoryValueHistory(
@@ -311,29 +308,7 @@ export default function DashboardSummary() {
         </div>
       </div>
 
-      {/* Portfolio Value Chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Valor Total del Portafolio (ARS) */}
-        <PortfolioValueChart 
-          valueHistory={trimHistory(portfolioValueHistory.map(h => ({
-            date: h.date,
-            invested: h.valueARSRaw - h.cashARS,
-            total: h.valueARSRaw,
-          })))}
-          currency="ARS"
-          title="Evolución del Portafolio (ARS)"
-        />
-        {/* Valor Total del Portafolio (USD) */}
-        <PortfolioValueChart 
-          valueHistory={trimHistory(portfolioValueHistory.map(h => ({
-            date: h.date,
-            invested: h.valueUSDRaw - h.cashUSD,
-            total: h.valueUSDRaw,
-          })))}
-          currency="USD"
-          title="Evolución del Portafolio (USD)"
-        />
-      </div>
+
 
       {/* Portfolio Category Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

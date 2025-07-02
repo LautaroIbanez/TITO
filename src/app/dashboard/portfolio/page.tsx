@@ -1,14 +1,11 @@
 'use client';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import PortfolioCard from '@/components/PortfolioCard';
 import ReturnComparison from '@/components/ReturnComparison';
-import { compareWithBenchmarks } from '@/utils/returnCalculator';
 import PortfolioTable from '@/components/PortfolioTable';
 import PortfolioPieChart from '@/components/PortfolioPieChart';
-import PortfolioValueChart from '@/components/PortfolioValueChart';
 import PortfolioCategoryChart from '@/components/PortfolioCategoryChart';
 import PortfolioTransactions from '@/components/PortfolioTransactions';
-import { calculatePortfolioValueHistory } from '@/utils/calculatePortfolioValue';
 import { calculateCategoryValueHistory } from '@/utils/categoryValueHistory';
 import { calculateInvestedCapital } from '@/utils/investedCapital';
 import { StockPosition, PortfolioTransaction, DepositTransaction } from '@/types';
@@ -26,22 +23,14 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
   const [depositSuccess, setDepositSuccess] = useState('');
   const [editingDeposit, setEditingDeposit] = useState<DepositTransaction | null>(null);
   const [depositActionError, setDepositActionError] = useState<string | null>(null);
-  const [valueHistory, setValueHistory] = useState<any[]>([]);
   const [categoryValueHistoryARS, setCategoryValueHistoryARS] = useState<any[]>([]);
   const [categoryValueHistoryUSD, setCategoryValueHistoryUSD] = useState<any[]>([]);
 
   const { portfolioData, loading, refreshPortfolio } = usePortfolio();
 
   useEffect(() => {
-    async function fetchValueHistory() {
+    async function fetchCategoryValueHistory() {
       if (portfolioData?.transactions && portfolioData?.historicalPrices) {
-        const history = await calculatePortfolioValueHistory(
-          portfolioData.transactions,
-          portfolioData.historicalPrices,
-          { days: 90 }
-        );
-        setValueHistory(history);
-        
         // Calculate category value histories
         const categoryHistoryARS = await calculateCategoryValueHistory(
           portfolioData.transactions,
@@ -59,12 +48,11 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
         );
         setCategoryValueHistoryUSD(categoryHistoryUSD);
       } else {
-        setValueHistory([]);
         setCategoryValueHistoryARS([]);
         setCategoryValueHistoryUSD([]);
       }
     }
-    fetchValueHistory();
+    fetchCategoryValueHistory();
   }, [portfolioData?.transactions, portfolioData?.historicalPrices]);
 
   useEffect(() => {
@@ -291,24 +279,6 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <PortfolioPieChart positions={portfolioData.positions} prices={portfolioData.historicalPrices} />
-        <PortfolioValueChart
-          valueHistory={valueHistory.map(h => ({
-            date: h.date,
-            invested: h.valueARSRaw - h.cashARS,
-            total: h.valueARSRaw,
-          }))}
-          currency="ARS"
-          title="Evolución del Portafolio (ARS)"
-        />
-        <PortfolioValueChart
-          valueHistory={valueHistory.map(h => ({
-            date: h.date,
-            invested: h.valueUSDRaw - h.cashUSD,
-            total: h.valueUSDRaw,
-          }))}
-          currency="USD"
-          title="Evolución del Portafolio (USD)"
-        />
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-medium text-gray-800 mb-4">Categorías del Portafolio (ARS)</h3>
           <PortfolioCategoryChart 
