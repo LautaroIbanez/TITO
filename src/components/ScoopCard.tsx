@@ -172,13 +172,11 @@ export default function ScoopCard({
     }
   };
 
-  const handleBuy: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier, currency, commissionPct, purchaseFeePct) => {
+  const handleBuy: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier, currency, commissionPct, purchaseFeePct, purchasePrice) => {
     const session = localStorage.getItem('session');
     if (!session) return;
     const username = JSON.parse(session).username;
-    
     const symbol = market === 'BCBA' ? `${stockData.symbol}.BA` : stockData.symbol;
-
     const res = await fetch('/api/portfolio/buy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -187,7 +185,7 @@ export default function ScoopCard({
         assetType: 'Stock',
         symbol,
         quantity,
-        price: currentPrice,
+        price: purchasePrice ?? currentPrice,
         currency,
         market,
         commissionPct,

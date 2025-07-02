@@ -11,7 +11,7 @@ export type TradeType = 'Buy' | 'Sell' | 'Invest';
 export interface TradeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (value: number, assetType: PortfolioPosition['type'], identifier: string, currency: 'ARS' | 'USD', commissionPct?: number, purchaseFeePct?: number) => Promise<void>;
+  onSubmit: (value: number, assetType: PortfolioPosition['type'], identifier: string, currency: 'ARS' | 'USD', commissionPct?: number, purchaseFeePct?: number, purchasePrice?: number) => Promise<void>;
   tradeType: TradeType;
   assetName: string;
   assetType: PortfolioPosition['type'];
@@ -42,12 +42,13 @@ export default function TradeModal({
   const [purchaseFeePct, setPurchaseFeePct] = useState(DEFAULT_PURCHASE_FEE_PCT);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [purchasePrice, setPurchasePrice] = useState(price);
   
   const { refreshPortfolio } = usePortfolio();
   
   const availableCash = cash[currency] || 0;
 
-  const baseCost = value * price;
+  const baseCost = value * purchasePrice;
   const totalCost = tradeType === 'Buy' && (assetType === 'Stock' || assetType === 'Bond' || assetType === 'Crypto')
     ? baseCost * (1 + commissionPct / 100 + purchaseFeePct / 100)
     : baseCost;
@@ -65,8 +66,9 @@ export default function TradeModal({
       setPurchaseFeePct(DEFAULT_PURCHASE_FEE_PCT);
       setError('');
       setLoading(false);
+      setPurchasePrice(price);
     }
-  }, [isOpen, isAmountBased]);
+  }, [isOpen, isAmountBased, price]);
 
   useEffect(() => {
     setError('');
@@ -87,7 +89,7 @@ export default function TradeModal({
     try {
       const commission = tradeType === 'Buy' && (assetType === 'Stock' || assetType === 'Bond' || assetType === 'Crypto') ? commissionPct : undefined;
       const purchaseFee = tradeType === 'Buy' && (assetType === 'Stock' || assetType === 'Bond' || assetType === 'Crypto') ? purchaseFeePct : undefined;
-      await onSubmit(value, assetType, identifier, currency, commission, purchaseFee);
+      await onSubmit(value, assetType, identifier, currency, commission, purchaseFee, purchasePrice);
       await refreshPortfolio();
       onClose();
     } catch (err: unknown) {
@@ -156,6 +158,21 @@ export default function TradeModal({
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                 />
               </div>
+            </div>
+          )}
+
+          {!isAmountBased && (
+            <div className="mb-4">
+              <label htmlFor="purchasePrice" className="block text-sm font-medium text-gray-700">Precio de Compra</label>
+              <input
+                id="purchasePrice"
+                type="number"
+                min="0"
+                step="0.01"
+                value={purchasePrice}
+                onChange={(e) => setPurchasePrice(Number(e.target.value))}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+              />
             </div>
           )}
 

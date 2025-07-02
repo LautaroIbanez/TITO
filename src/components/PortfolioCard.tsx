@@ -77,35 +77,33 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
     setTradeModalOpen(true);
   };
 
-  const handleTradeSubmit: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier, currency, commissionPct, purchaseFeePct) => {
+  const handleTradeSubmit: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier, currency, commissionPct, purchaseFeePct, purchasePrice) => {
     const session = localStorage.getItem('session');
     if (!session) throw new Error("Session not found");
     const username = JSON.parse(session).username;
-
-    const res = await fetch(`/api/portfolio/${tradeType.toLowerCase()}`, {
+    const url = tradeType === 'Buy' ? '/api/portfolio/buy' : '/api/portfolio/sell';
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        username, 
-        assetType, 
-        symbol: identifier, // Assuming symbol for stocks
-        ticker: identifier, // Assuming ticker for bonds
-        quantity, 
-        price: currentPrice,
+      body: JSON.stringify({
+        username,
+        assetType,
+        symbol: identifier,
+        quantity,
+        price: purchasePrice ?? currentPrice,
         currency,
         market: position.market,
         commissionPct,
-        purchaseFeePct
+        purchaseFeePct,
       }),
     });
-
     if (!res.ok) {
       const data = await res.json();
       throw new Error(data.error || `La ${tradeType.toLowerCase()} falló`);
     }
     onTrade();
     setTradeModalOpen(false);
-    await refreshPortfolio(); // Refresh portfolio data from server
+    await refreshPortfolio();
   };
   
   const value = position.quantity * currentPrice;

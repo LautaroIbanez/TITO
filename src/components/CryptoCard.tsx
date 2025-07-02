@@ -83,33 +83,32 @@ export default function CryptoCard({ symbol, prices, technicals, cash, onTrade }
     maintainAspectRatio: false,
   };
 
-  const handleTrade: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier, currency, commissionPct, purchaseFeePct) => {
+  const handleTrade: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier, currency, commissionPct, purchaseFeePct, purchasePrice) => {
     const session = localStorage.getItem('session');
-    if (!session) return;
+    if (!session) throw new Error("Session not found");
     const username = JSON.parse(session).username;
-
-    const res = await fetch(`/api/portfolio/${tradeType.toLowerCase()}`, {
+    const url = tradeType === 'Buy' ? '/api/portfolio/buy' : '/api/portfolio/sell';
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         username,
-        assetType: 'Crypto',
-        symbol,
+        assetType,
+        symbol: identifier,
         quantity,
-        price: currentPrice,
+        price: purchasePrice ?? currentPrice,
         currency,
         commissionPct,
         purchaseFeePct,
       }),
     });
-    if (res.ok) {
-      onTrade();
-      setIsModalOpen(false);
-      await refreshPortfolio();
-    } else {
+    if (!res.ok) {
       const data = await res.json();
-      alert(`Error: ${data.error}`);
+      throw new Error(data.error || `La ${tradeType.toLowerCase()} falló`);
     }
+    onTrade();
+    setIsModalOpen(false);
+    await refreshPortfolio();
   };
 
   return (

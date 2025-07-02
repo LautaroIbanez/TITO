@@ -53,6 +53,14 @@
       "quantity": 0.001,
       "averagePrice": 107179.21,
       "currency": "USD"
+    },
+    {
+      "type": "Stock",
+      "symbol": "MELI.BA.BA",
+      "quantity": 5,
+      "averagePrice": 25967.828999999998,
+      "currency": "ARS",
+      "market": "BCBA"
     }
   ],
   "transactions": [
@@ -154,6 +162,19 @@
       "currency": "USD",
       "commissionPct": 1,
       "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1751489027418",
+      "date": "2025-07-02T20:43:47.418Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "MELI.BA.BA",
+      "quantity": 5,
+      "price": 25698,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
     }
   ],
   "goals": [
@@ -177,7 +198,7 @@
     }
   ],
   "cash": {
-    "ARS": 841290.5625,
+    "ARS": 711451.4175,
     "USD": 3719.6164336245897
   },
   "profile": {
@@ -197,8 +218,8 @@
     "initialBalanceUSD": 5000
   },
   "investmentStrategy": {
-    "id": "strategy-80f40601-dd87-4905-82a2-a06960764793",
-    "createdAt": "2025-07-02T19:59:57.346Z",
+    "id": "strategy-36a27f61-0f23-46bb-aa3f-e5b0c1af7d24",
+    "createdAt": "2025-07-02T20:45:13.170Z",
     "targetAllocation": {
       "stocks": 59.4,
       "bonds": 29.7,
@@ -208,15 +229,15 @@
     },
     "recommendations": [
       {
-        "id": "alloc-2d1dadf9-ecad-4e6a-a0cc-51724bc718d0",
+        "id": "alloc-b02e1f50-59f3-47fb-9d6a-6a986cc8b2b1",
         "action": "increase",
         "assetClass": "stocks",
-        "reason": "Tu portafolio tiene 9.2% en acciones, pero tu estrategia objetivo es 59.4%",
+        "reason": "Tu portafolio tiene 22.1% en acciones, pero tu estrategia objetivo es 59.4%",
         "priority": "high",
         "expectedImpact": "positive"
       },
       {
-        "id": "alloc-ce6320b1-9062-402a-b825-b94b21167faa",
+        "id": "alloc-120490e2-1abc-479f-a456-cb1c0b7f17c6",
         "action": "increase",
         "assetClass": "bonds",
         "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 29.7%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
@@ -229,9 +250,9 @@
         ]
       },
       {
-        "id": "cash-invest-c31ed061-0d54-45f0-b213-888bd75d8639",
+        "id": "cash-invest-2b7b9fe5-261b-406e-9841-704cb9cb21b8",
         "action": "buy",
-        "reason": "Tienes un 83.8% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
+        "reason": "Tienes un 70.9% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
         "priority": "high",
         "expectedImpact": "positive"
       }

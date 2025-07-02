@@ -75,7 +75,7 @@ export default function ScoopPage() {
   const [portfolioSymbols, setPortfolioSymbols] = useState<{ USD: string[]; ARS: string[] }>({ USD: [], ARS: [] });
   const [loading, setLoading] = useState(true);
   const [requiredReturn, setRequiredReturn] = useState(0);
-  const { filterMode } = useScoop();
+  const { filterMode, currencyFilter } = useScoop();
   const { portfolioData } = usePortfolio();
 
   // Load portfolio symbols and scoop data
@@ -203,11 +203,12 @@ export default function ScoopPage() {
     loadData();
   }, []);
 
-  // Get all suggested stocks across both markets
-  const allSuggestedStocks = [
-    ...nasdaqStocks.filter(s => s.isSuggested),
-    ...bcbaStocks.filter(s => s.isSuggested)
-  ];
+  // Filtrar según currencyFilter
+  const filteredNasdaqStocks = currencyFilter === 'all' ? nasdaqStocks : nasdaqStocks.filter(s => s.currency === currencyFilter);
+  const filteredBcbaStocks = currencyFilter === 'all' ? bcbaStocks : bcbaStocks.filter(s => s.currency === currencyFilter);
+  const filteredAllSuggestedStocks = currencyFilter === 'all'
+    ? [...nasdaqStocks.filter(s => s.isSuggested), ...bcbaStocks.filter(s => s.isSuggested)]
+    : [...filteredNasdaqStocks.filter(s => s.isSuggested), ...filteredBcbaStocks.filter(s => s.isSuggested)];
 
   return (
     <div className="space-y-8">
@@ -227,11 +228,11 @@ export default function ScoopPage() {
         <div className="text-center text-gray-700 py-10">Cargando Oportunidades...</div>
       ) : (
         <>
-          {filterMode === 'suggested' && allSuggestedStocks.length > 0 && (
+          {filterMode === 'suggested' && filteredAllSuggestedStocks.length > 0 && (
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Sugerencias para ti</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {allSuggestedStocks.map((stock) => (
+                {filteredAllSuggestedStocks.map((stock) => (
                   <ScoopCard
                     key={stock.symbol}
                     stockData={stock}
@@ -252,11 +253,11 @@ export default function ScoopPage() {
           {filterMode === 'all' && (
             <>
               {/* NASDAQ Stocks Section */}
-              {nasdaqStocks.length > 0 && (
+              {filteredNasdaqStocks.length > 0 && (
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">Acciones NASDAQ (USD)</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {nasdaqStocks.map((stock) => (
+                    {filteredNasdaqStocks.map((stock) => (
                       <ScoopCard
                         key={stock.symbol}
                         stockData={stock}
@@ -275,11 +276,11 @@ export default function ScoopPage() {
               )}
 
               {/* BCBA Stocks Section */}
-              {bcbaStocks.length > 0 && (
+              {filteredBcbaStocks.length > 0 && (
                 <div className="mt-12">
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">Acciones BCBA (ARS)</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {bcbaStocks.map((stock) => (
+                    {filteredBcbaStocks.map((stock) => (
                       <ScoopCard
                         key={stock.symbol}
                         stockData={stock}
@@ -299,7 +300,7 @@ export default function ScoopPage() {
             </>
           )}
 
-          {!loading && nasdaqStocks.length === 0 && bcbaStocks.length === 0 && (
+          {!loading && filteredNasdaqStocks.length === 0 && filteredBcbaStocks.length === 0 && (
             <div className="text-center text-gray-700 py-10">
               <h3 className="text-xl font-semibold">
                 {filterMode === 'suggested' ? 'No hay sugerencias por ahora.' : 'No hay nuevas oportunidades por ahora.'}

@@ -17,13 +17,13 @@ const getTitle = (pathname: string) => {
 };
 
 function HeaderContent({ title, pathname }: { title: string; pathname: string }) {
-  const { filterMode, setFilterMode } = useScoop();
+  const { filterMode, setFilterMode, currencyFilter, setCurrencyFilter } = useScoop();
 
   return (
     <>
       <h1 className="text-xl font-semibold text-gray-800">{title}</h1>
       {pathname.includes('/dashboard/scoop') && (
-        <div className="ml-4">
+        <div className="ml-4 flex gap-2">
           <select
             value={filterMode}
             onChange={(e) => setFilterMode(e.target.value as any)}
@@ -31,6 +31,15 @@ function HeaderContent({ title, pathname }: { title: string; pathname: string })
           >
             <option value="all">Mostrar Todos</option>
             <option value="suggested">Solo Sugeridos</option>
+          </select>
+          <select
+            value={currencyFilter}
+            onChange={(e) => setCurrencyFilter(e.target.value as any)}
+            className="bg-gray-200 text-gray-800 text-sm font-medium rounded-md px-3 py-1 border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">Todas las Monedas</option>
+            <option value="ARS">Solo ARS</option>
+            <option value="USD">Solo USD</option>
           </select>
         </div>
       )}

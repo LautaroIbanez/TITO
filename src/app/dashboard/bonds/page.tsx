@@ -11,7 +11,7 @@ export default function BondsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedBond, setSelectedBond] = useState<Bond | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showTradeModal, setShowTradeModal] = useState(false);
   const { portfolioData } = usePortfolio();
 
   async function fetchInitialData() {
@@ -40,71 +40,49 @@ export default function BondsPage() {
 
   const handleOpenModal = (bond: Bond) => {
     setSelectedBond(bond);
-    setIsModalOpen(true);
+    setShowTradeModal(true);
   };
 
-  const handleBuyBond = async (
-    quantity: number,
-    assetType: string,
-    identifier: string,
-    currency: 'ARS' | 'USD',
-    commissionPct?: number,
-    purchaseFeePct?: number
-  ) => {
-    if (!selectedBond) return;
-    
+  const handleBuyBond: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier, currency, commissionPct, purchaseFeePct, purchasePrice) => {
     const session = localStorage.getItem('session');
-    if (!session) return;
+    if (!session) throw new Error("Session not found");
     const username = JSON.parse(session).username;
-
-    const body = {
-      username,
-      assetType,
-      ticker: identifier,
-      quantity,
-      price: selectedBond.price,
-      currency,
-      commissionPct,
-      purchaseFeePct,
-    };
-
-    try {
-      const res = await fetch('/api/portfolio/buy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || 'Failed to buy bond');
-      }
-
-      await fetchInitialData(); // Refresh data
-      setIsModalOpen(false);
-      setSelectedBond(null);
-    } catch (err: any) {
-      setError(err.message);
-      // Keep modal open to show error if needed, or handle error display
+    const res = await fetch('/api/portfolio/buy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username,
+        assetType,
+        symbol: identifier,
+        quantity,
+        price: purchasePrice,
+        currency,
+        commissionPct,
+        purchaseFeePct,
+      }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'La compra falló');
     }
+    setShowTradeModal(false);
+    await fetchInitialData();
   };
 
   return (
     <>
-      {isModalOpen && selectedBond && (
-        <TradeModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSubmit={handleBuyBond}
-          tradeType="Buy"
-          assetName={selectedBond.ticker}
-          assetType="Bond"
-          identifier={selectedBond.ticker}
-          price={selectedBond.price}
-          cash={portfolioData?.cash ?? { ARS: 0, USD: 0 }}
-          currency={selectedBond.currency}
-        />
-      )}
+      <TradeModal
+        isOpen={showTradeModal}
+        onClose={() => setShowTradeModal(false)}
+        onSubmit={handleBuyBond}
+        tradeType="Buy"
+        assetName={selectedBond?.name || ''}
+        assetType="Bond"
+        identifier={selectedBond?.ticker || ''}
+        price={selectedBond?.price || 0}
+        cash={portfolioData?.cash || { ARS: 0, USD: 0 }}
+        currency={selectedBond?.currency || 'ARS'}
+      />
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row gap-2 justify-end">
           <AvailableCapitalIndicator assetClass="bonds" currency="ARS" />
