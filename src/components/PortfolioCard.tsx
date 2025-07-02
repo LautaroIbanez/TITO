@@ -150,7 +150,7 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
         maxShares={position.quantity}
         currency={position.currency}
       />
-      <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col gap-4 relative">
+      <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col gap-4 relative text-black">
         <div className="flex items-center gap-2 justify-between">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-gray-900">{symbol}</h2>

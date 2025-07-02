@@ -243,27 +243,37 @@ export default function ScoopCard({
           </button>
         </div>
 
-        {/* Market Selector - Only show if symbol ends with .BA or getTickerMarket(symbol) === 'BCBA' */}
-        {(stockData.symbol.endsWith('.BA') || getTickerMarket(stockData.symbol) === 'BCBA') && (
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleMarketChange('NASDAQ')}
-              className={`px-3 py-1 rounded text-xs font-semibold ${
-                market === 'NASDAQ' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
-              }`}
-            >
-              NASDAQ
-            </button>
-            <button
-              onClick={() => handleMarketChange('BCBA')}
-              className={`px-3 py-1 rounded text-xs font-semibold ${
-                market === 'BCBA' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
-              }`}
-            >
-              BCBA
-            </button>
-          </div>
-        )}
+        {/* Market Selector - Only show if symbol has both NASDAQ and BCBA variants */}
+        {(() => {
+          // Si el símbolo termina en .BA, verificamos si existe el símbolo base (sin .BA) en el universo de acciones
+          const baseSymbol = stockData.symbol.endsWith('.BA') ? stockData.symbol.replace(/\.BA$/, '') : stockData.symbol;
+          // Suponemos que si el stockData tiene un campo hasNasdaqVariant o similar, lo usamos. Si no, solo mostramos el selector si el símbolo no termina en .BA
+          // Aquí puedes adaptar la lógica según tu fuente de datos
+          const hasBothMarkets = stockData.hasNasdaqVariant || stockData.hasBcbaVariant;
+          if (hasBothMarkets) {
+            return (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleMarketChange('NASDAQ')}
+                  className={`px-3 py-1 rounded text-xs font-semibold ${
+                    market === 'NASDAQ' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  NASDAQ
+                </button>
+                <button
+                  onClick={() => handleMarketChange('BCBA')}
+                  className={`px-3 py-1 rounded text-xs font-semibold ${
+                    market === 'BCBA' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  BCBA
+                </button>
+              </div>
+            );
+          }
+          return null;
+        })()}
 
         {/* Company Name */}
         <p className="text-sm text-gray-600">{stockData.companyName || 'Nombre no disponible'}</p>

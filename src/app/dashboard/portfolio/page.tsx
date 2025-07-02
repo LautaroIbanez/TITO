@@ -12,6 +12,7 @@ import { StockPosition, PortfolioTransaction, DepositTransaction } from '@/types
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import EditDepositModal from '@/components/EditDepositModal';
 import { formatCurrency } from '@/utils/goalCalculator';
+import { trimCategoryValueHistory } from '@/utils/history';
 
 export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange?: () => void }) {
   const [comparison, setComparison] = useState<any>(null);
@@ -282,13 +283,13 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-medium text-gray-800 mb-4">Categorías del Portafolio (ARS)</h3>
           <PortfolioCategoryChart 
-            history={categoryValueHistoryARS}
+            history={trimCategoryValueHistory(categoryValueHistoryARS)}
           />
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-medium text-gray-800 mb-4">Categorías del Portafolio (USD)</h3>
           <PortfolioCategoryChart 
-            history={categoryValueHistoryUSD}
+            history={trimCategoryValueHistory(categoryValueHistoryUSD)}
           />
         </div>
       </div>

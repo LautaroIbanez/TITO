@@ -11,7 +11,7 @@ import { usePortfolio } from '@/contexts/PortfolioContext';
 import GoalProgress from './GoalProgress';
 import PortfolioCategoryChart from './PortfolioCategoryChart';
 import { formatCurrency, calculateFixedIncomeGains, calculateFixedIncomeValueHistory } from '@/utils/goalCalculator';
-import { trimHistory } from '@/utils/history';
+import { trimHistory, trimCategoryValueHistory } from '@/utils/history';
 
 export default function DashboardSummary() {
   const [portfolioValueARS, setPortfolioValueARS] = useState(0);
@@ -316,14 +316,14 @@ export default function DashboardSummary() {
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-medium text-gray-800 mb-4">Categorías del Portafolio (ARS)</h3>
           <PortfolioCategoryChart 
-            history={trimHistory(categoryValueHistoryARS)}
+            history={trimCategoryValueHistory(categoryValueHistoryARS)}
           />
         </div>
         {/* Categorías del Portafolio (USD) */}
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-medium text-gray-800 mb-4">Categorías del Portafolio (USD)</h3>
           <PortfolioCategoryChart 
-            history={trimHistory(categoryValueHistoryUSD)}
+            history={trimCategoryValueHistory(categoryValueHistoryUSD)}
           />
         </div>
       </div>
