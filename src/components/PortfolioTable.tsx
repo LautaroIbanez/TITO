@@ -5,6 +5,9 @@ import TradeModal, { TradeType } from './TradeModal';
 import type { TradeModalProps } from './TradeModal';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import { formatCurrency } from '@/utils/goalCalculator';
+import { computePositionGain } from '@/utils/positionGains';
+import { detectDuplicates } from '@/utils/duplicateDetection';
+import { validatePositionPrice } from '@/utils/priceValidation';
 
 interface Props {
   positions: PortfolioPosition[];
@@ -15,9 +18,10 @@ interface Props {
   onPortfolioUpdate: () => void;
 }
 
-function getCurrentPrice(prices: PriceData[]): number {
-  if (!prices || prices.length === 0) return 0;
-  return prices[prices.length - 1]?.close || 0;
+function getCurrentPrice(prices: PriceData[]): number | undefined {
+  if (!prices || prices.length === 0) return undefined;
+  const latestPrice = prices[prices.length - 1]?.close;
+  return latestPrice === 0 ? undefined : latestPrice;
 }
 
 export default function PortfolioTable({ positions, prices, fundamentals, technicals, cash, onPortfolioUpdate }: Props) {
@@ -37,14 +41,16 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
     let currentPrice = 0;
     let market = undefined;
     if (assetType === 'Stock') {
-      currentPrice = getCurrentPrice(prices[identifier]);
+      const price = getCurrentPrice(prices[identifier]);
+      currentPrice = price ?? 0;
       if (modalState.asset?.type === 'Stock') {
         market = modalState.asset.market;
       }
     } else if (assetType === 'Bond' && modalState.asset?.type === 'Bond') {
       currentPrice = modalState.asset.averagePrice;
     } else if (assetType === 'Crypto') {
-      currentPrice = getCurrentPrice(prices[identifier]);
+      const price = getCurrentPrice(prices[identifier]);
+      currentPrice = price ?? 0;
     }
     
     const res = await fetch('/api/portfolio/sell', {
@@ -92,9 +98,12 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
   };
 
   const renderStockRow = (pos: StockPosition) => {
-    const currPrice = getCurrentPrice(prices[pos.symbol]);
-    const value = pos.quantity * currPrice;
-    const gain = currPrice && pos.averagePrice ? ((currPrice - pos.averagePrice) / pos.averagePrice) * 100 : 0;
+    const priceValidation = validatePositionPrice(pos, prices);
+    const hasValidPrice = priceValidation.hasValidPrice;
+    const currPrice = priceValidation.currentPrice;
+    const value = hasValidPrice ? pos.quantity * currPrice! : 0;
+    const gain = hasValidPrice && pos.averagePrice ? ((currPrice! - pos.averagePrice) / pos.averagePrice) * 100 : 0;
+    const gainCurrency = hasValidPrice ? computePositionGain(pos, currPrice!) : 0;
     const f = fundamentals[pos.symbol];
     const t = technicals[pos.symbol];
 
@@ -105,9 +114,18 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
         <td className="px-4 py-2 text-gray-700">{pos.currency}</td>
         <td className="px-4 py-2 text-right text-gray-900">{pos.quantity}</td>
         <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(pos.averagePrice, pos.currency)}</td>
-        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(currPrice, pos.currency)}</td>
+        <td className="px-4 py-2 text-right text-gray-900">
+          {hasValidPrice ? formatCurrency(currPrice!, pos.currency) : (
+            <span className="text-orange-600 text-xs">Sin datos suficientes</span>
+          )}
+        </td>
         <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(value, pos.currency)}</td>
-        <td className={`px-4 py-2 text-right font-semibold ${gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>{gain.toFixed(2)}%</td>
+        <td className={`px-4 py-2 text-right font-semibold ${gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          {hasValidPrice ? `${gain.toFixed(2)}%` : '-'}
+        </td>
+        <td className={`px-4 py-2 text-right font-semibold ${gainCurrency >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          {hasValidPrice ? formatCurrency(gainCurrency, pos.currency) : '-'}
+        </td>
         <td className="px-4 py-2 text-right text-gray-900">{f?.peRatio?.toFixed(2) ?? '-'}</td>
         <td className="px-4 py-2 text-right text-gray-900">{t?.rsi?.toFixed(2) ?? '-'}</td>
         <td className="px-4 py-2 text-center">
@@ -139,6 +157,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
   };
 
   const renderDepositRow = (pos: FixedTermDepositPosition) => {
+    const gainCurrency = computePositionGain(pos);
     return (
       <tr key={pos.id} className="even:bg-gray-50">
         <td className="px-4 py-2 font-medium text-gray-900">{pos.provider}</td>
@@ -150,7 +169,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
         <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(pos.amount, pos.currency)}</td>
         <td className="px-4 py-2 text-right text-green-600">{pos.annualRate.toFixed(2)}%</td>
         <td className="px-4 py-2 text-right text-gray-700">{new Date(pos.maturityDate).toLocaleDateString()}</td>
-        <td className="px-4 py-2 text-right text-gray-700">-</td>
+        <td className={`px-4 py-2 text-right font-semibold ${gainCurrency >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(gainCurrency, pos.currency)}</td>
         <td className="px-4 py-2 text-center">
           <button onClick={() => handleRemove(pos)} className="text-red-600 hover:text-red-800 text-xs font-semibold">Eliminar</button>
         </td>
@@ -159,6 +178,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
   };
 
   const renderCaucionRow = (pos: CaucionPosition) => {
+    const gainCurrency = computePositionGain(pos);
     return (
       <tr key={pos.id} className="even:bg-gray-50">
         <td className="px-4 py-2 font-medium text-gray-900">{pos.provider}</td>
@@ -171,6 +191,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
         <td className="px-4 py-2 text-right text-green-600">{pos.annualRate.toFixed(2)}%</td>
         <td className="px-4 py-2 text-right text-gray-700">{new Date(pos.maturityDate).toLocaleDateString()}</td>
         <td className="px-4 py-2 text-right text-gray-700">{pos.term} días</td>
+        <td className={`px-4 py-2 text-right font-semibold ${gainCurrency >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(gainCurrency, pos.currency)}</td>
         <td className="px-4 py-2 text-center">
           <button onClick={() => handleRemove(pos)} className="text-red-600 hover:text-red-800 text-xs font-semibold">Eliminar</button>
         </td>
@@ -179,9 +200,12 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
   };
 
   const renderCryptoRow = (pos: CryptoPosition) => {
-    const currPrice = getCurrentPrice(prices[pos.symbol]);
-    const value = pos.quantity * currPrice;
-    const gain = currPrice && pos.averagePrice ? ((currPrice - pos.averagePrice) / pos.averagePrice) * 100 : 0;
+    const priceValidation = validatePositionPrice(pos, prices);
+    const hasValidPrice = priceValidation.hasValidPrice;
+    const currPrice = priceValidation.currentPrice;
+    const value = hasValidPrice ? pos.quantity * currPrice! : 0;
+    const gain = hasValidPrice && pos.averagePrice ? ((currPrice! - pos.averagePrice) / pos.averagePrice) * 100 : 0;
+    const gainCurrency = hasValidPrice ? computePositionGain(pos, currPrice!) : 0;
     const f = fundamentals[pos.symbol];
     const t = technicals[pos.symbol];
 
@@ -192,9 +216,18 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
         <td className="px-4 py-2 text-gray-700">{pos.currency}</td>
         <td className="px-4 py-2 text-right text-gray-900">{pos.quantity}</td>
         <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(pos.averagePrice, pos.currency)}</td>
-        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(currPrice, pos.currency)}</td>
+        <td className="px-4 py-2 text-right text-gray-900">
+          {hasValidPrice ? formatCurrency(currPrice!, pos.currency) : (
+            <span className="text-orange-600 text-xs">Sin datos suficientes</span>
+          )}
+        </td>
         <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(value, pos.currency)}</td>
-        <td className={`px-4 py-2 text-right font-semibold ${gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>{gain.toFixed(2)}%</td>
+        <td className={`px-4 py-2 text-right font-semibold ${gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          {hasValidPrice ? `${gain.toFixed(2)}%` : '-'}
+        </td>
+        <td className={`px-4 py-2 text-right font-semibold ${gainCurrency >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          {hasValidPrice ? formatCurrency(gainCurrency, pos.currency) : '-'}
+        </td>
         <td className="px-4 py-2 text-right text-gray-900">{f?.peRatio?.toFixed(2) ?? '-'}</td>
         <td className="px-4 py-2 text-right text-gray-900">{t?.rsi?.toFixed(2) ?? '-'}</td>
         <td className="px-4 py-2 text-center">
@@ -208,18 +241,37 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
     if (!modalState.asset) return { assetName: '', identifier: '', price: 0, maxShares: 0, assetType: 'Stock' as const, currency: 'ARS' as const };
     const { asset } = modalState;
     if (asset.type === 'Stock') {
-      return { assetName: asset.symbol, identifier: asset.symbol, price: getCurrentPrice(prices[asset.symbol]), maxShares: asset.quantity, assetType: asset.type, currency: asset.currency };
+      const priceValidation = validatePositionPrice(asset, prices);
+      return { 
+        assetName: asset.symbol, 
+        identifier: asset.symbol, 
+        price: priceValidation.currentPrice ?? 0, 
+        maxShares: asset.quantity, 
+        assetType: asset.type, 
+        currency: asset.currency 
+      };
     }
     if (asset.type === 'Bond') {
       return { assetName: asset.ticker, identifier: asset.ticker, price: asset.averagePrice, maxShares: asset.quantity, assetType: asset.type, currency: asset.currency };
     }
     if (asset.type === 'Crypto') {
-      return { assetName: asset.symbol, identifier: asset.symbol, price: getCurrentPrice(prices[asset.symbol]), maxShares: asset.quantity, assetType: asset.type, currency: asset.currency };
+      const priceValidation = validatePositionPrice(asset, prices);
+      return { 
+        assetName: asset.symbol, 
+        identifier: asset.symbol, 
+        price: priceValidation.currentPrice ?? 0, 
+        maxShares: asset.quantity, 
+        assetType: asset.type, 
+        currency: asset.currency 
+      };
     }
     return { assetName: '', identifier: '', price: 0, maxShares: 0, assetType: 'Stock' as const, currency: 'ARS' as const };
   };
 
   const modalInfo = getModalInfo();
+
+  // Detect duplicates
+  const duplicateResult = detectDuplicates(positions);
 
   return (
     <>
@@ -238,6 +290,35 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
           currency={modalInfo.currency}
         />
       )}
+      
+      {/* Duplicate Warning Banner */}
+      {duplicateResult.hasDuplicates && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-yellow-800">
+                Activos duplicados detectados
+              </h3>
+              <div className="mt-2 text-sm text-yellow-700">
+                <p>{duplicateResult.warningMessage}</p>
+                <ul className="mt-2 list-disc list-inside">
+                  {duplicateResult.duplicates.map((group, index) => (
+                    <li key={index} className="text-xs">
+                      {group.warning}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="overflow-x-auto rounded-lg shadow mb-8">
         <table className="min-w-full bg-white text-gray-900 text-sm">
           <thead>
@@ -250,6 +331,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
               <th className="px-4 py-2 text-right">Precio Actual</th>
               <th className="px-4 py-2 text-right">Valor Total</th>
               <th className="px-4 py-2 text-right">Gan/Pérd % / TNA</th>
+              <th className="px-4 py-2 text-right">Gan/Pérd ($)</th>
               <th className="px-4 py-2 text-right">P/E / Vencimiento</th>
               <th className="px-4 py-2 text-right">RSI</th>
               <th className="px-4 py-2 text-center">Acciones</th>

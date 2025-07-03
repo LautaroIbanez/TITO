@@ -169,7 +169,7 @@ describe('DashboardSummary', () => {
       { date: '2023-03-31', totalValue: 7000, categories: { stocks: 4000, bonds: 1000, cash: 2000 } }
     ]);
     
-    // Mock performance calculations
+    // Mock performance calculations - always return a valid object
     mockCalculatePortfolioPerformance.mockReturnValue({
       monthlyReturnARS: 5.2,
       monthlyReturnUSD: 3.1,
@@ -199,18 +199,30 @@ describe('DashboardSummary', () => {
           json: () => Promise.resolve([])
         } as Response);
       }
+      if (url.toString().includes('/api/bonds')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([])
+        } as Response);
+      }
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve({})
       } as Response);
     });
     
-    // Mock the portfolio context
+    // Mock the usePortfolio hook
     mockUsePortfolio.mockReturnValue({
       portfolioData: mockPortfolioData,
+      strategy: null,
       loading: false,
       error: null,
+      portfolioVersion: 1,
       refreshPortfolio: jest.fn(),
+      refreshStrategy: jest.fn(),
+      triggerPortfolioUpdate: jest.fn(),
+      strategyLoading: false,
+      strategyError: null,
     });
   });
 

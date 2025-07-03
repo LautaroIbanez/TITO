@@ -1,9 +1,12 @@
+import dayjs from 'dayjs';
 import { PortfolioTransaction, FixedTermDepositCreationTransaction, CaucionCreationTransaction } from '@/types';
 import { PriceData } from '@/types/finance';
-import dayjs from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
-import { getExchangeRate } from './currency';
+import { getExchangeRate, convertCurrencySync } from './currency';
+import { detectDuplicates, filterDuplicates } from './duplicateDetection';
+import fs from 'fs';
+import path from 'path';
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 
@@ -29,6 +32,24 @@ export interface PortfolioValueOptions {
   days?: number; // If provided, calculate last N days. If not, calculate from first transaction to today
   startDate?: string; // YYYY-MM-DD
   endDate?: string;   // YYYY-MM-DD
+  bondFallback?: boolean; // Whether to use bonds.json as a fallback for bonds with no price history
+}
+
+// Helper to load bond prices from data/bonds.json
+function loadBondPrices(): Array<{ ticker: string; price: number; currency: string }> {
+  const filePath = path.resolve(process.cwd(), 'data', 'bonds.json');
+  try {
+    const data = fs.readFileSync(filePath, 'utf-8');
+    return JSON.parse(data);
+  } catch (e) {
+    return [];
+  }
+}
+
+const bondPricesCache = loadBondPrices();
+export function getBondPriceFromJson(ticker: string, currency: string): number | undefined {
+  const bond = bondPricesCache.find(b => b.ticker === ticker && b.currency === currency);
+  return bond?.price;
 }
 
 export async function calculatePortfolioValueHistory(
@@ -83,6 +104,14 @@ export async function calculatePortfolioValueHistory(
   let cashARS = 0;
   let cashUSD = 0;
   
+  // Build a set of bond tickers from transactions for this portfolio
+  const bondTickers = new Set<string>();
+  for (const tx of txs) {
+    if (tx.assetType === 'Bond' && 'ticker' in tx) {
+      bondTickers.add(tx.ticker);
+    }
+  }
+
   for (const tx of txs) {
     const txDate = dayjs(tx.date).startOf('day');
     if (txDate.isSameOrBefore(startDate)) {
@@ -339,27 +368,40 @@ export async function calculatePortfolioValueHistory(
     let dailyValueUSD = cashUSD; // Start with cash balance
 
     // Stocks and Bonds
-    for (const key in positions) {
-      const { quantity, currency } = positions[key];
-      if (quantity <= 1e-6) continue;
-      
-      const symbol = key.split('_')[0];
-      const ph = priceHistory[symbol];
-      if (!ph || ph.length === 0) continue;
-      
-      let price = 0;
-      const priceEntry = ph.slice().reverse().find(p => dayjs(p.date).isSameOrBefore(dateStr));
-      if(priceEntry) {
-        price = priceEntry.close;
+    for (const key of Object.keys(positions)) {
+      const [identifier, currency] = key.split('_');
+      const pos = positions[key];
+      if (!pos || pos.quantity <= 0) continue; // Only value open positions
+      let currentPrice: number | undefined = undefined;
+      const prices = priceHistory[identifier];
+      if (prices && prices.length > 0) {
+        // Buscar el precio más reciente no-cero hasta e incluyendo la fecha actual
+        const validPrices = prices.filter(p => p.close > 0 && p.date <= dateStr);
+        if (validPrices.length > 0) {
+          // Tomar el más reciente
+          currentPrice = validPrices[validPrices.length - 1].close;
+        }
       }
-      
-      const valueInOwnCurrency = quantity * price;
-
-      if (currency === 'ARS') {
-        dailyValueARS += valueInOwnCurrency;
-      } else {
-        dailyValueUSD += valueInOwnCurrency;
+      // Fallback: solo para bonos, solo si no hay precio válido, solo si la posición está abierta
+      if (bondTickers.has(identifier) && currentPrice === undefined && options && options.bondFallback && pos.quantity > 0) {
+        currentPrice = getBondPriceFromJson(identifier, currency);
       }
+      if (currentPrice !== undefined) {
+        const positionValue = pos.quantity * currentPrice;
+        if (currency === 'ARS') {
+          dailyValueARS += positionValue;
+        } else if (currency === 'USD') {
+          // For USD bonds, convert to ARS before adding to ARS total
+          if (bondTickers.has(identifier)) {
+            const exchangeRate = await getExchangeRate('USD', 'ARS');
+            dailyValueARS += positionValue * exchangeRate;
+          } else {
+            // For USD stocks/crypto, keep in USD
+            dailyValueUSD += positionValue;
+          }
+        }
+      }
+      // If no valid price found, skip this asset (treat as "price not available")
     }
     
     // Fixed-Term Deposits
@@ -520,39 +562,74 @@ export async function getDailyPortfolioValue(
 /**
  * Calculates the current value of the portfolio by currency (no conversion).
  * Sums the value of each position in its own currency plus the cash in that currency.
+ * USD bonds are converted to ARS before adding to ARS total.
  * @param positions Portfolio positions
  * @param cash { ARS: number, USD: number }
  * @param priceHistory Price data for stocks/bonds/crypto
- * @returns { ARS: number, USD: number }
+ * @returns { ARS: number, USD: number, duplicates?: DuplicateDetectionResult }
  */
 export function calculateCurrentValueByCurrency(
   positions: any[],
   cash: { ARS: number; USD: number },
   priceHistory: Record<string, PriceData[]>
-): { ARS: number; USD: number } {
+): { ARS: number; USD: number; duplicates?: any } {
+  // Detect duplicates first
+  const duplicateResult = detectDuplicates(positions);
+  
+  // Filter out duplicates for calculation to avoid double counting
+  const filteredPositions = duplicateResult.hasDuplicates ? filterDuplicates(positions) : positions;
+  
   let valueARS = cash.ARS || 0;
   let valueUSD = cash.USD || 0;
 
   const today = new Date();
 
-  for (const pos of positions) {
+  for (const pos of filteredPositions) {
     if (pos.type === 'Stock' || pos.type === 'Bond') {
       const symbol = pos.type === 'Stock' ? pos.symbol : pos.ticker;
       const prices = priceHistory[symbol];
+      let currentPrice: number | undefined = undefined;
       if (prices && prices.length > 0) {
-        const currentPrice = prices[prices.length - 1].close;
-        if (pos.currency === 'ARS') {
-          valueARS += pos.quantity * currentPrice;
-        } else if (pos.currency === 'USD') {
-          valueUSD += pos.quantity * currentPrice;
+        // Find the most recent non-zero price
+        const recentPrices = prices.slice().reverse().slice(0, 10); // Check last 10 prices
+        const validPriceEntry = recentPrices.find(p => p.close > 0);
+        if (validPriceEntry) {
+          currentPrice = validPriceEntry.close;
         }
       }
+      // Fallback: if bond and no valid price, use bonds.json
+      if (pos.type === 'Bond' && currentPrice === undefined) {
+        currentPrice = getBondPriceFromJson(pos.ticker, pos.currency);
+      }
+      if (currentPrice !== undefined) {
+        const positionValue = pos.quantity * currentPrice;
+        if (pos.currency === 'ARS') {
+          valueARS += positionValue;
+        } else if (pos.currency === 'USD') {
+          // For USD bonds, convert to ARS before adding to ARS total
+          if (pos.type === 'Bond') {
+            const convertedValue = convertCurrencySync(positionValue, 'USD', 'ARS');
+            valueARS += convertedValue;
+          } else {
+            // For USD stocks, keep in USD
+            valueUSD += positionValue;
+          }
+        }
+      }
+      // If no valid price found, skip this asset (treat as "price not available")
     } else if (pos.type === 'Crypto') {
       const prices = priceHistory[pos.symbol];
       if (prices && prices.length > 0) {
-        const currentPrice = prices[prices.length - 1].close;
-        // Crypto is always valued in USD
-        valueUSD += pos.quantity * currentPrice;
+        // Find the most recent non-zero price
+        const recentPrices = prices.slice().reverse().slice(0, 10); // Check last 10 prices
+        const validPriceEntry = recentPrices.find(p => p.close > 0);
+        
+        if (validPriceEntry) {
+          const currentPrice = validPriceEntry.close;
+          // Crypto is always valued in USD
+          valueUSD += pos.quantity * currentPrice;
+        }
+        // If no valid price found, skip this asset (treat as "price not available")
       }
     } else if (pos.type === 'FixedTermDeposit') {
       const startDate = new Date(pos.startDate);
@@ -600,5 +677,13 @@ export function calculateCurrentValueByCurrency(
       }
     }
   }
-  return { ARS: valueARS, USD: valueUSD };
+  
+  const result: { ARS: number; USD: number; duplicates?: any } = { ARS: valueARS, USD: valueUSD };
+  
+  // Include duplicate information if duplicates were found
+  if (duplicateResult.hasDuplicates) {
+    result.duplicates = duplicateResult;
+  }
+  
+  return result;
 } 

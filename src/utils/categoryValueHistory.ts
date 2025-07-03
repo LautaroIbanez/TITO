@@ -412,12 +412,11 @@ export async function calculateCategoryValueHistory(
       const ph = priceHistory[symbol];
       if (!ph || ph.length === 0) continue;
       
-      let price = 0;
-      const priceEntry = ph.slice().reverse().find(p => dayjs(p.date).isSameOrBefore(dateStr));
-      if(priceEntry) {
-        price = priceEntry.close;
-      }
+      // Find the most recent non-zero price up to this date
+      const validPrices = ph.filter(p => p.close > 0 && dayjs(p.date).isSameOrBefore(dateStr));
+      if (validPrices.length === 0) continue; // Skip if all prices are zero
       
+      const price = validPrices[validPrices.length - 1].close; // Most recent non-zero price
       const valueInOwnCurrency = quantity * price;
       
       // Determine asset type and category

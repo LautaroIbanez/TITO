@@ -12,6 +12,7 @@ import GoalProgress from './GoalProgress';
 import PortfolioCategoryChart from './PortfolioCategoryChart';
 import { formatCurrency, calculateFixedIncomeGains, calculateFixedIncomeValueHistory } from '@/utils/goalCalculator';
 import { trimHistory, trimCategoryValueHistory } from '@/utils/history';
+import { generatePortfolioHash } from '@/utils/priceDataHash';
 
 export default function DashboardSummary() {
   const [portfolioValueARS, setPortfolioValueARS] = useState(0);
@@ -26,6 +27,12 @@ export default function DashboardSummary() {
   const [categoryValueHistoryUSD, setCategoryValueHistoryUSD] = useState<any[]>([]);
   
   const { portfolioData, strategy, loading, error, portfolioVersion } = usePortfolio();
+
+  // Generate portfolio hash for dependency tracking
+  const portfolioHash = generatePortfolioHash(
+    portfolioVersion, 
+    portfolioData?.historicalPrices || {}
+  );
 
   // 1. Fetch goals and bonds only when portfolioData or portfolioVersion changes
   useEffect(() => {
@@ -66,7 +73,7 @@ export default function DashboardSummary() {
     });
   }, []);
 
-  // 3. Calculate values and performance when portfolioData or inflationData changes
+  // 3. Calculate values and performance when portfolioData, portfolioVersion, or price data changes
   useEffect(() => {
     async function calculateValues() {
       if (portfolioData) {
@@ -125,7 +132,7 @@ export default function DashboardSummary() {
       }
     }
     calculateValues();
-  }, [portfolioData, inflationData]);
+  }, [portfolioData, portfolioVersion, portfolioHash, inflationData]);
 
   useEffect(() => {
     async function fetchGoalValueHistories() {
@@ -143,7 +150,7 @@ export default function DashboardSummary() {
       setGoalValueHistories(histories);
     }
     fetchGoalValueHistories();
-  }, [goals, portfolioData]);
+  }, [goals, portfolioData, portfolioVersion, portfolioHash]);
 
   const handleDismissOnboarding = () => {
     setShowOnboarding(false);

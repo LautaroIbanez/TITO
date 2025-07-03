@@ -616,4 +616,227 @@ describe('calculateCategoryValueHistory', () => {
       expect(result[0].totalValue).toBe(0);
     });
   });
+
+  describe('zero price handling', () => {
+    it('should exclude assets with all zero prices from daily totals', async () => {
+      const transactions: PortfolioTransaction[] = [
+        {
+          id: '1',
+          date: '2024-01-01',
+          type: 'Buy',
+          assetType: 'Stock',
+          symbol: 'AAPL',
+          quantity: 10,
+          price: 100,
+          currency: 'USD',
+          market: 'NASDAQ',
+        },
+        {
+          id: '2',
+          date: '2024-01-01',
+          type: 'Buy',
+          assetType: 'Stock',
+          symbol: 'INVALID',
+          quantity: 5,
+          price: 50,
+          currency: 'USD',
+          market: 'NASDAQ',
+        },
+      ];
+
+      const priceHistoryWithZeros = {
+        ...mockPriceHistory,
+        'INVALID': [
+          { date: '2024-01-01', open: 0, high: 0, low: 0, close: 0, volume: 0 },
+          { date: '2024-01-02', open: 0, high: 0, low: 0, close: 0, volume: 0 },
+        ],
+      };
+
+      const result = await calculateCategoryValueHistory(
+        transactions,
+        priceHistoryWithZeros,
+        'USD',
+        { startDate: '2024-01-01', endDate: '2024-01-02' }
+      );
+
+      expect(result).toHaveLength(2);
+      
+      // Day 1: Only AAPL should be included, INVALID should be excluded due to zero prices
+      expect(result[0].date).toBe('2024-01-01');
+      expect(result[0].categories.tech).toBe(1020); // Only AAPL value (10 * 102)
+      expect(result[0].categories.cash).toBe(-1250); // Reduced by both purchase amounts (1000 + 500)
+      expect(result[0].totalValue).toBe(-230); // 1020 - 1250
+      
+      // Day 2: Same as day 1 since INVALID still has zero prices
+      expect(result[1].date).toBe('2024-01-02');
+      expect(result[1].categories.tech).toBe(1050); // Only AAPL value (10 * 105)
+      expect(result[1].categories.cash).toBe(-1250);
+      expect(result[1].totalValue).toBe(-200); // 1050 - 1250
+    });
+
+    it('should use most recent non-zero price when some prices are zero', async () => {
+      const transactions: PortfolioTransaction[] = [
+        {
+          id: '1',
+          date: '2024-01-01',
+          type: 'Buy',
+          assetType: 'Stock',
+          symbol: 'AAPL',
+          quantity: 10,
+          price: 100,
+          currency: 'USD',
+          market: 'NASDAQ',
+        },
+      ];
+
+      const priceHistoryWithMixedZeros = {
+        AAPL: [
+          { date: '2024-01-01', open: 100, high: 105, low: 95, close: 102, volume: 1000 },
+          { date: '2024-01-02', open: 0, high: 0, low: 0, close: 0, volume: 0 },
+          { date: '2024-01-03', open: 0, high: 0, low: 0, close: 0, volume: 0 },
+          { date: '2024-01-04', open: 110, high: 115, low: 105, close: 112, volume: 1200 },
+        ],
+      };
+
+      const result = await calculateCategoryValueHistory(
+        transactions,
+        priceHistoryWithMixedZeros,
+        'USD',
+        { startDate: '2024-01-01', endDate: '2024-01-04' }
+      );
+
+      expect(result).toHaveLength(4);
+      
+      // Day 1: Use price from day 1
+      expect(result[0].date).toBe('2024-01-01');
+      expect(result[0].categories.tech).toBe(1020); // 10 * 102
+      
+      // Day 2: Use most recent non-zero price (from day 1)
+      expect(result[1].date).toBe('2024-01-02');
+      expect(result[1].categories.tech).toBe(1020); // Still 10 * 102 (most recent non-zero)
+      
+      // Day 3: Use most recent non-zero price (from day 1)
+      expect(result[2].date).toBe('2024-01-03');
+      expect(result[2].categories.tech).toBe(1020); // Still 10 * 102 (most recent non-zero)
+      
+      // Day 4: Use new price from day 4
+      expect(result[3].date).toBe('2024-01-04');
+      expect(result[3].categories.tech).toBe(1120); // 10 * 112
+    });
+
+    it('should maintain stable category curves when price data is missing', async () => {
+      const transactions: PortfolioTransaction[] = [
+        {
+          id: '1',
+          date: '2024-01-01',
+          type: 'Buy',
+          assetType: 'Stock',
+          symbol: 'AAPL',
+          quantity: 10,
+          price: 100,
+          currency: 'USD',
+          market: 'NASDAQ',
+        },
+        {
+          id: '2',
+          date: '2024-01-01',
+          type: 'Buy',
+          assetType: 'Stock',
+          symbol: 'SPY',
+          quantity: 5,
+          price: 400,
+          currency: 'USD',
+          market: 'NYSE',
+        },
+      ];
+
+      const priceHistoryWithMissingData = {
+        AAPL: [
+          { date: '2024-01-01', open: 100, high: 105, low: 95, close: 102, volume: 1000 },
+          { date: '2024-01-02', open: 0, high: 0, low: 0, close: 0, volume: 0 },
+          { date: '2024-01-03', open: 0, high: 0, low: 0, close: 0, volume: 0 },
+        ],
+        SPY: [
+          { date: '2024-01-01', open: 400, high: 410, low: 390, close: 405, volume: 500 },
+          { date: '2024-01-02', open: 405, high: 415, low: 400, close: 410, volume: 600 },
+          { date: '2024-01-03', open: 410, high: 420, low: 405, close: 415, volume: 700 },
+        ],
+      };
+
+      const result = await calculateCategoryValueHistory(
+        transactions,
+        priceHistoryWithMissingData,
+        'USD',
+        { startDate: '2024-01-01', endDate: '2024-01-03' }
+      );
+
+      expect(result).toHaveLength(3);
+      
+      // Day 1: Both assets have valid prices
+      expect(result[0].date).toBe('2024-01-01');
+      expect(result[0].categories.tech).toBe(1020); // AAPL: 10 * 102
+      expect(result[0].categories.etfs).toBe(2025); // SPY: 5 * 405
+      
+      // Day 2: AAPL uses most recent non-zero price, SPY uses current price
+      expect(result[1].date).toBe('2024-01-02');
+      expect(result[1].categories.tech).toBe(1020); // AAPL: still 10 * 102 (most recent non-zero)
+      expect(result[1].categories.etfs).toBe(2050); // SPY: 5 * 410
+      
+      // Day 3: AAPL still uses most recent non-zero price, SPY uses current price
+      expect(result[2].date).toBe('2024-01-03');
+      expect(result[2].categories.tech).toBe(1020); // AAPL: still 10 * 102 (most recent non-zero)
+      expect(result[2].categories.etfs).toBe(2075); // SPY: 5 * 415
+      
+      // Verify that the tech category remains stable (no drops to zero)
+      expect(result[0].categories.tech).toBe(result[1].categories.tech);
+      expect(result[1].categories.tech).toBe(result[2].categories.tech);
+    });
+
+    it('should handle assets with no price history', async () => {
+      const transactions: PortfolioTransaction[] = [
+        {
+          id: '1',
+          date: '2024-01-01',
+          type: 'Buy',
+          assetType: 'Stock',
+          symbol: 'AAPL',
+          quantity: 10,
+          price: 100,
+          currency: 'USD',
+          market: 'NASDAQ',
+        },
+        {
+          id: '2',
+          date: '2024-01-01',
+          type: 'Buy',
+          assetType: 'Stock',
+          symbol: 'NODATA',
+          quantity: 5,
+          price: 50,
+          currency: 'USD',
+          market: 'NASDAQ',
+        },
+      ];
+
+      const result = await calculateCategoryValueHistory(
+        transactions,
+        mockPriceHistory, // NODATA has no price history
+        'USD',
+        { startDate: '2024-01-01', endDate: '2024-01-02' }
+      );
+
+      expect(result).toHaveLength(2);
+      
+      // Only AAPL should be included, NODATA should be excluded due to no price history
+      expect(result[0].date).toBe('2024-01-01');
+      expect(result[0].categories.tech).toBe(1020); // Only AAPL value (10 * 102)
+      expect(result[0].categories.cash).toBe(-1250); // Reduced by both purchase amounts (1000 + 500)
+      expect(result[0].totalValue).toBe(-230); // 1020 - 1250
+      
+      expect(result[1].date).toBe('2024-01-02');
+      expect(result[1].categories.tech).toBe(1050); // Only AAPL value (10 * 105)
+      expect(result[1].categories.cash).toBe(-1250);
+      expect(result[1].totalValue).toBe(-200); // 1050 - 1250
+    });
+  });
 }); 

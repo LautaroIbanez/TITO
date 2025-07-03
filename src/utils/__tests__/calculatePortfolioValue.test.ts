@@ -1,11 +1,21 @@
 import { calculatePortfolioValueHistory, calculateCurrentValueByCurrency } from '../calculatePortfolioValue';
 import { PortfolioTransaction } from '@/types';
+import { PriceData } from '@/types/finance';
 import dayjs from 'dayjs';
 import * as currencyUtils from '../currency';
 
 jest.mock('../currency', () => ({
   ...jest.requireActual('../currency'),
-  getExchangeRate: jest.fn(() => Promise.resolve(1)),
+  getExchangeRate: jest.fn((from, to) => {
+    if (from === 'USD' && to === 'ARS') return Promise.resolve(1000);
+    if (from === 'ARS' && to === 'USD') return Promise.resolve(1/1000);
+    return Promise.resolve(1);
+  }),
+  convertCurrencySync: jest.fn((amount, from, to) => {
+    if (from === 'USD' && to === 'ARS') return amount * 1000;
+    if (from === 'ARS' && to === 'USD') return amount / 1000;
+    return amount;
+  }),
 }));
 
 describe('calculatePortfolioValueHistory', () => {
@@ -397,6 +407,133 @@ describe('calculatePortfolioValueHistory', () => {
     expect(dayOfSell!.valueARS).toBeCloseTo(expectedCashAfterSell + expectedStockValueAfterSell);
     expect(dayOfSell!.valueARSRaw).toBeCloseTo(expectedCashAfterSell + expectedStockValueAfterSell);
     expect(dayOfSell!.cashARS).toBeCloseTo(expectedCashAfterSell);
+  });
+
+  it('should ignore assets with zero prices in calculatePortfolioValueHistory', async () => {
+    const depositDate = dayjs('2024-01-01');
+    const buyDate = dayjs('2024-01-03');
+    
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '1',
+        date: depositDate.toISOString(),
+        type: 'Deposit',
+        amount: 100000,
+        currency: 'ARS',
+      },
+      {
+        id: '2',
+        date: buyDate.toISOString(),
+        type: 'Buy',
+        assetType: 'Stock',
+        symbol: 'AAPL',
+        quantity: 10,
+        price: 5000,
+        commissionPct: 1,
+        currency: 'ARS',
+        market: 'BCBA',
+      },
+      {
+        id: '3',
+        date: buyDate.toISOString(),
+        type: 'Buy',
+        assetType: 'Stock',
+        symbol: 'INVALID',
+        quantity: 5,
+        price: 1000,
+        commissionPct: 1,
+        currency: 'ARS',
+        market: 'BCBA',
+      },
+    ];
+
+    const priceHistory = {
+      'AAPL': [
+        { date: '2024-01-03', open: 5000, high: 5000, low: 5000, close: 5000, volume: 1000 },
+        { date: '2024-01-04', open: 5200, high: 5200, low: 5200, close: 5200, volume: 1000 },
+      ],
+      'INVALID': [
+        { date: '2024-01-03', open: 0, high: 0, low: 0, close: 0, volume: 0 },
+        { date: '2024-01-04', open: 0, high: 0, low: 0, close: 0, volume: 0 },
+        { date: '2024-01-05', open: 0, high: 0, low: 0, close: 0, volume: 0 },
+      ],
+    };
+
+    // Calculate history from 5 days before deposit to 5 days after buy
+    const startDate = depositDate.subtract(5, 'days');
+    const endDate = buyDate.add(5, 'days');
+    
+    const history = await calculatePortfolioValueHistory(transactions, priceHistory, { startDate: startDate.format('YYYY-MM-DD'), endDate: endDate.format('YYYY-MM-DD') });
+
+    // Day after buy - should only include AAPL value, INVALID should be ignored
+    const dayAfterBuy = history.find(h => h.date === buyDate.add(1, 'day').format('YYYY-MM-DD'));
+    expect(dayAfterBuy).toBeDefined();
+    
+    const buyAmount = 10 * 5000; // 50000 (AAPL)
+    const buyCommission = buyAmount * 0.01; // 500
+    const totalBuyCost = buyAmount + buyCommission; // 50500
+    const expectedCashAfterBuy = 100000 - totalBuyCost; // 49500
+    const expectedStockValue = 10 * 5200; // 52000 (AAPL only)
+    
+    expect(dayAfterBuy!.valueARS).toBeCloseTo(expectedCashAfterBuy + expectedStockValue);
+    expect(dayAfterBuy!.valueARSRaw).toBeCloseTo(expectedCashAfterBuy + expectedStockValue);
+    expect(dayAfterBuy!.cashARS).toBeCloseTo(expectedCashAfterBuy);
+  });
+
+  it('should use most recent non-zero price in calculatePortfolioValueHistory', async () => {
+    const depositDate = dayjs('2024-01-01');
+    const buyDate = dayjs('2024-01-03');
+    
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '1',
+        date: depositDate.toISOString(),
+        type: 'Deposit',
+        amount: 100000,
+        currency: 'ARS',
+      },
+      {
+        id: '2',
+        date: buyDate.toISOString(),
+        type: 'Buy',
+        assetType: 'Stock',
+        symbol: 'AAPL',
+        quantity: 10,
+        price: 5000,
+        commissionPct: 1,
+        currency: 'ARS',
+        market: 'BCBA',
+      },
+    ];
+
+    const priceHistory = {
+      'AAPL': [
+        { date: '2024-01-05', open: 0, high: 0, low: 0, close: 0, volume: 0 },
+        { date: '2024-01-04', open: 0, high: 0, low: 0, close: 0, volume: 0 },
+        { date: '2024-01-03', open: 5000, high: 5000, low: 5000, close: 5000, volume: 1000 },
+        { date: '2024-01-02', open: 4800, high: 4800, low: 4800, close: 4800, volume: 1000 },
+      ],
+    };
+
+    // Calculate history from 5 days before deposit to 5 days after buy
+    const startDate = depositDate.subtract(5, 'days');
+    const endDate = buyDate.add(5, 'days');
+    
+    const history = await calculatePortfolioValueHistory(transactions, priceHistory, { startDate: startDate.format('YYYY-MM-DD'), endDate: endDate.format('YYYY-MM-DD') });
+
+    // Day after buy - should use the most recent non-zero price (5000 from 2024-01-03)
+    const dayAfterBuy = history.find(h => h.date === buyDate.add(1, 'day').format('YYYY-MM-DD'));
+    expect(dayAfterBuy).toBeDefined();
+    
+    const buyAmount = 10 * 5000; // 50000
+    const buyCommission = buyAmount * 0.01; // 500
+    const totalBuyCost = buyAmount + buyCommission; // 50500
+    const expectedCashAfterBuy = 100000 - totalBuyCost; // 49500
+    const expectedStockValue = 10 * 5000; // 50000 (most recent non-zero price)
+    
+    expect(dayAfterBuy!.valueARS).toBeCloseTo(expectedCashAfterBuy + expectedStockValue);
+    expect(dayAfterBuy!.valueARSRaw).toBeCloseTo(expectedCashAfterBuy + expectedStockValue);
+    expect(dayAfterBuy!.cashARS).toBeCloseTo(expectedCashAfterBuy);
   });
 
   it('should handle USD transactions correctly', async () => {
@@ -1104,6 +1241,246 @@ describe('calculatePortfolioValueHistory', () => {
     expect(dayAfterAll!.cashARS).toBeCloseTo(expectedCashARS);
     expect(dayAfterAll!.cashUSD).toBeCloseTo(expectedCashUSD);
   });
+
+  it('should use bonds.json price as fallback for bonds with no price history', async () => {
+    const depositDate = dayjs('2024-01-01');
+    const buyDate = dayjs('2024-01-03');
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '1',
+        date: depositDate.toISOString(),
+        type: 'Deposit',
+        amount: 1000,
+        currency: 'USD',
+      },
+      {
+        id: '2',
+        date: buyDate.toISOString(),
+        type: 'Buy',
+        assetType: 'Bond',
+        ticker: 'GD30',
+        quantity: 10,
+        price: 55,
+        currency: 'USD',
+      },
+    ];
+    // No price history for GD30
+    const priceHistory = {};
+    const startDate = depositDate.subtract(1, 'day');
+    const endDate = buyDate.add(1, 'day');
+    const history = await calculatePortfolioValueHistory(transactions, priceHistory, { startDate: startDate.format('YYYY-MM-DD'), endDate: endDate.format('YYYY-MM-DD'), bondFallback: true });
+    // After buy, value should be 10 * 55 (from bonds.json)
+    const dayAfterBuy = history.find(h => h.date === buyDate.add(1, 'day').format('YYYY-MM-DD'));
+    expect(dayAfterBuy).toBeDefined();
+    expect(dayAfterBuy!.valueUSD).toBeCloseTo(10 * 55);
+  });
+
+  it('should use bonds.json price as fallback for ARS bonds with no price history', async () => {
+    const depositDate = dayjs('2024-01-01');
+    const buyDate = dayjs('2024-01-03');
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '1',
+        date: depositDate.toISOString(),
+        type: 'Deposit',
+        amount: 100000,
+        currency: 'ARS',
+      },
+      {
+        id: '2',
+        date: buyDate.toISOString(),
+        type: 'Buy',
+        assetType: 'Bond',
+        ticker: 'AL30',
+        quantity: 2,
+        price: 50000,
+        currency: 'ARS',
+      },
+    ];
+    // No price history for AL30
+    const priceHistory = {};
+    const startDate = depositDate.subtract(1, 'day');
+    const endDate = buyDate.add(1, 'day');
+    const history = await calculatePortfolioValueHistory(transactions, priceHistory, { startDate: startDate.format('YYYY-MM-DD'), endDate: endDate.format('YYYY-MM-DD'), bondFallback: true });
+    // After buy, value should be 2 * 50000 (from bonds.json)
+    const dayAfterBuy = history.find(h => h.date === buyDate.add(1, 'day').format('YYYY-MM-DD'));
+    expect(dayAfterBuy).toBeDefined();
+    expect(dayAfterBuy!.valueARS).toBeCloseTo(2 * 50000);
+  });
+
+  it('should not use bonds.json fallback if a valid price exists in price history', async () => {
+    const depositDate = dayjs('2024-01-01');
+    const buyDate = dayjs('2024-01-03');
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '1',
+        date: depositDate.toISOString(),
+        type: 'Deposit',
+        amount: 1000,
+        currency: 'USD',
+      },
+      {
+        id: '2',
+        date: buyDate.toISOString(),
+        type: 'Buy',
+        assetType: 'Bond',
+        ticker: 'GD30',
+        quantity: 10,
+        price: 60,
+        currency: 'USD',
+      },
+    ];
+    // Price history for GD30 with a valid price
+    const priceHistory = {
+      'GD30': [
+        { date: buyDate.format('YYYY-MM-DD'), open: 60, high: 60, low: 60, close: 60, volume: 1000 },
+      ],
+    };
+    const startDate = depositDate.subtract(1, 'day');
+    const endDate = buyDate.add(1, 'day');
+    const history = await calculatePortfolioValueHistory(transactions, priceHistory, { startDate: startDate.format('YYYY-MM-DD'), endDate: endDate.format('YYYY-MM-DD'), bondFallback: true });
+    // After buy, value should be 10 * 60 (from price history, not bonds.json)
+    const dayAfterBuy = history.find(h => h.date === buyDate.add(1, 'day').format('YYYY-MM-DD'));
+    expect(dayAfterBuy).toBeDefined();
+    expect(dayAfterBuy!.valueUSD).toBeCloseTo(10 * 60);
+  });
+
+  it('should convert USD bonds to ARS before adding to ARS total in calculatePortfolioValueHistory', async () => {
+    const buyDate = dayjs('2024-01-01');
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '1',
+        type: 'Buy',
+        date: buyDate.toISOString(),
+        symbol: 'GD30',
+        quantity: 100,
+        price: 50,
+        currency: 'USD',
+        commissionPct: 0,
+        purchaseFeePct: 0,
+        assetType: 'Bond',
+        ticker: 'GD30'
+      }
+    ];
+
+    const priceHistory: Record<string, PriceData[]> = {
+      'GD30': [
+        { date: '2024-01-01', open: 50, high: 52, low: 48, close: 51, volume: 1000 },
+        { date: '2024-01-02', open: 51, high: 54, low: 50, close: 53, volume: 1200 }
+      ]
+    };
+
+    const startDate = buyDate.subtract(1, 'day');
+    const endDate = buyDate.add(1, 'day');
+    const result = await calculatePortfolioValueHistory(transactions, priceHistory, { 
+      startDate: startDate.format('YYYY-MM-DD'), 
+      endDate: endDate.format('YYYY-MM-DD'),
+      bondFallback: true 
+    });
+    
+    // The USD bond value should be converted to ARS and added to ARS total
+    // 100 bonds * $53 = $5,300 USD (using price from 2024-01-02)
+    // With exchange rate of 1000 (default), this should be 5,300,000 ARS
+    // Cash spent: $5,000 USD = 5,000,000 ARS
+    // Net value: 5,300,000 - 5,000,000 = 300,000 ARS
+    const dayAfterBuy = result.find(h => h.date === buyDate.add(1, 'day').format('YYYY-MM-DD'));
+    expect(dayAfterBuy).toBeDefined();
+    expect(dayAfterBuy!.valueARSRaw).toBe(5300000); // Raw ARS value should be 5,300,000 ARS
+    expect(dayAfterBuy!.valueUSDRaw).toBe(-5000); // Raw USD value should be -5000 (cash spent)
+    expect(dayAfterBuy!.valueARS).toBe(300000); // Final ARS value should be 300,000 ARS (net after cash spent)
+    expect(dayAfterBuy!.valueUSD).toBe(300); // Final USD value should be 300 USD (net after cash spent)
+  });
+
+  it('should convert USD bonds to ARS before adding to ARS total in calculateCurrentValueByCurrency', () => {
+    const positions = [
+      {
+        type: 'Bond',
+        ticker: 'GD30',
+        quantity: 100,
+        averagePrice: 50,
+        currency: 'USD'
+      }
+    ];
+
+    const cash = { ARS: 1000, USD: 100 };
+    const priceHistory: Record<string, PriceData[]> = {
+      'GD30': [
+        { date: '2024-01-01', open: 50, high: 52, low: 48, close: 51, volume: 1000 }
+      ]
+    };
+
+    const result = calculateCurrentValueByCurrency(positions, cash, priceHistory);
+    
+    // The USD bond value should be converted to ARS and added to ARS total
+    // 100 bonds * $51 = $5,100 USD
+    // With exchange rate of 1000 (default), this should be 5,100,000 ARS
+    expect(result.ARS).toBe(1000 + 5100000); // Cash ARS + converted bond value
+    expect(result.USD).toBe(100); // Only cash USD, bond was converted to ARS
+  });
+
+  it('should keep USD stocks in USD total in calculateCurrentValueByCurrency', () => {
+    const positions = [
+      {
+        type: 'Stock',
+        symbol: 'AAPL',
+        quantity: 10,
+        averagePrice: 100,
+        currency: 'USD',
+        market: 'NASDAQ'
+      }
+    ];
+
+    const cash = { ARS: 1000, USD: 100 };
+    const priceHistory: Record<string, PriceData[]> = {
+      'AAPL': [
+        { date: '2024-01-01', open: 100, high: 105, low: 95, close: 102, volume: 1000 }
+      ]
+    };
+
+    const result = calculateCurrentValueByCurrency(positions, cash, priceHistory);
+    
+    // USD stocks should remain in USD total
+    expect(result.ARS).toBe(1000); // Only cash ARS
+    expect(result.USD).toBe(100 + 1020); // Cash USD + stock value (10 * 102)
+  });
+
+  it('should handle mixed ARS and USD bonds correctly in calculateCurrentValueByCurrency', () => {
+    const positions = [
+      {
+        type: 'Bond',
+        ticker: 'GD30',
+        quantity: 100,
+        averagePrice: 50,
+        currency: 'USD'
+      },
+      {
+        type: 'Bond',
+        ticker: 'GD30ARS',
+        quantity: 1000,
+        averagePrice: 50000,
+        currency: 'ARS'
+      }
+    ];
+
+    const cash = { ARS: 1000, USD: 100 };
+    const priceHistory: Record<string, PriceData[]> = {
+      'GD30': [
+        { date: '2024-01-01', open: 50, high: 52, low: 48, close: 51, volume: 1000 }
+      ],
+      'GD30ARS': [
+        { date: '2024-01-01', open: 50000, high: 52000, low: 48000, close: 51000, volume: 1000 }
+      ]
+    };
+
+    const result = calculateCurrentValueByCurrency(positions, cash, priceHistory);
+    
+    // USD bond should be converted to ARS, ARS bond should stay in ARS
+    const usdBondValueARS = 100 * 51 * 1000; // 5,100,000 ARS
+    const arsBondValue = 1000 * 51000; // 51,000,000 ARS
+    
+    expect(result.ARS).toBe(1000 + usdBondValueARS + arsBondValue); // Cash + USD bond converted + ARS bond
+    expect(result.USD).toBe(100); // Only cash USD
+  });
 });
 
 describe('calculateCurrentValueByCurrency', () => {
@@ -1304,5 +1681,88 @@ describe('calculateCurrentValueByCurrency', () => {
 
     // Restore original Date
     global.Date = originalDate;
+  });
+
+  it('should ignore assets with zero prices in calculateCurrentValueByCurrency', () => {
+    const positions = [
+      {
+        type: 'Stock',
+        symbol: 'AAPL',
+        quantity: 10,
+        averagePrice: 4000,
+        currency: 'ARS',
+        market: 'BCBA',
+      },
+      {
+        type: 'Stock',
+        symbol: 'INVALID',
+        quantity: 5,
+        averagePrice: 1000,
+        currency: 'ARS',
+        market: 'BCBA',
+      },
+      {
+        type: 'Crypto',
+        symbol: 'BTCUSDT',
+        quantity: 0.1,
+        averagePrice: 50000,
+        currency: 'USD',
+      },
+    ];
+
+    const cash = { ARS: 10000, USD: 5000 };
+    const priceHistory = {
+      'AAPL': [
+        { date: '2024-01-15', open: 4000, high: 4000, low: 4000, close: 4200, volume: 1000 },
+      ],
+      'INVALID': [
+        { date: '2024-01-15', open: 0, high: 0, low: 0, close: 0, volume: 0 },
+        { date: '2024-01-14', open: 0, high: 0, low: 0, close: 0, volume: 0 },
+        { date: '2024-01-13', open: 0, high: 0, low: 0, close: 0, volume: 0 },
+      ],
+      'BTCUSDT': [
+        { date: '2024-01-15', open: 50000, high: 50000, low: 50000, close: 52000, volume: 1000 },
+      ],
+    };
+
+    const result = calculateCurrentValueByCurrency(positions, cash, priceHistory);
+
+    // Only AAPL and BTCUSDT should be included (INVALID has all zero prices)
+    const stockValue = 10 * 4200; // 42000
+    const cryptoValue = 0.1 * 52000; // 5200
+
+    expect(result.ARS).toBe(10000 + stockValue);
+    expect(result.USD).toBe(5000 + cryptoValue);
+  });
+
+  it('should use most recent non-zero price when some prices are zero', () => {
+    const positions = [
+      {
+        type: 'Stock',
+        symbol: 'AAPL',
+        quantity: 10,
+        averagePrice: 4000,
+        currency: 'ARS',
+        market: 'BCBA',
+      },
+    ];
+
+    const cash = { ARS: 10000, USD: 5000 };
+    const priceHistory = {
+      'AAPL': [
+        { date: '2024-01-15', open: 0, high: 0, low: 0, close: 0, volume: 0 },
+        { date: '2024-01-14', open: 0, high: 0, low: 0, close: 0, volume: 0 },
+        { date: '2024-01-13', open: 4000, high: 4000, low: 4000, close: 4200, volume: 1000 },
+        { date: '2024-01-12', open: 4000, high: 4000, low: 4000, close: 4100, volume: 1000 },
+      ],
+    };
+
+    const result = calculateCurrentValueByCurrency(positions, cash, priceHistory);
+
+    // Should use the most recent non-zero price (4200 from 2024-01-13)
+    const stockValue = 10 * 4200; // 42000
+
+    expect(result.ARS).toBe(10000 + stockValue);
+    expect(result.USD).toBe(5000);
   });
 }); 

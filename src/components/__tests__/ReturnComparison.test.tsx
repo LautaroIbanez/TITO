@@ -57,8 +57,9 @@ describe('ReturnComparison', () => {
     };
 
     render(<ReturnComparison data={mockData} />);
-    
-    expect(screen.getByText('+0.00%')).toBeInTheDocument();
+    // Should display two zero returns (ARS and USD)
+    const zeroReturns = screen.getAllByText('+0.00%');
+    expect(zeroReturns.length).toBeGreaterThanOrEqual(2);
   });
 
   it('should display all benchmark labels correctly', () => {
@@ -95,5 +96,16 @@ describe('ReturnComparison', () => {
     render(<ReturnComparison data={mockData} />);
     
     expect(screen.getByText('El rendimiento pasado no garantiza resultados futuros.')).toBeInTheDocument();
+  });
+
+  it('should display IRR-based returns', () => {
+    const mockData = {
+      portfolioReturnARS: 12.34,
+      portfolioReturnUSD: 7.89,
+      ...DEFAULT_BENCHMARKS
+    };
+    render(<ReturnComparison data={mockData} />);
+    expect(screen.getByText('+12.34%')).toBeInTheDocument();
+    expect(screen.getByText('+7.89%')).toBeInTheDocument();
   });
 }); 
