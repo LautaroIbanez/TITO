@@ -97,8 +97,10 @@ export function filterDuplicates(positions: PortfolioPosition[]): PortfolioPosit
   // Collect all tickers that are part of duplicate groups
   for (const group of duplicates) {
     for (const pos of group.positions) {
-      const ticker = pos.type === 'Stock' ? pos.symbol : pos.ticker;
-      duplicateTickers.add(ticker);
+      if (pos.type === 'Stock' || pos.type === 'Bond') {
+        const ticker = pos.type === 'Stock' ? pos.symbol : pos.ticker;
+        duplicateTickers.add(ticker);
+      }
     }
   }
   

@@ -5,6 +5,7 @@ import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import { getExchangeRate, convertCurrencySync } from './currency';
 import { detectDuplicates, filterDuplicates } from './duplicateDetection';
+import { hasAssetType, isTradeTransaction, isCreationTransaction, getTransactionIdentifier } from './typeGuards';
 import fs from 'fs';
 import path from 'path';
 dayjs.extend(isSameOrBefore);
@@ -107,7 +108,7 @@ export async function calculatePortfolioValueHistory(
   // Build a set of bond tickers from transactions for this portfolio
   const bondTickers = new Set<string>();
   for (const tx of txs) {
-    if (tx.assetType === 'Bond' && 'ticker' in tx) {
+    if (hasAssetType(tx) && tx.assetType === 'Bond' && 'ticker' in tx) {
       bondTickers.add(tx.ticker);
     }
   }
@@ -115,15 +116,8 @@ export async function calculatePortfolioValueHistory(
   for (const tx of txs) {
     const txDate = dayjs(tx.date).startOf('day');
     if (txDate.isSameOrBefore(startDate)) {
-      if (tx.type === 'Buy' || tx.type === 'Sell') {
-        let identifier: string | null = null;
-        if (tx.assetType === 'Stock' && 'symbol' in tx) {
-          identifier = tx.symbol;
-        } else if (tx.assetType === 'Bond' && 'ticker' in tx) {
-          identifier = tx.ticker;
-        } else if (tx.assetType === 'Crypto' && 'symbol' in tx) {
-          identifier = tx.symbol;
-        }
+      if (isTradeTransaction(tx)) {
+        const identifier = getTransactionIdentifier(tx);
         
         if (identifier) {
           const key = `${identifier}_${tx.currency}`;
@@ -155,7 +149,7 @@ export async function calculatePortfolioValueHistory(
             }
           }
         }
-      } else if (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit') {
+      } else if (tx.type === 'Create' && 'assetType' in tx && tx.assetType === 'FixedTermDeposit') {
         activeDeposits.push(tx as ActiveFixedTermDeposit);
         // Reduce cash by the deposit amount
         if (tx.currency === 'ARS') {
@@ -163,7 +157,7 @@ export async function calculatePortfolioValueHistory(
         } else {
           cashUSD -= tx.amount;
         }
-      } else if (tx.type === 'Create' && tx.assetType === 'Caucion') {
+      } else if (tx.type === 'Create' && 'assetType' in tx && tx.assetType === 'Caucion') {
         activeCauciones.push(tx as ActiveCaucion);
         // Reduce cash by the caucion amount
         if (tx.currency === 'ARS') {
@@ -244,15 +238,8 @@ export async function calculatePortfolioValueHistory(
     const today = dayjs(dateStr).startOf('day');
     const dailyTxs = transactionsByDate.get(dateStr) || [];
     for (const tx of dailyTxs) {
-      if (tx.type === 'Buy' || tx.type === 'Sell') {
-        let identifier: string | null = null;
-        if (tx.assetType === 'Stock' && 'symbol' in tx) {
-          identifier = tx.symbol;
-        } else if (tx.assetType === 'Bond' && 'ticker' in tx) {
-          identifier = tx.ticker;
-        } else if (tx.assetType === 'Crypto' && 'symbol' in tx) {
-          identifier = tx.symbol;
-        }
+      if (isTradeTransaction(tx)) {
+        const identifier = getTransactionIdentifier(tx);
         
         if (identifier) {
           const key = `${identifier}_${tx.currency}`;
@@ -284,7 +271,7 @@ export async function calculatePortfolioValueHistory(
             }
           }
         }
-      } else if (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit') {
+      } else if (tx.type === 'Create' && 'assetType' in tx && tx.assetType === 'FixedTermDeposit') {
         activeDeposits.push(tx as ActiveFixedTermDeposit);
         // Reduce cash by the deposit amount
         if (tx.currency === 'ARS') {
@@ -292,7 +279,7 @@ export async function calculatePortfolioValueHistory(
         } else {
           cashUSD -= tx.amount;
         }
-      } else if (tx.type === 'Create' && tx.assetType === 'Caucion') {
+      } else if (tx.type === 'Create' && 'assetType' in tx && tx.assetType === 'Caucion') {
         activeCauciones.push(tx as ActiveCaucion);
         // Reduce cash by the caucion amount
         if (tx.currency === 'ARS') {
