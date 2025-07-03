@@ -1,6 +1,5 @@
 import { InvestorProfile, InvestmentGoal, InvestmentStrategy, StrategyRecommendation, RiskAppetite, PortfolioPosition } from '@/types';
 import dayjs from 'dayjs';
-import crypto from 'crypto';
 
 // Popular stock symbols for rotation suggestions
 const POPULAR_STOCKS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META', 'NFLX', 'JPM', 'JNJ'];
@@ -13,6 +12,15 @@ export interface StrategyInput {
   goals: InvestmentGoal[];
   positions: PortfolioPosition[];
   cash: { ARS: number; USD: number };
+}
+
+// Helper para generar IDs únicos
+function generateId() {
+  if (typeof globalThis !== 'undefined' && globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function') {
+    return globalThis.crypto.randomUUID();
+  }
+  // Fallback simple
+  return 'id-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now();
 }
 
 export function generateInvestmentStrategy(input: StrategyInput): InvestmentStrategy {
@@ -28,7 +36,7 @@ export function generateInvestmentStrategy(input: StrategyInput): InvestmentStra
   const timeHorizon = calculateTimeHorizon(goals);
   
   return {
-    id: `strategy-${crypto.randomUUID()}`,
+    id: `strategy-${generateId()}`,
     createdAt: new Date().toISOString(),
     targetAllocation,
     recommendations,
@@ -216,7 +224,7 @@ function generateRecommendations(
   // Asset allocation recommendations
   if (currentAllocation.stocks < targetAllocation.stocks - 5) {
     recommendations.push({
-      id: `alloc-${crypto.randomUUID()}`,
+      id: `alloc-${generateId()}`,
       action: 'increase',
       assetClass: 'stocks',
       reason: `Tu portafolio tiene ${currentAllocation.stocks.toFixed(1)}% en acciones, pero tu estrategia objetivo es ${targetAllocation.stocks}%`,
@@ -225,7 +233,7 @@ function generateRecommendations(
     });
   } else if (currentAllocation.stocks > targetAllocation.stocks + 5) {
     recommendations.push({
-      id: `alloc-${crypto.randomUUID()}`,
+      id: `alloc-${generateId()}`,
       action: 'decrease',
       assetClass: 'stocks',
       reason: `Tu portafolio tiene ${currentAllocation.stocks.toFixed(1)}% en acciones, pero tu estrategia objetivo es ${targetAllocation.stocks}%`,
@@ -236,7 +244,7 @@ function generateRecommendations(
   
   if (currentAllocation.bonds < targetAllocation.bonds - 5) {
     recommendations.push({
-      id: `alloc-${crypto.randomUUID()}`,
+      id: `alloc-${generateId()}`,
       action: 'increase',
       assetClass: 'bonds',
       reason: `Tu portafolio tiene ${currentAllocation.bonds.toFixed(1)}% en bonos, pero tu estrategia objetivo es ${targetAllocation.bonds}%. Considera alternativas como: ${BOND_ALTERNATIVES.join(', ')}`,
@@ -258,7 +266,7 @@ function generateRecommendations(
       const nonTechAlternatives = POPULAR_STOCKS.filter(s => !symbols.includes(s) && !['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META'].includes(s));
       if (nonTechAlternatives.length > 0) {
         recommendations.push({
-          id: `rotate-${crypto.randomUUID()}`,
+          id: `rotate-${generateId()}`,
           action: 'rotate',
           symbol: techStocks[0],
           targetSymbol: nonTechAlternatives[0],
@@ -272,7 +280,7 @@ function generateRecommendations(
     // Suggest rotation based on risk profile
     if (profile.riskAppetite === 'Conservador' && symbols.includes('TSLA')) {
       recommendations.push({
-        id: `rotate-${crypto.randomUUID()}`,
+        id: `rotate-${generateId()}`,
         action: 'rotate',
         symbol: 'TSLA',
         targetSymbol: 'JNJ',
@@ -286,7 +294,7 @@ function generateRecommendations(
   // Cash management recommendations
   if (totalCash > totalValue * 0.15) {
     recommendations.push({
-      id: `cash-invest-${crypto.randomUUID()}`,
+      id: `cash-invest-${generateId()}`,
       action: 'buy',
       reason: `Tienes un ${currentAllocation.cash.toFixed(1)}% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido`,
       priority: 'high',
@@ -294,7 +302,7 @@ function generateRecommendations(
     });
   } else if (totalCash < totalValue * 0.02) {
     recommendations.push({
-      id: `cash-reserve-${crypto.randomUUID()}`,
+      id: `cash-reserve-${generateId()}`,
       action: 'sell',
       reason: `Tienes menos de 2% de tu portafolio en efectivo. Considera vender algunas posiciones para tener una reserva de liquidez.`,
       priority: 'low',
@@ -307,7 +315,7 @@ function generateRecommendations(
     const shortTermGoals = goals.filter(g => dayjs(g.targetDate).diff(dayjs(), 'year') < 3);
     if (shortTermGoals.length > 0 && currentAllocation.stocks > 70) {
       recommendations.push({
-        id: `goal-${crypto.randomUUID()}`,
+        id: `goal-${generateId()}`,
         action: 'decrease',
         assetClass: 'stocks',
         reason: 'Tienes metas a corto plazo. Considera reducir la exposición a acciones',
@@ -321,7 +329,7 @@ function generateRecommendations(
   if (typeof targetAllocation.crypto === 'number') {
     if ((currentAllocation.crypto ?? 0) < targetAllocation.crypto - 1) {
       recommendations.push({
-        id: `alloc-${crypto.randomUUID()}`,
+        id: `alloc-${generateId()}`,
         action: 'increase',
         assetClass: 'crypto',
         reason: `Tu portafolio tiene ${(currentAllocation.crypto ?? 0).toFixed(1)}% en cripto, pero tu estrategia objetivo es ${targetAllocation.crypto}% (máximo recomendado por volatilidad).`,
@@ -330,7 +338,7 @@ function generateRecommendations(
       });
     } else if ((currentAllocation.crypto ?? 0) > targetAllocation.crypto + 1) {
       recommendations.push({
-        id: `alloc-${crypto.randomUUID()}`,
+        id: `alloc-${generateId()}`,
         action: 'decrease',
         assetClass: 'crypto',
         reason: `Tu portafolio tiene ${(currentAllocation.crypto ?? 0).toFixed(1)}% en cripto, superando el máximo recomendado de ${targetAllocation.crypto}%. Considera reducir exposición por volatilidad.`,
