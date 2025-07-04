@@ -1,13 +1,11 @@
 'use client';
 import { useEffect, useState } from 'react';
 import PortfolioCard from '@/components/PortfolioCard';
-import ReturnComparison from '@/components/ReturnComparison';
 import PortfolioTable from '@/components/PortfolioTable';
 import PortfolioPieChart from '@/components/PortfolioPieChart';
 import PortfolioCategoryChart from '@/components/PortfolioCategoryChart';
 import PortfolioTransactions from '@/components/PortfolioTransactions';
 import { calculateCategoryValueHistory } from '@/utils/categoryValueHistory';
-import { calculateInvestedCapital } from '@/utils/investedCapital';
 import { StockPosition, PortfolioTransaction, DepositTransaction } from '@/types';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import EditDepositModal from '@/components/EditDepositModal';
@@ -15,15 +13,12 @@ import { formatCurrency } from '@/utils/goalCalculator';
 import { trimCategoryValueHistory } from '@/utils/history';
 import { generateInvestmentStrategy } from '@/utils/strategyAdvisor';
 import { InvestmentGoal, InvestorProfile, PortfolioPosition } from '@/types';
-import { calculateIRR, calculateTWR, calculateAnnualizedReturn } from '@/utils/returnCalculator';
-import { filterPositionsWithValidPrices, getPositionDisplayName } from '@/utils/priceValidation';
 import { generatePortfolioHash } from '@/utils/priceDataHash';
 
 export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange?: () => void }) {
   const { portfolioData, loading, refreshPortfolio, portfolioVersion } = usePortfolio();
   const [categoryValueHistoryARS, setCategoryValueHistoryARS] = useState<any[]>([]);
   const [categoryValueHistoryUSD, setCategoryValueHistoryUSD] = useState<any[]>([]);
-  const [comparison, setComparison] = useState<any>(null);
   const [depositAmount, setDepositAmount] = useState('');
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
   const [depositCurrency, setDepositCurrency] = useState<'ARS' | 'USD'>('ARS');
@@ -32,7 +27,7 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
   const [depositSuccess, setDepositSuccess] = useState('');
   const [editingDeposit, setEditingDeposit] = useState<DepositTransaction | null>(null);
   const [depositActionError, setDepositActionError] = useState<string | null>(null);
-  const [excludedPositions, setExcludedPositions] = useState<Array<{ position: PortfolioPosition; reason: string }>>([]);
+  // (All code related to ReturnComparison, comparison, excludedPositions, and their logic has been removed)
 
   // Generate portfolio hash for dependency tracking
   const portfolioHash = generatePortfolioHash(
@@ -67,163 +62,7 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
     fetchCategoryValueHistory();
   }, [portfolioData?.transactions, portfolioData?.historicalPrices, portfolioVersion, portfolioHash]);
 
-  useEffect(() => {
-    async function calculateComparison() {
-      if (portfolioData?.transactions && portfolioData?.positions && portfolioData?.historicalPrices) {
-        try {
-          // Filter positions to only include those with valid current prices
-          const { validPositions, excludedPositions: excluded } = filterPositionsWithValidPrices(
-            portfolioData.positions,
-            portfolioData.historicalPrices
-          );
-          
-          setExcludedPositions(excluded);
-          
-          // Use category value history for daily values (excluding cash)
-          // Wait for categoryValueHistoryARS/USD to be populated
-          let valuesARS = categoryValueHistoryARS.map((entry: any) => ({ date: entry.date, value: entry.totalValue }));
-          let valuesUSD = categoryValueHistoryUSD.map((entry: any) => ({ date: entry.date, value: entry.totalValue }));
-
-          // Build cash flows for IRR: deposits, withdrawals, buys, sells, fixed-term deposits, etc. (excluding cash-only flows)
-          const cashFlowsARS: { date: string; amount: number }[] = [];
-          const cashFlowsUSD: { date: string; amount: number }[] = [];
-          
-          // Track total invested capital to ensure we capture all investments
-          let totalInvestedARS = 0;
-          let totalInvestedUSD = 0;
-          
-          for (const tx of portfolioData.transactions) {
-            if (tx.currency === 'ARS') {
-              if (tx.type === 'Deposit') {
-                cashFlowsARS.push({ date: tx.date, amount: -tx.amount });
-                totalInvestedARS += tx.amount;
-              }
-              if (tx.type === 'Withdrawal') {
-                cashFlowsARS.push({ date: tx.date, amount: tx.amount });
-                totalInvestedARS -= tx.amount;
-              }
-              if (tx.type === 'Buy') {
-                const totalCost = tx.price * tx.quantity * (1 + (tx.commissionPct || 0) / 100 + (tx.purchaseFeePct || 0) / 100);
-                cashFlowsARS.push({ date: tx.date, amount: -totalCost });
-                totalInvestedARS += totalCost;
-              }
-              if (tx.type === 'Sell') {
-                const totalProceeds = tx.price * tx.quantity * (1 - (tx.commissionPct || 0) / 100);
-                cashFlowsARS.push({ date: tx.date, amount: totalProceeds });
-                totalInvestedARS -= totalProceeds;
-              }
-              if (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit') {
-                cashFlowsARS.push({ date: tx.date, amount: -tx.amount });
-                totalInvestedARS += tx.amount;
-              }
-              if (tx.type === 'Create' && tx.assetType === 'Caucion') {
-                cashFlowsARS.push({ date: tx.date, amount: -tx.amount });
-                totalInvestedARS += tx.amount;
-              }
-              if (tx.type === 'Create' && tx.assetType === 'RealEstate') {
-                cashFlowsARS.push({ date: tx.date, amount: -tx.amount });
-                totalInvestedARS += tx.amount;
-              }
-            }
-            if (tx.currency === 'USD') {
-              if (tx.type === 'Deposit') {
-                cashFlowsUSD.push({ date: tx.date, amount: -tx.amount });
-                totalInvestedUSD += tx.amount;
-              }
-              if (tx.type === 'Withdrawal') {
-                cashFlowsUSD.push({ date: tx.date, amount: tx.amount });
-                totalInvestedUSD -= tx.amount;
-              }
-              if (tx.type === 'Buy') {
-                const totalCost = tx.price * tx.quantity * (1 + (tx.commissionPct || 0) / 100 + (tx.purchaseFeePct || 0) / 100);
-                cashFlowsUSD.push({ date: tx.date, amount: -totalCost });
-                totalInvestedUSD += totalCost;
-              }
-              if (tx.type === 'Sell') {
-                const totalProceeds = tx.price * tx.quantity * (1 - (tx.commissionPct || 0) / 100);
-                cashFlowsUSD.push({ date: tx.date, amount: totalProceeds });
-                totalInvestedUSD -= totalProceeds;
-              }
-              if (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit') {
-                cashFlowsUSD.push({ date: tx.date, amount: -tx.amount });
-                totalInvestedUSD += tx.amount;
-              }
-              if (tx.type === 'Create' && tx.assetType === 'Caucion') {
-                cashFlowsUSD.push({ date: tx.date, amount: -tx.amount });
-                totalInvestedUSD += tx.amount;
-              }
-              if (tx.type === 'Create' && tx.assetType === 'RealEstate') {
-                cashFlowsUSD.push({ date: tx.date, amount: -tx.amount });
-                totalInvestedUSD += tx.amount;
-              }
-            }
-          }
-          // Add the final portfolio value as a positive inflow (for IRR)
-          // Include cash in the final portfolio value
-          if (valuesARS.length > 0) {
-            const finalValueARS = valuesARS[valuesARS.length - 1].value + (portfolioData.cash?.ARS || 0);
-            cashFlowsARS.push({ date: valuesARS[valuesARS.length - 1].date, amount: finalValueARS });
-          }
-          if (valuesUSD.length > 0) {
-            const finalValueUSD = valuesUSD[valuesUSD.length - 1].value + (portfolioData.cash?.USD || 0);
-            cashFlowsUSD.push({ date: valuesUSD[valuesUSD.length - 1].date, amount: finalValueUSD });
-          }
-
-          // Calculate annualized returns using both methods for comparison
-          let irrARS = 0;
-          let irrUSD = 0;
-          
-          if (cashFlowsARS.length >= 2 && valuesARS.length > 0) {
-            // Use IRR for complex cash flow scenarios
-            irrARS = calculateIRR(cashFlowsARS);
-            
-            // Also calculate using simple annualized return formula as backup
-            const firstARS = valuesARS[0];
-            const lastARS = valuesARS[valuesARS.length - 1];
-            if (firstARS && lastARS && firstARS.value > 0) {
-              const simpleARS = calculateAnnualizedReturn(firstARS.value, lastARS.value, firstARS.date, lastARS.date);
-              // Use simple calculation if IRR fails or is unreasonable
-              if (Math.abs(irrARS) > 1000 || isNaN(irrARS)) {
-                irrARS = simpleARS;
-              }
-            }
-          }
-          
-          if (cashFlowsUSD.length >= 2 && valuesUSD.length > 0) {
-            // Use IRR for complex cash flow scenarios
-            irrUSD = calculateIRR(cashFlowsUSD);
-            
-            // Also calculate using simple annualized return formula as backup
-            const firstUSD = valuesUSD[0];
-            const lastUSD = valuesUSD[valuesUSD.length - 1];
-            if (firstUSD && lastUSD && firstUSD.value > 0) {
-              const simpleUSD = calculateAnnualizedReturn(firstUSD.value, lastUSD.value, firstUSD.date, lastUSD.date);
-              // Use simple calculation if IRR fails or is unreasonable
-              if (Math.abs(irrUSD) > 1000 || isNaN(irrUSD)) {
-                irrUSD = simpleUSD;
-              }
-            }
-          }
-
-          // Fetch benchmarks from API
-          const benchmarksResponse = await fetch('/api/benchmarks');
-          const benchmarks = await benchmarksResponse.json();
-
-          setComparison(
-            require('@/utils/returnCalculator').compareWithBenchmarksDual(
-              irrARS,
-              irrUSD,
-              benchmarks
-            )
-          );
-        } catch (error) {
-          console.error('Error calculating portfolio return:', error);
-          setComparison(require('@/utils/returnCalculator').compareWithBenchmarksDual(0, 0, {}));
-        }
-      }
-    }
-    calculateComparison();
-  }, [portfolioData, categoryValueHistoryARS, categoryValueHistoryUSD, portfolioVersion, portfolioHash]);
+  // Remove the entire calculateComparison function and its useEffect, as well as any remaining references to setComparison, calculateIRR, calculateAnnualizedReturn, and related variables.
 
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -387,34 +226,6 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
         {depositSuccess && <div className="text-green-600 text-sm">{depositSuccess}</div>}
       </div>
       
-      {/* Warning for excluded positions */}
-      {excludedPositions.length > 0 && (
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-orange-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-orange-800">
-                Activos sin datos suficientes
-              </h3>
-              <div className="mt-2 text-sm text-orange-700">
-                <p>Los siguientes activos fueron excluidos del cálculo de retorno por falta de datos de precio:</p>
-                <ul className="mt-2 list-disc list-inside">
-                  {excludedPositions.map((item, index) => (
-                    <li key={index} className="text-xs">
-                      <strong>{getPositionDisplayName(item.position)}</strong>: {item.reason}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      
       {/* Nueva grilla con sugerencias y gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Gráfico de torta */}
@@ -456,7 +267,6 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
       </div>
 
       <PortfolioTransactions transactions={portfolioData.transactions} />
-      {comparison && <ReturnComparison data={comparison} />}
       <PortfolioTable 
         positions={portfolioData.positions} 
         prices={portfolioData.historicalPrices} 
