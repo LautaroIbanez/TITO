@@ -15,7 +15,7 @@ const INSTRUMENTS = [
 
 const KNOWLEDGE_LEVELS: KnowledgeLevel[] = ['Bajo', 'Medio', 'Alto'];
 const HOLDING_PERIODS = ['Menos de 1 año', '1 a 5 años', 'Más de 5 años'];
-const AGE_GROUPS = ['Menos de 30', '30 a 40', '41 a 50', 'Más de 50'];
+const AGE_GROUPS = ['18-30', '31-40', '41-50', '51-65', '65+'];
 const RISK_APPETITES: RiskAppetite[] = ['Conservador', 'Balanceado', 'Agresivo'];
 
 export default function ProfilePage() {
@@ -31,6 +31,7 @@ export default function ProfilePage() {
     ageGroup: '',
     riskAppetite: 'Balanceado',
     investmentAmount: 0,
+    investmentSharePct: 0,
     initialBalanceARS: 0,
     initialBalanceUSD: 0,
   });
@@ -82,6 +83,12 @@ export default function ProfilePage() {
 
     if (formData.instrumentsUsed.length === 0) {
       setError('Por favor, selecciona al menos un instrumento de inversión.');
+      setIsLoading(false);
+      return;
+    }
+    
+    if (formData.investmentSharePct < 0 || formData.investmentSharePct > 100) {
+      setError('El porcentaje de capital para invertir debe estar entre 0 y 100.');
       setIsLoading(false);
       return;
     }
@@ -319,6 +326,29 @@ export default function ProfilePage() {
                       </div>
                     ))}
                   </div>
+                </div>
+
+                {/* Investment Share Percentage */}
+                <div className="space-y-2">
+                  <label htmlFor="investmentSharePct" className="text-sm font-medium text-gray-700">
+                    Porcentaje de Capital para Invertir (%)
+                  </label>
+                  <input
+                    type="number"
+                    id="investmentSharePct"
+                    min="0"
+                    max="100"
+                    value={formData.investmentSharePct || ''}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      investmentSharePct: Number(e.target.value) 
+                    }))}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
+                    placeholder="Ej: 80"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Indica qué porcentaje de tu capital total planeas usar para inversiones (0-100%)
+                  </p>
                 </div>
               </div>
             )}

@@ -22,7 +22,7 @@ export function getTradeSignal(
   }
 
   let score = 0;
-  const { rsi, macd, sma200, ema50, ema12, ema26, adx, pdi, mdi } = technicals;
+  const { rsi, macd, sma200, sma40, ema25, ema50, ema150, ema12, ema26, adx, pdi, mdi, koncorde } = technicals;
 
   // 1. RSI
   if (rsi != null) {
@@ -48,13 +48,21 @@ export function getTradeSignal(
   if (sma200 != null && currentPrice > sma200) score++; // Bullish trend
   if (sma200 != null && currentPrice < sma200) score--; // Bearish trend
   
+  if (sma40 != null && currentPrice > sma40) score++; // Bullish trend
+  if (sma40 != null && currentPrice < sma40) score--; // Bearish trend
+  
   if (ema50 != null && currentPrice > ema50) score++; // Bullish trend
   if (ema50 != null && currentPrice < ema50) score--; // Bearish trend
 
-  // 4. EMA Crossover
+  // 4. EMA Crossovers
   if (ema12 != null && ema26 != null) {
     if (ema12 > ema26) score++; // Golden cross
     if (ema12 < ema26) score--; // Death cross
+  }
+
+  if (ema25 != null && ema150 != null) {
+    if (ema25 > ema150) score++; // Long-term bullish
+    if (ema25 < ema150) score--; // Long-term bearish
   }
 
   // 5. ADX + PDI/MDI
@@ -63,9 +71,16 @@ export function getTradeSignal(
     if (mdi > pdi) score--; // Strong downtrend
   }
 
-  // Final decision based on score
-  if (score >= 2) return 'buy';
-  if (score <= -2) return 'sell';
+  // 6. KONCORDE Indicator
+  if (koncorde != null) {
+    if (koncorde.bullish && koncorde.strength > 50) score++; // Strong bullish signal
+    if (koncorde.bearish && koncorde.strength > 50) score--; // Strong bearish signal
+    if (koncorde.neutral) score += 0; // Neutral, no change
+  }
+
+  // Adjusted thresholds for more indicators
+  if (score >= 3) return 'buy';
+  if (score <= -3) return 'sell';
   return 'hold';
 }
 
@@ -91,6 +106,11 @@ export function getTechnicalColor(indicator: string, value: number, currentPrice
 
   if (name.includes('ADX')) {
     if (value > 25) return 'text-green-600'; // Tendencia fuerte
+  }
+
+  if (name.includes('KONCORDE')) {
+    // KONCORDE color logic would be handled separately since it's an object
+    return 'text-gray-600'; // Default neutral
   }
 
   return 'text-gray-600'; // Neutral

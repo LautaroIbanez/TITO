@@ -13,6 +13,7 @@ const navItems = [
   { label: "💎 Criptomonedas", href: "/dashboard/crypto" },
   { label: "⏳ Plazos Fijos", href: "/dashboard/deposits" },
   { label: "🏦 Cauciones", href: "/dashboard/cauciones" },
+  { label: "🏠 Bienes Raíces", href: "/dashboard/real-estate" },
   { label: "🧾 Impuestos", href: "/dashboard/taxes" },
   { label: "🎯 Metas", href: "/dashboard/goals" },
   { label: "👤 Mi Perfil", href: "/dashboard/user" },

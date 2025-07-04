@@ -20,6 +20,7 @@ import { RatioRow, StockBadges, formatDate } from './StockMetrics';
 import { formatCurrency } from '@/utils/goalCalculator';
 import { StockPosition, AssetType } from '@/types';
 import { getTickerCurrency } from '@/utils/tickers';
+import SectorComparison from './SectorComparison';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
@@ -210,18 +211,21 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
         <div>
           <h3 className="text-sm font-semibold text-gray-900 mb-2">Fundamentales</h3>
           {hasFundamentals ? (
-            <div className="grid grid-cols-2 gap-x-4 text-xs text-gray-700">
-              <RatioRow label="PE" value={fundamentals?.peRatio} metric="peRatio" />
-              <RatioRow label="PB" value={fundamentals?.pbRatio} metric="pbRatio" />
-              <RatioRow label="EV/EBITDA" value={fundamentals?.evToEbitda} metric="evToEbitda" />
-              <RatioRow label="P/FCF" value={fundamentals?.priceToFCF} metric="priceToFCF" />
-              <RatioRow label="ROE" value={fundamentals?.roe} metric="roe" />
-              <RatioRow label="ROA" value={fundamentals?.roa} metric="roa" />
-              <RatioRow label="Net Margin" value={fundamentals?.netMargin} metric="netMargin" />
-              <RatioRow label="D/EBITDA" value={fundamentals?.debtToEbitda} metric="debtToEbitda" />
-              <RatioRow label="D/E" value={fundamentals?.debtToEquity} metric="debtToEquity" />
-              <RatioRow label="FCF (M)" value={fundamentals?.freeCashFlow} metric="freeCashFlow" />
-            </div>
+            <>
+              <div className="grid grid-cols-2 gap-x-4 text-xs text-gray-700">
+                <RatioRow label="PE" value={fundamentals?.peRatio} metric="peRatio" />
+                <RatioRow label="PB" value={fundamentals?.pbRatio} metric="pbRatio" />
+                <RatioRow label="EV/EBITDA" value={fundamentals?.evToEbitda} metric="evToEbitda" />
+                <RatioRow label="P/FCF" value={fundamentals?.priceToFCF} metric="priceToFCF" />
+                <RatioRow label="ROE" value={fundamentals?.roe} metric="roe" />
+                <RatioRow label="ROA" value={fundamentals?.roa} metric="roa" />
+                <RatioRow label="Net Margin" value={fundamentals?.netMargin} metric="netMargin" />
+                <RatioRow label="D/EBITDA" value={fundamentals?.debtToEbitda} metric="debtToEbitda" />
+                <RatioRow label="D/E" value={fundamentals?.debtToEquity} metric="debtToEquity" />
+                <RatioRow label="FCF (M)" value={fundamentals?.freeCashFlow} metric="freeCashFlow" />
+              </div>
+              <SectorComparison symbol={symbol} fundamentals={fundamentals || null} />
+            </>
           ) : (
             <span className="text-gray-500 text-sm">Datos no disponibles</span>
           )}

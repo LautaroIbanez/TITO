@@ -80,12 +80,22 @@ export interface Technicals {
   rsi: number | null;
   macd: number | null;
   sma200: number | null;
+  sma40: number | null;
   ema12: number | null;
+  ema25: number | null;
   ema26: number | null;
   ema50: number | null;
+  ema150: number | null;
   adx: number | null;
   pdi: number | null;
   mdi: number | null;
+  // KONCORDE indicators (placeholder for manual configuration)
+  koncorde: {
+    bullish: boolean;
+    bearish: boolean;
+    neutral: boolean;
+    strength: number; // 0-100
+  } | null;
   updatedAt: string;
 }
 

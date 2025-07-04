@@ -10,6 +10,27 @@ import {
   ADX,
 } from 'technicalindicators';
 
+// KONCORDE indicator calculation (placeholder for manual configuration)
+function calculateKoncordeIndicator(prices: number[], currentPrice: number) {
+  if (prices.length < 20) return null;
+  
+  // Simple placeholder implementation - can be replaced with actual KONCORDE logic
+  const recentPrices = prices.slice(-20);
+  const avgPrice = recentPrices.reduce((sum, price) => sum + price, 0) / recentPrices.length;
+  const volatility = Math.sqrt(recentPrices.reduce((sum, price) => sum + Math.pow(price - avgPrice, 2), 0) / recentPrices.length);
+  
+  // Determine trend based on price vs average and volatility
+  const priceVsAvg = currentPrice / avgPrice;
+  const strength = Math.min(100, Math.abs(priceVsAvg - 1) * 100);
+  
+  return {
+    bullish: priceVsAvg > 1.02,
+    bearish: priceVsAvg < 0.98,
+    neutral: priceVsAvg >= 0.98 && priceVsAvg <= 1.02,
+    strength: Math.round(strength)
+  };
+}
+
 // Helper: Read JSON file safely
 async function readJsonSafe<T = unknown>(filePath: string): Promise<T | null> {
   try {
@@ -185,10 +206,13 @@ export async function getCryptoTechnicals(symbol: string, interval: '1d' | '1wk'
     });
     // SMA
     const sma200Result = SMA.calculate({ values: closePrices, period: 200 });
+    const sma40Result = SMA.calculate({ values: closePrices, period: 40 });
     // EMA
     const ema12Result = EMA.calculate({ values: closePrices, period: 12 });
+    const ema25Result = EMA.calculate({ values: closePrices, period: 25 });
     const ema26Result = EMA.calculate({ values: closePrices, period: 26 });
     const ema50Result = EMA.calculate({ values: closePrices, period: 50 });
+    const ema150Result = EMA.calculate({ values: closePrices, period: 150 });
     // DMI / ADX
     const adxResult = ADX.calculate({
       close: closePrices,
@@ -199,16 +223,24 @@ export async function getCryptoTechnicals(symbol: string, interval: '1d' | '1wk'
 
     const lastAdx = adxResult[adxResult.length - 1];
 
+    // KONCORDE indicator (placeholder for manual configuration)
+    const currentPrice = closePrices[closePrices.length - 1];
+    const koncordeIndicator = calculateKoncordeIndicator(closePrices, currentPrice);
+
     technicals = {
       rsi: rsiResult[rsiResult.length - 1] || null,
       macd: macdResult[macdResult.length - 1]?.MACD || null,
       sma200: sma200Result[sma200Result.length - 1] || null,
+      sma40: sma40Result[sma40Result.length - 1] || null,
       ema12: ema12Result[ema12Result.length - 1] || null,
+      ema25: ema25Result[ema25Result.length - 1] || null,
       ema26: ema26Result[ema26Result.length - 1] || null,
       ema50: ema50Result[ema50Result.length - 1] || null,
+      ema150: ema150Result[ema150Result.length - 1] || null,
       adx: lastAdx?.adx || null,
       pdi: lastAdx?.pdi || null,
       mdi: lastAdx?.mdi || null,
+      koncorde: koncordeIndicator,
       updatedAt: dayjs().toISOString(),
     };
 

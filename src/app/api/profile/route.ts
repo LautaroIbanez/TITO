@@ -50,9 +50,23 @@ export async function POST(request: Request) {
       );
     }
 
+    if (profile.investmentSharePct < 0 || profile.investmentSharePct > 100) {
+      return NextResponse.json(
+        { error: 'Investment share percentage must be between 0 and 100' },
+        { status: 400 }
+      );
+    }
+
     try {
       // Read existing user data
-      const userData: UserData = await getUserData(username);
+      const userData = await getUserData(username);
+      
+      if (!userData) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
 
       // Update user data with profile and initial cash balances
       const updatedUserData: UserData = {

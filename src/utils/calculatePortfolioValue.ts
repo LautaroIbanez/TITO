@@ -482,6 +482,8 @@ export async function calculatePortfolioValueHistory(
       }
     }
     
+
+    
     // Store raw values before conversion
     const valueARSRaw = dailyValueARS;
     const valueUSDRaw = dailyValueUSD;
@@ -646,6 +648,24 @@ export function calculateCurrentValueByCurrency(
         interest = pos.amount * dailyRate * days;
       }
       value += interest;
+      if (pos.currency === 'ARS') {
+        valueARS += value;
+      } else if (pos.currency === 'USD') {
+        valueUSD += value;
+      }
+    } else if (pos.type === 'RealEstate') {
+      // Real estate value is the amount plus any appreciation based on annual rate
+      // For simplicity, we'll use the amount as the base value
+      // In a real implementation, you might want to track purchase date and calculate appreciation
+      let value = pos.amount;
+      
+      // Optional: Calculate appreciation if you have purchase date
+      // const purchaseDate = new Date(pos.purchaseDate);
+      // const daysSincePurchase = Math.round((today.getTime() - purchaseDate.getTime()) / (1000 * 60 * 60 * 24));
+      // const dailyRate = pos.annualRate / 100 / 365;
+      // const appreciation = pos.amount * dailyRate * daysSincePurchase;
+      // value += appreciation;
+      
       if (pos.currency === 'ARS') {
         valueARS += value;
       } else if (pos.currency === 'USD') {

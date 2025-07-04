@@ -13,6 +13,7 @@ export interface InvestorProfile {
   ageGroup: string;
   riskAppetite: RiskAppetite;
   investmentAmount: number;
+  investmentSharePct: number;
 }
 
 export interface InvestmentGoal {
@@ -26,7 +27,7 @@ export interface InvestmentGoal {
 }
 
 // -- Portfolio Positions --
-export type AssetType = 'Stock' | 'Bond' | 'FixedTermDeposit' | 'Caucion' | 'Crypto';
+export type AssetType = 'Stock' | 'Bond' | 'FixedTermDeposit' | 'Caucion' | 'Crypto' | 'RealEstate';
 
 export interface StockPosition {
   type: 'Stock';
@@ -76,7 +77,16 @@ export interface CryptoPosition {
   currency: 'USD';
 }
 
-export type PortfolioPosition = StockPosition | BondPosition | FixedTermDepositPosition | CaucionPosition | CryptoPosition;
+export interface RealEstatePosition {
+  type: 'RealEstate';
+  id: string;
+  name: string;
+  amount: number;
+  annualRate: number;
+  currency: 'ARS' | 'USD';
+}
+
+export type PortfolioPosition = StockPosition | BondPosition | FixedTermDepositPosition | CaucionPosition | CryptoPosition | RealEstatePosition;
 
 // -- Portfolio Transactions --
 export interface StockTradeTransaction {
@@ -166,7 +176,18 @@ export interface CryptoTradeTransaction {
   convertedAmount?: number;
 }
 
-export type PortfolioTransaction = StockTradeTransaction | BondTradeTransaction | DepositTransaction | FixedTermDepositCreationTransaction | CaucionCreationTransaction | WithdrawalTransaction | CryptoTradeTransaction;
+export interface RealEstateTransaction {
+  id: string;
+  date: string; // ISO string
+  type: 'Create' | 'Update' | 'Delete';
+  assetType: AssetType;
+  name: string;
+  amount: number;
+  annualRate: number;
+  currency: 'ARS' | 'USD';
+}
+
+export type PortfolioTransaction = StockTradeTransaction | BondTradeTransaction | DepositTransaction | FixedTermDepositCreationTransaction | CaucionCreationTransaction | WithdrawalTransaction | CryptoTradeTransaction | RealEstateTransaction;
 
 // -- Investment Strategy --
 export type StrategyAction = 'buy' | 'sell' | 'hold' | 'rotate' | 'increase' | 'decrease';

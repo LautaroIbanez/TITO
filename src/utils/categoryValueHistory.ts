@@ -70,6 +70,7 @@ function getAssetCategory(symbol: string, assetType: string): string {
   if (assetType === 'Caucion') return 'cauciones';
   if (assetType === 'Crypto') return 'crypto';
   if (assetType === 'Bond') return 'bonds';
+  if (assetType === 'RealEstate') return 'realEstate';
   
   // Default category for unknown stocks
   if (assetType === 'Stock') return 'other_stocks';
@@ -551,6 +552,13 @@ export async function calculateCategoryValueHistory(
       }
       
       categoryValues.cauciones = (categoryValues.cauciones || 0) + valueInTargetCurrency;
+    }
+    
+    // Real Estate positions (from current positions, not transactions)
+    // Note: This would need to be passed as a parameter or calculated differently
+    // For now, we'll add a placeholder for real estate category
+    if (!categoryValues.realEstate) {
+      categoryValues.realEstate = 0;
     }
     
     // Calculate total value
