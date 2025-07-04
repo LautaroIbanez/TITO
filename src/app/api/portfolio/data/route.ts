@@ -27,14 +27,35 @@ export async function GET(req: NextRequest) {
     const fundamentals: Record<string, any> = {};
     const technicals: Record<string, any> = {};
 
+    // Build a map of base tickers to avoid duplicate fundamentals calls
+    const baseTickerMap = new Map<string, string[]>();
+    stockSymbols.forEach(symbol => {
+      const baseTicker = getBaseTicker(symbol);
+      if (!baseTickerMap.has(baseTicker)) {
+        baseTickerMap.set(baseTicker, []);
+      }
+      baseTickerMap.get(baseTicker)!.push(symbol);
+    });
+
+    // Load fundamentals once per base ticker
+    const fundamentalsCache = new Map<string, any>();
+    await Promise.all(
+      Array.from(baseTickerMap.keys()).map(async (baseTicker) => {
+        const fund = await getFundamentals(baseTicker);
+        fundamentalsCache.set(baseTicker, fund);
+      })
+    );
+
+    // Load all data with optimized fundamentals
     await Promise.all(stockSymbols.map(async (symbol: string) => {
-      const [prices, fund, tech] = await Promise.all([
+      const baseTicker = getBaseTicker(symbol);
+      const [prices, tech] = await Promise.all([
         getHistoricalPrices(symbol),
-        getFundamentals(getBaseTicker(symbol)),
         getTechnicals(symbol)
       ]);
+      
       historicalPrices[symbol] = prices;
-      fundamentals[symbol] = fund;
+      fundamentals[symbol] = fundamentalsCache.get(baseTicker);
       technicals[symbol] = tech;
     }));
 

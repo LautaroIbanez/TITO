@@ -51,13 +51,31 @@ export async function getPortfolioData(username: string) {
     .filter((pos): pos is CryptoPosition => pos.type === 'Crypto')
     .map((pos) => pos.symbol);
 
+  // Build a map of base tickers to avoid duplicate fundamentals reads
+  const baseTickerMap = new Map<string, string[]>();
+  stockSymbols.forEach(symbol => {
+    const baseTicker = getBaseTicker(symbol);
+    if (!baseTickerMap.has(baseTicker)) {
+      baseTickerMap.set(baseTicker, []);
+    }
+    baseTickerMap.get(baseTicker)!.push(symbol);
+  });
+
+  // Load fundamentals once per base ticker
+  const fundamentalsCache = new Map<string, Fundamentals | null>();
+  await Promise.all(
+    Array.from(baseTickerMap.keys()).map(async (baseTicker) => {
+      const fund = await readJsonSafe<Fundamentals>(path.join(process.cwd(), 'data', 'fundamentals', `${baseTicker}.json`));
+      fundamentalsCache.set(baseTicker, fund);
+    })
+  );
+
   await Promise.all([
-    // Load stock data
+    // Load stock data with optimized fundamentals
     ...stockSymbols.map(async (symbol) => {
+      const baseTicker = getBaseTicker(symbol);
       historicalPrices[symbol] = await readJsonSafe<PriceData[]>(path.join(process.cwd(), 'data', 'stocks', `${symbol}.json`)) || [];
-      // Use base ticker for fundamentals to avoid duplication
-      const baseSymbol = getBaseTicker(symbol);
-      fundamentals[symbol] = await readJsonSafe<Fundamentals>(path.join(process.cwd(), 'data', 'fundamentals', `${baseSymbol}.json`)) || null;
+      fundamentals[symbol] = fundamentalsCache.get(baseTicker) || null;
       technicals[symbol] = await readJsonSafe<Technicals>(path.join(process.cwd(), 'data', 'technicals', `${symbol}.json`)) || null;
     }),
     // Load crypto data

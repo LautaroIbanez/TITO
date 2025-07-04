@@ -164,14 +164,33 @@ export default function ScoopPage() {
     });
 
     // Fetch data separately for each set using the existing enrichment logic
+    // Maintain a cache map keyed by base ticker
+    const baseTickerCache = new Map<string, { fundamentals: any, technicals: any, prices: any }>();
+    const { getBaseTicker } = await import('@/utils/tickers');
+
     const enrichStocks = async (tickers: string[]) => {
       return await Promise.all(
         tickers.map(async (symbol: string) => {
+          const baseTicker = getBaseTicker(symbol);
+          if (baseTickerCache.has(baseTicker)) {
+            const cached = baseTickerCache.get(baseTicker)!;
+            return {
+              symbol,
+              companyName: cached.fundamentals?.longName || symbol,
+              prices: cached.prices,
+              fundamentals: cached.fundamentals,
+              technicals: cached.technicals,
+              isTrending: trendingSymbols.includes(symbol),
+              currency: getTickerCurrency(symbol),
+              market: getTickerMarket(symbol)
+            };
+          }
           const [fundamentals, technicals, prices] = await Promise.all([
             fetch(`/api/stocks/${symbol}?type=fundamentals`).then(res => res.ok ? res.json() : null),
             fetch(`/api/stocks/${symbol}?type=technicals`).then(res => res.ok ? res.json() : null),
             fetch(`/api/stocks/${symbol}?type=prices`).then(res => res.ok ? res.json() : [])
           ]);
+          baseTickerCache.set(baseTicker, { fundamentals, technicals, prices });
           return {
             symbol,
             companyName: fundamentals?.longName || symbol,
