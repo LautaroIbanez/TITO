@@ -149,9 +149,8 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
-        <td className="px-4 py-2 text-center">
-          <button onClick={() => openSellModal(pos)} className="text-red-600 hover:text-red-800 text-xs font-semibold">Vender</button>
-        </td>
+        <td className="px-4 py-2 text-right text-gray-700">-</td>
+        <td className="px-4 py-2 text-center">-</td>
       </tr>
     );
   };

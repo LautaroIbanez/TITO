@@ -453,4 +453,84 @@ describe('PortfolioTransactions', () => {
 
     expect(screen.getByText('Update failed')).toBeInTheDocument();
   });
+
+  it('should render fixed-term deposit credit transaction correctly', () => {
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: 'ftd-credit-1',
+        date: '2024-01-10T00:00:00.000Z',
+        type: 'Acreditación Plazo Fijo',
+        assetType: 'FixedTermDeposit',
+        provider: 'Banco X',
+        amount: 1100,
+        principal: 1000,
+        interest: 100,
+        currency: 'ARS',
+        depositId: 'ftd-1',
+      }
+    ];
+    renderWithProvider(transactions);
+    expect(screen.getByText('Acreditación Plazo Fijo')).toBeInTheDocument();
+    expect(screen.getByText('Banco X')).toBeInTheDocument();
+    expect(screen.getByText('$1.100,00')).toBeInTheDocument();
+  });
+
+  it('should render caucion credit transaction correctly', () => {
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: 'caucion-credit-1',
+        date: '2024-01-12T00:00:00.000Z',
+        type: 'Acreditación Caución',
+        assetType: 'Caucion',
+        provider: 'Broker Y',
+        amount: 2100,
+        principal: 2000,
+        interest: 100,
+        currency: 'ARS',
+        caucionId: 'caucion-1',
+      }
+    ];
+    renderWithProvider(transactions);
+    expect(screen.getByText('Acreditación Caución')).toBeInTheDocument();
+    expect(screen.getByText('Broker Y')).toBeInTheDocument();
+    expect(screen.getByText('$2.100,00')).toBeInTheDocument();
+  });
+
+  it('should render bond coupon transaction correctly', () => {
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: 'bond-coupon-AA23-2024-01-15',
+        date: '2024-01-15T00:00:00.000Z',
+        type: 'Pago de Cupón Bono',
+        assetType: 'Bond',
+        ticker: 'AA23',
+        amount: 500,
+        currency: 'ARS',
+        couponNumber: 3,
+      }
+    ];
+    renderWithProvider(transactions);
+    expect(screen.getByText('Pago de Cupón Bono')).toBeInTheDocument();
+    expect(screen.getByText('AA23')).toBeInTheDocument();
+    expect(screen.getByText('$500,00')).toBeInTheDocument();
+  });
+
+  it('should render bond amortization transaction correctly', () => {
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: 'bond-amort-AA23-2024-01-20',
+        date: '2024-01-20T00:00:00.000Z',
+        type: 'Amortización Bono',
+        assetType: 'Bond',
+        ticker: 'AA23',
+        amount: 1000,
+        currency: 'ARS',
+        amortizationNumber: 1,
+      }
+    ];
+    renderWithProvider(transactions);
+    expect(screen.getByText('Amortización Bono')).toBeInTheDocument();
+    expect(screen.getByText('AA23')).toBeInTheDocument();
+    expect(screen.getByText('$1.000,00')).toBeInTheDocument();
+  });
 }); 

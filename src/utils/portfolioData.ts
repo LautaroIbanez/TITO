@@ -1,8 +1,9 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { UserData, StockPosition, CryptoPosition } from '@/types';
+import { UserData, StockPosition, CryptoPosition, FixedTermDepositPosition, CaucionPosition, FixedTermDepositCreditTransaction, CaucionCreditTransaction, BondCouponTransaction, BondAmortizationTransaction } from '@/types';
 import { Fundamentals, Technicals, PriceData } from '@/types/finance';
 import { getBaseTicker, ensureBaSuffix } from './tickers';
+import dayjs from 'dayjs';
 
 async function readJsonSafe<T = unknown>(filePath: string): Promise<T | null> {
   try {
@@ -11,6 +12,110 @@ async function readJsonSafe<T = unknown>(filePath: string): Promise<T | null> {
   } catch {
     return null;
   }
+}
+
+async function applyMaturityCredits(user: UserData) {
+  let changed = false;
+  const now = dayjs();
+  // Fixed-term deposits
+  for (const pos of user.positions) {
+    if (pos.type === 'FixedTermDeposit') {
+      const matured = dayjs(pos.maturityDate).isBefore(now);
+      const alreadyCredited = user.transactions.some(
+        t => t.type === 'Acreditación Plazo Fijo' && (t as FixedTermDepositCreditTransaction).depositId === pos.id
+      );
+      if (matured && !alreadyCredited) {
+        const principal = pos.amount;
+        const interest = principal * (pos.annualRate / 100) * (dayjs(pos.maturityDate).diff(dayjs(pos.startDate), 'day') / 365);
+        const payout = principal + interest;
+        const tx: FixedTermDepositCreditTransaction = {
+          id: `ftd-credit-${pos.id}`,
+          date: pos.maturityDate,
+          type: 'Acreditación Plazo Fijo',
+          assetType: 'FixedTermDeposit',
+          provider: pos.provider,
+          amount: payout,
+          principal,
+          interest,
+          currency: pos.currency,
+          depositId: pos.id,
+        };
+        user.transactions.push(tx);
+        user.cash[pos.currency as 'ARS' | 'USD'] += payout;
+        changed = true;
+      }
+    }
+    if (pos.type === 'Caucion') {
+      const matured = dayjs(pos.maturityDate).isBefore(now);
+      const alreadyCredited = user.transactions.some(
+        t => t.type === 'Acreditación Caución' && (t as CaucionCreditTransaction).caucionId === pos.id
+      );
+      if (matured && !alreadyCredited) {
+        const principal = pos.amount;
+        const interest = principal * (pos.annualRate / 100) * (pos.term / 365);
+        const payout = principal + interest;
+        const tx: CaucionCreditTransaction = {
+          id: `caucion-credit-${pos.id}`,
+          date: pos.maturityDate,
+          type: 'Acreditación Caución',
+          assetType: 'Caucion',
+          provider: pos.provider,
+          amount: payout,
+          principal,
+          interest,
+          currency: pos.currency,
+          caucionId: pos.id,
+        };
+        user.transactions.push(tx);
+        user.cash[pos.currency as 'ARS' | 'USD'] += payout;
+        changed = true;
+      }
+    }
+  }
+  // Bond coupon/amortization events
+  const bondPaymentsPath = path.join(process.cwd(), 'data', 'bondPayments.json');
+  let bondPayments = [];
+  try {
+    bondPayments = JSON.parse(await fs.readFile(bondPaymentsPath, 'utf-8'));
+  } catch {}
+  for (const payment of bondPayments) {
+    const { ticker, date, type, amount, currency, number } = payment;
+    const alreadyCredited = user.transactions.some(
+      t => t.type === type && (t as BondCouponTransaction | BondAmortizationTransaction).ticker === ticker && t.date === date
+    );
+    if (!alreadyCredited) {
+      if (type === 'Pago de Cupón Bono') {
+        const tx: BondCouponTransaction = {
+          id: `bond-coupon-${ticker}-${date}`,
+          date,
+          type,
+          assetType: 'Bond',
+          ticker,
+          amount,
+          currency,
+          couponNumber: number,
+        };
+        user.transactions.push(tx);
+        user.cash[currency as 'ARS' | 'USD'] += amount;
+        changed = true;
+      } else if (type === 'Amortización Bono') {
+        const tx: BondAmortizationTransaction = {
+          id: `bond-amort-${ticker}-${date}`,
+          date,
+          type,
+          assetType: 'Bond',
+          ticker,
+          amount,
+          currency,
+          amortizationNumber: number,
+        };
+        user.transactions.push(tx);
+        user.cash[currency as 'ARS' | 'USD'] += amount;
+        changed = true;
+      }
+    }
+  }
+  return changed;
 }
 
 export async function getPortfolioData(username: string) {
@@ -89,6 +194,11 @@ export async function getPortfolioData(username: string) {
       technicals[symbol] = await readJsonSafe<Technicals>(path.join(process.cwd(), 'data', 'crypto-technicals', `${symbol}.json`)) || null;
     })
   ]);
+
+  const changed = await applyMaturityCredits(user);
+  if (changed) {
+    await saveUserData(username, user);
+  }
 
   return {
     positions: user.positions,

@@ -187,7 +187,67 @@ export interface RealEstateTransaction {
   currency: 'ARS' | 'USD';
 }
 
-export type PortfolioTransaction = StockTradeTransaction | BondTradeTransaction | DepositTransaction | FixedTermDepositCreationTransaction | CaucionCreationTransaction | WithdrawalTransaction | CryptoTradeTransaction | RealEstateTransaction;
+export interface FixedTermDepositCreditTransaction {
+  id: string;
+  date: string; // ISO string
+  type: 'Acreditación Plazo Fijo';
+  assetType: 'FixedTermDeposit';
+  provider: string;
+  amount: number; // payout (principal + interest)
+  principal: number;
+  interest: number;
+  currency: 'ARS' | 'USD';
+  depositId: string;
+}
+
+export interface CaucionCreditTransaction {
+  id: string;
+  date: string; // ISO string
+  type: 'Acreditación Caución';
+  assetType: 'Caucion';
+  provider: string;
+  amount: number; // payout (principal + interest)
+  principal: number;
+  interest: number;
+  currency: 'ARS' | 'USD';
+  caucionId: string;
+}
+
+export interface BondCouponTransaction {
+  id: string;
+  date: string; // ISO string
+  type: 'Pago de Cupón Bono';
+  assetType: 'Bond';
+  ticker: string;
+  amount: number;
+  currency: 'ARS' | 'USD';
+  couponNumber?: number;
+}
+
+export interface BondAmortizationTransaction {
+  id: string;
+  date: string; // ISO string
+  type: 'Amortización Bono';
+  assetType: 'Bond';
+  ticker: string;
+  amount: number;
+  currency: 'ARS' | 'USD';
+  amortizationNumber?: number;
+}
+
+export type PortfolioTransaction =
+  | StockTradeTransaction
+  | BondTradeTransaction
+  | DepositTransaction
+  | FixedTermDepositCreationTransaction
+  | CaucionCreationTransaction
+  | WithdrawalTransaction
+  | CryptoTradeTransaction
+  | RealEstateTransaction
+  | FixedTermDepositCreditTransaction
+  | CaucionCreditTransaction
+  | BondCouponTransaction
+  | BondAmortizationTransaction;
 
 // -- Investment Strategy --
 export type StrategyAction = 'buy' | 'sell' | 'hold' | 'rotate' | 'increase' | 'decrease';

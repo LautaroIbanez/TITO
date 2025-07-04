@@ -160,6 +160,50 @@ export default function PortfolioTransactions({ transactions }: Props) {
         commissionPct: undefined,
         purchaseFeePct: undefined
       };
+    } else if (tx.type === 'Acreditación Plazo Fijo') {
+      return {
+        symbol: tx.provider,
+        quantity: null,
+        price: null,
+        typeLabel: 'Acreditación Plazo Fijo',
+        typeColor: 'text-green-700',
+        commissionPct: undefined,
+        purchaseFeePct: undefined,
+        amount: tx.amount,
+      };
+    } else if (tx.type === 'Acreditación Caución') {
+      return {
+        symbol: tx.provider,
+        quantity: null,
+        price: null,
+        typeLabel: 'Acreditación Caución',
+        typeColor: 'text-green-700',
+        commissionPct: undefined,
+        purchaseFeePct: undefined,
+        amount: tx.amount,
+      };
+    } else if (tx.type === 'Pago de Cupón Bono') {
+      return {
+        symbol: tx.ticker,
+        quantity: null,
+        price: null,
+        typeLabel: 'Pago de Cupón Bono',
+        typeColor: 'text-green-700',
+        commissionPct: undefined,
+        purchaseFeePct: undefined,
+        amount: tx.amount,
+      };
+    } else if (tx.type === 'Amortización Bono') {
+      return {
+        symbol: tx.ticker,
+        quantity: null,
+        price: null,
+        typeLabel: 'Amortización Bono',
+        typeColor: 'text-green-700',
+        commissionPct: undefined,
+        purchaseFeePct: undefined,
+        amount: tx.amount,
+      };
     }
     
     // Fallback for unknown transaction types
@@ -205,8 +249,9 @@ export default function PortfolioTransactions({ transactions }: Props) {
                   </td>
                   <td className="px-4 py-2 font-mono text-gray-800">{display.symbol}</td>
                   <td className="px-4 py-2 text-right text-gray-800">
-                    {display.quantity !== null ? display.quantity : 
-                     (tx.type === 'Deposit' || isFixedTerm(tx) || isCaucion(tx) || isRealEstate(tx)) 
+                    {display.quantity !== null ? display.quantity :
+                     display.amount !== undefined ? formatCurrency(display.amount, tx.currency) :
+                     (tx.type === 'Deposit' || isFixedTerm(tx) || isCaucion(tx) || isRealEstate(tx))
                      ? formatCurrency(tx.amount, tx.currency) : '—'}
                   </td>
                   <td className="px-4 py-2 text-left text-gray-800">

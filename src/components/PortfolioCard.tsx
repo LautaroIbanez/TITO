@@ -30,12 +30,17 @@ interface PortfolioCardProps {
   fundamentals?: Fundamentals | null;
   technicals: Technicals | null;
   prices?: any[];
-  position: StockPosition;
+  position: import('@/types').PortfolioPosition;
   onTrade: () => void;
   cash: { ARS: number; USD: number };
 }
 
-
+function isBondPosition(pos: any): pos is { type: 'Bond'; ticker: string; quantity: number; averagePrice: number; currency: string } {
+  return pos && pos.type === 'Bond' && typeof pos.ticker === 'string';
+}
+function isStockPosition(pos: any): pos is { type: 'Stock'; symbol: string; quantity: number; averagePrice: number; currency: string; market: string } {
+  return pos && pos.type === 'Stock' && typeof pos.symbol === 'string';
+}
 
 export default function PortfolioCard({ symbol, fundamentals, technicals, prices, position, onTrade, cash }: PortfolioCardProps) {
   const [isTradeModalOpen, setTradeModalOpen] = useState(false);
@@ -70,20 +75,28 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
     if (!session) throw new Error("Session not found");
     const username = JSON.parse(session).username;
     const url = tradeType === 'Buy' ? '/api/portfolio/buy' : '/api/portfolio/sell';
+    // Use 'ticker' for Bond, 'symbol' otherwise
+    const payload = {
+      username,
+      assetType,
+      quantity,
+      price: purchasePrice ?? currentPrice,
+      currency,
+      commissionPct,
+      purchaseFeePct,
+    };
+    if (isStockPosition(position)) {
+      (payload as any).market = position.market;
+    }
+    if (assetType === 'Bond') {
+      (payload as any).ticker = identifier;
+    } else {
+      (payload as any).symbol = identifier;
+    }
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username,
-        assetType,
-        symbol: identifier,
-        quantity,
-        price: purchasePrice ?? currentPrice,
-        currency,
-        market: position.market,
-        commissionPct,
-        purchaseFeePct,
-      }),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) {
       const data = await res.json();
@@ -94,8 +107,11 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
     await refreshPortfolio();
   };
   
-  const value = position.quantity * currentPrice;
-  const gain = ((currentPrice - position.averagePrice) / position.averagePrice) * 100;
+  const market = isStockPosition(position) ? position.market : undefined;
+  const quantity = (isStockPosition(position) || isBondPosition(position)) ? position.quantity : 0;
+  const averagePrice = (isStockPosition(position) || isBondPosition(position)) ? position.averagePrice : 0;
+  const value = quantity * currentPrice;
+  const gain = averagePrice ? ((currentPrice - averagePrice) / averagePrice) * 100 : 0;
 
   // Chart: last 90 days
   const last90 = safePrices?.slice(-90) || [];
@@ -130,10 +146,10 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
         tradeType={tradeType}
         assetName={symbol}
         assetType={position.type}
-        identifier={symbol}
+        identifier={isBondPosition(position) ? position.ticker : symbol}
         price={currentPrice}
         cash={cash}
-        maxShares={position.quantity}
+        maxShares={quantity}
         currency={position.currency}
       />
       <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col gap-4 relative text-black">
@@ -173,11 +189,11 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <span className="text-gray-600">Cantidad:</span>
-            <span className="ml-2 font-semibold">{position.quantity}</span>
+            <span className="ml-2 font-semibold">{quantity}</span>
           </div>
           <div>
             <span className="text-gray-600">Precio Promedio:</span>
-            <span className="ml-2 font-semibold">${position.averagePrice.toFixed(2)}</span>
+            <span className="ml-2 font-semibold">${averagePrice.toFixed(2)}</span>
           </div>
           <div>
             <span className="text-gray-600">Precio Actual:</span>
