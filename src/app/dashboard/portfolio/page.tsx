@@ -259,11 +259,11 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
         {/* Gráficos de categorías en filas siguientes */}
         <div className="bg-white p-6 rounded-lg shadow border border-gray-200 lg:col-span-2">
           <h3 className="text-lg font-bold text-gray-800 mb-4">Categorías del Portafolio (ARS)</h3>
-          <PortfolioCategoryChart history={trimCategoryValueHistory(categoryValueHistoryARS)} />
+          <PortfolioCategoryChart history={trimCategoryValueHistory(categoryValueHistoryARS)} height={60} />
         </div>
         <div className="bg-white p-6 rounded-lg shadow border border-gray-200 lg:col-span-2">
           <h3 className="text-lg font-bold text-gray-800 mb-4">Categorías del Portafolio (USD)</h3>
-          <PortfolioCategoryChart history={trimCategoryValueHistory(categoryValueHistoryUSD)} />
+          <PortfolioCategoryChart history={trimCategoryValueHistory(categoryValueHistoryUSD)} height={60} />
         </div>
       </div>
 

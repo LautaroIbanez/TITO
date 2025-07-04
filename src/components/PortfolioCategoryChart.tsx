@@ -71,9 +71,10 @@ function getCategoryValue(entry: CategoryValueEntry, key: string): number {
 
 export interface PortfolioCategoryChartProps {
   history: CategoryValueEntry[];
+  height?: number;
 }
 
-export const PortfolioCategoryChart: React.FC<PortfolioCategoryChartProps> = ({ history }) => {
+export const PortfolioCategoryChart: React.FC<PortfolioCategoryChartProps> = ({ history, height = 220 }) => {
   const labels = history.map((entry) => entry.date);
 
   const datasets = [
@@ -201,7 +202,7 @@ export const PortfolioCategoryChart: React.FC<PortfolioCategoryChartProps> = ({ 
     },
   };
 
-  return <Line data={data} options={options} />;
+  return <Line data={data} options={options} height={height} />;
 };
 
 export default PortfolioCategoryChart; 
