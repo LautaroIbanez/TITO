@@ -19,7 +19,6 @@ import { usePortfolio } from '@/contexts/PortfolioContext';
 import { RatioRow, StockBadges, formatDate } from './StockMetrics';
 import FundamentalsCompact from './FundamentalsCompact';
 import { getTickerCurrency, getTickerMarket } from '@/utils/tickers';
-import SectorComparison from './SectorComparison';
 import SignalBadge from './SignalBadge';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
@@ -51,7 +50,6 @@ export default function ScoopCard({
 }: ScoopCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [market, setMarket] = useState<'NASDAQ' | 'BCBA'>(getTickerMarket(stockData.symbol));
-  const [localPrice, setLocalPrice] = useState<number | null>(null);
   
   // Display states for current market data
   const [displayPrices, setDisplayPrices] = useState<any[]>(stockData?.prices || []);
@@ -139,10 +137,6 @@ export default function ScoopCard({
         setDisplayFundamentals(bcbaFundamentalsData);
         setDisplayTechnicals(bcbaTechnicalsData);
         
-        // Update local price if available
-        if (bcbaPricesData.length > 0) {
-          setLocalPrice(bcbaPricesData[bcbaPricesData.length - 1].close);
-        }
       } catch (error) {
         console.error('Failed to fetch BCBA data for', stockData.symbol, error);
         // Fallback to original data if BCBA fetch fails
@@ -155,7 +149,6 @@ export default function ScoopCard({
       setDisplayPrices(stockData?.prices || []);
       setDisplayFundamentals(fundamentals);
       setDisplayTechnicals(technicals);
-      setLocalPrice(null);
     }
   };
 
@@ -286,7 +279,7 @@ export default function ScoopCard({
         <div>
           <h3 className="text-sm font-semibold text-gray-900 mb-2">Fundamentales</h3>
           {hasFundamentals ? (
-            <FundamentalsCompact fundamentals={displayFundamentals} showSector={true} />
+            <FundamentalsCompact fundamentals={displayFundamentals} symbol={stockData.symbol} showSector={true} />
           ) : (
             <span className="text-gray-500 text-sm">Datos no disponibles</span>
           )}

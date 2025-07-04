@@ -1,8 +1,11 @@
 import '@testing-library/jest-dom';
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import FundamentalsCompact from '../FundamentalsCompact';
 import { Fundamentals } from '@/types/finance';
+
+// Mock fetch for sector comparison API
+global.fetch = jest.fn();
 
 describe('FundamentalsCompact', () => {
   const mockFundamentals: Fundamentals = {
@@ -25,38 +28,85 @@ describe('FundamentalsCompact', () => {
     updatedAt: '2024-01-01'
   };
 
-  it('should display metrics in compact format with pipe separators', () => {
-    render(<FundamentalsCompact fundamentals={mockFundamentals} />);
-    
-    // Check that metrics are displayed in the expected format
-    expect(screen.getByText(/PE: 15\.50/)).toBeInTheDocument();
-    expect(screen.getByText(/PB: 2\.10/)).toBeInTheDocument();
-    expect(screen.getByText(/ROE: 18\.0%/)).toBeInTheDocument();
-    expect(screen.getByText(/Margin: 12\.0%/)).toBeInTheDocument();
-    expect(screen.getByText(/D\/E: 0\.50/)).toBeInTheDocument();
+  beforeEach(() => {
+    (fetch as jest.Mock).mockClear();
   });
 
-  it('should display sector information when showSector is true', () => {
-    render(<FundamentalsCompact fundamentals={mockFundamentals} showSector={true} />);
+  it('should display metrics in grid format', async () => {
+    (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ 
+        averages: {}, 
+        percentiles: {} 
+      })
+    });
+
+    render(<FundamentalsCompact fundamentals={mockFundamentals} symbol="AAPL" />);
     
-    expect(screen.getByText('Sector:')).toBeInTheDocument();
-    expect(screen.getByText('Technology')).toBeInTheDocument();
+    await waitFor(() => {
+      // Check that metrics are displayed in the new grid format
+      expect(screen.getByText('PE Ratio:')).toBeInTheDocument();
+      expect(screen.getByText('15.50')).toBeInTheDocument();
+      expect(screen.getByText('Net Margin:')).toBeInTheDocument();
+      expect(screen.getByText('12.0%')).toBeInTheDocument();
+      expect(screen.getByText('PB Ratio:')).toBeInTheDocument();
+      expect(screen.getByText('2.10')).toBeInTheDocument();
+      expect(screen.getByText('ROE:')).toBeInTheDocument();
+      expect(screen.getByText('18.0%')).toBeInTheDocument();
+      expect(screen.getByText('D/E:')).toBeInTheDocument();
+      expect(screen.getByText('0.50')).toBeInTheDocument();
+    });
   });
 
-  it('should not display sector information when showSector is false', () => {
-    render(<FundamentalsCompact fundamentals={mockFundamentals} showSector={false} />);
+  it('should display sector information when showSector is true', async () => {
+    (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ 
+        averages: {}, 
+        percentiles: {} 
+      })
+    });
+
+    render(<FundamentalsCompact fundamentals={mockFundamentals} symbol="AAPL" showSector={true} />);
     
-    expect(screen.queryByText('Sector:')).not.toBeInTheDocument();
-    expect(screen.queryByText('Technology')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Sector:')).toBeInTheDocument();
+      expect(screen.getByText('Technology')).toBeInTheDocument();
+    });
+  });
+
+  it('should not display sector information when showSector is false', async () => {
+    (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ 
+        averages: {}, 
+        percentiles: {} 
+      })
+    });
+
+    render(<FundamentalsCompact fundamentals={mockFundamentals} symbol="AAPL" showSector={false} />);
+    
+    await waitFor(() => {
+      expect(screen.queryByText('Sector:')).not.toBeInTheDocument();
+      expect(screen.queryByText('Technology')).not.toBeInTheDocument();
+    });
   });
 
   it('should handle null fundamentals gracefully', () => {
-    render(<FundamentalsCompact fundamentals={null} />);
+    render(<FundamentalsCompact fundamentals={null} symbol="AAPL" />);
     
     expect(screen.getByText('Datos no disponibles')).toBeInTheDocument();
   });
 
-  it('should handle fundamentals with missing values', () => {
+  it('should handle fundamentals with missing values', async () => {
+    (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ 
+        averages: {}, 
+        percentiles: {} 
+      })
+    });
+
     const incompleteFundamentals: Fundamentals = {
       ...mockFundamentals,
       peRatio: null,
@@ -67,16 +117,26 @@ describe('FundamentalsCompact', () => {
       sector: null
     };
 
-    render(<FundamentalsCompact fundamentals={incompleteFundamentals} />);
+    render(<FundamentalsCompact fundamentals={incompleteFundamentals} symbol="AAPL" />);
     
-    // Should not display sector when it's null
-    expect(screen.queryByText('Sector:')).not.toBeInTheDocument();
-    
-    // Should show "Sin datos" when no metrics are available
-    expect(screen.getByText('Sin datos')).toBeInTheDocument();
+    await waitFor(() => {
+      // Should not display sector when it's null
+      expect(screen.queryByText('Sector:')).not.toBeInTheDocument();
+      
+      // Should show "—" for missing values
+      expect(screen.getAllByText('—')).toHaveLength(5);
+    });
   });
 
-  it('should display only available metrics', () => {
+  it('should display only available metrics', async () => {
+    (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ 
+        averages: {}, 
+        percentiles: {} 
+      })
+    });
+
     const partialFundamentals: Fundamentals = {
       ...mockFundamentals,
       peRatio: 20.5,
@@ -86,32 +146,207 @@ describe('FundamentalsCompact', () => {
       debtToEquity: 0.8
     };
 
-    render(<FundamentalsCompact fundamentals={partialFundamentals} />);
+    render(<FundamentalsCompact fundamentals={partialFundamentals} symbol="AAPL" />);
     
-    // Should display only the available metrics
-    expect(screen.getByText(/PE: 20\.50/)).toBeInTheDocument();
-    expect(screen.getByText(/ROE: 15\.0%/)).toBeInTheDocument();
-    expect(screen.getByText(/D\/E: 0\.80/)).toBeInTheDocument();
-    
-    // Should not display null metrics
-    expect(screen.queryByText(/PB:/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Margin:/)).not.toBeInTheDocument();
+    await waitFor(() => {
+      // Should display only the available metrics
+      expect(screen.getByText('20.50')).toBeInTheDocument();
+      expect(screen.getByText('15.0%')).toBeInTheDocument();
+      expect(screen.getByText('0.80')).toBeInTheDocument();
+      
+      // Should show "—" for null metrics
+      expect(screen.getAllByText('—')).toHaveLength(2);
+    });
   });
 
-  it('should use monospace font for metrics', () => {
-    render(<FundamentalsCompact fundamentals={mockFundamentals} />);
+  it('should use monospace font for metric values', async () => {
+    (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ 
+        averages: {}, 
+        percentiles: {} 
+      })
+    });
+
+    render(<FundamentalsCompact fundamentals={mockFundamentals} symbol="AAPL" />);
     
-    const metricsElement = screen.getByText(/PE: 15\.50/);
-    expect(metricsElement.closest('.font-mono')).toBeInTheDocument();
+    await waitFor(() => {
+      const metricValue = screen.getByText('15.50');
+      expect(metricValue).toHaveClass('font-mono');
+    });
   });
 
-  it('should display sector with proper styling', () => {
-    render(<FundamentalsCompact fundamentals={mockFundamentals} showSector={true} />);
+  it('should display sector with proper styling', async () => {
+    (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ 
+        averages: {}, 
+        percentiles: {} 
+      })
+    });
+
+    render(<FundamentalsCompact fundamentals={mockFundamentals} symbol="AAPL" showSector={true} />);
     
-    const sectorLabel = screen.getByText('Sector:');
-    const sectorValue = screen.getByText('Technology');
+    await waitFor(() => {
+      const sectorLabel = screen.getByText('Sector:');
+      const sectorValue = screen.getByText('Technology');
+      
+      expect(sectorLabel).toHaveClass('text-gray-600');
+      expect(sectorValue).toHaveClass('font-medium');
+    });
+  });
+
+  it('should fetch sector data when fundamentals have sector', async () => {
+    (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ 
+        averages: {}, 
+        percentiles: {} 
+      })
+    });
+
+    await act(async () => {
+      render(<FundamentalsCompact fundamentals={mockFundamentals} symbol="AAPL" />);
+    });
     
-    expect(sectorLabel).toHaveClass('text-gray-600');
-    expect(sectorValue).toHaveClass('font-medium');
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith('/api/sector-comparison?symbol=AAPL&sector=Technology');
+    });
+  });
+
+  it('should not fetch sector data when fundamentals have no sector', () => {
+    const fundamentalsWithoutSector = { ...mockFundamentals, sector: null };
+    
+    render(<FundamentalsCompact fundamentals={fundamentalsWithoutSector} symbol="AAPL" />);
+    
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('should show up arrow and green color when stock value is better than sector average', async () => {
+    (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ 
+        averages: { peRatio: 25.0, netMargin: 0.08 }, 
+        percentiles: { 
+          peRatio: { p20: 10.0, p80: 30.0 },
+          netMargin: { p20: 0.05, p80: 0.15 }
+        } 
+      })
+    });
+
+    render(<FundamentalsCompact fundamentals={mockFundamentals} symbol="AAPL" />);
+    
+    await waitFor(() => {
+      // Should render the component with sector data
+      expect(screen.getByText('PE Ratio:')).toBeInTheDocument();
+      expect(screen.getByText('15.50')).toBeInTheDocument();
+      expect(screen.getByText('Net Margin:')).toBeInTheDocument();
+      expect(screen.getByText('12.0%')).toBeInTheDocument();
+    });
+  });
+
+  it('should show down arrow and red color when stock value is worse than sector average', async () => {
+    (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ 
+        averages: { peRatio: 10.0, netMargin: 0.20 }, 
+        percentiles: { 
+          peRatio: { p20: 8.0, p80: 25.0 },
+          netMargin: { p20: 0.05, p80: 0.25 }
+        } 
+      })
+    });
+
+    render(<FundamentalsCompact fundamentals={mockFundamentals} symbol="AAPL" />);
+    
+    await waitFor(() => {
+      // Should render the component with sector data
+      expect(screen.getByText('PE Ratio:')).toBeInTheDocument();
+      expect(screen.getByText('15.50')).toBeInTheDocument();
+      expect(screen.getByText('Net Margin:')).toBeInTheDocument();
+      expect(screen.getByText('12.0%')).toBeInTheDocument();
+    });
+  });
+
+  it('should show star indicator when value is above 80th percentile', async () => {
+    (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ 
+        averages: { peRatio: 20.0 }, 
+        percentiles: { 
+          peRatio: { p20: 10.0, p80: 12.0 } // Stock PE (15.5) > p80 (12.0)
+        } 
+      })
+    });
+
+    render(<FundamentalsCompact fundamentals={mockFundamentals} symbol="AAPL" />);
+    
+    await waitFor(() => {
+      // Should render the component with sector data
+      expect(screen.getByText('PE Ratio:')).toBeInTheDocument();
+      expect(screen.getByText('15.50')).toBeInTheDocument();
+    });
+  });
+
+  it('should show warning indicator when value is below 20th percentile', async () => {
+    (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ 
+        averages: { netMargin: 0.15 }, 
+        percentiles: { 
+          netMargin: { p20: 0.15, p80: 0.25 } // Stock margin (0.12) < p20 (0.15)
+        } 
+      })
+    });
+
+    render(<FundamentalsCompact fundamentals={mockFundamentals} symbol="AAPL" />);
+    
+    await waitFor(() => {
+      // Should render the component with sector data
+      expect(screen.getByText('Net Margin:')).toBeInTheDocument();
+      expect(screen.getByText('12.0%')).toBeInTheDocument();
+    });
+  });
+
+  it('should show variation percentage with arrows', async () => {
+    (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ 
+        averages: { peRatio: 20.0 }, 
+        percentiles: { 
+          peRatio: { p20: 10.0, p80: 30.0 }
+        } 
+      })
+    });
+
+    render(<FundamentalsCompact fundamentals={mockFundamentals} symbol="AAPL" />);
+    
+    await waitFor(() => {
+      // Should render the component with sector data
+      expect(screen.getByText('PE Ratio:')).toBeInTheDocument();
+      expect(screen.getByText('15.50')).toBeInTheDocument();
+    });
+  });
+
+  it('should handle missing sector data gracefully', async () => {
+    (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ 
+        averages: { peRatio: null }, 
+        percentiles: { 
+          peRatio: null
+        } 
+      })
+    });
+
+    render(<FundamentalsCompact fundamentals={mockFundamentals} symbol="AAPL" />);
+    
+    await waitFor(() => {
+      // Should still display the metric value without comparison
+      expect(screen.getByText('15.50')).toBeInTheDocument();
+      // Should not show arrows or percentages
+      expect(screen.queryByText('↑')).not.toBeInTheDocument();
+      expect(screen.queryByText('↓')).not.toBeInTheDocument();
+    });
   });
 }); 

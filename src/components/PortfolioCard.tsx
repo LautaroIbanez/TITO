@@ -20,8 +20,7 @@ import { RatioRow, StockBadges, formatDate } from './StockMetrics';
 import FundamentalsCompact from './FundamentalsCompact';
 import { formatCurrency } from '@/utils/goalCalculator';
 import { StockPosition, AssetType } from '@/types';
-import { getTickerCurrency } from '@/utils/tickers';
-import SectorComparison from './SectorComparison';
+import { getTickerCurrency, getBaseTicker } from '@/utils/tickers';
 import SignalBadge from './SignalBadge';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
@@ -138,7 +137,7 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
       <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col gap-4 relative text-black">
         <div className="flex items-center gap-2 justify-between">
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-gray-900">{symbol}</h2>
+            <h2 className="text-xl font-bold text-gray-900">{getBaseTicker(symbol)}{symbol.endsWith('.BA') ? '.BA' : ''}</h2>
             <span className={`px-2 py-1 rounded text-xs font-semibold ${
               currency === 'ARS' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
             }`}>
@@ -195,7 +194,7 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
         <div>
           <h3 className="text-sm font-semibold text-gray-900 mb-2">Fundamentales</h3>
           {hasFundamentals ? (
-            <FundamentalsCompact fundamentals={fundamentals || null} showSector={true} />
+            <FundamentalsCompact fundamentals={fundamentals || null} symbol={symbol} showSector={true} />
           ) : (
             <span className="text-gray-500 text-sm">Datos no disponibles</span>
           )}
