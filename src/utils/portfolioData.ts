@@ -2,7 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { UserData, StockPosition, CryptoPosition } from '@/types';
 import { Fundamentals, Technicals, PriceData } from '@/types/finance';
-import { getBaseTicker } from './tickers';
+import { getBaseTicker, ensureBaSuffix } from './tickers';
 
 async function readJsonSafe<T = unknown>(filePath: string): Promise<T | null> {
   try {
@@ -45,7 +45,11 @@ export async function getPortfolioData(username: string) {
 
   const stockSymbols = user.positions
     .filter((pos): pos is StockPosition => pos.type === 'Stock')
-    .map((pos) => pos.symbol);
+    .map((pos) => {
+      let symbol = getBaseTicker(pos.symbol);
+      if (pos.market === 'BCBA') symbol = ensureBaSuffix(symbol);
+      return symbol;
+    });
 
   const cryptoSymbols = user.positions
     .filter((pos): pos is CryptoPosition => pos.type === 'Crypto')
@@ -72,7 +76,7 @@ export async function getPortfolioData(username: string) {
 
   await Promise.all([
     // Load stock data with optimized fundamentals
-    ...stockSymbols.map(async (symbol) => {
+    ...stockSymbols.map(async (symbol, idx) => {
       const baseTicker = getBaseTicker(symbol);
       historicalPrices[symbol] = await readJsonSafe<PriceData[]>(path.join(process.cwd(), 'data', 'stocks', `${symbol}.json`)) || [];
       fundamentals[symbol] = fundamentalsCache.get(baseTicker) || null;

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPortfolioData } from '@/utils/portfolioData';
 import { getFundamentals, getHistoricalPrices, getTechnicals } from '@/utils/financeData';
-import { getBaseTicker } from '@/utils/tickers';
+import { getBaseTicker, ensureBaSuffix } from '@/utils/tickers';
 import { getUserData } from '@/utils/userData';
 
 export async function GET(req: NextRequest) {
@@ -21,7 +21,11 @@ export async function GET(req: NextRequest) {
     const data = await getPortfolioData(username);
     const stockSymbols = data.positions
       .filter((pos: any) => pos.type === 'Stock')
-      .map((pos: any) => pos.symbol);
+      .map((pos: any) => {
+        let symbol = getBaseTicker(pos.symbol);
+        if (pos.market === 'BCBA') symbol = ensureBaSuffix(symbol);
+        return symbol;
+      });
 
     const historicalPrices: Record<string, any[]> = {};
     const fundamentals: Record<string, any> = {};
@@ -47,7 +51,7 @@ export async function GET(req: NextRequest) {
     );
 
     // Load all data with optimized fundamentals
-    await Promise.all(stockSymbols.map(async (symbol: string) => {
+    await Promise.all(stockSymbols.map(async (symbol: string, idx: number) => {
       const baseTicker = getBaseTicker(symbol);
       const [prices, tech] = await Promise.all([
         getHistoricalPrices(symbol),

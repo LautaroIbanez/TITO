@@ -3,6 +3,7 @@ import { UserData, DepositTransaction, PortfolioTransaction, StockPosition, Bond
 import { DEFAULT_COMMISSION_PCT, DEFAULT_PURCHASE_FEE_PCT } from './constants';
 import { convertCurrency } from './currency';
 import dayjs from 'dayjs';
+import { getBaseTicker, ensureBaSuffix } from './tickers';
 
 export async function addDeposit(username: string, amount: number, date: string, currency: 'ARS' | 'USD') {
   const user = await getUserData(username);
@@ -33,8 +34,11 @@ export async function buyAsset(username: string, assetType: string, body: any) {
 
   switch (assetType) {
     case 'Stock': {
-      const { symbol, quantity, price, currency, market, commissionPct = DEFAULT_COMMISSION_PCT, purchaseFeePct = DEFAULT_PURCHASE_FEE_PCT } = body;
+      let { symbol, quantity, price, currency, market, commissionPct = DEFAULT_COMMISSION_PCT, purchaseFeePct = DEFAULT_PURCHASE_FEE_PCT } = body;
       if (!symbol || !quantity || !price || !currency || !market) throw new Error('Missing fields for Stock purchase');
+      // Normalize symbol
+      symbol = getBaseTicker(symbol);
+      if (market === 'BCBA') symbol = ensureBaSuffix(symbol);
       const validatedCurrency = currency as 'ARS' | 'USD';
       const baseCost = quantity * price;
       totalCost = baseCost * (1 + commissionPct / 100 + purchaseFeePct / 100);
@@ -198,8 +202,11 @@ export async function sellAsset(username: string, assetType: string, body: any) 
   const commissionPct = body.commissionPct ?? DEFAULT_COMMISSION_PCT;
   switch (assetType) {
     case 'Stock': {
-      const { symbol, quantity, price, currency, market } = body;
+      let { symbol, quantity, price, currency, market } = body;
       if (!symbol) throw new Error('Symbol is required for stock sell');
+      // Normalize symbol
+      symbol = getBaseTicker(symbol);
+      if (market === 'BCBA') symbol = ensureBaSuffix(symbol);
       const posIndex = user.positions.findIndex(p => p.type === 'Stock' && p.symbol === symbol && p.currency === currency && p.market === market);
       if (posIndex === -1) throw new Error('Position not found');
       const pos = user.positions[posIndex] as StockPosition;

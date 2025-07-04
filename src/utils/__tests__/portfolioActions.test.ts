@@ -1,6 +1,7 @@
 import { addDeposit, buyAsset, sellAsset } from '../portfolioActions';
 import { getUserData } from '../userData';
 import { UserData, StockPosition, BondPosition, CryptoPosition } from '@/types';
+import { getBaseTicker, ensureBaSuffix } from '../tickers';
 
 // Mock the userData module
 const mockGetUserData = getUserData as jest.MockedFunction<typeof getUserData>;
@@ -292,5 +293,37 @@ describe('portfolioActions', () => {
         market: 'NASDAQ',
       })).rejects.toThrow('Insufficient quantity');
     });
+  });
+});
+
+describe('buyAsset and sellAsset symbol normalization', () => {
+  it('should store symbol as BASE.BA for BCBA market, no repeated suffixes', async () => {
+    const username = 'testuser';
+    const assetType = 'Stock';
+    const body = { symbol: 'MELI.BA.BA', quantity: 1, price: 100, currency: 'ARS', market: 'BCBA' };
+    await buyAsset(username, assetType, body);
+    const user = await getUserData(username);
+    const pos = user.positions.find(p => p.type === 'Stock');
+    expect(pos.symbol).toBe('MELI.BA');
+  });
+  it('should store symbol as BASE for non-BCBA market', async () => {
+    const username = 'testuser2';
+    const assetType = 'Stock';
+    const body = { symbol: 'AAPL.BA.BA', quantity: 1, price: 100, currency: 'USD', market: 'NASDAQ' };
+    await buyAsset(username, assetType, body);
+    const user = await getUserData(username);
+    const pos = user.positions.find(p => p.type === 'Stock');
+    expect(pos.symbol).toBe('AAPL');
+  });
+  it('should store symbol as BASE.BA for BCBA market on sellAsset', async () => {
+    const username = 'testuser3';
+    const assetType = 'Stock';
+    const buyBody = { symbol: 'GGAL.AR.AR', quantity: 2, price: 50, currency: 'ARS', market: 'BCBA' };
+    await buyAsset(username, assetType, buyBody);
+    const sellBody = { symbol: 'GGAL.AR.AR', quantity: 1, price: 60, currency: 'ARS', market: 'BCBA' };
+    await sellAsset(username, assetType, sellBody);
+    const user = await getUserData(username);
+    const pos = user.positions.find(p => p.type === 'Stock');
+    expect(pos.symbol).toBe('GGAL.BA');
   });
 }); 
