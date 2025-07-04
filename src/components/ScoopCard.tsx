@@ -18,7 +18,7 @@ import TechnicalDisplay from './TechnicalDisplay';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import { RatioRow, StockBadges, formatDate } from './StockMetrics';
 import FundamentalsCompact from './FundamentalsCompact';
-import { getTickerCurrency, getTickerMarket } from '@/utils/tickers';
+import { getTickerCurrency, getTickerMarket, ensureBaSuffix } from '@/utils/tickers';
 import SignalBadge from './SignalBadge';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
@@ -156,7 +156,7 @@ export default function ScoopCard({
     const session = localStorage.getItem('session');
     if (!session) return;
     const username = JSON.parse(session).username;
-    const symbol = market === 'BCBA' ? `${stockData.symbol}.BA` : stockData.symbol;
+    const symbol = market === 'BCBA' ? ensureBaSuffix(stockData.symbol) : stockData.symbol;
     const res = await fetch('/api/portfolio/buy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

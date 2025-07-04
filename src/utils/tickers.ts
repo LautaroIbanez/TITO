@@ -9,10 +9,8 @@
  */
 export function getBaseTicker(symbol: string): string {
   if (!symbol) return '';
-  
-  // Remove known market suffixes only (not class identifiers like .B, .A)
-  const baseTicker = symbol.replace(/\.(BA|AR|TO)$/i, '');
-  
+  // Remove repeated market suffixes like .BA, .AR, .TO
+  const baseTicker = symbol.replace(/(\.(BA|AR|TO))+$/i, '');
   return baseTicker;
 }
 

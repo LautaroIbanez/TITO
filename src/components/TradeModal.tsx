@@ -59,6 +59,8 @@ export default function TradeModal({
   }
   const tradeTypeText = getTradeTypeText();
 
+  const priceLabel = tradeType === 'Sell' ? 'Precio de Venta' : 'Precio de Compra';
+
   useEffect(() => {
     if (isOpen) {
       setValue(isAmountBased ? 50000 : 1);
@@ -163,9 +165,11 @@ export default function TradeModal({
 
           {!isAmountBased && (
             <div className="mb-4">
-              <label htmlFor="purchasePrice" className="block text-sm font-medium text-gray-700">Precio de Compra</label>
+              <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+                {priceLabel}
+              </label>
               <input
-                id="purchasePrice"
+                id="price"
                 type="number"
                 min="0"
                 step="0.01"

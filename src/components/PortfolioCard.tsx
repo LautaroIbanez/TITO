@@ -29,7 +29,7 @@ interface PortfolioCardProps {
   symbol: string;
   fundamentals?: Fundamentals | null;
   technicals: Technicals | null;
-  prices: any[];
+  prices?: any[];
   position: StockPosition;
   onTrade: () => void;
   cash: { ARS: number; USD: number };
@@ -43,15 +43,17 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
   
   const { refreshPortfolio } = usePortfolio();
   
-  const currentPrice = prices.length > 0 ? prices[prices.length - 1].close : 0;
+  // Ensure prices is always an array to prevent undefined errors
+  const safePrices = prices || [];
+  const currentPrice = safePrices.length > 0 ? safePrices[safePrices.length - 1].close : 0;
   const signal = getTradeSignal(technicals, currentPrice);
 
   // Compute last price date
-  const lastPriceDate = prices.length > 0 ? prices[prices.length - 1].date : null;
+  const lastPriceDate = safePrices.length > 0 ? safePrices[safePrices.length - 1].date : null;
   const fundamentalsDate = fundamentals?.updatedAt;
 
   // Check if data is available
-  const hasPriceData = prices.length > 0;
+  const hasPriceData = safePrices.length > 0;
   const hasFundamentals = fundamentals !== null;
   const hasTechnicals = technicals !== null;
 
@@ -96,7 +98,7 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
   const gain = ((currentPrice - position.averagePrice) / position.averagePrice) * 100;
 
   // Chart: last 90 days
-  const last90 = prices?.slice(-90) || [];
+  const last90 = safePrices?.slice(-90) || [];
   const chartData = {
     labels: last90.map((p: any) => p.date),
     datasets: [

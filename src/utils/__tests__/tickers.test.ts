@@ -57,6 +57,11 @@ describe('tickers utility functions', () => {
       expect(getBaseTicker('')).toBe('');
       expect(getBaseTicker(null as any)).toBe('');
     });
+
+    it('removes repeated .BA suffixes', () => {
+      expect(getBaseTicker('AAPL.BA.BA')).toBe('AAPL');
+      expect(getBaseTicker('GGAL.AR.AR')).toBe('GGAL');
+    });
   });
 
   describe('getTickerCurrency', () => {
