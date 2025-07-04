@@ -137,7 +137,14 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
       <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col gap-4 relative text-black">
         <div className="flex items-center gap-2 justify-between">
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-gray-900">{getBaseTicker(symbol)}{symbol.endsWith('.BA') ? '.BA' : ''}</h2>
+            {/* Symbol display: only show .BA or .AR once if present */}
+            <h2 className="text-xl font-bold text-gray-900">
+              {(() => {
+                const base = getBaseTicker(symbol);
+                const match = symbol.match(/\.(BA|AR)$/i);
+                return match ? `${base}${match[0].toUpperCase()}` : base;
+              })()}
+            </h2>
             <span className={`px-2 py-1 rounded text-xs font-semibold ${
               currency === 'ARS' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
             }`}>

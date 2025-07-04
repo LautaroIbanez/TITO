@@ -14,6 +14,7 @@ import { trimCategoryValueHistory } from '@/utils/history';
 import { generateInvestmentStrategy } from '@/utils/strategyAdvisor';
 import { InvestmentGoal, InvestorProfile, PortfolioPosition } from '@/types';
 import { generatePortfolioHash } from '@/utils/priceDataHash';
+import { ensureBaSuffix, getBaseTicker } from '@/utils/tickers';
 
 export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange?: () => void }) {
   const { portfolioData, loading, refreshPortfolio, portfolioVersion } = usePortfolio();
@@ -279,11 +280,9 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
       {/* Stock Cards - Only show stock positions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {stockPositions.map((stock) => {
-          // Corregir el ticker para evitar .BA.BA
-          let symbol = stock.symbol;
-          if (stock.market === 'BCBA' && !symbol.endsWith('.BA')) {
-            symbol += '.BA';
-          }
+          // Normalizar el símbolo: base + sufijo correcto
+          const base = getBaseTicker(stock.symbol);
+          const symbol = stock.market === 'BCBA' ? `${base}.BA` : base;
           return (
             <PortfolioCard
               key={symbol}
