@@ -1,38 +1,48 @@
 {
-  "ALUAR": {
-    "history": "2025-07-02T20:43:58.929Z"
-  },
-  "BYMA": {
-    "fundamentals": "2025-07-02T20:43:59.223Z"
-  },
-  "CAPU": {
-    "fundamentals": "2025-07-02T20:43:59.317Z"
-  },
-  "PAMP": {
-    "fundamentals": "2025-07-02T20:43:59.948Z"
-  },
-  "TGNO4": {
-    "fundamentals": "2025-07-02T20:44:00.011Z"
-  },
   "TGSU2": {
-    "fundamentals": "2025-07-02T20:44:00.387Z"
+    "history": "2025-07-04T11:59:48.762Z",
+    "fundamentals": "2025-07-04T12:00:03.201Z"
   },
   "TRAN": {
-    "fundamentals": "2025-07-02T20:44:00.468Z"
+    "fundamentals": "2025-07-04T12:00:03.349Z",
+    "history": "2025-07-04T11:59:49.099Z"
   },
   "YPFD": {
-    "fundamentals": "2025-07-02T20:44:00.743Z"
+    "fundamentals": "2025-07-04T12:00:03.735Z",
+    "history": "2025-07-04T11:59:50.051Z"
   },
   "COME": {
-    "fundamentals": "2025-07-02T20:44:00.817Z"
+    "history": "2025-07-04T11:59:50.252Z",
+    "fundamentals": "2025-07-04T12:00:04.001Z"
   },
   "CRES": {
-    "fundamentals": "2025-07-02T20:44:01.128Z"
+    "fundamentals": "2025-07-04T12:00:04.374Z",
+    "history": "2025-07-04T11:59:50.884Z"
   },
-  "MELI.BA": {
-    "history": "2025-07-03T21:47:11.102Z"
+  "BITO": {
+    "history": "2025-07-04T11:59:53.570Z"
   },
-  "MSFT": {
-    "history": "2025-07-03T11:40:12.314Z"
+  "DIS": {
+    "history": "2025-07-04T11:59:55.527Z"
+  },
+  "BRK.B": {
+    "history": "2025-07-04T11:59:58.235Z",
+    "fundamentals": "2025-07-04T11:59:58.404Z"
+  },
+  "ALUAR": {
+    "fundamentals": "2025-07-04T12:00:00.522Z",
+    "history": "2025-07-04T12:00:00.594Z"
+  },
+  "BYMA": {
+    "fundamentals": "2025-07-04T12:00:01.140Z"
+  },
+  "CAPU": {
+    "fundamentals": "2025-07-04T12:00:01.274Z"
+  },
+  "PAMP": {
+    "fundamentals": "2025-07-04T12:00:02.446Z"
+  },
+  "TGNO4": {
+    "fundamentals": "2025-07-04T12:00:02.536Z"
   }
 }

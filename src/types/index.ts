@@ -93,7 +93,7 @@ export interface StockTradeTransaction {
   id: string;
   date: string; // ISO string
   type: 'Buy' | 'Sell';
-  assetType: AssetType;
+  assetType: 'Stock';
   symbol:string;
   quantity: number;
   price: number;
@@ -107,7 +107,7 @@ export interface BondTradeTransaction {
   id: string;
   date: string; // ISO string
   type: 'Buy' | 'Sell';
-  assetType: AssetType;
+  assetType: 'Bond';
   ticker: string;
   quantity: number;
   price: number;
@@ -137,7 +137,7 @@ export interface FixedTermDepositCreationTransaction {
   id: string;
   date: string; // ISO string
   type: 'Create';
-  assetType: AssetType;
+  assetType: 'FixedTermDeposit';
   provider: string;
   amount: number;
   annualRate: number;
@@ -150,7 +150,7 @@ export interface CaucionCreationTransaction {
   id: string;
   date: string; // ISO string
   type: 'Create';
-  assetType: AssetType;
+  assetType: 'Caucion';
   provider: string;
   amount: number;
   annualRate: number;
@@ -163,7 +163,7 @@ export interface CryptoTradeTransaction {
   id: string;
   date: string; // ISO string
   type: 'Buy' | 'Sell';
-  assetType: AssetType;
+  assetType: 'Crypto';
   symbol: string;
   quantity: number;
   price: number;
@@ -180,7 +180,7 @@ export interface RealEstateTransaction {
   id: string;
   date: string; // ISO string
   type: 'Create' | 'Update' | 'Delete';
-  assetType: AssetType;
+  assetType: 'RealEstate';
   name: string;
   amount: number;
   annualRate: number;

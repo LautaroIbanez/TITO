@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { PortfolioTransaction, DepositTransaction } from '@/types';
+import React, { useState, useMemo } from 'react';
+import { PortfolioTransaction, DepositTransaction, FixedTermDepositCreationTransaction, CaucionCreationTransaction, RealEstateTransaction } from '@/types';
 import EditDepositModal from './EditDepositModal';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import { formatCurrency } from '@/utils/goalCalculator';
@@ -8,12 +8,28 @@ interface Props {
   transactions: PortfolioTransaction[];
 }
 
+// Helper predicates for type guards
+function isFixedTerm(tx: PortfolioTransaction): tx is FixedTermDepositCreationTransaction {
+  return tx.type === 'Create' && tx.assetType === 'FixedTermDeposit';
+}
+
+function isCaucion(tx: PortfolioTransaction): tx is CaucionCreationTransaction {
+  return tx.type === 'Create' && tx.assetType === 'Caucion';
+}
+
+function isRealEstate(tx: PortfolioTransaction): tx is RealEstateTransaction {
+  return 'assetType' in tx && tx.assetType === 'RealEstate';
+}
+
 export default function PortfolioTransactions({ transactions }: Props) {
   const { refreshPortfolio } = usePortfolio();
   const [editingDeposit, setEditingDeposit] = useState<DepositTransaction | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const sorted = [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sorted = useMemo(
+    () => [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    [transactions]
+  );
   
   const handleDelete = async (transactionId: string) => {
     if (!window.confirm('Are you sure you want to delete this deposit?')) return;
@@ -104,7 +120,7 @@ export default function PortfolioTransactions({ transactions }: Props) {
           purchaseFeePct: tx.purchaseFeePct
         };
       }
-    } else if (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit') {
+    } else if (isFixedTerm(tx)) {
       return {
         symbol: tx.provider,
         quantity: null,
@@ -114,13 +130,23 @@ export default function PortfolioTransactions({ transactions }: Props) {
         commissionPct: undefined,
         purchaseFeePct: undefined
       };
-    } else if (tx.type === 'Create' && tx.assetType === 'Caucion') {
+    } else if (isCaucion(tx)) {
       return {
         symbol: tx.provider,
         quantity: null,
         price: null,
         typeLabel: 'Creación Caución',
         typeColor: 'text-blue-600',
+        commissionPct: undefined,
+        purchaseFeePct: undefined
+      };
+    } else if (isRealEstate(tx)) {
+      return {
+        symbol: tx.name,
+        quantity: null,
+        price: null,
+        typeLabel: tx.type === 'Create' ? 'Creación Inmueble' : tx.type === 'Update' ? 'Actualización Inmueble' : 'Eliminación Inmueble',
+        typeColor: 'text-purple-600',
         commissionPct: undefined,
         purchaseFeePct: undefined
       };
@@ -180,7 +206,7 @@ export default function PortfolioTransactions({ transactions }: Props) {
                   <td className="px-4 py-2 font-mono text-gray-800">{display.symbol}</td>
                   <td className="px-4 py-2 text-right text-gray-800">
                     {display.quantity !== null ? display.quantity : 
-                     (tx.type === 'Deposit' || (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit') || (tx.type === 'Create' && tx.assetType === 'Caucion')) 
+                     (tx.type === 'Deposit' || isFixedTerm(tx) || isCaucion(tx) || isRealEstate(tx)) 
                      ? formatCurrency(tx.amount, tx.currency) : '—'}
                   </td>
                   <td className="px-4 py-2 text-left text-gray-800">

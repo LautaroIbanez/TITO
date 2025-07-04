@@ -1,4 +1,4 @@
-import { calculatePortfolioReturn, compareWithBenchmarks } from '../returnCalculator';
+import { calculatePortfolioReturn, compareWithBenchmarks, calculateAnnualizedReturn } from '../returnCalculator';
 import dayjs from 'dayjs';
 
 describe('calculatePortfolioReturn', () => {
@@ -75,6 +75,48 @@ describe('calculatePortfolioReturn', () => {
     };
     expect(calculatePortfolioReturn(prices, '3y')).toBeCloseTo(50);
     expect(calculatePortfolioReturn(prices, '6m')).toBeCloseTo(25);
+  });
+});
+
+describe('calculateAnnualizedReturn', () => {
+  it('calculates correct annualized return for 1 year period', () => {
+    const result = calculateAnnualizedReturn(1000, 1200, '2023-01-01', '2024-01-01');
+    expect(result).toBeCloseTo(20, 1); // 20% annualized return
+  });
+
+  it('calculates correct annualized return for 2 year period', () => {
+    const result = calculateAnnualizedReturn(1000, 1440, '2022-01-01', '2024-01-01');
+    expect(result).toBeCloseTo(20, 1); // 20% annualized return over 2 years
+  });
+
+  it('calculates correct annualized return for 6 month period', () => {
+    const result = calculateAnnualizedReturn(1000, 1100, '2023-07-01', '2024-01-01');
+    expect(result).toBeCloseTo(21, 0); // Approximately 21% annualized
+  });
+
+  it('handles negative returns correctly', () => {
+    const result = calculateAnnualizedReturn(1000, 800, '2023-01-01', '2024-01-01');
+    expect(result).toBeCloseTo(-20, 1); // -20% annualized return
+  });
+
+  it('returns 0 for zero or negative initial values', () => {
+    expect(calculateAnnualizedReturn(0, 1200, '2023-01-01', '2024-01-01')).toBe(0);
+    expect(calculateAnnualizedReturn(-1000, 1200, '2023-01-01', '2024-01-01')).toBe(0);
+  });
+
+  it('returns 0 for zero or negative final values', () => {
+    expect(calculateAnnualizedReturn(1000, 0, '2023-01-01', '2024-01-01')).toBe(0);
+    expect(calculateAnnualizedReturn(1000, -1200, '2023-01-01', '2024-01-01')).toBe(0);
+  });
+
+  it('returns 0 for invalid date ranges', () => {
+    expect(calculateAnnualizedReturn(1000, 1200, '2024-01-01', '2023-01-01')).toBe(0);
+    expect(calculateAnnualizedReturn(1000, 1200, '2024-01-01', '2024-01-01')).toBe(0);
+  });
+
+  it('rounds to 2 decimal places', () => {
+    const result = calculateAnnualizedReturn(1000, 1234.567, '2023-01-01', '2024-01-01');
+    expect(result).toBeCloseTo(23.47, 1); // Rounded to 2 decimal places
   });
 });
 

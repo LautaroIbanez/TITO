@@ -70,6 +70,36 @@ export function compareWithBenchmarksDual(
 export type ComparisonResult = ReturnType<typeof compareWithBenchmarks>;
 
 /**
+ * Calculate annualized return using the proper formula:
+ * Annualized Return = (Final Value / Initial Value)^(1/A) - 1
+ * Where A is the number of years between initial and final dates
+ * @param initialValue The initial portfolio value
+ * @param finalValue The final portfolio value
+ * @param initialDate The initial date (ISO string)
+ * @param finalDate The final date (ISO string)
+ * @returns Annualized return as a percentage (e.g., 12.5 for 12.5%)
+ */
+export function calculateAnnualizedReturn(
+  initialValue: number,
+  finalValue: number,
+  initialDate: string,
+  finalDate: string
+): number {
+  if (initialValue <= 0 || finalValue <= 0) return 0;
+  
+  const startDate = dayjs(initialDate);
+  const endDate = dayjs(finalDate);
+  const years = endDate.diff(startDate, 'day') / 365.25;
+  
+  if (years <= 0) return 0;
+  
+  const annualizedReturn = (Math.pow(finalValue / initialValue, 1 / years) - 1) * 100;
+  
+  // Round to 2 decimal places
+  return Math.round(annualizedReturn * 100) / 100;
+}
+
+/**
  * Calculate the Internal Rate of Return (IRR) for a series of cash flows.
  * @param cashFlows Array of objects: { date: string (ISO), amount: number }
  *   - Negative amounts = investments (outflows), positive = withdrawals (inflows)
@@ -82,10 +112,14 @@ export function calculateIRR(
   guess = 0.1
 ): number {
   if (cashFlows.length < 2) return 0;
-  // Convert dates to days since first cash flow
-  const day0 = dayjs(cashFlows[0].date);
-  const times = cashFlows.map(cf => dayjs(cf.date).diff(day0, 'day') / 365);
-  const amounts = cashFlows.map(cf => cf.amount);
+  
+  // Sort cash flows by date
+  const sortedCashFlows = [...cashFlows].sort((a, b) => dayjs(a.date).diff(dayjs(b.date)));
+  
+  // Convert dates to years since first cash flow
+  const day0 = dayjs(sortedCashFlows[0].date);
+  const times = sortedCashFlows.map(cf => dayjs(cf.date).diff(day0, 'day') / 365.25);
+  const amounts = sortedCashFlows.map(cf => cf.amount);
 
   // Newton-Raphson method
   let rate = guess;
@@ -99,10 +133,15 @@ export function calculateIRR(
       df += -a * t / Math.pow(1 + rate, t + 1);
     }
     const newRate = rate - f / df;
-    if (Math.abs(newRate - rate) < 1e-7) return newRate;
+    if (Math.abs(newRate - rate) < 1e-7) {
+      // Round to 2 decimal places and convert to percentage
+      return Math.round(newRate * 10000) / 100;
+    }
     rate = newRate;
   }
-  return rate;
+  
+  // Round to 2 decimal places and convert to percentage
+  return Math.round(rate * 10000) / 100;
 }
 
 /**

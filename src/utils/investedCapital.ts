@@ -1,4 +1,4 @@
-import { PortfolioTransaction } from '@/types';
+import { PortfolioTransaction, CryptoTradeTransaction } from '@/types';
 
 /**
  * Calculates the total capital invested based on market transactions.
@@ -29,8 +29,9 @@ export function calculateInvestedCapital(transactions: PortfolioTransaction[], c
           typeof tx.originalAmount === 'number'
         ) {
           // Sumar el gasto real en la moneda original
-          if ((tx.originalCurrency as string) === currency) {
-            investedCapital += tx.originalAmount;
+          const cryptoTx = tx as CryptoTradeTransaction;
+          if (cryptoTx.originalCurrency === currency && cryptoTx.originalAmount) {
+            investedCapital += cryptoTx.originalAmount;
           }
         } else {
           investedCapital += tx.price * tx.quantity * (1 + commission / 100 + purchaseFee / 100);

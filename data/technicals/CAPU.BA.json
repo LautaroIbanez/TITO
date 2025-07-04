@@ -2,11 +2,20 @@
   "rsi": 100,
   "macd": null,
   "sma200": 7.650000095367432,
+  "sma40": 7.650000095367432,
   "ema12": 7.650000095367432,
+  "ema25": 7.650000095367432,
   "ema26": 7.650000095367432,
   "ema50": 7.650000095367432,
+  "ema150": 7.650000095367432,
   "adx": null,
   "pdi": null,
   "mdi": null,
-  "updatedAt": "2025-07-02T20:03:40.654Z"
+  "koncorde": {
+    "bullish": false,
+    "bearish": false,
+    "neutral": true,
+    "strength": 0
+  },
+  "updatedAt": "2025-07-04T11:59:45.408Z"
 }

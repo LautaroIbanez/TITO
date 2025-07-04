@@ -11,7 +11,7 @@ import {
   Filler,
 } from 'chart.js';
 import { Fundamentals, Technicals } from '../types/finance';
-import { getTradeSignal, TradeSignal } from '@/utils/tradeSignal';
+import { getTradeSignal } from '@/utils/tradeSignal';
 import TradeModal, { TradeType } from './TradeModal';
 import type { TradeModalProps } from './TradeModal';
 import TechnicalDisplay from './TechnicalDisplay';
@@ -21,6 +21,7 @@ import { formatCurrency } from '@/utils/goalCalculator';
 import { StockPosition, AssetType } from '@/types';
 import { getTickerCurrency } from '@/utils/tickers';
 import SectorComparison from './SectorComparison';
+import SignalBadge from './SignalBadge';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
@@ -34,23 +35,7 @@ interface PortfolioCardProps {
   cash: { ARS: number; USD: number };
 }
 
-const SignalBadge = ({ signal }: { signal: TradeSignal }) => {
-  const badgeStyles: Record<TradeSignal, string> = {
-    buy: 'bg-green-100 text-green-700',
-    sell: 'bg-red-100 text-red-700',
-    hold: 'bg-gray-100 text-gray-700',
-  };
-  const signalText: Record<TradeSignal, string> = {
-    buy: 'Comprar',
-    sell: 'Vender',
-    hold: 'Mantener',
-  };
-  return (
-    <span className={`px-2 py-1 rounded text-xs font-semibold capitalize ${badgeStyles[signal]}`}>
-      {signalText[signal]}
-    </span>
-  );
-};
+
 
 export default function PortfolioCard({ symbol, fundamentals, technicals, prices, position, onTrade, cash }: PortfolioCardProps) {
   const [isTradeModalOpen, setTradeModalOpen] = useState(false);
@@ -165,8 +150,6 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
             <button onClick={() => handleOpenModal('Sell')} className="px-3 py-1 bg-red-600 text-white rounded text-xs font-semibold hover:bg-red-700">Vender</button>
           </div>
         </div>
-
-        {hasFundamentals && <StockBadges fundamentals={fundamentals} />}
 
         {/* Price Chart */}
         <div className="h-24 flex items-center justify-center bg-gray-50 rounded">

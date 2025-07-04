@@ -15,7 +15,7 @@ import { formatCurrency } from '@/utils/goalCalculator';
 import { trimCategoryValueHistory } from '@/utils/history';
 import { generateInvestmentStrategy } from '@/utils/strategyAdvisor';
 import { InvestmentGoal, InvestorProfile, PortfolioPosition } from '@/types';
-import { calculateIRR, calculateTWR } from '@/utils/returnCalculator';
+import { calculateIRR, calculateTWR, calculateAnnualizedReturn } from '@/utils/returnCalculator';
 import { filterPositionsWithValidPrices, getPositionDisplayName } from '@/utils/priceValidation';
 import { generatePortfolioHash } from '@/utils/priceDataHash';
 
@@ -87,33 +87,123 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
           // Build cash flows for IRR: deposits, withdrawals, buys, sells, fixed-term deposits, etc. (excluding cash-only flows)
           const cashFlowsARS: { date: string; amount: number }[] = [];
           const cashFlowsUSD: { date: string; amount: number }[] = [];
+          
+          // Track total invested capital to ensure we capture all investments
+          let totalInvestedARS = 0;
+          let totalInvestedUSD = 0;
+          
           for (const tx of portfolioData.transactions) {
             if (tx.currency === 'ARS') {
-              if (tx.type === 'Deposit') cashFlowsARS.push({ date: tx.date, amount: -tx.amount });
-              if (tx.type === 'Withdrawal') cashFlowsARS.push({ date: tx.date, amount: tx.amount });
-              if (tx.type === 'Buy') cashFlowsARS.push({ date: tx.date, amount: -tx.price * tx.quantity });
-              if (tx.type === 'Sell') cashFlowsARS.push({ date: tx.date, amount: tx.price * tx.quantity });
-              if (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit') cashFlowsARS.push({ date: tx.date, amount: -tx.amount });
+              if (tx.type === 'Deposit') {
+                cashFlowsARS.push({ date: tx.date, amount: -tx.amount });
+                totalInvestedARS += tx.amount;
+              }
+              if (tx.type === 'Withdrawal') {
+                cashFlowsARS.push({ date: tx.date, amount: tx.amount });
+                totalInvestedARS -= tx.amount;
+              }
+              if (tx.type === 'Buy') {
+                const totalCost = tx.price * tx.quantity * (1 + (tx.commissionPct || 0) / 100 + (tx.purchaseFeePct || 0) / 100);
+                cashFlowsARS.push({ date: tx.date, amount: -totalCost });
+                totalInvestedARS += totalCost;
+              }
+              if (tx.type === 'Sell') {
+                const totalProceeds = tx.price * tx.quantity * (1 - (tx.commissionPct || 0) / 100);
+                cashFlowsARS.push({ date: tx.date, amount: totalProceeds });
+                totalInvestedARS -= totalProceeds;
+              }
+              if (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit') {
+                cashFlowsARS.push({ date: tx.date, amount: -tx.amount });
+                totalInvestedARS += tx.amount;
+              }
+              if (tx.type === 'Create' && tx.assetType === 'Caucion') {
+                cashFlowsARS.push({ date: tx.date, amount: -tx.amount });
+                totalInvestedARS += tx.amount;
+              }
+              if (tx.type === 'Create' && tx.assetType === 'RealEstate') {
+                cashFlowsARS.push({ date: tx.date, amount: -tx.amount });
+                totalInvestedARS += tx.amount;
+              }
             }
             if (tx.currency === 'USD') {
-              if (tx.type === 'Deposit') cashFlowsUSD.push({ date: tx.date, amount: -tx.amount });
-              if (tx.type === 'Withdrawal') cashFlowsUSD.push({ date: tx.date, amount: tx.amount });
-              if (tx.type === 'Buy') cashFlowsUSD.push({ date: tx.date, amount: -tx.price * tx.quantity });
-              if (tx.type === 'Sell') cashFlowsUSD.push({ date: tx.date, amount: tx.price * tx.quantity });
-              if (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit') cashFlowsUSD.push({ date: tx.date, amount: -tx.amount });
+              if (tx.type === 'Deposit') {
+                cashFlowsUSD.push({ date: tx.date, amount: -tx.amount });
+                totalInvestedUSD += tx.amount;
+              }
+              if (tx.type === 'Withdrawal') {
+                cashFlowsUSD.push({ date: tx.date, amount: tx.amount });
+                totalInvestedUSD -= tx.amount;
+              }
+              if (tx.type === 'Buy') {
+                const totalCost = tx.price * tx.quantity * (1 + (tx.commissionPct || 0) / 100 + (tx.purchaseFeePct || 0) / 100);
+                cashFlowsUSD.push({ date: tx.date, amount: -totalCost });
+                totalInvestedUSD += totalCost;
+              }
+              if (tx.type === 'Sell') {
+                const totalProceeds = tx.price * tx.quantity * (1 - (tx.commissionPct || 0) / 100);
+                cashFlowsUSD.push({ date: tx.date, amount: totalProceeds });
+                totalInvestedUSD -= totalProceeds;
+              }
+              if (tx.type === 'Create' && tx.assetType === 'FixedTermDeposit') {
+                cashFlowsUSD.push({ date: tx.date, amount: -tx.amount });
+                totalInvestedUSD += tx.amount;
+              }
+              if (tx.type === 'Create' && tx.assetType === 'Caucion') {
+                cashFlowsUSD.push({ date: tx.date, amount: -tx.amount });
+                totalInvestedUSD += tx.amount;
+              }
+              if (tx.type === 'Create' && tx.assetType === 'RealEstate') {
+                cashFlowsUSD.push({ date: tx.date, amount: -tx.amount });
+                totalInvestedUSD += tx.amount;
+              }
             }
           }
           // Add the final portfolio value as a positive inflow (for IRR)
+          // Include cash in the final portfolio value
           if (valuesARS.length > 0) {
-            cashFlowsARS.push({ date: valuesARS[valuesARS.length - 1].date, amount: valuesARS[valuesARS.length - 1].value });
+            const finalValueARS = valuesARS[valuesARS.length - 1].value + (portfolioData.cash?.ARS || 0);
+            cashFlowsARS.push({ date: valuesARS[valuesARS.length - 1].date, amount: finalValueARS });
           }
           if (valuesUSD.length > 0) {
-            cashFlowsUSD.push({ date: valuesUSD[valuesUSD.length - 1].date, amount: valuesUSD[valuesUSD.length - 1].value });
+            const finalValueUSD = valuesUSD[valuesUSD.length - 1].value + (portfolioData.cash?.USD || 0);
+            cashFlowsUSD.push({ date: valuesUSD[valuesUSD.length - 1].date, amount: finalValueUSD });
           }
 
-          // Calculate IRR (annualized)
-          const irrARS = calculateIRR(cashFlowsARS) * 100;
-          const irrUSD = calculateIRR(cashFlowsUSD) * 100;
+          // Calculate annualized returns using both methods for comparison
+          let irrARS = 0;
+          let irrUSD = 0;
+          
+          if (cashFlowsARS.length >= 2 && valuesARS.length > 0) {
+            // Use IRR for complex cash flow scenarios
+            irrARS = calculateIRR(cashFlowsARS);
+            
+            // Also calculate using simple annualized return formula as backup
+            const firstARS = valuesARS[0];
+            const lastARS = valuesARS[valuesARS.length - 1];
+            if (firstARS && lastARS && firstARS.value > 0) {
+              const simpleARS = calculateAnnualizedReturn(firstARS.value, lastARS.value, firstARS.date, lastARS.date);
+              // Use simple calculation if IRR fails or is unreasonable
+              if (Math.abs(irrARS) > 1000 || isNaN(irrARS)) {
+                irrARS = simpleARS;
+              }
+            }
+          }
+          
+          if (cashFlowsUSD.length >= 2 && valuesUSD.length > 0) {
+            // Use IRR for complex cash flow scenarios
+            irrUSD = calculateIRR(cashFlowsUSD);
+            
+            // Also calculate using simple annualized return formula as backup
+            const firstUSD = valuesUSD[0];
+            const lastUSD = valuesUSD[valuesUSD.length - 1];
+            if (firstUSD && lastUSD && firstUSD.value > 0) {
+              const simpleUSD = calculateAnnualizedReturn(firstUSD.value, lastUSD.value, firstUSD.date, lastUSD.date);
+              // Use simple calculation if IRR fails or is unreasonable
+              if (Math.abs(irrUSD) > 1000 || isNaN(irrUSD)) {
+                irrUSD = simpleUSD;
+              }
+            }
+          }
 
           // Fetch benchmarks from API
           const benchmarksResponse = await fetch('/api/benchmarks');
@@ -378,18 +468,25 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
       
       {/* Stock Cards - Only show stock positions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {stockPositions.map((stock) => (
-          <PortfolioCard
-            key={stock.symbol}
-            symbol={stock.symbol}
-            fundamentals={portfolioData.fundamentals[stock.symbol]}
-            technicals={portfolioData.technicals[stock.symbol]}
-            prices={portfolioData.historicalPrices[stock.symbol]}
-            position={stock}
-            onTrade={refreshPortfolio}
-            cash={cash}
-          />
-        ))}
+        {stockPositions.map((stock) => {
+          // Corregir el ticker para evitar .BA.BA
+          let symbol = stock.symbol;
+          if (stock.market === 'BCBA' && !symbol.endsWith('.BA')) {
+            symbol += '.BA';
+          }
+          return (
+            <PortfolioCard
+              key={symbol}
+              symbol={symbol}
+              fundamentals={portfolioData.fundamentals[symbol]}
+              technicals={portfolioData.technicals[symbol]}
+              prices={portfolioData.historicalPrices[symbol]}
+              position={stock}
+              onTrade={refreshPortfolio}
+              cash={cash}
+            />
+          );
+        })}
       </div>
 
       {/* Deposit Transactions List */}
