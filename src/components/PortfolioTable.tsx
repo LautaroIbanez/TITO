@@ -167,9 +167,10 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(pos.amount, pos.currency)}</td>
-        <td className="px-4 py-2 text-right text-green-600">{pos.annualRate.toFixed(2)}%</td>
-        <td className="px-4 py-2 text-right text-gray-700">{new Date(pos.maturityDate).toLocaleDateString()}</td>
-        <td className={`px-4 py-2 text-right font-semibold ${gainCurrency >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(gainCurrency, pos.currency)}</td>
+        <td className="px-4 py-2 text-right text-green-600">{pos.annualRate?.toFixed(2) ?? '-' }%</td>
+        <td className={`px-4 py-2 text-right font-semibold ${gainCurrency >= 0 ? 'text-green-600' : 'text-red-600'}`}>{gainCurrency !== undefined ? formatCurrency(gainCurrency, pos.currency) : '-'}</td>
+        <td className="px-4 py-2 text-right text-gray-700">{pos.maturityDate ? new Date(pos.maturityDate).toLocaleDateString() : '-'}</td>
+        <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-center">
           <button onClick={() => handleRemove(pos)} className="text-red-600 hover:text-red-800 text-xs font-semibold">Eliminar</button>
         </td>
@@ -188,10 +189,10 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(pos.amount, pos.currency)}</td>
-        <td className="px-4 py-2 text-right text-green-600">{pos.annualRate.toFixed(2)}%</td>
-        <td className="px-4 py-2 text-right text-gray-700">{new Date(pos.maturityDate).toLocaleDateString()}</td>
-        <td className="px-4 py-2 text-right text-gray-700">{pos.term} días</td>
-        <td className={`px-4 py-2 text-right font-semibold ${gainCurrency >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(gainCurrency, pos.currency)}</td>
+        <td className="px-4 py-2 text-right text-green-600">{pos.annualRate?.toFixed(2) ?? '-' }%</td>
+        <td className={`px-4 py-2 text-right font-semibold ${gainCurrency >= 0 ? 'text-green-600' : 'text-red-600'}`}>{gainCurrency !== undefined ? formatCurrency(gainCurrency, pos.currency) : '-'}</td>
+        <td className="px-4 py-2 text-right text-gray-700">{pos.maturityDate ? new Date(pos.maturityDate).toLocaleDateString() : '-'}</td>
+        <td className="px-4 py-2 text-right text-gray-700">{pos.term ? `${pos.term} días` : '-'}</td>
         <td className="px-4 py-2 text-center">
           <button onClick={() => handleRemove(pos)} className="text-red-600 hover:text-red-800 text-xs font-semibold">Eliminar</button>
         </td>
