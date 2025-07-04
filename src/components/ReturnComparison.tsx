@@ -49,7 +49,7 @@ export default function ReturnComparison({ data }: Props) {
           <div key={item.label} className="flex items-center gap-4">
             <div className="w-40 text-gray-800 text-sm font-medium">{item.label}</div>
             <div className={`w-24 font-mono text-base text-right pr-4 ${item.value === best ? 'text-green-600 font-bold' : 'text-gray-900'}`}>
-              {item.value >= 0 ? '+' : ''}{item.value.toFixed(2)}%
+              {item.value >= 0 ? '+' : ''}{Number(item.value).toFixed(2)}%
             </div>
             <div className="flex-1 h-3 bg-gray-200 rounded">
               <div

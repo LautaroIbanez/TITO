@@ -218,8 +218,8 @@
     "initialBalanceUSD": 5000
   },
   "investmentStrategy": {
-    "id": "strategy-6c7e7964-67f0-42d0-a5a8-4156bd4c5084",
-    "createdAt": "2025-07-04T12:53:30.743Z",
+    "id": "strategy-2f3ef0fb-3a8d-4654-bc10-ad1e2cda8577",
+    "createdAt": "2025-07-04T13:10:04.950Z",
     "targetAllocation": {
       "stocks": 59.4,
       "bonds": 29.7,
@@ -229,7 +229,7 @@
     },
     "recommendations": [
       {
-        "id": "alloc-2af3d77d-248d-4b01-97f5-881f31440758",
+        "id": "alloc-debf55e5-dfce-4014-98b6-6f2c0436e4f6",
         "action": "increase",
         "assetClass": "stocks",
         "reason": "Tu portafolio tiene 22.1% en acciones, pero tu estrategia objetivo es 59.4%",
@@ -237,7 +237,7 @@
         "expectedImpact": "positive"
       },
       {
-        "id": "alloc-31d28cce-22ed-4e8e-8fa7-2ed2379e966f",
+        "id": "alloc-27fc7abc-7d4a-4713-b84b-a033432ef900",
         "action": "increase",
         "assetClass": "bonds",
         "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 29.7%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
@@ -250,7 +250,7 @@
         ]
       },
       {
-        "id": "cash-invest-29620556-39bf-4215-a67b-b63779511f69",
+        "id": "cash-invest-b1520963-d323-43fa-8487-6f910bd0dbc9",
         "action": "buy",
         "reason": "Tienes un 70.9% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
         "priority": "high",
