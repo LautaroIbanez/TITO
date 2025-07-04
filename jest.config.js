@@ -12,6 +12,9 @@ const customJestConfig = {
     '^@/utils/(.*)$': '<rootDir>/src/utils/$1',
     '^@/types/(.*)$': '<rootDir>/src/types/$1',
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(.*\\.mjs$))',
+  ],
 }
 
 module.exports = createJestConfig(customJestConfig) 

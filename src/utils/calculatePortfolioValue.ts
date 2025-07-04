@@ -6,8 +6,7 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import { getExchangeRate, convertCurrencySync } from './currency';
 import { detectDuplicates, filterDuplicates } from './duplicateDetection';
 import { hasAssetType, isTradeTransaction, isCreationTransaction, getTransactionIdentifier } from './typeGuards';
-import fs from 'fs';
-import path from 'path';
+import bondPricesData from '../../data/bonds.json';
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 
@@ -36,18 +35,8 @@ export interface PortfolioValueOptions {
   bondFallback?: boolean; // Whether to use bonds.json as a fallback for bonds with no price history
 }
 
-// Helper to load bond prices from data/bonds.json
-function loadBondPrices(): Array<{ ticker: string; price: number; currency: string }> {
-  const filePath = path.resolve(process.cwd(), 'data', 'bonds.json');
-  try {
-    const data = fs.readFileSync(filePath, 'utf-8');
-    return JSON.parse(data);
-  } catch (e) {
-    return [];
-  }
-}
-
-const bondPricesCache = loadBondPrices();
+// Bond prices data loaded statically
+const bondPricesCache = bondPricesData as Array<{ ticker: string; price: number; currency: string }>;
 export function getBondPriceFromJson(ticker: string, currency: string): number | undefined {
   const bond = bondPricesCache.find(b => b.ticker === ticker && b.currency === currency);
   return bond?.price;

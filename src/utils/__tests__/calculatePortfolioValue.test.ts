@@ -1766,3 +1766,16 @@ describe('calculateCurrentValueByCurrency', () => {
     expect(result.USD).toBe(5000);
   });
 }); 
+
+describe('import bonds.json data correctly', () => {
+  // This test verifies that the JSON import works in the test environment
+  const { getBondPriceFromJson } = require('../calculatePortfolioValue');
+  
+  // Test that we can get bond prices from the imported data
+  expect(getBondPriceFromJson('AL30', 'ARS')).toBe(50000);
+  expect(getBondPriceFromJson('GD30', 'USD')).toBe(55);
+  expect(getBondPriceFromJson('YMC2O', 'USD')).toBe(98);
+  
+  // Test that non-existent bonds return undefined
+  expect(getBondPriceFromJson('NONEXISTENT', 'ARS')).toBeUndefined();
+});

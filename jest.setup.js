@@ -45,4 +45,38 @@ if (typeof global.Response === 'undefined') {
 // Mock fetch if it's not available (it is in recent Node versions, but good to be safe)
 if (typeof global.fetch === 'undefined') {
   global.fetch = jest.fn();
-} 
+}
+
+// Mock JSON imports
+jest.mock('../../data/bonds.json', () => [
+  {
+    id: "AL30",
+    ticker: "AL30",
+    name: "Bonar 2030 Ley Arg.",
+    issuer: "Gobierno de Argentina",
+    maturityDate: "2030-07-09",
+    couponRate: 0.75,
+    price: 50000,
+    currency: "ARS"
+  },
+  {
+    id: "GD30",
+    ticker: "GD30",
+    name: "Global 2030 Ley NY",
+    issuer: "Gobierno de Argentina",
+    maturityDate: "2030-07-09",
+    couponRate: 0.75,
+    price: 55,
+    currency: "USD"
+  },
+  {
+    id: "ON-YMC20",
+    ticker: "YMC2O",
+    name: "ON YPF 2026",
+    issuer: "YPF S.A.",
+    maturityDate: "2026-03-23",
+    couponRate: 8.5,
+    price: 98,
+    currency: "USD"
+  }
+], { virtual: true }); 
