@@ -60,9 +60,12 @@ export function compareWithBenchmarksDual(
   portfolioReturnUSD: number,
   benchmarks: Record<string, number> = DEFAULT_BENCHMARKS
 ) {
+  // Redondear a 1 decimal antes de retornar
+  const roundedARS = typeof portfolioReturnARS === 'number' ? Number(portfolioReturnARS.toFixed(1)) : portfolioReturnARS;
+  const roundedUSD = typeof portfolioReturnUSD === 'number' ? Number(portfolioReturnUSD.toFixed(1)) : portfolioReturnUSD;
   return {
-    portfolioReturnARS,
-    portfolioReturnUSD,
+    portfolioReturnARS: roundedARS,
+    portfolioReturnUSD: roundedUSD,
     ...benchmarks,
   };
 }

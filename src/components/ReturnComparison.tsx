@@ -30,12 +30,20 @@ export default function ReturnComparison({ data }: Props) {
   // Extract portfolio returns and create items for other benchmarks
   const { portfolioReturnARS, portfolioReturnUSD, ...benchmarks } = data;
 
+  // Redondear y formatear los valores del portafolio a 1 decimal como string
+  const formattedPortfolioReturnARS =
+    typeof portfolioReturnARS === 'number' ? (portfolioReturnARS >= 0 ? '+' : '') + portfolioReturnARS.toFixed(1) + '%' : String(portfolioReturnARS);
+  const formattedPortfolioReturnUSD =
+    typeof portfolioReturnUSD === 'number' ? (portfolioReturnUSD >= 0 ? '+' : '') + portfolioReturnUSD.toFixed(1) + '%' : String(portfolioReturnUSD);
+
   const items = [
-    { label: 'Tu Portafolio (ARS)', value: portfolioReturnARS },
-    { label: 'Tu Portafolio (USD)', value: portfolioReturnUSD },
+    { label: 'Tu Portafolio (ARS)', value: portfolioReturnARS, display: formattedPortfolioReturnARS, decimals: 1 },
+    { label: 'Tu Portafolio (USD)', value: portfolioReturnUSD, display: formattedPortfolioReturnUSD, decimals: 1 },
     ...Object.entries(benchmarks).map(([key, value]) => ({
       label: benchmarkLabels[key] || key,
-      value: value as number
+      value: value as number,
+      display: (value >= 0 ? '+' : '') + value.toFixed(2) + '%',
+      decimals: 2
     }))
   ];
 
@@ -48,8 +56,15 @@ export default function ReturnComparison({ data }: Props) {
         {items.map((item) => (
           <div key={item.label} className="flex items-center gap-4">
             <div className="w-40 text-gray-800 text-sm font-medium">{item.label}</div>
-            <div className={`w-24 font-mono text-base text-right pr-4 ${item.value === best ? 'text-green-600 font-bold' : 'text-gray-900'}`}>
-              {item.value >= 0 ? '+' : ''}{Number(item.value).toFixed(2)}%
+            <div
+              className={`w-24 font-mono text-base text-right pr-4 ${
+                item.value === best ? 'font-bold' : ''
+              } ${
+                item.value >= 0 ? 'text-green-600' : 'text-red-600'
+              }`}
+              title={item.display}
+            >
+              {item.display}
             </div>
             <div className="flex-1 h-3 bg-gray-200 rounded">
               <div

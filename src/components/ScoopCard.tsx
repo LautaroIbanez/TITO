@@ -17,6 +17,7 @@ import TradeModal, { TradeModalProps } from './TradeModal';
 import TechnicalDisplay from './TechnicalDisplay';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import { RatioRow, StockBadges, formatDate } from './StockMetrics';
+import FundamentalsCompact from './FundamentalsCompact';
 import { getTickerCurrency, getTickerMarket } from '@/utils/tickers';
 import SectorComparison from './SectorComparison';
 import SignalBadge from './SignalBadge';
@@ -285,21 +286,7 @@ export default function ScoopCard({
         <div>
           <h3 className="text-sm font-semibold text-gray-900 mb-2">Fundamentales</h3>
           {hasFundamentals ? (
-            <>
-              <div className="grid grid-cols-2 gap-x-4 text-xs text-gray-700">
-                <RatioRow label="PE" value={displayFundamentals?.peRatio} metric="peRatio" />
-                <RatioRow label="PB" value={displayFundamentals?.pbRatio} metric="pbRatio" />
-                <RatioRow label="EV/EBITDA" value={displayFundamentals?.evToEbitda} metric="evToEbitda" />
-                <RatioRow label="P/FCF" value={displayFundamentals?.priceToFCF} metric="priceToFCF" />
-                <RatioRow label="ROE" value={displayFundamentals?.roe} metric="roe" />
-                <RatioRow label="ROA" value={displayFundamentals?.roa} metric="roa" />
-                <RatioRow label="Net Margin" value={displayFundamentals?.netMargin} metric="netMargin" />
-                <RatioRow label="D/EBITDA" value={displayFundamentals?.debtToEbitda} metric="debtToEbitda" />
-                <RatioRow label="D/E" value={displayFundamentals?.debtToEquity} metric="debtToEquity" />
-                <RatioRow label="FCF (M)" value={displayFundamentals?.freeCashFlow} metric="freeCashFlow" />
-              </div>
-              <SectorComparison symbol={stockData.symbol} fundamentals={displayFundamentals} />
-            </>
+            <FundamentalsCompact fundamentals={displayFundamentals} showSector={true} />
           ) : (
             <span className="text-gray-500 text-sm">Datos no disponibles</span>
           )}
