@@ -204,6 +204,13 @@ export async function calculateCategoryValueHistory(
         } else {
           cashUSD += tx.amount;
         }
+      } else if (tx.type === 'Acreditación Plazo Fijo' || tx.type === 'Acreditación Caución' || tx.type === 'Pago de Cupón Bono' || tx.type === 'Amortización Bono') {
+        // Cash inflows from matured fixed income instruments or bond payments
+        if (tx.currency === 'ARS') {
+          cashARS += tx.amount;
+        } else {
+          cashUSD += tx.amount;
+        }
       } else if (tx.type === 'Withdrawal') {
         // Remove matured deposits that match the withdrawal amount and currency
         const withdrawalAmount = tx.amount;
@@ -332,6 +339,13 @@ export async function calculateCategoryValueHistory(
         }
       } else if (tx.type === 'Deposit') {
         // Add cash from deposit
+        if (tx.currency === 'ARS') {
+          cashARS += tx.amount;
+        } else {
+          cashUSD += tx.amount;
+        }
+      } else if (tx.type === 'Acreditación Plazo Fijo' || tx.type === 'Acreditación Caución' || tx.type === 'Pago de Cupón Bono' || tx.type === 'Amortización Bono') {
+        // Cash inflows from matured fixed income instruments or bond payments
         if (tx.currency === 'ARS') {
           cashARS += tx.amount;
         } else {
