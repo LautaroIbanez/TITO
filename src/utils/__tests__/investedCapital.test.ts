@@ -125,6 +125,41 @@ describe('calculateInvestedCapital', () => {
     // Net contributions: solo el create cuenta, el deposit se ignora
     expect(calculateNetContributions(transactions, 'ARS')).toBe(0);
   });
+
+  test('Buy de FixedTermDeposit suma amount', () => {
+    const tx = {
+      id: 'ftd-buy',
+      type: 'Buy',
+      assetType: 'FixedTermDeposit',
+      amount: 1000,
+      price: 10,
+      quantity: 1,
+      date: '2023-01-01',
+      currency: 'ARS',
+      provider: 'Bank',
+      annualRate: 0.1,
+      termDays: 30,
+      maturityDate: '2023-02-01'
+    };
+    expect(calculateInvestedCapital([tx], 'ARS')).toBe(1000);
+  });
+  test('Buy de Caucion suma amount', () => {
+    const tx = {
+      id: 'caucion-buy',
+      type: 'Buy',
+      assetType: 'Caucion',
+      amount: 2000,
+      price: 20,
+      quantity: 1,
+      date: '2023-01-01',
+      currency: 'ARS',
+      provider: 'Bank',
+      annualRate: 0.1,
+      termDays: 7,
+      maturityDate: '2023-01-08'
+    };
+    expect(calculateInvestedCapital([tx], 'ARS')).toBe(2000);
+  });
 });
 
 describe('calculateNetContributions', () => {

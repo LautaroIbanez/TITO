@@ -8,6 +8,10 @@ import { PortfolioTransaction, CryptoTradeTransaction } from '@/types';
  * @param currency - The currency to calculate the invested capital for.
  * @returns The net invested capital for the specified currency.
  */
+function isCryptoTradeTransaction(tx: PortfolioTransaction): tx is CryptoTradeTransaction {
+  return tx.assetType === 'Crypto' && typeof (tx as any).originalCurrency === 'string' && typeof (tx as any).originalAmount === 'number';
+}
+
 export function calculateInvestedCapital(transactions: PortfolioTransaction[], currency: 'ARS' | 'USD'): number {
   let investedCapital = 0;
 
@@ -21,17 +25,9 @@ export function calculateInvestedCapital(transactions: PortfolioTransaction[], c
         const commission = tx.commissionPct ?? 0;
         const purchaseFee = tx.purchaseFeePct ?? 0;
         // Manejo especial para compras de cripto pagadas en ARS pero registradas en USD
-        if (
-          tx.assetType === 'Crypto' &&
-          'originalCurrency' in tx &&
-          'originalAmount' in tx &&
-          typeof tx.originalCurrency === 'string' &&
-          typeof tx.originalAmount === 'number'
-        ) {
-          // Sumar el gasto real en la moneda original
-          const cryptoTx = tx as CryptoTradeTransaction;
-          if (cryptoTx.originalCurrency === currency && cryptoTx.originalAmount) {
-            investedCapital += cryptoTx.originalAmount;
+        if (isCryptoTradeTransaction(tx)) {
+          if (tx.originalCurrency === currency && tx.originalAmount) {
+            investedCapital += tx.originalAmount;
           }
         } else {
           investedCapital += tx.price * tx.quantity * (1 + commission / 100 + purchaseFee / 100);
@@ -44,7 +40,7 @@ export function calculateInvestedCapital(transactions: PortfolioTransaction[], c
         break;
       }
       case 'Create':
-        if (tx.assetType === 'FixedTermDeposit') {
+        if (tx.assetType === 'FixedTermDeposit' || tx.assetType === 'Caucion') {
           investedCapital += tx.amount;
         }
         break;
@@ -75,12 +71,8 @@ export function calculateNetContributions(transactions: PortfolioTransaction[], 
       // Excepción: para crypto pagada en ARS pero registrada en USD
       if (
         tx.type === 'Buy' &&
-        tx.assetType === 'Crypto' &&
-        'originalCurrency' in tx &&
-        'originalAmount' in tx &&
-        typeof tx.originalCurrency === 'string' &&
-        typeof tx.originalAmount === 'number' &&
-        (tx.originalCurrency as string) === currency
+        isCryptoTradeTransaction(tx) &&
+        tx.originalCurrency === currency
       ) {
         netContributions += tx.originalAmount;
       }

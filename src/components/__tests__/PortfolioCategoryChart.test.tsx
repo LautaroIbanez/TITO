@@ -56,7 +56,7 @@ describe('PortfolioCategoryChart', () => {
       'Deposits',
       'Crypto',
       'Cauciones',
-      'Cash',
+      'Efectivo Disponible',
     ]);
   });
 

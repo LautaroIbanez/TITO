@@ -411,11 +411,13 @@ export async function calculateCategoryValueHistory(
     // Initialize category values
     const categoryValues: { [category: string]: number } = {};
     
-    // Add cash to appropriate category
+    // Add cash to appropriate category (convert both balances to target currency)
     if (currency === 'ARS') {
-      categoryValues.cash = cashARS;
+      const usdToArs = await getExchangeRate('USD', 'ARS');
+      categoryValues.cash = cashARS + cashUSD * usdToArs;
     } else {
-      categoryValues.cash = cashUSD;
+      const arsToUsd = await getExchangeRate('ARS', 'USD');
+      categoryValues.cash = cashUSD + cashARS * arsToUsd;
     }
 
     // Calculate values for each position by category
