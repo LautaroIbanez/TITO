@@ -41,7 +41,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   deposits: 'Deposits',
   crypto: 'Crypto',
   cauciones: 'Cauciones',
-  cash: 'Cash',
+  cash: 'Efectivo Disponible',
 };
 
 function getCategoryValue(entry: CategoryValueEntry, key: string): number {

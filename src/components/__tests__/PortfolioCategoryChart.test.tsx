@@ -46,6 +46,8 @@ describe('PortfolioCategoryChart', () => {
     expect(screen.getByTestId('mock-line-chart')).toBeInTheDocument();
     expect(screen.getByTestId('labels').textContent).toContain('2024-01-01');
     expect(screen.getByTestId('labels').textContent).toContain('2024-01-02');
+    const labels = JSON.parse(screen.getByTestId('labels').textContent || '[]');
+    expect(labels).toContain('Efectivo Disponible');
     const datasets = JSON.parse(screen.getByTestId('datasets').textContent || '[]');
     expect(datasets).toEqual([
       'Total',

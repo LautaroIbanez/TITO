@@ -266,8 +266,8 @@
     "initialBalanceUSD": 3000
   },
   "investmentStrategy": {
-    "id": "strategy-bc447ab2-7b09-44ca-b113-6d90eae088ca",
-    "createdAt": "2025-07-05T11:47:19.749Z",
+    "id": "strategy-af739456-e385-460c-befc-157f2d3ceb20",
+    "createdAt": "2025-07-05T12:02:26.379Z",
     "targetAllocation": {
       "stocks": 75,
       "bonds": 15,
@@ -277,7 +277,7 @@
     },
     "recommendations": [
       {
-        "id": "alloc-1086a469-2f68-4563-bc21-b16151364536",
+        "id": "alloc-f0f84d3b-6b3c-4819-893b-5f483e3098cc",
         "action": "increase",
         "assetClass": "stocks",
         "reason": "Tu portafolio tiene 9.6% en acciones, pero tu estrategia objetivo es 75%",
@@ -285,14 +285,14 @@
         "expectedImpact": "positive"
       },
       {
-        "id": "cash-reserve-4eb749f2-2dcf-487d-942a-5e2a06651980",
+        "id": "cash-reserve-725567f1-48b1-4a0d-a9a8-dd8ddcacad63",
         "action": "sell",
         "reason": "Tienes menos de 2% de tu portafolio en efectivo. Considera vender algunas posiciones para tener una reserva de liquidez.",
         "priority": "low",
         "expectedImpact": "neutral"
       },
       {
-        "id": "alloc-0adc62ed-5f1d-4498-a113-c3565418d0d8",
+        "id": "alloc-b92f186c-38bf-4340-8856-3287162e1184",
         "action": "increase",
         "assetClass": "crypto",
         "reason": "Tu portafolio tiene 0.1% en cripto, pero tu estrategia objetivo es 5% (máximo recomendado por volatilidad).",
