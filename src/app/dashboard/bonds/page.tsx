@@ -47,19 +47,21 @@ export default function BondsPage() {
     const session = localStorage.getItem('session');
     if (!session) throw new Error("Session not found");
     const username = JSON.parse(session).username;
+    const payload: any = {
+      username,
+      assetType,
+      ticker: identifier,
+      quantity: Number(quantity),
+      price: Number(purchasePrice),
+      currency,
+      commissionPct,
+      purchaseFeePct,
+    };
+    console.log('Payload enviado al backend:', payload);
     const res = await fetch('/api/portfolio/buy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username,
-        assetType,
-        symbol: identifier,
-        quantity,
-        price: purchasePrice,
-        currency,
-        commissionPct,
-        purchaseFeePct,
-      }),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) {
       const data = await res.json();

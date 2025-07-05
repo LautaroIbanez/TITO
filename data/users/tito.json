@@ -60,6 +60,41 @@
       "maturityDate": "2025-07-11T21:08:11.521Z",
       "currency": "ARS",
       "term": 7
+    },
+    {
+      "type": "Bond",
+      "ticker": "AL30",
+      "quantity": 2,
+      "averagePrice": 50525,
+      "currency": "ARS"
+    },
+    {
+      "type": "FixedTermDeposit",
+      "id": "ftd-1751664219143",
+      "provider": "Banco Galicia",
+      "amount": 100000,
+      "annualRate": 75,
+      "termDays": 30,
+      "currency": "ARS",
+      "startDate": "2025-07-04T21:23:39.143Z",
+      "maturityDate": "2025-08-03T21:23:39.143Z",
+      "status": "active"
+    },
+    {
+      "type": "Stock",
+      "symbol": "GOOGL.BA",
+      "quantity": 30,
+      "averagePrice": 181.40496,
+      "currency": "ARS",
+      "market": "BCBA"
+    },
+    {
+      "type": "Stock",
+      "symbol": "CAT.BA",
+      "quantity": 13,
+      "averagePrice": 402.027425,
+      "currency": "ARS",
+      "market": "BCBA"
     }
   ],
   "transactions": [
@@ -151,11 +186,60 @@
       "termDays": 7,
       "maturityDate": "2025-07-11T21:08:11.521Z",
       "currency": "ARS"
+    },
+    {
+      "id": "1751664192193",
+      "date": "2025-07-04T21:23:12.193Z",
+      "type": "Buy",
+      "assetType": "Bond",
+      "ticker": "AL30",
+      "quantity": 2,
+      "price": 50000,
+      "currency": "ARS",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1751664219144",
+      "date": "2025-07-04T21:23:39.144Z",
+      "type": "Buy",
+      "assetType": "FixedTermDeposit",
+      "provider": "Banco Galicia",
+      "amount": 100000,
+      "annualRate": 75,
+      "termDays": 30,
+      "currency": "ARS"
+    },
+    {
+      "id": "1751664577166",
+      "date": "2025-07-04T21:29:37.166Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "GOOGL.BA",
+      "quantity": 30,
+      "price": 179.52,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1751664781005",
+      "date": "2025-07-04T21:33:01.005Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "CAT.BA",
+      "quantity": 13,
+      "price": 397.85,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
     }
   ],
   "goals": [],
   "cash": {
-    "ARS": 216826.80602500006,
+    "ARS": 5108.300700000057,
     "USD": 14.981181100000185
   },
   "profile": {
@@ -182,8 +266,8 @@
     "initialBalanceUSD": 3000
   },
   "investmentStrategy": {
-    "id": "strategy-32d463a5-eae6-417b-b734-57ec487e4989",
-    "createdAt": "2025-07-04T21:10:55.963Z",
+    "id": "strategy-e762353e-db4a-4bfb-a121-237f14c81987",
+    "createdAt": "2025-07-05T11:32:15.476Z",
     "targetAllocation": {
       "stocks": 75,
       "bonds": 15,
@@ -193,35 +277,22 @@
     },
     "recommendations": [
       {
-        "id": "alloc-2bce4e36-f52a-4fd6-89dc-af64fb9a2556",
+        "id": "alloc-d35e74df-5a5e-4e7c-b674-3e39183e1beb",
         "action": "increase",
         "assetClass": "stocks",
-        "reason": "Tu portafolio tiene 8.5% en acciones, pero tu estrategia objetivo es 75%",
+        "reason": "Tu portafolio tiene 9.6% en acciones, pero tu estrategia objetivo es 75%",
         "priority": "high",
         "expectedImpact": "positive"
       },
       {
-        "id": "alloc-6172eec3-7727-496d-945c-f194529a9d18",
-        "action": "increase",
-        "assetClass": "bonds",
-        "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 15%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
-        "priority": "high",
-        "expectedImpact": "positive",
-        "suggestedAssets": [
-          "GOV-BOND-2025",
-          "CORP-BOND-2026",
-          "MUNI-BOND-2027"
-        ]
+        "id": "cash-reserve-203224e2-1132-4fbb-8966-fc0a4da29b18",
+        "action": "sell",
+        "reason": "Tienes menos de 2% de tu portafolio en efectivo. Considera vender algunas posiciones para tener una reserva de liquidez.",
+        "priority": "low",
+        "expectedImpact": "neutral"
       },
       {
-        "id": "cash-invest-6e180948-802d-4456-962c-98663c4761aa",
-        "action": "buy",
-        "reason": "Tienes un 21.6% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
-        "priority": "high",
-        "expectedImpact": "positive"
-      },
-      {
-        "id": "alloc-ee5de649-9f9f-4add-9e8b-de472e8a96fb",
+        "id": "alloc-7764d62e-6d1a-4e25-9b85-91ff93001e39",
         "action": "increase",
         "assetClass": "crypto",
         "reason": "Tu portafolio tiene 0.1% en cripto, pero tu estrategia objetivo es 5% (máximo recomendado por volatilidad).",

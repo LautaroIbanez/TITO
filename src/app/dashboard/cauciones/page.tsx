@@ -94,32 +94,32 @@ export default function CaucionesPage() {
       {isModalOpen && selectedCaucion && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Crear Caución</h3>
+            <h3 className="text-lg font-semibold mb-4 text-black">Crear Caución</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium mb-2 text-black">
                   {selectedCaucion.description}
                 </label>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-black">
                   TNA: {selectedCaucion.annualRate.toFixed(2)}% | 
                   Plazo: {selectedCaucion.term} días
                 </p>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium mb-2 text-black">
                   Monto ({selectedCaucion.currency})
                 </label>
                 <input
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                   placeholder="Ingresa el monto"
                   min="0"
                   max={availableCash}
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs mt-1 text-black">
                   Disponible: {availableCash.toLocaleString()} {selectedCaucion.currency}
                 </p>
               </div>
@@ -131,7 +131,7 @@ export default function CaucionesPage() {
                     setSelectedCaucion(null);
                     setAmount('');
                   }}
-                  className="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                  className="flex-1 px-4 py-2 text-black bg-gray-200 rounded-md hover:bg-gray-300"
                 >
                   Cancelar
                 </button>
