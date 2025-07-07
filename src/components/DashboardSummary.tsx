@@ -13,6 +13,8 @@ import PortfolioCategoryChart from './PortfolioCategoryChart';
 import { formatCurrency, calculateFixedIncomeGains, calculateFixedIncomeValueHistory } from '@/utils/goalCalculator';
 import { trimHistory, trimCategoryValueHistory } from '@/utils/history';
 import { generatePortfolioHash } from '@/utils/priceDataHash';
+import { calculateNetGainsByCurrency } from '@/utils/positionGains';
+import { getPositionDisplayName } from '@/utils/priceValidation';
 
 export default function DashboardSummary() {
   const [portfolioValueARS, setPortfolioValueARS] = useState(0);
@@ -205,10 +207,15 @@ export default function DashboardSummary() {
     portfolioData.historicalPrices || {}
   );
 
-  const netGainsARS = investedValues.ARS - investedCapitalARS;
+  // Calculate net gains by currency and skipped assets
+  const netGainsResult = calculateNetGainsByCurrency(
+    portfolioData.positions || [],
+    portfolioData.historicalPrices || {}
+  );
+  const netGainsARS = netGainsResult.ARS;
+  const netGainsUSD = netGainsResult.USD;
+  const skippedAssets = netGainsResult.skipped;
   const gainsColorARS = netGainsARS >= 0 ? 'text-green-600' : 'text-red-600';
-
-  const netGainsUSD = investedValues.USD - investedCapitalUSD;
   const gainsColorUSD = netGainsUSD >= 0 ? 'text-green-600' : 'text-red-600';
 
   return (
@@ -292,8 +299,21 @@ export default function DashboardSummary() {
           <h3 className="text-sm font-medium text-gray-700">Capital Invertido (ARS)</h3>
           <p className="text-2xl font-semibold text-gray-900">{formatCurrency(investedCapitalARS, 'ARS')}</p>
         </div>
+        {/* Net Gains Warning */}
+        {skippedAssets.length > 0 && (
+          <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-3 rounded mb-4">
+            <strong>Advertencia:</strong> Algunos activos no se incluyeron en el cálculo de ganancias por falta de precio actual:
+            <ul className="list-disc ml-6 mt-1">
+              {skippedAssets.map(({ position, reason }, i) => (
+                <li key={i}>
+                  {position.type} {getPositionDisplayName(position)}: {reason}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-700">Ganancias / Pérdidas (ARS)</h3>
+          <h3 className="text-sm font-medium text-gray-700">Ganancias Netas (ARS)</h3>
           <p className={`text-2xl font-semibold ${gainsColorARS}`}> 
             {netGainsARS >= 0 ? '+' : ''}{formatCurrency(netGainsARS, 'ARS')}
           </p>
@@ -303,7 +323,7 @@ export default function DashboardSummary() {
           <p className="text-2xl font-semibold text-gray-900">{formatCurrency(investedCapitalUSD, 'USD')}</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-700">Ganancias / Pérdidas (USD)</h3>
+          <h3 className="text-sm font-medium text-gray-700">Ganancias Netas (USD)</h3>
           <p className={`text-2xl font-semibold ${gainsColorUSD}`}> 
             {netGainsUSD >= 0 ? '+' : ''}{formatCurrency(netGainsUSD, 'USD')}
           </p>

@@ -1,4 +1,5 @@
 import { PortfolioPosition, StockPosition, CryptoPosition, FixedTermDepositPosition, CaucionPosition } from '@/types';
+import { validatePositionPrice } from './priceValidation';
 
 /**
  * Computes the gain/loss in currency for a portfolio position.
@@ -29,4 +30,33 @@ export function computePositionGain(
     return pos.amount * (pos.annualRate / 100) * (days / 365);
   }
   return 0;
+}
+
+/**
+ * Calculates net gains by currency for all positions with valid current price.
+ * Returns { ARS, USD, skipped: Array<{ position, reason }> }
+ */
+export function calculateNetGainsByCurrency(
+  positions: PortfolioPosition[],
+  priceHistory: Record<string, any>,
+  today: Date = new Date()
+): { ARS: number; USD: number; skipped: Array<{ position: PortfolioPosition; reason: string }> } {
+  let ARS = 0;
+  let USD = 0;
+  const skipped: Array<{ position: PortfolioPosition; reason: string }> = [];
+
+  for (const pos of positions) {
+    const validation = validatePositionPrice(pos, priceHistory);
+    if (!validation.hasValidPrice || typeof validation.currentPrice !== 'number') {
+      skipped.push({ position: pos, reason: validation.reason || 'Precio no disponible' });
+      continue;
+    }
+    const gain = computePositionGain(pos, validation.currentPrice, today);
+    if (pos.currency === 'ARS') {
+      ARS += gain;
+    } else if (pos.currency === 'USD') {
+      USD += gain;
+    }
+  }
+  return { ARS, USD, skipped };
 } 

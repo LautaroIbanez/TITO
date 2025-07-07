@@ -36,6 +36,9 @@ export function calculateInvestedCapital(transactions: PortfolioTransaction[], c
           if (tx.originalCurrency === currency && typeof tx.originalAmount === 'number') {
             investedCapital += tx.originalAmount;
           }
+        } else if ((tx as any).assetType === 'FixedTermDeposit' || (tx as any).assetType === 'Caucion') {
+          // For FixedTermDeposit and Caucion, add amount (including commissions if present)
+          investedCapital += (tx as any).amount * (1 + commission / 100 + purchaseFee / 100);
         } else {
           investedCapital += tx.price * tx.quantity * (1 + commission / 100 + purchaseFee / 100);
         }
@@ -97,7 +100,11 @@ export function calculateNetContributions(transactions: PortfolioTransaction[], 
         netContributions -= tx.amount;
         break;
       case 'Buy':
-        netContributions += tx.price * tx.quantity;
+        if ((tx as any).assetType === 'FixedTermDeposit' || (tx as any).assetType === 'Caucion') {
+          netContributions += (tx as any).amount;
+        } else {
+          netContributions += tx.price * tx.quantity;
+        }
         break;
       case 'Sell':
         netContributions -= tx.price * tx.quantity;
@@ -151,18 +158,78 @@ export function calculateDailyInvestedCapital(
         const currency = (tx as { currency: 'ARS' | 'USD' }).currency;
         if (cryptoTx.originalCurrency === currency && typeof cryptoTx.originalAmount === 'number') {
           if (currency === 'ARS') investedARS += cryptoTx.originalAmount;
-          // @ts-expect-error: currency solo puede ser 'ARS' o 'USD' aquí
           if (currency === 'USD') investedUSD += cryptoTx.originalAmount;
+        } else {
+          // Fallback to normal logic if not a special ARS-paid crypto buy
+          if (tx.type === 'Buy') {
+            const commission = (tx as any).commissionPct ?? 0;
+            const purchaseFee = (tx as any).purchaseFeePct ?? 0;
+            if ((tx as any).assetType === 'FixedTermDeposit' || (tx as any).assetType === 'Caucion') {
+              // Treat Buy of FixedTermDeposit/Caucion like Create: use amount (plus fees)
+              if (currency === 'ARS') {
+                investedARS += (tx as any).amount * (1 + commission / 100 + purchaseFee / 100);
+              } else {
+                investedUSD += (tx as any).amount * (1 + commission / 100 + purchaseFee / 100);
+              }
+              continue;
+            }
+            if (currency === 'ARS') {
+              investedARS += (tx as any).price * (tx as any).quantity * (1 + commission / 100 + purchaseFee / 100);
+            } else {
+              investedUSD += (tx as any).price * (tx as any).quantity * (1 + commission / 100 + purchaseFee / 100);
+            }
+          } else if (tx.type === 'Sell') {
+            const commission = (tx as any).commissionPct ?? 0;
+            if (currency === 'ARS') {
+              investedARS -= (tx as any).price * (tx as any).quantity * (1 - commission / 100);
+            } else {
+              investedUSD -= (tx as any).price * (tx as any).quantity * (1 - commission / 100);
+            }
+          }
         }
-      } else if ('price' in tx && 'quantity' in tx && 'currency' in tx) {
+      } else if ('price' in tx && 'quantity' in tx && 'currency' in tx && 'type' in tx) {
         const commission = (tx as any).commissionPct ?? 0;
         const purchaseFee = (tx as any).purchaseFeePct ?? 0;
         const currency = (tx as { currency: 'ARS' | 'USD' }).currency;
-        if (currency === 'ARS') {
-          investedARS += (tx as any).price * (tx as any).quantity * (1 + commission / 100 + purchaseFee / 100);
+        if (tx.type === 'Buy') {
+          if ((tx as any).assetType === 'FixedTermDeposit' || (tx as any).assetType === 'Caucion') {
+            // Treat Buy of FixedTermDeposit/Caucion like Create: use amount (plus fees)
+            if (currency === 'ARS') {
+              investedARS += (tx as any).amount * (1 + commission / 100 + purchaseFee / 100);
+            } else {
+              investedUSD += (tx as any).amount * (1 + commission / 100 + purchaseFee / 100);
+            }
+            continue;
+          }
+          if (currency === 'ARS') {
+            investedARS += (tx as any).price * (tx as any).quantity * (1 + commission / 100 + purchaseFee / 100);
+          } else {
+            investedUSD += (tx as any).price * (tx as any).quantity * (1 + commission / 100 + purchaseFee / 100);
+          }
+        } else if (tx.type === 'Sell') {
+          if (currency === 'ARS') {
+            investedARS -= (tx as any).price * (tx as any).quantity * (1 - commission / 100);
+          } else {
+            investedUSD -= (tx as any).price * (tx as any).quantity * (1 - commission / 100);
+          }
         }
-        if (currency === 'USD') {
-          investedUSD += (tx as any).price * (tx as any).quantity * (1 + commission / 100 + purchaseFee / 100);
+      } else if (tx.type === 'Create' && 'amount' in tx && 'currency' in tx) {
+        // Handle Create transactions for FixedTermDeposit and Caucion
+        const currency = (tx as { currency: 'ARS' | 'USD' }).currency;
+        if ((tx as any).assetType === 'FixedTermDeposit' || (tx as any).assetType === 'Caucion') {
+          if (currency === 'ARS') {
+            investedARS += (tx as any).amount;
+          } else {
+            investedUSD += (tx as any).amount;
+          }
+        }
+      } else if (tx.type === 'Deposit' && tx.source === 'FixedTermPayout' && 'amount' in tx && 'currency' in tx) {
+        // Handle FixedTermPayout deposit as reducing invested capital
+        const currency = (tx as { currency: 'ARS' | 'USD' }).currency;
+        if (currency === 'ARS') {
+          investedARS -= (tx as any).amount;
+        } else {
+          investedUSD -= (tx as any).amount;
         }
       }
     }
