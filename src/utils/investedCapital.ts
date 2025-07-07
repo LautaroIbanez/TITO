@@ -9,7 +9,14 @@ import { PortfolioTransaction, CryptoTradeTransaction } from '@/types';
  * @returns The net invested capital for the specified currency.
  */
 function isCryptoTradeTransaction(tx: PortfolioTransaction): tx is CryptoTradeTransaction {
-  return tx.assetType === 'Crypto' && typeof (tx as any).originalCurrency === 'string' && typeof (tx as any).originalAmount === 'number';
+  return (
+    'assetType' in tx &&
+    tx.assetType === 'Crypto' &&
+    'originalCurrency' in tx &&
+    typeof (tx as any).originalCurrency === 'string' &&
+    'originalAmount' in tx &&
+    typeof (tx as any).originalAmount === 'number'
+  );
 }
 
 export function calculateInvestedCapital(transactions: PortfolioTransaction[], currency: 'ARS' | 'USD'): number {
@@ -26,7 +33,7 @@ export function calculateInvestedCapital(transactions: PortfolioTransaction[], c
         const purchaseFee = tx.purchaseFeePct ?? 0;
         // Manejo especial para compras de cripto pagadas en ARS pero registradas en USD
         if (isCryptoTradeTransaction(tx)) {
-          if (tx.originalCurrency === currency && tx.originalAmount) {
+          if (tx.originalCurrency === currency && typeof tx.originalAmount === 'number') {
             investedCapital += tx.originalAmount;
           }
         } else {
@@ -72,7 +79,8 @@ export function calculateNetContributions(transactions: PortfolioTransaction[], 
       if (
         tx.type === 'Buy' &&
         isCryptoTradeTransaction(tx) &&
-        tx.originalCurrency === currency
+        tx.originalCurrency === currency &&
+        typeof tx.originalAmount === 'number'
       ) {
         netContributions += tx.originalAmount;
       }
@@ -137,68 +145,24 @@ export function calculateDailyInvestedCapital(
     const dateStr = current.toISOString().slice(0, 10);
     const todaysTxs = txByDate.get(dateStr) || [];
     for (const tx of todaysTxs) {
-      // ARS
-      if (tx.currency === 'ARS') {
-        switch (tx.type) {
-          case 'Buy': {
-            const commission = tx.commissionPct ?? 0;
-            const purchaseFee = tx.purchaseFeePct ?? 0;
-            if (
-              tx.assetType === 'Crypto' &&
-              'originalCurrency' in tx &&
-              'originalAmount' in tx &&
-              typeof tx.originalCurrency === 'string' &&
-              typeof tx.originalAmount === 'number'
-            ) {
-              if ((tx.originalCurrency as string) === 'ARS') investedARS += tx.originalAmount;
-            } else {
-              investedARS += tx.price * tx.quantity * (1 + commission / 100 + purchaseFee / 100);
-            }
-            break;
-          }
-          case 'Sell': {
-            const commission = tx.commissionPct ?? 0;
-            investedARS -= tx.price * tx.quantity * (1 - commission / 100);
-            break;
-          }
-          case 'Create':
-            if (tx.assetType === 'FixedTermDeposit') investedARS += tx.amount;
-            break;
-          case 'Deposit':
-            if ((tx as any).source === 'FixedTermPayout') investedARS -= tx.amount;
-            break;
+      const isCrypto = isCryptoTradeTransaction(tx);
+      if (isCrypto && 'currency' in tx) {
+        const cryptoTx = tx as CryptoTradeTransaction;
+        const currency = (tx as { currency: 'ARS' | 'USD' }).currency;
+        if (cryptoTx.originalCurrency === currency && typeof cryptoTx.originalAmount === 'number') {
+          if (currency === 'ARS') investedARS += cryptoTx.originalAmount;
+          // @ts-expect-error: currency solo puede ser 'ARS' o 'USD' aquí
+          if (currency === 'USD') investedUSD += cryptoTx.originalAmount;
         }
-      }
-      // USD
-      if (tx.currency === 'USD') {
-        switch (tx.type) {
-          case 'Buy': {
-            const commission = tx.commissionPct ?? 0;
-            const purchaseFee = tx.purchaseFeePct ?? 0;
-            if (
-              tx.assetType === 'Crypto' &&
-              'originalCurrency' in tx &&
-              'originalAmount' in tx &&
-              typeof tx.originalCurrency === 'string' &&
-              typeof tx.originalAmount === 'number'
-            ) {
-              if ((tx.originalCurrency as string) === 'USD') investedUSD += tx.originalAmount;
-            } else {
-              investedUSD += tx.price * tx.quantity * (1 + commission / 100 + purchaseFee / 100);
-            }
-            break;
-          }
-          case 'Sell': {
-            const commission = tx.commissionPct ?? 0;
-            investedUSD -= tx.price * tx.quantity * (1 - commission / 100);
-            break;
-          }
-          case 'Create':
-            if (tx.assetType === 'FixedTermDeposit') investedUSD += tx.amount;
-            break;
-          case 'Deposit':
-            if ((tx as any).source === 'FixedTermPayout') investedUSD -= tx.amount;
-            break;
+      } else if ('price' in tx && 'quantity' in tx && 'currency' in tx) {
+        const commission = (tx as any).commissionPct ?? 0;
+        const purchaseFee = (tx as any).purchaseFeePct ?? 0;
+        const currency = (tx as { currency: 'ARS' | 'USD' }).currency;
+        if (currency === 'ARS') {
+          investedARS += (tx as any).price * (tx as any).quantity * (1 + commission / 100 + purchaseFee / 100);
+        }
+        if (currency === 'USD') {
+          investedUSD += (tx as any).price * (tx as any).quantity * (1 + commission / 100 + purchaseFee / 100);
         }
       }
     }
