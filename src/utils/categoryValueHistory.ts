@@ -276,6 +276,7 @@ export async function calculateCategoryValueHistory(
         }
       }
     }
+  }
 
   const valueHistory: CategoryValueEntry[] = [];
   let lastKnownTotalValue = 0;
@@ -635,4 +636,4 @@ export async function calculateCategoryValueHistory(
 
   // Return both valueHistory and alerts
   return { valueHistory, alerts: alerts || [] };
-} 
+}
