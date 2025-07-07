@@ -215,6 +215,22 @@ export async function calculatePortfolioValueHistory(
             cashUSD -= tx.amount;
           }
         }
+      } else if (tx.type === 'Acreditación Plazo Fijo' || tx.type === 'Acreditación Caución') {
+        // Cash inflows from matured fixed income instruments
+        if (tx.currency === 'ARS') {
+          cashARS += tx.amount;
+        } else {
+          cashUSD += tx.amount;
+        }
+        // Remove the matching matured deposit/caucion after credit
+        if (tx.type === 'Acreditación Plazo Fijo' && 'depositId' in tx) {
+          const idx = maturedDeposits.findIndex(d => d.id === tx.depositId);
+          if (idx !== -1) maturedDeposits.splice(idx, 1);
+        }
+        if (tx.type === 'Acreditación Caución' && 'caucionId' in tx) {
+          const idx = maturedCauciones.findIndex(c => c.id === tx.caucionId);
+          if (idx !== -1) maturedCauciones.splice(idx, 1);
+        }
       }
     }
   }
@@ -336,6 +352,22 @@ export async function calculatePortfolioValueHistory(
           } else {
             cashUSD -= tx.amount;
           }
+        }
+      } else if (tx.type === 'Acreditación Plazo Fijo' || tx.type === 'Acreditación Caución') {
+        // Cash inflows from matured fixed income instruments
+        if (tx.currency === 'ARS') {
+          cashARS += tx.amount;
+        } else {
+          cashUSD += tx.amount;
+        }
+        // Remove the matching matured deposit/caucion after credit
+        if (tx.type === 'Acreditación Plazo Fijo' && 'depositId' in tx) {
+          const idx = maturedDeposits.findIndex(d => d.id === tx.depositId);
+          if (idx !== -1) maturedDeposits.splice(idx, 1);
+        }
+        if (tx.type === 'Acreditación Caución' && 'caucionId' in tx) {
+          const idx = maturedCauciones.findIndex(c => c.id === tx.caucionId);
+          if (idx !== -1) maturedCauciones.splice(idx, 1);
         }
       }
     }

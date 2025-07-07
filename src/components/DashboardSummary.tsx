@@ -27,6 +27,7 @@ export default function DashboardSummary() {
   const [goalValueHistories, setGoalValueHistories] = useState<Record<string, { date: string, value: number }[]>>({});
   const [categoryValueHistoryARS, setCategoryValueHistoryARS] = useState<any[]>([]);
   const [categoryValueHistoryUSD, setCategoryValueHistoryUSD] = useState<any[]>([]);
+  const [consolidatedTotals, setConsolidatedTotals] = useState<{ ARS: number, USD: number }[]>([]);
   
   const { portfolioData, strategy, loading, error, portfolioVersion } = usePortfolio();
 
@@ -100,7 +101,7 @@ export default function DashboardSummary() {
           'ARS',
           { days: 365 }
         );
-        setCategoryValueHistoryARS(categoryHistoryARS);
+        setCategoryValueHistoryARS(categoryHistoryARS.valueHistory);
         
         const categoryHistoryUSD = await calculateCategoryValueHistory(
           portfolioData.transactions || [],
@@ -108,7 +109,14 @@ export default function DashboardSummary() {
           'USD',
           { days: 365 }
         );
-        setCategoryValueHistoryUSD(categoryHistoryUSD);
+        setCategoryValueHistoryUSD(categoryHistoryUSD.valueHistory);
+        
+        // Create consolidated totals for tooltips (matching the summary figures)
+        const consolidatedTotals = valueHistory.map(entry => ({
+          ARS: entry.valueARS,
+          USD: entry.valueUSD
+        }));
+        setConsolidatedTotals(consolidatedTotals);
         
         // Verify that the last value in history matches current portfolio value
         if (valueHistory.length > 0) {
@@ -344,6 +352,7 @@ export default function DashboardSummary() {
           <h3 className="text-lg font-medium text-gray-800 mb-4">Categorías del Portafolio (ARS)</h3>
           <PortfolioCategoryChart 
             history={trimCategoryValueHistory(categoryValueHistoryARS)}
+            consolidatedTotals={consolidatedTotals}
           />
         </div>
         {/* Categorías del Portafolio (USD) */}
@@ -351,6 +360,7 @@ export default function DashboardSummary() {
           <h3 className="text-lg font-medium text-gray-800 mb-4">Categorías del Portafolio (USD)</h3>
           <PortfolioCategoryChart 
             history={trimCategoryValueHistory(categoryValueHistoryUSD)}
+            consolidatedTotals={consolidatedTotals}
           />
         </div>
       </div>

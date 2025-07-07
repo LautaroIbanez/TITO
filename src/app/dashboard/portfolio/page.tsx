@@ -15,11 +15,13 @@ import { generateInvestmentStrategy } from '@/utils/strategyAdvisor';
 import { InvestmentGoal, InvestorProfile, PortfolioPosition } from '@/types';
 import { generatePortfolioHash } from '@/utils/priceDataHash';
 import { ensureBaSuffix, getBaseTicker } from '@/utils/tickers';
+import { calculatePortfolioValueHistory } from '@/utils/calculatePortfolioValue';
 
 export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange?: () => void }) {
   const { portfolioData, loading, refreshPortfolio, portfolioVersion } = usePortfolio();
   const [categoryValueHistoryARS, setCategoryValueHistoryARS] = useState<any[]>([]);
   const [categoryValueHistoryUSD, setCategoryValueHistoryUSD] = useState<any[]>([]);
+  const [consolidatedTotals, setConsolidatedTotals] = useState<{ ARS: number, USD: number }[]>([]);
   const [depositAmount, setDepositAmount] = useState('');
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
   const [depositCurrency, setDepositCurrency] = useState<'ARS' | 'USD'>('ARS');
@@ -39,6 +41,20 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
   useEffect(() => {
     async function fetchCategoryValueHistory() {
       if (portfolioData?.transactions && portfolioData?.historicalPrices) {
+        // Calculate portfolio value history for consolidated totals
+        const valueHistory = await calculatePortfolioValueHistory(
+          portfolioData.transactions,
+          portfolioData.historicalPrices,
+          { days: 90 }
+        );
+        
+        // Create consolidated totals for tooltips (matching the summary figures)
+        const consolidatedTotals = valueHistory.map(entry => ({
+          ARS: entry.valueARS,
+          USD: entry.valueUSD
+        }));
+        setConsolidatedTotals(consolidatedTotals);
+        
         // Calculate category value histories
         const categoryHistoryARS = await calculateCategoryValueHistory(
           portfolioData.transactions,
@@ -46,7 +62,7 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
           'ARS',
           { days: 90 }
         );
-        setCategoryValueHistoryARS(categoryHistoryARS);
+        setCategoryValueHistoryARS(categoryHistoryARS.valueHistory);
         
         const categoryHistoryUSD = await calculateCategoryValueHistory(
           portfolioData.transactions,
@@ -54,10 +70,11 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
           'USD',
           { days: 90 }
         );
-        setCategoryValueHistoryUSD(categoryHistoryUSD);
+        setCategoryValueHistoryUSD(categoryHistoryUSD.valueHistory);
       } else {
         setCategoryValueHistoryARS([]);
         setCategoryValueHistoryUSD([]);
+        setConsolidatedTotals([]);
       }
     }
     fetchCategoryValueHistory();
@@ -259,11 +276,19 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
         {/* Gráficos de categorías en filas siguientes */}
         <div className="bg-white p-6 rounded-lg shadow border border-gray-200 lg:col-span-2">
           <h3 className="text-lg font-bold text-gray-800 mb-4">Categorías del Portafolio (ARS)</h3>
-          <PortfolioCategoryChart history={trimCategoryValueHistory(categoryValueHistoryARS)} height={60} />
+          <PortfolioCategoryChart 
+            history={trimCategoryValueHistory(categoryValueHistoryARS)} 
+            height={60} 
+            consolidatedTotals={consolidatedTotals}
+          />
         </div>
         <div className="bg-white p-6 rounded-lg shadow border border-gray-200 lg:col-span-2">
           <h3 className="text-lg font-bold text-gray-800 mb-4">Categorías del Portafolio (USD)</h3>
-          <PortfolioCategoryChart history={trimCategoryValueHistory(categoryValueHistoryUSD)} height={60} />
+          <PortfolioCategoryChart 
+            history={trimCategoryValueHistory(categoryValueHistoryUSD)} 
+            height={60} 
+            consolidatedTotals={consolidatedTotals}
+          />
         </div>
       </div>
 

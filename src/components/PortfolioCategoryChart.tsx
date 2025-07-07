@@ -72,9 +72,14 @@ function getCategoryValue(entry: CategoryValueEntry, key: string): number {
 export interface PortfolioCategoryChartProps {
   history: CategoryValueEntry[];
   height?: number;
+  consolidatedTotals?: { ARS: number; USD: number }[];
 }
 
-export const PortfolioCategoryChart: React.FC<PortfolioCategoryChartProps> = ({ history, height = 220 }) => {
+export const PortfolioCategoryChart: React.FC<PortfolioCategoryChartProps> = ({ 
+  history, 
+  height = 220,
+  consolidatedTotals 
+}) => {
   const labels = history.map((entry) => entry.date);
 
   const datasets = [
@@ -176,6 +181,28 @@ export const PortfolioCategoryChart: React.FC<PortfolioCategoryChartProps> = ({ 
       tooltip: {
         mode: 'index' as const,
         intersect: false,
+        callbacks: {
+          afterBody: (context: any) => {
+            if (!consolidatedTotals || context.length === 0) return '';
+            
+            const dataIndex = context[0].dataIndex;
+            const consolidatedTotal = consolidatedTotals[dataIndex];
+            
+            if (!consolidatedTotal) return '';
+            
+            return [
+              '',
+              `Total ARS: $${consolidatedTotal.ARS.toLocaleString('es-AR', { 
+                minimumFractionDigits: 0, 
+                maximumFractionDigits: 0 
+              })}`,
+              `Total USD: $${consolidatedTotal.USD.toLocaleString('en-US', { 
+                minimumFractionDigits: 0, 
+                maximumFractionDigits: 0 
+              })}`
+            ];
+          }
+        }
       },
     },
     interaction: {

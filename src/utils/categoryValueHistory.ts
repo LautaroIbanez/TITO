@@ -1,10 +1,10 @@
-import { PortfolioTransaction, FixedTermDepositCreationTransaction, CaucionCreationTransaction } from '@/types';
-import { PriceData } from '@/types/finance';
 import dayjs from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
-import { getExchangeRate } from './currency';
+import { PortfolioTransaction, PortfolioPosition, FixedTermDepositCreationTransaction, CaucionCreationTransaction } from '@/types';
+import { PriceData } from '@/types/finance';
 import { STOCK_CATEGORIES, AR_SOVEREIGN_BONDS } from './assetCategories';
+import { filterDuplicates } from './duplicateDetection';
 
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
@@ -86,8 +86,8 @@ export async function calculateCategoryValueHistory(
   priceHistory: Record<string, PriceData[]>,
   currency: 'ARS' | 'USD' = 'ARS',
   options: CategoryValueOptions = {}
-): Promise<CategoryValueEntry[]> {
-  if (!transactions || transactions.length === 0) return [];
+): Promise<{ valueHistory: CategoryValueEntry[], alerts: { date: string; category: string; value: number; totalValue: number }[] }> {
+  if (!transactions || transactions.length === 0) return { valueHistory: [], alerts: [] };
 
   const txs = [...transactions].sort((a, b) => dayjs(a.date).startOf('day').diff(dayjs(b.date).startOf('day')));
   
@@ -211,6 +211,15 @@ export async function calculateCategoryValueHistory(
         } else {
           cashUSD += tx.amount;
         }
+        // Remove the matching matured deposit/caucion after credit
+        if (tx.type === 'Acreditación Plazo Fijo' && 'depositId' in tx) {
+          const idx = maturedDeposits.findIndex(d => d.id === tx.depositId);
+          if (idx !== -1) maturedDeposits.splice(idx, 1);
+        }
+        if (tx.type === 'Acreditación Caución' && 'caucionId' in tx) {
+          const idx = maturedCauciones.findIndex(c => c.id === tx.caucionId);
+          if (idx !== -1) maturedCauciones.splice(idx, 1);
+        }
       } else if (tx.type === 'Withdrawal') {
         // Remove matured deposits that match the withdrawal amount and currency
         const withdrawalAmount = tx.amount;
@@ -267,10 +276,10 @@ export async function calculateCategoryValueHistory(
         }
       }
     }
-  }
 
   const valueHistory: CategoryValueEntry[] = [];
   let lastKnownTotalValue = 0;
+  let alerts: { date: string; category: string; value: number; totalValue: number }[] | null = null;
 
   for (const dateStr of allDates) {
     const today = dayjs(dateStr).startOf('day');
@@ -351,6 +360,15 @@ export async function calculateCategoryValueHistory(
         } else {
           cashUSD += tx.amount;
         }
+        // Remove the matching matured deposit/caucion after credit
+        if (tx.type === 'Acreditación Plazo Fijo' && 'depositId' in tx) {
+          const idx = maturedDeposits.findIndex(d => d.id === tx.depositId);
+          if (idx !== -1) maturedDeposits.splice(idx, 1);
+        }
+        if (tx.type === 'Acreditación Caución' && 'caucionId' in tx) {
+          const idx = maturedCauciones.findIndex(c => c.id === tx.caucionId);
+          if (idx !== -1) maturedCauciones.splice(idx, 1);
+        }
       } else if (tx.type === 'Withdrawal') {
         // Remove matured deposits that match the withdrawal amount and currency
         const withdrawalAmount = tx.amount;
@@ -411,31 +429,75 @@ export async function calculateCategoryValueHistory(
     // Initialize category values
     const categoryValues: { [category: string]: number } = {};
     
-    // Add cash to appropriate category (convert both balances to target currency)
+    // Add cash to appropriate category (no conversion)
     if (currency === 'ARS') {
-      const usdToArs = await getExchangeRate('USD', 'ARS');
-      categoryValues.cash = cashARS + cashUSD * usdToArs;
+      categoryValues.cash = cashARS;
     } else {
-      const arsToUsd = await getExchangeRate('ARS', 'USD');
-      categoryValues.cash = cashUSD + cashARS * arsToUsd;
+      categoryValues.cash = cashUSD;
     }
 
-    // Calculate values for each position by category
-    for (const key in positions) {
-      const { quantity, currency: posCurrency } = positions[key];
+    // Convert positions map to array, filter duplicates, and rebuild map
+    const positionsArray: PortfolioPosition[] = [];
+    for (const [key, { quantity, currency: posCurrency }] of Object.entries(positions)) {
       if (quantity <= 1e-6) continue;
+      const symbol = key.split('_')[0];
+      const assetType = AR_SOVEREIGN_BONDS.includes(symbol) ? 'Bond' : 
+                       ASSET_CATEGORIES.crypto.includes(symbol) ? 'Crypto' : 'Stock';
       
+      if (assetType === 'Stock') {
+        positionsArray.push({
+          type: 'Stock',
+          symbol,
+          quantity,
+          currency: posCurrency,
+          averagePrice: 0, // Not needed for category calculation
+          market: 'BCBA' // Default market
+        });
+      } else if (assetType === 'Bond') {
+        positionsArray.push({
+          type: 'Bond',
+          ticker: symbol,
+          quantity,
+          currency: posCurrency,
+          averagePrice: 0 // Not needed for category calculation
+        });
+      } else if (assetType === 'Crypto') {
+        positionsArray.push({
+          type: 'Crypto',
+          symbol,
+          quantity,
+          currency: 'USD', // Crypto positions are always in USD
+          averagePrice: 0 // Not needed for category calculation
+        });
+      }
+    }
+    
+    // Filter duplicates and rebuild positions map
+    const filteredPositions = filterDuplicates(positionsArray);
+    const filteredPositionsMap: Record<string, { quantity: number; currency: 'ARS' | 'USD' }> = {};
+    
+    for (const pos of filteredPositions) {
+      const identifier = pos.type === 'Stock' ? pos.symbol : 
+                       pos.type === 'Bond' ? pos.ticker : 
+                       pos.type === 'Crypto' ? pos.symbol : '';
+      const key = `${identifier}_${pos.currency}`;
+      const quantity = pos.type === 'Stock' || pos.type === 'Bond' || pos.type === 'Crypto' ? pos.quantity : 0;
+      filteredPositionsMap[key] = { quantity, currency: pos.currency };
+    }
+
+    // Calculate values for each position by category using filtered positions
+    for (const key in filteredPositionsMap) {
+      const { quantity, currency: posCurrency } = filteredPositionsMap[key];
+      if (quantity <= 1e-6) continue;
+      if (posCurrency !== currency) continue;
       const symbol = key.split('_')[0];
       const ph = priceHistory[symbol];
       if (!ph || ph.length === 0) continue;
-      
       // Find the most recent non-zero price up to this date
       const validPrices = ph.filter(p => p.close > 0 && dayjs(p.date).isSameOrBefore(dateStr));
       if (validPrices.length === 0) continue; // Skip if all prices are zero
-      
       const price = validPrices[validPrices.length - 1].close; // Most recent non-zero price
       const valueInOwnCurrency = quantity * price;
-      
       // Determine asset type and category
       let assetType = 'Stock'; // Default
       if (AR_SOVEREIGN_BONDS.includes(symbol)) {
@@ -443,26 +505,17 @@ export async function calculateCategoryValueHistory(
       } else if (ASSET_CATEGORIES.crypto.includes(symbol)) {
         assetType = 'Crypto';
       }
-      
       const category = getAssetCategory(symbol, assetType);
-      
-      // Convert to target currency if needed
-      let valueInTargetCurrency = valueInOwnCurrency;
-      if (posCurrency !== currency) {
-        const exchangeRate = await getExchangeRate(posCurrency, currency);
-        valueInTargetCurrency = valueInOwnCurrency * exchangeRate;
-      }
-      
-      categoryValues[category] = (categoryValues[category] || 0) + valueInTargetCurrency;
+      // No conversion needed, already filtered by currency
+      categoryValues[category] = (categoryValues[category] || 0) + valueInOwnCurrency;
     }
     
     // Fixed-Term Deposits
     for (const deposit of activeDeposits) {
+      if (deposit.currency !== currency) continue;
       const startDate = dayjs(deposit.date).startOf('day');
       const maturityDate = dayjs(deposit.maturityDate).startOf('day');
-
       if (today.isBefore(startDate)) continue;
-
       if (today.isAfter(maturityDate) && !deposit.isMatured) {
         deposit.isMatured = true;
         // Move to matured deposits array
@@ -473,9 +526,7 @@ export async function calculateCategoryValueHistory(
           activeDeposits.splice(index, 1);
         }
       }
-
       if (deposit.isMatured) continue;
-
       let value = deposit.amount;
       if (today.isSameOrAfter(startDate)) {
         const daysActive = today.diff(startDate, 'day');
@@ -483,24 +534,16 @@ export async function calculateCategoryValueHistory(
         const interest = deposit.amount * dailyRate * daysActive;
         value += interest;
       }
-      
-      // Convert to target currency if needed
-      let valueInTargetCurrency = value;
-      if (deposit.currency !== currency) {
-        const exchangeRate = await getExchangeRate(deposit.currency, currency);
-        valueInTargetCurrency = value * exchangeRate;
-      }
-      
-      categoryValues.deposits = (categoryValues.deposits || 0) + valueInTargetCurrency;
+      // No conversion needed
+      categoryValues.deposits = (categoryValues.deposits || 0) + value;
     }
     
     // Cauciones
     for (const caucion of activeCauciones) {
+      if (caucion.currency !== currency) continue;
       const startDate = dayjs(caucion.date).startOf('day');
       const maturityDate = dayjs(caucion.maturityDate).startOf('day');
-
       if (today.isBefore(startDate)) continue;
-
       if (today.isAfter(maturityDate) && !caucion.isMatured) {
         caucion.isMatured = true;
         // Move to matured cauciones array
@@ -511,9 +554,7 @@ export async function calculateCategoryValueHistory(
           activeCauciones.splice(index, 1);
         }
       }
-
       if (caucion.isMatured) continue;
-
       let value = caucion.amount;
       if (today.isSameOrAfter(startDate)) {
         const daysActive = today.diff(startDate, 'day');
@@ -521,53 +562,34 @@ export async function calculateCategoryValueHistory(
         const interest = caucion.amount * dailyRate * daysActive;
         value += interest;
       }
-      
-      // Convert to target currency if needed
-      let valueInTargetCurrency = value;
-      if (caucion.currency !== currency) {
-        const exchangeRate = await getExchangeRate(caucion.currency, currency);
-        valueInTargetCurrency = value * exchangeRate;
-      }
-      
-      categoryValues.cauciones = (categoryValues.cauciones || 0) + valueInTargetCurrency;
+      // No conversion needed
+      categoryValues.cauciones = (categoryValues.cauciones || 0) + value;
     }
     
     // Matured Deposits (keep their final value until withdrawn)
     for (const deposit of maturedDeposits) {
+      if (deposit.currency !== currency) continue;
       const startDate = dayjs(deposit.date).startOf('day');
       const maturityDate = dayjs(deposit.maturityDate).startOf('day');
       const days = maturityDate.diff(startDate, 'day');
       const dailyRate = deposit.annualRate / 100 / 365;
       const fullInterest = deposit.amount * dailyRate * days;
       const finalValue = deposit.amount + fullInterest;
-      
-      // Convert to target currency if needed
-      let valueInTargetCurrency = finalValue;
-      if (deposit.currency !== currency) {
-        const exchangeRate = await getExchangeRate(deposit.currency, currency);
-        valueInTargetCurrency = finalValue * exchangeRate;
-      }
-      
-      categoryValues.deposits = (categoryValues.deposits || 0) + valueInTargetCurrency;
+      // No conversion needed
+      categoryValues.deposits = (categoryValues.deposits || 0) + finalValue;
     }
     
     // Matured Cauciones (keep their final value until withdrawn)
     for (const caucion of maturedCauciones) {
+      if (caucion.currency !== currency) continue;
       const startDate = dayjs(caucion.date).startOf('day');
       const maturityDate = dayjs(caucion.maturityDate).startOf('day');
       const days = maturityDate.diff(startDate, 'day');
       const dailyRate = caucion.annualRate / 100 / 365;
       const fullInterest = caucion.amount * dailyRate * days;
       const finalValue = caucion.amount + fullInterest;
-      
-      // Convert to target currency if needed
-      let valueInTargetCurrency = finalValue;
-      if (caucion.currency !== currency) {
-        const exchangeRate = await getExchangeRate(caucion.currency, currency);
-        valueInTargetCurrency = finalValue * exchangeRate;
-      }
-      
-      categoryValues.cauciones = (categoryValues.cauciones || 0) + valueInTargetCurrency;
+      // No conversion needed
+      categoryValues.cauciones = (categoryValues.cauciones || 0) + finalValue;
     }
     
     // Real Estate positions (from current positions, not transactions)
@@ -579,9 +601,17 @@ export async function calculateCategoryValueHistory(
     
     // Calculate total value
     const totalValue = Object.values(categoryValues).reduce((sum, value) => sum + value, 0);
-    
+
+    // Alert logic: check for categories exceeding totalValue by tolerance
+    const tolerance = 1e-2; // Small tolerance for floating point
+    for (const [cat, value] of Object.entries(categoryValues)) {
+      if (value > totalValue + tolerance) {
+        if (!alerts) alerts = [];
+        alerts.push({ date: dateStr, category: cat, value, totalValue });
+      }
+    }
+
     // Only use last known value if we have no positions/deposits but still have a value
-    // This prevents the value from dropping to 0 when we have active positions
     if (totalValue === 0 && lastKnownTotalValue > 0 && 
         Object.keys(positions).length === 0 && 
         activeDeposits.length === 0 && 
@@ -603,5 +633,6 @@ export async function calculateCategoryValueHistory(
     }
   }
 
-  return valueHistory;
+  // Return both valueHistory and alerts
+  return { valueHistory, alerts: alerts || [] };
 } 
