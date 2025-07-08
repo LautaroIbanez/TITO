@@ -11,7 +11,7 @@ import {
   Filler,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import type { CategoryValueEntry } from '@/utils/categoryValueHistory';
+import type { PortfolioSummaryEntry } from '@/utils/portfolioSummaryHistory';
 
 ChartJS.register(
   LineElement,
@@ -26,66 +26,49 @@ ChartJS.register(
 
 const COLORS = {
   total: '#22223b',
-  stocks: '#4a4e69',
-  bonds: '#9a8c98',
-  deposits: '#c9ada7',
-  crypto: '#f2e9e4',
-  cauciones: '#f28482',
+  invested: '#4a4e69',
+  gains: '#9a8c98',
   cash: '#588157',
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  total: 'Total',
-  stocks: 'Stocks',
-  bonds: 'Bonds',
-  deposits: 'Deposits',
-  crypto: 'Crypto',
-  cauciones: 'Cauciones',
+const CATEGORY_LABELS = {
+  total: 'Valor Total',
+  invested: 'Capital Invertido',
+  gains: 'Ganancias Netas',
   cash: 'Efectivo Disponible',
 };
 
-function getCategoryValue(entry: CategoryValueEntry, key: string): number {
-  if (key === 'stocks') {
-    // Sum all stock categories (tech, etfs, etc, and other_stocks)
-    return Object.entries(entry.categories)
-      .filter(([cat]) =>
-        [
-          'tech',
-          'etfs',
-          'semiconductors',
-          'communication',
-          'industrials',
-          'defensive',
-          'materials',
-          'healthcare',
-          'financials',
-          'cyclical',
-          'merval',
-          'other_stocks',
-        ].includes(cat)
-      )
-      .reduce((sum, [, v]) => sum + v, 0);
-  }
-  return entry.categories[key] || 0;
-}
-
 export interface PortfolioCategoryChartProps {
-  history: CategoryValueEntry[];
+  history: PortfolioSummaryEntry[];
+  currency: 'ARS' | 'USD';
   height?: number;
-  consolidatedTotals?: { ARS: number; USD: number }[];
 }
 
 export const PortfolioCategoryChart: React.FC<PortfolioCategoryChartProps> = ({ 
   history, 
-  height = 220,
-  consolidatedTotals 
+  currency,
+  height = 220
 }) => {
   const labels = history.map((entry) => entry.date);
 
+  // Get the appropriate currency values
+  const getCurrencyValue = (entry: PortfolioSummaryEntry, field: keyof Pick<PortfolioSummaryEntry, 'totalARS' | 'totalUSD' | 'investedARS' | 'investedUSD' | 'cashARS' | 'cashUSD'>) => {
+    return entry[field];
+  };
+
+  // Calculate net gains (total - invested)
+  const getNetGains = (entry: PortfolioSummaryEntry) => {
+    if (currency === 'ARS') {
+      return entry.totalARS - entry.investedARS;
+    } else {
+      return entry.totalUSD - entry.investedUSD;
+    }
+  };
+
   const datasets = [
     {
-      label: CATEGORY_LABELS.total,
-      data: history.map((entry) => entry.totalValue),
+      label: `${CATEGORY_LABELS.total} (${currency})`,
+      data: history.map((entry) => getCurrencyValue(entry, currency === 'ARS' ? 'totalARS' : 'totalUSD')),
       borderColor: COLORS.total,
       backgroundColor: COLORS.total,
       fill: false,
@@ -94,58 +77,28 @@ export const PortfolioCategoryChart: React.FC<PortfolioCategoryChartProps> = ({
       borderWidth: 2,
     },
     {
-      label: CATEGORY_LABELS.stocks,
-      data: history.map((entry) => getCategoryValue(entry, 'stocks')),
-      borderColor: COLORS.stocks,
-      backgroundColor: COLORS.stocks,
+      label: `${CATEGORY_LABELS.invested} (${currency})`,
+      data: history.map((entry) => getCurrencyValue(entry, currency === 'ARS' ? 'investedARS' : 'investedUSD')),
+      borderColor: COLORS.invested,
+      backgroundColor: COLORS.invested,
       fill: false,
       tension: 0.2,
       pointRadius: 0,
       borderWidth: 2,
     },
     {
-      label: CATEGORY_LABELS.bonds,
-      data: history.map((entry) => getCategoryValue(entry, 'bonds')),
-      borderColor: COLORS.bonds,
-      backgroundColor: COLORS.bonds,
+      label: `${CATEGORY_LABELS.gains} (${currency})`,
+      data: history.map(getNetGains),
+      borderColor: COLORS.gains,
+      backgroundColor: COLORS.gains,
       fill: false,
       tension: 0.2,
       pointRadius: 0,
       borderWidth: 2,
     },
     {
-      label: CATEGORY_LABELS.deposits,
-      data: history.map((entry) => getCategoryValue(entry, 'deposits')),
-      borderColor: COLORS.deposits,
-      backgroundColor: COLORS.deposits,
-      fill: false,
-      tension: 0.2,
-      pointRadius: 0,
-      borderWidth: 2,
-    },
-    {
-      label: CATEGORY_LABELS.crypto,
-      data: history.map((entry) => getCategoryValue(entry, 'crypto')),
-      borderColor: COLORS.crypto,
-      backgroundColor: COLORS.crypto,
-      fill: false,
-      tension: 0.2,
-      pointRadius: 0,
-      borderWidth: 2,
-    },
-    {
-      label: CATEGORY_LABELS.cauciones,
-      data: history.map((entry) => getCategoryValue(entry, 'cauciones')),
-      borderColor: COLORS.cauciones,
-      backgroundColor: COLORS.cauciones,
-      fill: false,
-      tension: 0.2,
-      pointRadius: 0,
-      borderWidth: 2,
-    },
-    {
-      label: CATEGORY_LABELS.cash,
-      data: history.map((entry) => getCategoryValue(entry, 'cash')),
+      label: `${CATEGORY_LABELS.cash} (${currency})`,
+      data: history.map((entry) => getCurrencyValue(entry, currency === 'ARS' ? 'cashARS' : 'cashUSD')),
       borderColor: COLORS.cash,
       backgroundColor: COLORS.cash,
       fill: false,
@@ -183,20 +136,20 @@ export const PortfolioCategoryChart: React.FC<PortfolioCategoryChartProps> = ({
         intersect: false,
         callbacks: {
           afterBody: (context: any) => {
-            if (!consolidatedTotals || context.length === 0) return '';
+            if (context.length === 0) return '';
             
             const dataIndex = context[0].dataIndex;
-            const consolidatedTotal = consolidatedTotals[dataIndex];
+            const entry = history[dataIndex];
             
-            if (!consolidatedTotal) return '';
+            if (!entry) return '';
             
             return [
               '',
-              `Total ARS: $${consolidatedTotal.ARS.toLocaleString('es-AR', { 
+              `Total ARS: $${entry.totalARS.toLocaleString('es-AR', { 
                 minimumFractionDigits: 0, 
                 maximumFractionDigits: 0 
               })}`,
-              `Total USD: $${consolidatedTotal.USD.toLocaleString('en-US', { 
+              `Total USD: $${entry.totalUSD.toLocaleString('en-US', { 
                 minimumFractionDigits: 0, 
                 maximumFractionDigits: 0 
               })}`

@@ -9,15 +9,20 @@ import { calculatePortfolioValueHistory, calculateCurrentValueByCurrency } from 
 import { calculatePortfolioPerformance, fetchInflationData } from '../../utils/portfolioPerformance';
 import { UserData, PortfolioTransaction, FixedTermDepositCreationTransaction } from '@/types';
 import { calculateInvestedCapital } from '../../utils/investedCapital';
-import { calculateCategoryValueHistory } from '../../utils/categoryValueHistory';
+import { calculatePortfolioSummaryHistory } from '../../utils/portfolioSummaryHistory';
 
 // Mock the hooks and utilities
 jest.mock('../../contexts/PortfolioContext');
 jest.mock('../../utils/calculatePortfolioValue');
 jest.mock('../../utils/portfolioPerformance');
-jest.mock('../../utils/investedCapital');
+jest.mock('../../utils/investedCapital', () => ({
+  calculateInvestedCapital: jest.fn(),
+  calculateDailyInvestedCapital: jest.fn(),
+}));
 jest.mock('../../utils/currency');
-jest.mock('../../utils/categoryValueHistory');
+jest.mock('../../utils/portfolioSummaryHistory', () => ({
+  calculatePortfolioSummaryHistory: jest.fn(),
+}));
 
 const mockUsePortfolio = usePortfolio as jest.Mock;
 const mockCalculatePortfolioValueHistory = calculatePortfolioValueHistory as jest.Mock;
@@ -25,7 +30,8 @@ const mockCalculateCurrentValueByCurrency = calculateCurrentValueByCurrency as j
 const mockCalculatePortfolioPerformance = calculatePortfolioPerformance as jest.Mock;
 const mockFetchInflationData = fetchInflationData as jest.Mock;
 const mockCalculateInvestedCapital = calculateInvestedCapital as jest.Mock;
-const mockCalculateCategoryValueHistory = calculateCategoryValueHistory as jest.Mock;
+const mockCalculateDailyInvestedCapital = require('../../utils/investedCapital').calculateDailyInvestedCapital as jest.Mock;
+const mockCalculatePortfolioSummaryHistory = calculatePortfolioSummaryHistory as jest.Mock;
 
 // Mock chart components to avoid canvas context issues
 jest.mock('../PortfolioHistoryChart', () => {
@@ -162,11 +168,11 @@ describe('DashboardSummary', () => {
       { date: '2023-03-31', valueARS: 7000, valueUSD: 0, valueARSRaw: 7000, valueUSDRaw: 0, cashARS: 3500, cashUSD: 0 }
     ]);
     
-    // Mock the category value history calculation
-    mockCalculateCategoryValueHistory.mockReturnValue([
-      { date: '2023-01-01', totalValue: 5000, categories: { stocks: 3000, bonds: 1000, cash: 1000 } },
-      { date: '2023-02-01', totalValue: 6000, categories: { stocks: 3500, bonds: 1000, cash: 1500 } },
-      { date: '2023-03-31', totalValue: 7000, categories: { stocks: 4000, bonds: 1000, cash: 2000 } }
+    // Mock the portfolio summary history calculation
+    mockCalculatePortfolioSummaryHistory.mockResolvedValue([
+      { date: '2023-01-01', totalARS: 5000, totalUSD: 0, investedARS: 3000, investedUSD: 0, cashARS: 2000, cashUSD: 0 },
+      { date: '2023-02-01', totalARS: 6000, totalUSD: 0, investedARS: 3500, investedUSD: 0, cashARS: 2500, cashUSD: 0 },
+      { date: '2023-03-31', totalARS: 7000, totalUSD: 0, investedARS: 4000, investedUSD: 0, cashARS: 3000, cashUSD: 0 }
     ]);
     
     // Mock performance calculations - always return a valid object
@@ -183,6 +189,11 @@ describe('DashboardSummary', () => {
     
     // Mock invested capital and portfolio value
     mockCalculateInvestedCapital.mockImplementation((txs, currency) => currency === 'ARS' ? 1500 : 0);
+    mockCalculateDailyInvestedCapital.mockReturnValue([
+      { date: '2023-01-01', investedARS: 3000, investedUSD: 0 },
+      { date: '2023-02-01', investedARS: 3500, investedUSD: 0 },
+      { date: '2023-03-31', investedARS: 4000, investedUSD: 0 }
+    ]);
     mockCalculateCurrentValueByCurrency.mockReturnValue({ ARS: 1600, USD: 0 });
     
     // Mock inflation data fetch

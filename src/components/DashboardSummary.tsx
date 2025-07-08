@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { InvestmentGoal, StrategyRecommendation } from '@/types';
 import { Bond } from '@/types/finance';
 import { calculatePortfolioValueHistory, PortfolioValueHistory, calculateCurrentValueByCurrency } from '@/utils/calculatePortfolioValue';
-import { calculateCategoryValueHistory } from '@/utils/categoryValueHistory';
+import { calculatePortfolioSummaryHistory } from '@/utils/portfolioSummaryHistory';
 import { calculateInvestedCapital } from '@/utils/investedCapital';
 import { calculatePortfolioPerformance, fetchInflationData, formatPerformance, PerformanceMetrics, InflationData } from '@/utils/portfolioPerformance';
 import { usePortfolio } from '@/contexts/PortfolioContext';
@@ -25,9 +25,8 @@ export default function DashboardSummary() {
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
   const [inflationData, setInflationData] = useState<InflationData | null>(null);
   const [goalValueHistories, setGoalValueHistories] = useState<Record<string, { date: string, value: number }[]>>({});
-  const [categoryValueHistoryARS, setCategoryValueHistoryARS] = useState<any[]>([]);
-  const [categoryValueHistoryUSD, setCategoryValueHistoryUSD] = useState<any[]>([]);
-  const [consolidatedTotals, setConsolidatedTotals] = useState<{ ARS: number, USD: number }[]>([]);
+  const [portfolioSummaryHistoryARS, setPortfolioSummaryHistoryARS] = useState<any[]>([]);
+  const [portfolioSummaryHistoryUSD, setPortfolioSummaryHistoryUSD] = useState<any[]>([]);
   
   const { portfolioData, strategy, loading, error, portfolioVersion } = usePortfolio();
 
@@ -94,29 +93,20 @@ export default function DashboardSummary() {
           { days: 365 }
         );
         
-        // Calculate category value histories
-        const categoryHistoryARS = await calculateCategoryValueHistory(
+        // Calculate portfolio summary histories
+        const summaryHistoryARS = await calculatePortfolioSummaryHistory(
           portfolioData.transactions || [],
           portfolioData.historicalPrices || {},
-          'ARS',
           { days: 365, initialCash: portfolioData.cash }
         );
-        setCategoryValueHistoryARS(categoryHistoryARS.valueHistory);
+        setPortfolioSummaryHistoryARS(summaryHistoryARS);
         
-        const categoryHistoryUSD = await calculateCategoryValueHistory(
+        const summaryHistoryUSD = await calculatePortfolioSummaryHistory(
           portfolioData.transactions || [],
           portfolioData.historicalPrices || {},
-          'USD',
           { days: 365, initialCash: portfolioData.cash }
         );
-        setCategoryValueHistoryUSD(categoryHistoryUSD.valueHistory);
-        
-        // Create consolidated totals for tooltips (matching the summary figures)
-        const consolidatedTotals = valueHistory.map(entry => ({
-          ARS: entry.valueARS,
-          USD: entry.valueUSD
-        }));
-        setConsolidatedTotals(consolidatedTotals);
+        setPortfolioSummaryHistoryUSD(summaryHistoryUSD);
         
         // Verify that the last value in history matches current portfolio value
         if (valueHistory.length > 0) {
@@ -345,22 +335,22 @@ export default function DashboardSummary() {
 
 
 
-      {/* Portfolio Category Chart */}
+      {/* Portfolio Summary Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Categorías del Portafolio (ARS) */}
+        {/* Resumen del Portafolio (ARS) */}
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-800 mb-4">Categorías del Portafolio (ARS)</h3>
+          <h3 className="text-lg font-medium text-gray-800 mb-4">Portafolio (ARS)</h3>
           <PortfolioCategoryChart 
-            history={trimCategoryValueHistory(categoryValueHistoryARS)}
-            consolidatedTotals={consolidatedTotals}
+            history={portfolioSummaryHistoryARS}
+            currency="ARS"
           />
         </div>
-        {/* Categorías del Portafolio (USD) */}
+        {/* Resumen del Portafolio (USD) */}
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-800 mb-4">Categorías del Portafolio (USD)</h3>
+          <h3 className="text-lg font-medium text-gray-800 mb-4">Portafolio (USD)</h3>
           <PortfolioCategoryChart 
-            history={trimCategoryValueHistory(categoryValueHistoryUSD)}
-            consolidatedTotals={consolidatedTotals}
+            history={portfolioSummaryHistoryUSD}
+            currency="USD"
           />
         </div>
       </div>

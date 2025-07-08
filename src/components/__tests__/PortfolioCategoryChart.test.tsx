@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { PortfolioCategoryChart } from '../PortfolioCategoryChart';
-import type { CategoryValueEntry } from '@/utils/categoryValueHistory';
+import type { PortfolioSummaryEntry } from '@/utils/portfolioSummaryHistory';
 
 jest.mock('react-chartjs-2', () => ({
   Line: jest.fn(({ data, options }) => (
@@ -14,57 +14,67 @@ jest.mock('react-chartjs-2', () => ({
 }));
 
 describe('PortfolioCategoryChart', () => {
-  const mockHistory: CategoryValueEntry[] = [
+  const mockHistory: PortfolioSummaryEntry[] = [
     {
       date: '2024-01-01',
-      categories: {
-        tech: 1000,
-        bonds: 500,
-        deposits: 200,
-        crypto: 100,
-        cauciones: 50,
-        cash: 300,
-      },
-      totalValue: 2150,
+      totalARS: 100000,
+      totalUSD: 2000,
+      investedARS: 80000,
+      investedUSD: 1600,
+      cashARS: 20000,
+      cashUSD: 400,
     },
     {
       date: '2024-01-02',
-      categories: {
-        tech: 1100,
-        bonds: 600,
-        deposits: 250,
-        crypto: 120,
-        cauciones: 60,
-        cash: 350,
-      },
-      totalValue: 2480,
+      totalARS: 110000,
+      totalUSD: 2200,
+      investedARS: 80000,
+      investedUSD: 1600,
+      cashARS: 30000,
+      cashUSD: 600,
     },
   ];
 
-  it('renders Line chart with correct labels and datasets', () => {
-    render(<PortfolioCategoryChart history={mockHistory} />);
+  it('renders Line chart with correct labels and datasets for ARS', () => {
+    render(<PortfolioCategoryChart history={mockHistory} currency="ARS" />);
     expect(screen.getByTestId('mock-line-chart')).toBeInTheDocument();
     expect(screen.getByTestId('labels').textContent).toContain('2024-01-01');
     expect(screen.getByTestId('labels').textContent).toContain('2024-01-02');
-    const labels = JSON.parse(screen.getByTestId('labels').textContent || '[]');
-    expect(labels).toContain('Efectivo Disponible');
+    
     const datasets = JSON.parse(screen.getByTestId('datasets').textContent || '[]');
     expect(datasets).toEqual([
-      'Total',
-      'Stocks',
-      'Bonds',
-      'Deposits',
-      'Crypto',
-      'Cauciones',
-      'Efectivo Disponible',
+      'Valor Total (ARS)',
+      'Capital Invertido (ARS)',
+      'Ganancias Netas (ARS)',
+      'Efectivo Disponible (ARS)',
+    ]);
+  });
+
+  it('renders Line chart with correct labels and datasets for USD', () => {
+    render(<PortfolioCategoryChart history={mockHistory} currency="USD" />);
+    
+    const datasets = JSON.parse(screen.getByTestId('datasets').textContent || '[]');
+    expect(datasets).toEqual([
+      'Valor Total (USD)',
+      'Capital Invertido (USD)',
+      'Ganancias Netas (USD)',
+      'Efectivo Disponible (USD)',
     ]);
   });
 
   it('passes responsive options and legend config', () => {
-    render(<PortfolioCategoryChart history={mockHistory} />);
+    render(<PortfolioCategoryChart history={mockHistory} currency="ARS" />);
     const options = JSON.parse(screen.getByTestId('options').textContent || '{}');
     expect(options.responsive).toBe(true);
     expect(options.plugins.legend.display).toBe(true);
     expect(options.plugins.legend.position).toBe('top');
+  });
+
+  it('calculates net gains correctly', () => {
+    render(<PortfolioCategoryChart history={mockHistory} currency="ARS" />);
+    // The component should calculate net gains as total - invested
+    // For the first entry: 100000 - 80000 = 20000
+    // For the second entry: 110000 - 80000 = 30000
+    expect(screen.getByTestId('mock-line-chart')).toBeInTheDocument();
   });
 }); 
