@@ -1,5 +1,5 @@
 import { getUserData, saveUserData } from './userData';
-import { UserData, DepositTransaction, PortfolioTransaction, StockPosition, BondPosition, CryptoPosition, CryptoTradeTransaction, FixedTermDepositPosition } from '@/types';
+import { UserData, DepositTransaction, PortfolioTransaction, StockPosition, BondPosition, CryptoPosition, CryptoTradeTransaction, FixedTermDepositPosition, FixedTermDepositCreationTransaction } from '@/types';
 import { DEFAULT_COMMISSION_PCT, DEFAULT_PURCHASE_FEE_PCT } from './constants';
 import { convertCurrency } from './currency';
 import dayjs from 'dayjs';
@@ -162,22 +162,21 @@ export async function buyAsset(username: string, assetType: string, body: any) {
         provider,
         amount,
         annualRate,
-        termDays,
         currency: validatedCurrency,
         startDate: startDate.toISOString(),
         maturityDate: maturityDate.toISOString(),
-        status: 'active',
       };
       user.positions.push(newPosition);
-      const tx: PortfolioTransaction = {
+      const tx: FixedTermDepositCreationTransaction = {
         id: Date.now().toString(),
         date: new Date().toISOString(),
-        type: 'Buy',
+        type: 'Create',
         assetType: 'FixedTermDeposit',
         provider,
         amount,
         annualRate,
         termDays,
+        maturityDate: maturityDate.toISOString(),
         currency: validatedCurrency,
       };
       user.transactions.push(tx);

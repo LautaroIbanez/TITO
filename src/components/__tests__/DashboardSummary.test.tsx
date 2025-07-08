@@ -406,7 +406,7 @@ describe('DashboardSummary', () => {
 
 describe('usePortfolioHistory', () => {
   it('should clear history and error when username is undefined', () => {
-    const { result, rerender } = renderHook(({ username }) => usePortfolioHistory(username), {
+    const { result, rerender } = renderHook(({ username }: { username?: string }) => usePortfolioHistory(username), {
       initialProps: { username: undefined },
     });
     expect(result.current.history).toBeNull();
@@ -414,7 +414,7 @@ describe('usePortfolioHistory', () => {
     expect(result.current.loading).toBe(false);
 
     // Should remain clear if username stays falsy
-    rerender({ username: '' });
+    rerender({ username: undefined });
     expect(result.current.history).toBeNull();
     expect(result.current.error).toBeNull();
     expect(result.current.loading).toBe(false);

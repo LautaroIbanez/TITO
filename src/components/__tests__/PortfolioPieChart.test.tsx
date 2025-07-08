@@ -65,9 +65,9 @@ describe('PortfolioPieChart', () => {
 
   it('should handle mixed portfolio with Caucion and other assets', () => {
     const positions: PortfolioPosition[] = [
-      { type: 'Stock', symbol: 'GOOGL', quantity: 1, averagePrice: 2500, currency: 'USD', market: 'NASDAQ' },
+      { type: 'Stock', symbol: 'GOOGL', quantity: 1, purchasePrice: 2500, currency: 'USD', market: 'NASDAQ' },
       { type: 'Caucion', id: 'CAU-1', provider: 'Local Broker', amount: 15000, annualRate: 9, startDate: '2024-01-01', maturityDate: '2024-04-01', currency: 'ARS', term: 90 },
-      { type: 'Crypto', symbol: 'BTCUSDT', quantity: 0.1, averagePrice: 50000, currency: 'USD' },
+      { type: 'Crypto', symbol: 'BTCUSDT', quantity: 0.1, purchasePrice: 50000, currency: 'USD' },
     ];
     const prices = {
       GOOGL: [ { close: 2800 } ],

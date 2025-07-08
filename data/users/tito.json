@@ -278,8 +278,8 @@
     "initialBalanceUSD": 3000
   },
   "investmentStrategy": {
-    "id": "strategy-395dbeaa-c534-42b0-ba61-02907ed336ff",
-    "createdAt": "2025-07-08T20:57:51.505Z",
+    "id": "strategy-b7ad5bc8-d209-4335-a97c-39ccaf368618",
+    "createdAt": "2025-07-08T21:51:42.771Z",
     "targetAllocation": {
       "stocks": 75,
       "bonds": 15,
@@ -287,37 +287,7 @@
       "cash": 2,
       "crypto": 5
     },
-    "recommendations": [
-      {
-        "id": "alloc-d518a99f-2da5-4bf0-b587-894cd5fe03e6",
-        "action": "increase",
-        "assetClass": "stocks",
-        "reason": "Tu portafolio tiene 8.8% en acciones, pero tu estrategia objetivo es 75%",
-        "priority": "high",
-        "expectedImpact": "positive"
-      },
-      {
-        "id": "alloc-074568cd-f1fd-41d2-a3d5-a5534ab9a8e6",
-        "action": "increase",
-        "assetClass": "bonds",
-        "reason": "Tu portafolio tiene 9.6% en bonos, pero tu estrategia objetivo es 15%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
-        "priority": "high",
-        "expectedImpact": "positive",
-        "suggestedAssets": [
-          "GOV-BOND-2025",
-          "CORP-BOND-2026",
-          "MUNI-BOND-2027"
-        ]
-      },
-      {
-        "id": "alloc-2e3ca92e-8cf3-4df5-a830-f5add4f39455",
-        "action": "increase",
-        "assetClass": "crypto",
-        "reason": "Tu portafolio tiene 0.1% en cripto, pero tu estrategia objetivo es 5% (máximo recomendado por volatilidad).",
-        "priority": "medium",
-        "expectedImpact": "neutral"
-      }
-    ],
+    "recommendations": [],
     "riskLevel": "Agresivo",
     "timeHorizon": "5-10 años",
     "notes": "Estrategia agresiva: busca maximizar retornos asumiendo mayor riesgo"
