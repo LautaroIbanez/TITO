@@ -83,7 +83,7 @@
     {
       "type": "Stock",
       "symbol": "GOOGL.BA",
-      "quantity": 30,
+      "quantity": 15,
       "averagePrice": 181.40496,
       "currency": "ARS",
       "market": "BCBA"
@@ -235,11 +235,23 @@
       "market": "BCBA",
       "commissionPct": 1,
       "purchaseFeePct": 0.05
+    },
+    {
+      "id": "txn_1752007666711",
+      "date": "2025-07-08T20:47:46.711Z",
+      "type": "Sell",
+      "assetType": "Stock",
+      "symbol": "GOOGL.BA",
+      "quantity": 15,
+      "price": 3890,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1
     }
   ],
   "goals": [],
   "cash": {
-    "ARS": 5108.300700000057,
+    "ARS": 62874.80070000006,
     "USD": 14.981181100000185
   },
   "profile": {
@@ -266,8 +278,8 @@
     "initialBalanceUSD": 3000
   },
   "investmentStrategy": {
-    "id": "strategy-8a2e69d0-ec6d-46d0-aa5d-2f98ff340cc5",
-    "createdAt": "2025-07-08T20:35:09.585Z",
+    "id": "strategy-670b1a83-7b60-4a8e-a882-558c87553f18",
+    "createdAt": "2025-07-08T20:47:21.306Z",
     "targetAllocation": {
       "stocks": 75,
       "bonds": 15,
@@ -277,7 +289,7 @@
     },
     "recommendations": [
       {
-        "id": "alloc-3859900c-c956-416c-81be-7d0f8ab7e245",
+        "id": "alloc-c3992149-747e-44a7-ac1d-3d66e2ba8b6b",
         "action": "increase",
         "assetClass": "stocks",
         "reason": "Tu portafolio tiene 9.6% en acciones, pero tu estrategia objetivo es 75%",
@@ -285,7 +297,7 @@
         "expectedImpact": "positive"
       },
       {
-        "id": "cash-reserve-a983ce72-ceed-46f6-9929-c340c09813f4",
+        "id": "cash-reserve-6fc96f40-4435-4d5b-a189-4b98858d5be5",
         "action": "sell",
         "assetClass": "cash",
         "reason": "Tienes menos de 2% de tu portafolio en efectivo. Considera vender algunas posiciones para tener una reserva de liquidez.",
@@ -293,7 +305,7 @@
         "expectedImpact": "neutral"
       },
       {
-        "id": "alloc-20083a6d-702d-488f-b17c-b021d34b357a",
+        "id": "alloc-e6d6b365-4717-4cb5-8faf-58e2d04b829d",
         "action": "increase",
         "assetClass": "crypto",
         "reason": "Tu portafolio tiene 0.1% en cripto, pero tu estrategia objetivo es 5% (máximo recomendado por volatilidad).",

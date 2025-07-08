@@ -53,10 +53,31 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
       currentPrice = price ?? 0;
     }
     
+    // Create payload object according to requirements
+    const payload: any = {
+      username,
+      assetType,
+      quantity,
+      price: currentPrice,
+      currency
+    };
+
+    // Add ticker for Bond, symbol for others
+    if (assetType === 'Bond') {
+      payload.ticker = identifier;
+    } else {
+      payload.symbol = identifier;
+    }
+
+    // Add market if it exists
+    if (market) {
+      payload.market = market;
+    }
+    
     const res = await fetch('/api/portfolio/sell', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, assetType, identifier, quantity, price: currentPrice, currency, market }),
+      body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
