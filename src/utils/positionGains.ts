@@ -3,7 +3,7 @@ import { validatePositionPrice } from './priceValidation';
 
 /**
  * Computes the gain/loss in currency for a portfolio position.
- * - For stocks/crypto: (currentPrice - averagePrice) * quantity
+ * - For stocks/crypto: (currentPrice - purchasePrice) * quantity
  * - For fixed-term deposits/cauciones: amount * annualRate * (days/365)
  * @param pos PortfolioPosition
  * @param currentPrice (for stocks/crypto)
@@ -17,7 +17,7 @@ export function computePositionGain(
 ): number {
   if (pos.type === 'Stock' || pos.type === 'Crypto') {
     if (typeof currentPrice !== 'number') return 0;
-    return (currentPrice - pos.averagePrice) * pos.quantity;
+    return (currentPrice - pos.purchasePrice) * pos.quantity;
   }
   if (pos.type === 'FixedTermDeposit' || pos.type === 'Caucion') {
     const start = new Date(pos.startDate);

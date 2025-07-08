@@ -17,7 +17,7 @@ export default function PortfolioPieChart({ positions, prices }: Props) {
       const currPrice = prices[pos.symbol]?.[prices[pos.symbol].length - 1]?.close || 0;
       return { label: pos.symbol, value: pos.quantity * currPrice };
     } else if (pos.type === 'Bond') {
-      return { label: pos.ticker, value: pos.quantity * pos.averagePrice };
+      return { label: pos.ticker, value: pos.quantity * pos.purchasePrice };
     } else if (pos.type === 'FixedTermDeposit') {
       return { label: pos.provider, value: pos.amount };
     } else if (pos.type === 'Caucion') {

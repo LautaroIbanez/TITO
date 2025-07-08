@@ -452,7 +452,7 @@ export async function calculateCategoryValueHistory(
           symbol,
           quantity,
           currency: posCurrency,
-          averagePrice: 0, // Not needed for category calculation
+          purchasePrice: 0, // Not needed for category calculation
           market: 'BCBA' // Default market
         });
       } else if (assetType === 'Bond') {
@@ -461,7 +461,7 @@ export async function calculateCategoryValueHistory(
           ticker: symbol,
           quantity,
           currency: posCurrency,
-          averagePrice: 0 // Not needed for category calculation
+          purchasePrice: 0 // Not needed for category calculation
         });
       } else if (assetType === 'Crypto') {
         positionsArray.push({
@@ -469,7 +469,7 @@ export async function calculateCategoryValueHistory(
           symbol,
           quantity,
           currency: 'USD', // Crypto positions are always in USD
-          averagePrice: 0 // Not needed for category calculation
+          purchasePrice: 0 // Not needed for category calculation
         });
       }
     }

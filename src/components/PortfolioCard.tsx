@@ -35,10 +35,10 @@ interface PortfolioCardProps {
   cash: { ARS: number; USD: number };
 }
 
-function isBondPosition(pos: any): pos is { type: 'Bond'; ticker: string; quantity: number; averagePrice: number; currency: string } {
+function isBondPosition(pos: any): pos is { type: 'Bond'; ticker: string; quantity: number; purchasePrice: number; currency: string } {
   return pos && pos.type === 'Bond' && typeof pos.ticker === 'string';
 }
-function isStockPosition(pos: any): pos is { type: 'Stock'; symbol: string; quantity: number; averagePrice: number; currency: string; market: string } {
+function isStockPosition(pos: any): pos is { type: 'Stock'; symbol: string; quantity: number; purchasePrice: number; currency: string; market: string } {
   return pos && pos.type === 'Stock' && typeof pos.symbol === 'string';
 }
 
@@ -109,7 +109,7 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
   
   const market = isStockPosition(position) ? position.market : undefined;
   const quantity = (isStockPosition(position) || isBondPosition(position)) ? position.quantity : 0;
-  const averagePrice = (isStockPosition(position) || isBondPosition(position)) ? position.averagePrice : 0;
+  const averagePrice = (isStockPosition(position) || isBondPosition(position)) ? position.purchasePrice : 0;
   const value = quantity * currentPrice;
   const gain = averagePrice ? ((currentPrice - averagePrice) / averagePrice) * 100 : 0;
 
@@ -192,7 +192,7 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
             <span className="ml-2 font-semibold">{quantity}</span>
           </div>
           <div>
-            <span className="text-gray-600">Precio Promedio:</span>
+            <span className="text-gray-600">Precio Compra:</span>
             <span className="ml-2 font-semibold">${averagePrice.toFixed(2)}</span>
           </div>
           <div>

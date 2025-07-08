@@ -22,14 +22,14 @@ export default function CurrencyDistributionChart({ positions, cash }: Props) {
     let value = 0;
     if (pos.type === 'Stock') {
       // This is a simplification. For a real app, you'd fetch current prices.
-      value = pos.quantity * pos.averagePrice; 
+      value = pos.quantity * pos.purchasePrice; 
     } else if (pos.type === 'Bond') {
-      value = pos.quantity * pos.averagePrice;
+      value = pos.quantity * pos.purchasePrice;
     } else if (pos.type === 'FixedTermDeposit') {
       value = pos.amount;
     } else if (pos.type === 'Crypto') {
       // This is a simplification. For a real app, you'd fetch current prices.
-      value = pos.quantity * pos.averagePrice;
+      value = pos.quantity * pos.purchasePrice;
     }
 
     if (pos.currency === 'ARS') {

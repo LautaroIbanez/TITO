@@ -36,7 +36,7 @@ export function calculateDailyInterest(
       const bond = bonds.find(b => b.ticker === position.ticker);
       if (bond) {
         const dailyRate = (bond.couponRate / 100) / 365;
-        const dailyInterest = position.quantity * position.averagePrice * dailyRate;
+        const dailyInterest = position.quantity * position.purchasePrice * dailyRate;
         
         // Convert to target currency if needed
         const convertedInterest = convertCurrencySync(dailyInterest, position.currency, targetCurrency);

@@ -45,9 +45,9 @@ export function detectDuplicates(positions: PortfolioPosition[]): DuplicateDetec
       let totalValue = 0;
       for (const pos of groupPositions) {
         if (pos.type === 'Stock') {
-          totalValue += pos.quantity * (pos.averagePrice || 0);
-        } else if (pos.type === 'Bond') {
-          totalValue += pos.quantity * pos.averagePrice;
+                totalValue += pos.quantity * (pos.purchasePrice || 0);
+    } else if (pos.type === 'Bond') {
+      totalValue += pos.quantity * pos.purchasePrice;
         }
       }
       
@@ -131,9 +131,9 @@ export function consolidateDuplicates(positions: PortfolioPosition[]): Portfolio
     for (const pos of group.positions) {
       let value = 0;
       if (pos.type === 'Stock') {
-        value = pos.quantity * (pos.averagePrice || 0);
-      } else if (pos.type === 'Bond') {
-        value = pos.quantity * pos.averagePrice;
+              value = pos.quantity * (pos.purchasePrice || 0);
+    } else if (pos.type === 'Bond') {
+      value = pos.quantity * pos.purchasePrice;
       }
       
       if (value > bestValue) {

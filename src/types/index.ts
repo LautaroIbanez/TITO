@@ -33,7 +33,7 @@ export interface StockPosition {
   type: 'Stock';
   symbol: string;
   quantity: number;
-  averagePrice: number;
+  purchasePrice: number;
   currency: 'ARS' | 'USD';
   market: 'NASDAQ' | 'NYSE' | 'BCBA';
 }
@@ -42,7 +42,7 @@ export interface BondPosition {
   type: 'Bond';
   ticker: string;
   quantity: number;
-  averagePrice: number;
+  purchasePrice: number;
   currency: 'ARS' | 'USD';
 }
 
@@ -73,7 +73,7 @@ export interface CryptoPosition {
   type: 'Crypto';
   symbol: string;
   quantity: number;
-  averagePrice: number;
+  purchasePrice: number;
   currency: 'USD';
 }
 

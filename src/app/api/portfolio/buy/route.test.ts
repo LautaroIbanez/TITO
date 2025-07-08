@@ -59,9 +59,9 @@ describe('/api/portfolio/buy average price with fees', () => {
       if (pos) {
         const prevTotalCost = pos.averagePrice * pos.quantity;
         pos.quantity += quantity;
-        pos.averagePrice = (prevTotalCost + totalCost) / pos.quantity;
+        pos.purchasePrice = (prevTotalCost + totalCost) / pos.quantity;
       } else {
-        pos = { type: 'Stock', symbol, quantity, averagePrice: totalCost / quantity, currency, market };
+        pos = { type: 'Stock', symbol, quantity, purchasePrice: totalCost / quantity, currency, market };
         userData.positions.push(pos);
       }
       
@@ -100,7 +100,7 @@ describe('/api/portfolio/buy average price with fees', () => {
     const pos = userData.positions.find((p: any) => p.type === 'Stock' && p.symbol === 'AAPL');
     expect(pos).toBeDefined();
     // totalCost = 10*100 * (1+0.01+0.02) = 1000*1.03 = 1030
-    expect(pos.averagePrice).toBeCloseTo(1030 / 10);
+    expect(pos.purchasePrice).toBeCloseTo(1030 / 10);
     
     // Verify cash was deducted correctly
     expect(userData.cash.ARS).toBe(100000 - 1030);
@@ -118,11 +118,11 @@ describe('/api/portfolio/buy average price with fees', () => {
       // Find existing position or create new one
       let pos = userData.positions.find((p: any) => p.type === 'Bond' && p.ticker === ticker && p.currency === currency);
       if (pos) {
-        const prevTotalCost = pos.averagePrice * pos.quantity;
+        const prevTotalCost = pos.purchasePrice * pos.quantity;
         pos.quantity += quantity;
-        pos.averagePrice = (prevTotalCost + totalCost) / pos.quantity;
+        pos.purchasePrice = (prevTotalCost + totalCost) / pos.quantity;
       } else {
-        pos = { type: 'Bond', ticker, quantity, averagePrice: totalCost / quantity, currency };
+        pos = { type: 'Bond', ticker, quantity, purchasePrice: totalCost / quantity, currency };
         userData.positions.push(pos);
       }
       
@@ -159,7 +159,7 @@ describe('/api/portfolio/buy average price with fees', () => {
     const pos = userData.positions.find((p: any) => p.type === 'Bond' && p.ticker === 'BOND1');
     expect(pos).toBeDefined();
     // totalCost = 5*200 * (1+0.005+0.015) = 1000*1.02 = 1020
-    expect(pos.averagePrice).toBeCloseTo(1020 / 5);
+    expect(pos.purchasePrice).toBeCloseTo(1020 / 5);
     
     // Verify cash was deducted correctly
     expect(userData.cash.USD).toBe(100000 - 1020);
@@ -184,11 +184,11 @@ describe('/api/portfolio/buy average price with fees', () => {
       // Find existing position or create new one
       let pos = userData.positions.find((p: any) => p.type === 'Crypto' && p.symbol === symbol);
       if (pos) {
-        const prevTotalCost = pos.averagePrice * pos.quantity;
+        const prevTotalCost = pos.purchasePrice * pos.quantity;
         pos.quantity += quantity;
-        pos.averagePrice = (prevTotalCost + usdAmount) / pos.quantity;
+        pos.purchasePrice = (prevTotalCost + usdAmount) / pos.quantity;
       } else {
-        pos = { type: 'Crypto', symbol, quantity, averagePrice: usdAmount / quantity, currency: 'USD' };
+        pos = { type: 'Crypto', symbol, quantity, purchasePrice: usdAmount / quantity, currency: 'USD' };
         userData.positions.push(pos);
       }
       
@@ -225,7 +225,7 @@ describe('/api/portfolio/buy average price with fees', () => {
     const pos = userData.positions.find((p: any) => p.type === 'Crypto' && p.symbol === 'BTCUSDT');
     expect(pos).toBeDefined();
     // totalCost = 2*500 * (1+0.01+0.02) = 1000*1.03 = 1030
-    expect(pos.averagePrice).toBeCloseTo(1030 / 2);
+    expect(pos.purchasePrice).toBeCloseTo(1030 / 2);
     
     // Verify cash was deducted correctly
     expect(userData.cash.USD).toBe(100000 - 1030);

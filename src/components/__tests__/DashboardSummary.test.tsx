@@ -95,7 +95,7 @@ const mockPortfolioData = {
     {
       symbol: 'AAPL',
       shares: 10,
-      averagePrice: 150,
+      purchasePrice: 150,
       currentPrice: 160,
       currency: 'USD',
     },

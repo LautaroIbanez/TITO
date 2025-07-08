@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
       const tx: StockTradeTransaction = { id: Date.now().toString(), date: new Date().toISOString(), type: 'Sell', assetType: 'Stock', symbol: position.symbol, quantity: position.quantity, price, currency: positionCurrency, market: position.market };
       user.transactions.push(tx);
     } else if (position.type === 'Bond') {
-      const price = position.averagePrice; // Assume sale at average price for simplicity
+      const price = position.purchasePrice; // Assume sale at purchase price for simplicity
       const totalProceeds = position.quantity * price;
       user.cash[positionCurrency] += totalProceeds;
       const tx: BondTradeTransaction = { id: Date.now().toString(), date: new Date().toISOString(), type: 'Sell', assetType: 'Bond', ticker: position.ticker, quantity: position.quantity, price, currency: positionCurrency };

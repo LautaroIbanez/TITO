@@ -359,7 +359,7 @@ function calculateTotalPortfolioValue(positions: PortfolioPosition[], totalCash:
   // A real implementation would need price history and exchange rates.
   for (const pos of positions) {
     if (pos.type === 'Stock' || pos.type === 'Bond' || pos.type === 'Crypto') {
-      total += pos.quantity * pos.averagePrice; 
+      total += pos.quantity * pos.purchasePrice; 
     } else if (pos.type === 'FixedTermDeposit' || pos.type === 'Caucion') {
       total += pos.amount;
     }
@@ -383,13 +383,13 @@ function calculateCurrentAllocation(
 
   for (const pos of positions as any[]) {
     if (pos.type === 'Stock') {
-      stockValue += pos.quantity * pos.averagePrice;
+      stockValue += pos.quantity * pos.purchasePrice;
     } else if (pos.type === 'Bond') {
-      bondValue += pos.quantity * pos.averagePrice;
+      bondValue += pos.quantity * pos.purchasePrice;
     } else if (pos.type === 'FixedTermDeposit' || pos.type === 'Caucion') {
       depositValue += pos.amount;
     } else if (pos.type === 'Crypto') {
-      cryptoValue += pos.quantity * pos.averagePrice;
+      cryptoValue += pos.quantity * pos.purchasePrice;
     }
   }
   

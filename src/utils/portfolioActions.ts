@@ -51,11 +51,11 @@ export async function buyAsset(username: string, assetType: string, body: any) {
           p.market === market
       );
       if (pos) {
-        const prevTotalCost = pos.averagePrice * pos.quantity;
+        const prevTotalCost = pos.purchasePrice * pos.quantity;
         pos.quantity += quantity;
-        pos.averagePrice = (prevTotalCost + totalCost) / pos.quantity;
+        pos.purchasePrice = (prevTotalCost + totalCost) / pos.quantity;
       } else {
-        const newPosition: StockPosition = { type: 'Stock', symbol, quantity, averagePrice: totalCost / quantity, currency: validatedCurrency, market };
+        const newPosition: StockPosition = { type: 'Stock', symbol, quantity, purchasePrice: totalCost / quantity, currency: validatedCurrency, market };
         user.positions.push(newPosition);
       }
       const tx: PortfolioTransaction = {
@@ -84,11 +84,11 @@ export async function buyAsset(username: string, assetType: string, body: any) {
       if (user.cash[validatedCurrency] < totalCost) throw new Error('Insufficient funds');
       const pos = user.positions.find((p): p is BondPosition => p.type === 'Bond' && p.ticker === ticker && p.currency === validatedCurrency);
       if (pos) {
-        const prevTotalCost = pos.averagePrice * pos.quantity;
+        const prevTotalCost = pos.purchasePrice * pos.quantity;
         pos.quantity += quantity;
-        pos.averagePrice = (prevTotalCost + totalCost) / pos.quantity;
+        pos.purchasePrice = (prevTotalCost + totalCost) / pos.quantity;
       } else {
-        const newPosition: BondPosition = { type: 'Bond', ticker, quantity, averagePrice: totalCost / quantity, currency: validatedCurrency };
+        const newPosition: BondPosition = { type: 'Bond', ticker, quantity, purchasePrice: totalCost / quantity, currency: validatedCurrency };
         user.positions.push(newPosition);
       }
       const tx: PortfolioTransaction = {
@@ -120,11 +120,11 @@ export async function buyAsset(username: string, assetType: string, body: any) {
       }
       const pos = user.positions.find((p): p is CryptoPosition => p.type === 'Crypto' && p.symbol === symbol);
       if (pos) {
-        const prevTotalCost = pos.averagePrice * pos.quantity;
+        const prevTotalCost = pos.purchasePrice * pos.quantity;
         pos.quantity += quantity;
-        pos.averagePrice = (prevTotalCost + usdAmount) / pos.quantity;
+        pos.purchasePrice = (prevTotalCost + usdAmount) / pos.quantity;
       } else {
-        const newPosition: CryptoPosition = { type: 'Crypto', symbol, quantity, averagePrice: usdAmount / quantity, currency: 'USD' };
+        const newPosition: CryptoPosition = { type: 'Crypto', symbol, quantity, purchasePrice: usdAmount / quantity, currency: 'USD' };
         user.positions.push(newPosition);
       }
       const tx: CryptoTradeTransaction = {

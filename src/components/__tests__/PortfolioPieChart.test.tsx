@@ -15,8 +15,8 @@ jest.mock('react-chartjs-2', () => ({
 describe('PortfolioPieChart', () => {
   it('should include all asset types with correct values and labels', () => {
     const positions: PortfolioPosition[] = [
-      { type: 'Stock', symbol: 'AAPL', quantity: 2, averagePrice: 150, currency: 'ARS', market: 'BCBA' },
-      { type: 'Bond', ticker: 'BOND1', quantity: 3, averagePrice: 1000, currency: 'USD' },
+      { type: 'Stock', symbol: 'AAPL', quantity: 2, purchasePrice: 150, currency: 'ARS', market: 'BCBA' },
+      { type: 'Bond', ticker: 'BOND1', quantity: 3, purchasePrice: 1000, currency: 'USD' },
       { type: 'FixedTermDeposit', id: 'FTD-1', provider: 'Bank X', amount: 5000, annualRate: 5, startDate: '2024-01-01', maturityDate: '2025-01-01', currency: 'ARS' },
       { type: 'Caucion', id: 'CAU-1', provider: 'Broker Y', amount: 3000, annualRate: 7, startDate: '2024-01-01', maturityDate: '2024-02-01', currency: 'ARS', term: 30 },
     ];
@@ -36,7 +36,7 @@ describe('PortfolioPieChart', () => {
 
   it('should show 0 value for stocks with no price data', () => {
     const positions: PortfolioPosition[] = [
-      { type: 'Stock', symbol: 'MSFT', quantity: 1, averagePrice: 100, currency: 'USD', market: 'NASDAQ' },
+      { type: 'Stock', symbol: 'MSFT', quantity: 1, purchasePrice: 100, currency: 'USD', market: 'NASDAQ' },
     ];
     const prices = {};
     render(
