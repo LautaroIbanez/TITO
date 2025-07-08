@@ -339,6 +339,69 @@ describe('DashboardSummary', () => {
     });
     warnSpy.mockRestore();
   });
+
+  it('should display Spanish asset class labels for recommendations', async () => {
+    // Mock strategy with recommendations that have assetClass
+    const mockStrategyWithRecommendations = {
+      id: 'strategy-1',
+      createdAt: '2024-01-01',
+      targetAllocation: { stocks: 60, bonds: 30, deposits: 5, cash: 5 },
+      recommendations: [
+        {
+          id: 'rec-1',
+          action: 'increase' as const,
+          assetClass: 'stocks' as const,
+          reason: 'Test recommendation',
+          priority: 'high' as const,
+          expectedImpact: 'positive' as const
+        },
+        {
+          id: 'cash-invest-123',
+          action: 'buy' as const,
+          reason: 'Cash investment recommendation',
+          priority: 'medium' as const,
+          expectedImpact: 'positive' as const
+        }
+      ],
+      riskLevel: 'Balanceado' as const,
+      timeHorizon: '5-10 años',
+      notes: 'Test strategy'
+    };
+
+    // Mock performance calculations for this test
+    mockCalculatePortfolioPerformance.mockReturnValue({
+      monthlyReturnARS: 5.2,
+      monthlyReturnUSD: 3.1,
+      annualReturnARS: 15.8,
+      annualReturnUSD: 12.4,
+      monthlyReturnARSReal: 1.0,
+      monthlyReturnUSDReal: 2.8,
+      annualReturnARSReal: -126.9,
+      annualReturnUSDReal: 9.3,
+    });
+
+    mockUsePortfolio.mockReturnValue({
+      portfolioData: mockPortfolioData,
+      strategy: mockStrategyWithRecommendations,
+      loading: false,
+      error: null,
+      portfolioVersion: 1,
+      refreshPortfolio: jest.fn(),
+      refreshStrategy: jest.fn(),
+      triggerPortfolioUpdate: jest.fn(),
+      strategyLoading: false,
+      strategyError: null,
+    });
+
+    render(<DashboardSummary />);
+
+    await waitFor(() => {
+      // Should display "Acciones" for stocks asset class
+      expect(screen.getByText('Acciones')).toBeInTheDocument();
+      // Should display "Efectivo" for cash recommendations (based on ID starting with 'cash-')
+      expect(screen.getByText('Efectivo')).toBeInTheDocument();
+    });
+  });
 });
 
 describe('usePortfolioHistory', () => {

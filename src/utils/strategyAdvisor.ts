@@ -296,6 +296,7 @@ function generateRecommendations(
     recommendations.push({
       id: `cash-invest-${generateId()}`,
       action: 'buy',
+      assetClass: 'cash',
       reason: `Tienes un ${currentAllocation.cash.toFixed(1)}% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido`,
       priority: 'high',
       expectedImpact: 'positive'
@@ -304,6 +305,7 @@ function generateRecommendations(
     recommendations.push({
       id: `cash-reserve-${generateId()}`,
       action: 'sell',
+      assetClass: 'cash',
       reason: `Tienes menos de 2% de tu portafolio en efectivo. Considera vender algunas posiciones para tener una reserva de liquidez.`,
       priority: 'low',
       expectedImpact: 'neutral'

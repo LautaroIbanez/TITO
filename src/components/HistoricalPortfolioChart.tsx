@@ -66,22 +66,18 @@ export default function HistoricalPortfolioChart({ records }: Props) {
     );
   }
 
-  // Get the latest record (final after sorting) for current snapshot
-  const latestRecord = sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1];
-
   const labels = sortedAndFilteredRecords.map((r) => dayjs(r.fecha).toDate());
 
-  const chartData = {
+  // ARS datasets
+  const arsChartData = {
     labels,
     datasets: [
-      // ARS
       {
         label: 'Total ARS',
         data: sortedAndFilteredRecords.map((r) => r.total_portfolio_ars),
         borderColor: '#2563eb',
         backgroundColor: 'rgba(37,99,235,0.08)',
         fill: false,
-        yAxisID: 'ARS',
         pointRadius: 0,
         tension: 0.2,
       },
@@ -91,7 +87,6 @@ export default function HistoricalPortfolioChart({ records }: Props) {
         borderColor: '#dc2626',
         backgroundColor: 'rgba(220,38,38,0.08)',
         fill: false,
-        yAxisID: 'ARS',
         pointRadius: 0,
         borderDash: [4, 2],
         tension: 0.2,
@@ -102,7 +97,6 @@ export default function HistoricalPortfolioChart({ records }: Props) {
         borderColor: '#059669',
         backgroundColor: 'rgba(5,150,105,0.08)',
         fill: false,
-        yAxisID: 'ARS',
         pointRadius: 0,
         borderDash: [2, 2],
         tension: 0.2,
@@ -113,19 +107,23 @@ export default function HistoricalPortfolioChart({ records }: Props) {
         borderColor: '#f59e42',
         backgroundColor: 'rgba(245,158,66,0.08)',
         fill: false,
-        yAxisID: 'ARS',
         pointRadius: 0,
         borderDash: [1, 2],
         tension: 0.2,
       },
-      // USD
+    ],
+  };
+
+  // USD datasets
+  const usdChartData = {
+    labels,
+    datasets: [
       {
         label: 'Total USD',
         data: sortedAndFilteredRecords.map((r) => r.total_portfolio_usd),
         borderColor: '#818cf8',
         backgroundColor: 'rgba(129,140,248,0.08)',
         fill: false,
-        yAxisID: 'USD',
         pointRadius: 0,
         tension: 0.2,
       },
@@ -135,7 +133,6 @@ export default function HistoricalPortfolioChart({ records }: Props) {
         borderColor: '#f472b6',
         backgroundColor: 'rgba(244,114,182,0.08)',
         fill: false,
-        yAxisID: 'USD',
         pointRadius: 0,
         borderDash: [4, 2],
         tension: 0.2,
@@ -146,7 +143,6 @@ export default function HistoricalPortfolioChart({ records }: Props) {
         borderColor: '#facc15',
         backgroundColor: 'rgba(250,204,21,0.08)',
         fill: false,
-        yAxisID: 'USD',
         pointRadius: 0,
         borderDash: [2, 2],
         tension: 0.2,
@@ -157,7 +153,6 @@ export default function HistoricalPortfolioChart({ records }: Props) {
         borderColor: '#0ea5e9',
         backgroundColor: 'rgba(14,165,233,0.08)',
         fill: false,
-        yAxisID: 'USD',
         pointRadius: 0,
         borderDash: [1, 2],
         tension: 0.2,
@@ -165,7 +160,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
     ],
   };
 
-  const chartOptions = {
+  const arsChartOptions = {
     responsive: true,
     plugins: {
       legend: { display: true, position: 'top' as const },
@@ -183,12 +178,29 @@ export default function HistoricalPortfolioChart({ records }: Props) {
         position: 'left' as const,
         title: { display: true, text: 'ARS' },
       },
+    },
+    elements: { line: { borderWidth: 2 } },
+    maintainAspectRatio: false,
+    layout: { padding: 0 },
+  };
+
+  const usdChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { display: true, position: 'top' as const },
+      tooltip: { enabled: true },
+    },
+    scales: {
+      x: {
+        type: 'time' as const,
+        time: { unit: 'day' as const },
+        title: { display: true, text: 'Fecha' },
+      },
       USD: {
         type: 'linear' as const,
         display: true,
-        position: 'right' as const,
+        position: 'left' as const,
         title: { display: true, text: 'USD' },
-        grid: { drawOnChartArea: false },
       },
     },
     elements: { line: { borderWidth: 2 } },
@@ -199,8 +211,15 @@ export default function HistoricalPortfolioChart({ records }: Props) {
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Histórico del Portafolio</h3>
-      <div className="h-96">
-        <Line data={chartData} options={chartOptions} height={360} className="w-full" />
+      <div className="flex flex-col gap-8">
+        <div className="h-80" data-testid="ars-chart-container">
+          <h4 className="text-md font-semibold text-blue-700 mb-2">ARS</h4>
+          <Line data={arsChartData} options={arsChartOptions} height={300} className="w-full" data-testid="ars-line-chart" />
+        </div>
+        <div className="h-80" data-testid="usd-chart-container">
+          <h4 className="text-md font-semibold text-indigo-700 mb-2">USD</h4>
+          <Line data={usdChartData} options={usdChartOptions} height={300} className="w-full" data-testid="usd-line-chart" />
+        </div>
       </div>
     </div>
   );

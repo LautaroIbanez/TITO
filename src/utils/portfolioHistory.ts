@@ -1,5 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { getUserData } from './userData';
+import { calculatePortfolioSummaryHistory } from './portfolioSummaryHistory';
 
 export interface DailyPortfolioRecord {
   fecha: string; // YYYY-MM-DD
@@ -80,6 +82,42 @@ export async function loadPortfolioHistory(username: string): Promise<DailyPortf
     }
   } catch (error) {
     console.error(`Error loading portfolio history for ${username}:`, error);
+    return [];
+  }
+} 
+
+export async function loadOrGeneratePortfolioHistory(username: string): Promise<DailyPortfolioRecord[]> {
+  try {
+    const filePath = path.join(process.cwd(), 'data', 'history', `${username}.json`);
+    try {
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+      return JSON.parse(fileContent);
+    } catch {
+      // File doesn't exist, generate from user data
+      const user = await getUserData(username);
+      if (!user) return [];
+      // Use user's transactions, price history, and initial cash
+      const transactions = user.transactions || [];
+      // Try to get price history if present (may be in user.portfolioData or similar)
+      const priceHistory = (user as any).historicalPrices || {};
+      const initialCash = user.cash || { ARS: 0, USD: 0 };
+      // Generate summary history
+      const summary = await calculatePortfolioSummaryHistory(transactions, priceHistory, { initialCash });
+      // Convert to DailyPortfolioRecord[]
+      return summary.map(entry => ({
+        fecha: entry.date,
+        total_portfolio_ars: entry.totalARS,
+        total_portfolio_usd: entry.totalUSD,
+        capital_invertido_ars: entry.investedARS,
+        capital_invertido_usd: entry.investedUSD,
+        ganancias_netas_ars: entry.totalARS - entry.investedARS,
+        ganancias_netas_usd: entry.totalUSD - entry.investedUSD,
+        efectivo_disponible_ars: entry.cashARS,
+        efectivo_disponible_usd: entry.cashUSD,
+      }));
+    }
+  } catch (error) {
+    console.error(`Error loading or generating portfolio history for ${username}:`, error);
     return [];
   }
 } 

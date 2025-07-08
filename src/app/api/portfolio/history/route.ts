@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { loadPortfolioHistory } from '@/utils/portfolioHistory';
+import { loadOrGeneratePortfolioHistory } from '@/utils/portfolioHistory';
 import { getUserData } from '@/utils/userData';
 
 export async function GET(req: NextRequest) {
@@ -17,8 +17,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Load portfolio history for the user
-    const history = await loadPortfolioHistory(username);
+    // Load or generate portfolio history for the user
+    const history = await loadOrGeneratePortfolioHistory(username);
 
     return NextResponse.json({
       username,

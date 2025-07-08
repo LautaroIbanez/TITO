@@ -11,6 +11,7 @@ import { formatCurrency, calculateFixedIncomeGains, calculateFixedIncomeValueHis
 import { generatePortfolioHash } from '@/utils/priceDataHash';
 import { calculateNetGainsByCurrency } from '@/utils/positionGains';
 import { getPositionDisplayName } from '@/utils/priceValidation';
+import { getRecommendationLabel } from '@/utils/assetClassLabels';
 import { usePortfolioHistory } from './usePortfolioHistory';
 import HistoricalPortfolioChart from './HistoricalPortfolioChart';
 
@@ -252,7 +253,9 @@ export default function DashboardSummary() {
             {strategy.recommendations.map((recommendation, index) => (
               <div key={index} className="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold text-gray-900">{recommendation.symbol || recommendation.id}</h3>
+                  <h3 className="font-semibold text-gray-900">
+                    {recommendation.symbol || getRecommendationLabel(recommendation.assetClass, recommendation.id)}
+                  </h3>
                   <span className={`px-2 py-1 text-xs font-medium rounded ${getPriorityColor(recommendation.priority)}`}>
                     {recommendation.priority.toUpperCase()}
                   </span>
