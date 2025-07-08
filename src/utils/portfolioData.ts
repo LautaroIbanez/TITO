@@ -17,6 +17,8 @@ async function readJsonSafe<T = unknown>(filePath: string): Promise<T | null> {
 async function applyMaturityCredits(user: UserData) {
   let changed = false;
   const now = dayjs();
+  const positionsToRemove: string[] = [];
+  
   // Fixed-term deposits
   for (const pos of user.positions) {
     if (pos.type === 'FixedTermDeposit') {
@@ -42,7 +44,11 @@ async function applyMaturityCredits(user: UserData) {
         };
         user.transactions.push(tx);
         user.cash[pos.currency as 'ARS' | 'USD'] += payout;
+        positionsToRemove.push(pos.id);
         changed = true;
+      } else if (matured && alreadyCredited) {
+        // Position is matured and already credited, remove it
+        positionsToRemove.push(pos.id);
       }
     }
     if (pos.type === 'Caucion') {
@@ -68,9 +74,24 @@ async function applyMaturityCredits(user: UserData) {
         };
         user.transactions.push(tx);
         user.cash[pos.currency as 'ARS' | 'USD'] += payout;
+        positionsToRemove.push(pos.id);
         changed = true;
+      } else if (matured && alreadyCredited) {
+        // Position is matured and already credited, remove it
+        positionsToRemove.push(pos.id);
       }
     }
+  }
+  
+  // Remove matured positions
+  if (positionsToRemove.length > 0) {
+    user.positions = user.positions.filter(pos => {
+      // Only FixedTermDeposit and Caucion positions have id property
+      if (pos.type === 'FixedTermDeposit' || pos.type === 'Caucion') {
+        return !positionsToRemove.includes((pos as FixedTermDepositPosition | CaucionPosition).id);
+      }
+      return true; // Keep other position types
+    });
   }
   // Bond coupon/amortization events
   const bondPaymentsPath = path.join(process.cwd(), 'data', 'bondPayments.json');

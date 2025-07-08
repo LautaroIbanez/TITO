@@ -9,7 +9,7 @@ export function usePortfolioHistory(username?: string) {
   useEffect(() => {
     if (!username) {
       setHistory(null);
-      setError('No username provided');
+      setError(null); // Clear error instead of setting a message
       return;
     }
     setLoading(true);

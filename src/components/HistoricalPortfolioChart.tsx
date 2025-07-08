@@ -30,8 +30,34 @@ interface Props {
   records: DailyPortfolioRecord[];
 }
 
+function isValidRecord(r: DailyPortfolioRecord) {
+  // Check that fecha exists and is a valid string
+  if (!r.fecha || typeof r.fecha !== 'string') {
+    return false;
+  }
+
+  // Check that all numeric fields are valid
+  return [
+    r.total_portfolio_ars,
+    r.total_portfolio_usd,
+    r.capital_invertido_ars,
+    r.capital_invertido_usd,
+    r.ganancias_netas_ars,
+    r.ganancias_netas_usd,
+    r.efectivo_disponible_ars,
+    r.efectivo_disponible_usd,
+  ].every(
+    (v) => v !== null && v !== undefined && Number.isFinite(v)
+  );
+}
+
 export default function HistoricalPortfolioChart({ records }: Props) {
-  if (!records || records.length === 0) {
+  // Sort records by fecha and filter out invalid ones
+  const sortedAndFilteredRecords = (records || [])
+    .filter(isValidRecord)
+    .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+
+  if (!sortedAndFilteredRecords || sortedAndFilteredRecords.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Histórico del Portafolio</h3>
@@ -40,7 +66,10 @@ export default function HistoricalPortfolioChart({ records }: Props) {
     );
   }
 
-  const labels = records.map((r) => dayjs(r.fecha).toDate());
+  // Get the latest record (final after sorting) for current snapshot
+  const latestRecord = sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1];
+
+  const labels = sortedAndFilteredRecords.map((r) => dayjs(r.fecha).toDate());
 
   const chartData = {
     labels,
@@ -48,7 +77,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
       // ARS
       {
         label: 'Total ARS',
-        data: records.map((r) => r.total_portfolio_ars),
+        data: sortedAndFilteredRecords.map((r) => r.total_portfolio_ars),
         borderColor: '#2563eb',
         backgroundColor: 'rgba(37,99,235,0.08)',
         fill: false,
@@ -58,7 +87,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
       },
       {
         label: 'Invertido ARS',
-        data: records.map((r) => r.capital_invertido_ars),
+        data: sortedAndFilteredRecords.map((r) => r.capital_invertido_ars),
         borderColor: '#dc2626',
         backgroundColor: 'rgba(220,38,38,0.08)',
         fill: false,
@@ -69,7 +98,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
       },
       {
         label: 'Ganancia Neta ARS',
-        data: records.map((r) => r.ganancias_netas_ars),
+        data: sortedAndFilteredRecords.map((r) => r.ganancias_netas_ars),
         borderColor: '#059669',
         backgroundColor: 'rgba(5,150,105,0.08)',
         fill: false,
@@ -80,7 +109,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
       },
       {
         label: 'Efectivo ARS',
-        data: records.map((r) => r.efectivo_disponible_ars),
+        data: sortedAndFilteredRecords.map((r) => r.efectivo_disponible_ars),
         borderColor: '#f59e42',
         backgroundColor: 'rgba(245,158,66,0.08)',
         fill: false,
@@ -92,7 +121,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
       // USD
       {
         label: 'Total USD',
-        data: records.map((r) => r.total_portfolio_usd),
+        data: sortedAndFilteredRecords.map((r) => r.total_portfolio_usd),
         borderColor: '#818cf8',
         backgroundColor: 'rgba(129,140,248,0.08)',
         fill: false,
@@ -102,7 +131,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
       },
       {
         label: 'Invertido USD',
-        data: records.map((r) => r.capital_invertido_usd),
+        data: sortedAndFilteredRecords.map((r) => r.capital_invertido_usd),
         borderColor: '#f472b6',
         backgroundColor: 'rgba(244,114,182,0.08)',
         fill: false,
@@ -113,7 +142,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
       },
       {
         label: 'Ganancia Neta USD',
-        data: records.map((r) => r.ganancias_netas_usd),
+        data: sortedAndFilteredRecords.map((r) => r.ganancias_netas_usd),
         borderColor: '#facc15',
         backgroundColor: 'rgba(250,204,21,0.08)',
         fill: false,
@@ -124,7 +153,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
       },
       {
         label: 'Efectivo USD',
-        data: records.map((r) => r.efectivo_disponible_usd),
+        data: sortedAndFilteredRecords.map((r) => r.efectivo_disponible_usd),
         borderColor: '#0ea5e9',
         backgroundColor: 'rgba(14,165,233,0.08)',
         fill: false,

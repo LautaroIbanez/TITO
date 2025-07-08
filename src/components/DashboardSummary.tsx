@@ -93,8 +93,16 @@ export default function DashboardSummary() {
           portfolioData.cash || { ARS: 0, USD: 0 },
           portfolioData.historicalPrices || {}
         );
-        setPortfolioValueARS(ARS);
-        setPortfolioValueUSD(USD);
+        if (Number.isFinite(ARS)) {
+          setPortfolioValueARS(ARS);
+        } else {
+          console.warn('portfolioValueARS is not finite:', ARS);
+        }
+        if (Number.isFinite(USD)) {
+          setPortfolioValueUSD(USD);
+        } else {
+          console.warn('portfolioValueUSD is not finite:', USD);
+        }
 
         const valueHistory = await calculatePortfolioValueHistory(
           portfolioData.transactions || [],
@@ -122,7 +130,12 @@ export default function DashboardSummary() {
         }
         
         const performance = calculatePortfolioPerformance(valueHistory, inflationData || undefined);
-        setPerformanceMetrics(performance);
+        if (performance &&
+          Object.values(performance).every((v) => Number.isFinite(v))) {
+          setPerformanceMetrics(performance);
+        } else {
+          console.warn('Performance metrics contain non-finite values:', performance);
+        }
       }
     }
     calculateValues();
@@ -189,16 +202,21 @@ export default function DashboardSummary() {
     return <div className="text-center text-gray-500">Could not load user data.</div>;
   }
   
-  const investedCapitalARS = calculateInvestedCapital(portfolioData.transactions, 'ARS');
-  const investedCapitalUSD = calculateInvestedCapital(portfolioData.transactions, 'USD');
+  const investedCapitalARS = Number.isFinite(calculateInvestedCapital(portfolioData.transactions, 'ARS'))
+    ? calculateInvestedCapital(portfolioData.transactions, 'ARS')
+    : (console.warn('investedCapitalARS is not finite'), 0);
+  const investedCapitalUSD = Number.isFinite(calculateInvestedCapital(portfolioData.transactions, 'USD'))
+    ? calculateInvestedCapital(portfolioData.transactions, 'USD')
+    : (console.warn('investedCapitalUSD is not finite'), 0);
 
   const { ARS: netGainsARS, USD: netGainsUSD, skipped } = calculateNetGainsByCurrency(
     portfolioData.positions || [],
     portfolioData.historicalPrices || {}
   );
-
-  const gainsColorARS = netGainsARS >= 0 ? 'text-green-600' : 'text-red-600';
-  const gainsColorUSD = netGainsUSD >= 0 ? 'text-green-600' : 'text-red-600';
+  const safeNetGainsARS = Number.isFinite(netGainsARS) ? netGainsARS : (console.warn('netGainsARS is not finite', netGainsARS), 0);
+  const safeNetGainsUSD = Number.isFinite(netGainsUSD) ? netGainsUSD : (console.warn('netGainsUSD is not finite', netGainsUSD), 0);
+  const gainsColorARS = safeNetGainsARS >= 0 ? 'text-green-600' : 'text-red-600';
+  const gainsColorUSD = safeNetGainsUSD >= 0 ? 'text-green-600' : 'text-red-600';
 
   return (
     <div>
@@ -284,7 +302,7 @@ export default function DashboardSummary() {
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-sm font-medium text-gray-700">Ganancias Netas (ARS)</h3>
           <p className={`text-2xl font-semibold ${gainsColorARS}`}> 
-            {netGainsARS >= 0 ? '+' : ''}{formatCurrency(netGainsARS, 'ARS')}
+            {safeNetGainsARS >= 0 ? '+' : ''}{formatCurrency(safeNetGainsARS, 'ARS')}
           </p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
@@ -294,7 +312,7 @@ export default function DashboardSummary() {
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-sm font-medium text-gray-700">Ganancias Netas (USD)</h3>
           <p className={`text-2xl font-semibold ${gainsColorUSD}`}> 
-            {netGainsUSD >= 0 ? '+' : ''}{formatCurrency(netGainsUSD, 'USD')}
+            {safeNetGainsUSD >= 0 ? '+' : ''}{formatCurrency(safeNetGainsUSD, 'USD')}
           </p>
         </div>
          <div className="bg-white p-6 rounded-lg shadow">
@@ -305,7 +323,8 @@ export default function DashboardSummary() {
       </div>
 
       {/* Performance Metrics */}
-      {performanceMetrics && (
+      {performanceMetrics && 
+       Object.values(performanceMetrics).every((v) => Number.isFinite(v)) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-sm font-medium text-gray-700 mb-2">Rendimiento Mensual (ARS)</h3>

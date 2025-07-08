@@ -110,4 +110,27 @@ describe('PortfolioHistoryChart', () => {
     expect(options.layout.padding).toBe(0);
     // If the mock is updated to render className, check for it here
   });
+
+  it('should filter out records with invalid numeric fields', () => {
+    const valid = {
+      fecha: '2024-01-01',
+      total_portfolio_ars: 10000,
+      total_portfolio_usd: 2000,
+      capital_invertido_ars: 8000,
+      capital_invertido_usd: 1600,
+      ganancias_netas_ars: 2000,
+      ganancias_netas_usd: 400,
+      efectivo_disponible_ars: 1000,
+      efectivo_disponible_usd: 200,
+    };
+    const invalid1 = { ...valid, fecha: '2024-01-02', total_portfolio_ars: null };
+    const invalid2 = { ...valid, fecha: '2024-01-03', ganancias_netas_usd: undefined };
+    const invalid3 = { ...valid, fecha: '2024-01-04', efectivo_disponible_ars: NaN };
+    render(<PortfolioHistoryChart records={[valid, invalid1, invalid2, invalid3]} />);
+    // Only the valid record should be rendered
+    const chartData = screen.getByTestId('chart-data');
+    const data = JSON.parse(chartData.textContent || '{}');
+    expect(data.labels).toEqual(["2024-01-01"]);
+    expect(data.datasets[0].data).toEqual([10000]);
+  });
 }); 

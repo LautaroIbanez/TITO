@@ -120,14 +120,12 @@ describe('portfolioPerformance', () => {
     it('should handle negative values in the past correctly', () => {
       const history: PortfolioValueHistory[] = [
         { date: '2024-01-01', valueARS: -1000, valueUSD: -100, valueARSRaw: -1000, valueUSDRaw: -100, cashARS: -500, cashUSD: -50 }, // Negative starting value
-        { date: '2024-02-01', valueARS: 1000, valueUSD: 100, valueARSRaw: 1000, valueUSDRaw: 100, cashARS: 500, cashUSD: 50 } // Current value
+        { date: '2024-02-01', valueARS: 900, valueUSD: 95, valueARSRaw: 900, valueUSDRaw: 95, cashARS: 450, cashUSD: 47.5 } // Current value
       ];
-      
       const result = calculatePortfolioPerformance(history);
-      
-      // Should return 0 instead of calculating with negative values
-      expect(result.monthlyReturnARS).toBe(0);
-      expect(result.monthlyReturnUSD).toBe(0);
+      // Should return the mathematically correct negative return
+      expect(result.monthlyReturnARS).toBe(-190); // (900 - (-1000)) / -1000 * 100 = -190%
+      expect(result.monthlyReturnUSD).toBe(-195); // (95 - (-100)) / -100 * 100 = -195%
     });
 
     it('should use reverse search to find the correct reference point', () => {
@@ -157,6 +155,40 @@ describe('portfolioPerformance', () => {
       // Should find the correct reference points despite gaps
       expect(result.monthlyReturnARS).toBeCloseTo(8.33, 2); // (1300 - 1200) / 1200 * 100 ≈ 8.33
       expect(result.annualReturnARS).toBe(30); // (1300 - 1000) / 1000 * 100
+    });
+
+    it('should fallback to earliest available record if no record exists on or before the reference date', () => {
+      const history: PortfolioValueHistory[] = [
+        { date: '2024-01-10', valueARS: 1000, valueUSD: 100, valueARSRaw: 1000, valueUSDRaw: 100, cashARS: 500, cashUSD: 50 },
+        { date: '2024-02-10', valueARS: 1200, valueUSD: 110, valueARSRaw: 1200, valueUSDRaw: 110, cashARS: 600, cashUSD: 55 },
+        { date: '2024-03-10', valueARS: 1300, valueUSD: 115, valueARSRaw: 1300, valueUSDRaw: 115, cashARS: 650, cashUSD: 57.5 }
+      ];
+      // Reference date for 1 month ago from 2024-03-10 is 2024-02-10 (exists),
+      // for 1 year ago is 2023-03-10 (does not exist, should fallback to 2024-01-10)
+      const result = calculatePortfolioPerformance(history);
+      expect(result.monthlyReturnARS).toBeCloseTo((1300-1200)/1200*100, 2);
+      expect(result.annualReturnARS).toBeCloseTo((1300-1000)/1000*100, 2);
+    });
+
+    it('should fallback to first record if no record exists within the range', () => {
+      const history: PortfolioValueHistory[] = [
+        { date: '2024-01-10', valueARS: 1000, valueUSD: 100, valueARSRaw: 1000, valueUSDRaw: 100, cashARS: 500, cashUSD: 50 },
+        { date: '2024-02-10', valueARS: 1200, valueUSD: 110, valueARSRaw: 1200, valueUSDRaw: 110, cashARS: 600, cashUSD: 55 },
+        { date: '2024-03-10', valueARS: 1300, valueUSD: 115, valueARSRaw: 1300, valueUSDRaw: 115, cashARS: 650, cashUSD: 57.5 }
+      ];
+      // If we set current to 2024-03-10, 1 year ago is 2023-03-10 (no record), so fallback to first record 2024-01-10
+      const result = calculatePortfolioPerformance(history);
+      expect(result.annualReturnARS).toBeCloseTo((1300-1000)/1000*100, 2);
+    });
+
+    it('should compute negative returns and not force them to zero', () => {
+      const history: PortfolioValueHistory[] = [
+        { date: '2024-01-01', valueARS: 1000, valueUSD: 100, valueARSRaw: 1000, valueUSDRaw: 100, cashARS: 500, cashUSD: 50 },
+        { date: '2024-02-01', valueARS: 900, valueUSD: 95, valueARSRaw: 900, valueUSDRaw: 95, cashARS: 450, cashUSD: 47.5 }
+      ];
+      const result = calculatePortfolioPerformance(history);
+      expect(result.monthlyReturnARS).toBe(-10);
+      expect(result.monthlyReturnUSD).toBe(-5);
     });
   });
 

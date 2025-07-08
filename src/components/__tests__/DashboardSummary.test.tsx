@@ -10,6 +10,8 @@ import { calculatePortfolioPerformance, fetchInflationData } from '../../utils/p
 import { UserData, PortfolioTransaction, FixedTermDepositCreationTransaction } from '@/types';
 import { calculateInvestedCapital } from '../../utils/investedCapital';
 import { calculatePortfolioSummaryHistory } from '../../utils/portfolioSummaryHistory';
+import { renderHook, act } from '@testing-library/react-hooks';
+import { usePortfolioHistory } from '../usePortfolioHistory';
 
 // Mock the hooks and utilities
 jest.mock('../../contexts/PortfolioContext');
@@ -312,5 +314,46 @@ describe('DashboardSummary', () => {
       expect(screen.getByText('$1.000.000,00')).toBeInTheDocument(); // Invested capital
       expect(screen.getByText('$234.567,89')).toBeInTheDocument(); // Net gains
     });
+  });
+
+  it('should log a warning and not update state if a non-finite value is returned', async () => {
+    mockCalculateCurrentValueByCurrency.mockReturnValueOnce({ ARS: NaN, USD: Infinity });
+    mockCalculateInvestedCapital.mockImplementation((txs, currency) => currency === 'ARS' ? NaN : Infinity);
+    mockCalculatePortfolioPerformance.mockReturnValueOnce({
+      monthlyReturnARS: NaN,
+      monthlyReturnUSD: Infinity,
+      annualReturnARS: NaN,
+      annualReturnUSD: Infinity,
+      monthlyReturnARSReal: NaN,
+      monthlyReturnUSDReal: Infinity,
+      annualReturnARSReal: NaN,
+      annualReturnUSDReal: Infinity,
+    });
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    render(<DashboardSummary />);
+    await waitFor(() => {
+      // Should log warnings for each non-finite value
+      expect(warnSpy).toHaveBeenCalled();
+      // UI should fallback to 0 or not show NaN/Infinity
+      expect(screen.getByText('$0,00')).toBeInTheDocument();
+    });
+    warnSpy.mockRestore();
+  });
+});
+
+describe('usePortfolioHistory', () => {
+  it('should clear history and error when username is undefined', () => {
+    const { result, rerender } = renderHook(({ username }) => usePortfolioHistory(username), {
+      initialProps: { username: undefined },
+    });
+    expect(result.current.history).toBeNull();
+    expect(result.current.error).toBeNull();
+    expect(result.current.loading).toBe(false);
+
+    // Should remain clear if username stays falsy
+    rerender({ username: '' });
+    expect(result.current.history).toBeNull();
+    expect(result.current.error).toBeNull();
+    expect(result.current.loading).toBe(false);
   });
 }); 
