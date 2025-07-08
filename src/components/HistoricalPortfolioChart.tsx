@@ -80,6 +80,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
         fill: false,
         pointRadius: 0,
         tension: 0.2,
+        yAxisID: 'ARS',
       },
       {
         label: 'Invertido ARS',
@@ -90,6 +91,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
         pointRadius: 0,
         borderDash: [4, 2],
         tension: 0.2,
+        yAxisID: 'ARS',
       },
       {
         label: 'Ganancia Neta ARS',
@@ -100,6 +102,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
         pointRadius: 0,
         borderDash: [2, 2],
         tension: 0.2,
+        yAxisID: 'ARS',
       },
       {
         label: 'Efectivo ARS',
@@ -110,6 +113,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
         pointRadius: 0,
         borderDash: [1, 2],
         tension: 0.2,
+        yAxisID: 'ARS',
       },
     ],
   };
@@ -126,6 +130,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
         fill: false,
         pointRadius: 0,
         tension: 0.2,
+        yAxisID: 'USD',
       },
       {
         label: 'Invertido USD',
@@ -136,6 +141,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
         pointRadius: 0,
         borderDash: [4, 2],
         tension: 0.2,
+        yAxisID: 'USD',
       },
       {
         label: 'Ganancia Neta USD',
@@ -146,6 +152,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
         pointRadius: 0,
         borderDash: [2, 2],
         tension: 0.2,
+        yAxisID: 'USD',
       },
       {
         label: 'Efectivo USD',
@@ -156,6 +163,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
         pointRadius: 0,
         borderDash: [1, 2],
         tension: 0.2,
+        yAxisID: 'USD',
       },
     ],
   };
