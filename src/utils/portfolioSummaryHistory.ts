@@ -83,15 +83,15 @@ export async function calculatePortfolioSummaryHistory(
   // Combine the data into summary entries
   const summaryHistory: PortfolioSummaryEntry[] = valueHistory.map(entry => {
     const invested = investedByDate.get(entry.date) || { ARS: 0, USD: 0 };
-    
+
     return {
       date: entry.date,
       totalARS: entry.valueARS,
       totalUSD: entry.valueUSD,
       investedARS: invested.ARS,
       investedUSD: invested.USD,
-      cashARS: entry.valueARS - invested.ARS,
-      cashUSD: entry.valueUSD - invested.USD,
+      cashARS: entry.cashARS,
+      cashUSD: entry.cashUSD,
     };
   });
 

@@ -98,8 +98,8 @@ describe('calculatePortfolioSummaryHistory', () => {
         totalUSD: 1020,
         investedARS: 0,
         investedUSD: 1000,
-        cashARS: 0,
-        cashUSD: 20,
+        cashARS: 0, // igual al mock
+        cashUSD: 0, // igual al mock
       },
       {
         date: '2024-01-02',
@@ -107,8 +107,8 @@ describe('calculatePortfolioSummaryHistory', () => {
         totalUSD: 2050,
         investedARS: 0,
         investedUSD: 1000,
-        cashARS: 0,
-        cashUSD: 1050,
+        cashARS: 0, // igual al mock
+        cashUSD: 1000, // igual al mock
       },
     ]);
   });
@@ -194,7 +194,7 @@ describe('calculatePortfolioSummaryHistory', () => {
     );
   });
 
-  it('calculates cash correctly as total minus invested', async () => {
+  it('uses cash values from portfolio value history', async () => {
     mockCalculatePortfolioValueHistory.mockResolvedValue([
       {
         date: '2024-01-01',
@@ -217,8 +217,8 @@ describe('calculatePortfolioSummaryHistory', () => {
 
     const result = await calculatePortfolioSummaryHistory(mockTransactions, mockPriceHistory);
 
-    expect(result[0].cashARS).toBe(20000); // 100000 - 80000
-    expect(result[0].cashUSD).toBe(400);   // 2000 - 1600
+    expect(result[0].cashARS).toBe(20000); // igual al mock
+    expect(result[0].cashUSD).toBe(400);   // igual al mock
   });
 
   it('handles missing invested capital data gracefully', async () => {
@@ -245,8 +245,8 @@ describe('calculatePortfolioSummaryHistory', () => {
         totalUSD: 2000,
         investedARS: 0,
         investedUSD: 0,
-        cashARS: 100000,
-        cashUSD: 2000,
+        cashARS: 20000,
+        cashUSD: 400,
       },
     ]);
   });
