@@ -3,6 +3,10 @@ import { getPortfolioData } from '@/utils/portfolioData';
 import { getFundamentals, getHistoricalPrices, getTechnicals } from '@/utils/financeData';
 import { getBaseTicker, ensureBaSuffix } from '@/utils/tickers';
 import { getUserData } from '@/utils/userData';
+import { calculateCurrentValueByCurrency } from '@/utils/calculatePortfolioValue';
+import { calculateInvestedCapital } from '@/utils/investedCapital';
+import { calculateNetGainsByCurrency } from '@/utils/positionGains';
+import { appendDailyRecord } from '@/utils/portfolioHistory';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -19,6 +23,7 @@ export async function GET(req: NextRequest) {
     }
 
     const data = await getPortfolioData(username);
+    
     const stockSymbols = data.positions
       .filter((pos: any) => pos.type === 'Stock')
       .map((pos: any) => {
@@ -62,6 +67,28 @@ export async function GET(req: NextRequest) {
       fundamentals[symbol] = fundamentalsCache.get(baseTicker);
       technicals[symbol] = tech;
     }));
+
+    // Compute portfolio metrics for daily record with loaded price history
+    const { ARS, USD } = calculateCurrentValueByCurrency(data.positions, data.cash, historicalPrices);
+    const investedARS = calculateInvestedCapital(data.transactions, 'ARS');
+    const investedUSD = calculateInvestedCapital(data.transactions, 'USD');
+    const gains = calculateNetGainsByCurrency(data.positions, historicalPrices);
+    
+    // Create today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Append daily record to user's history
+    appendDailyRecord(username, {
+      fecha: today,
+      total_portfolio_ars: ARS,
+      total_portfolio_usd: USD,
+      capital_invertido_ars: investedARS,
+      capital_invertido_usd: investedUSD,
+      ganancias_netas_ars: gains.ARS,
+      ganancias_netas_usd: gains.USD,
+      efectivo_disponible_ars: data.cash.ARS,
+      efectivo_disponible_usd: data.cash.USD,
+    });
 
     return NextResponse.json({
       ...data,
