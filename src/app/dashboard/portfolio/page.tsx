@@ -1,26 +1,19 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import PortfolioCard from '@/components/PortfolioCard';
 import PortfolioTable from '@/components/PortfolioTable';
 import PortfolioPieChart from '@/components/PortfolioPieChart';
-import PortfolioCategoryChart from '@/components/PortfolioCategoryChart';
 import PortfolioTransactions from '@/components/PortfolioTransactions';
-import { calculatePortfolioSummaryHistory } from '@/utils/portfolioSummaryHistory';
-import { StockPosition, PortfolioTransaction, DepositTransaction } from '@/types';
+import { StockPosition, DepositTransaction } from '@/types';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import EditDepositModal from '@/components/EditDepositModal';
 import { formatCurrency } from '@/utils/goalCalculator';
-import { trimCategoryValueHistory } from '@/utils/history';
 import { generateInvestmentStrategy } from '@/utils/strategyAdvisor';
 import { InvestmentGoal, InvestorProfile, PortfolioPosition } from '@/types';
-import { generatePortfolioHash } from '@/utils/priceDataHash';
-import { ensureBaSuffix, getBaseTicker } from '@/utils/tickers';
-import { calculatePortfolioValueHistory } from '@/utils/calculatePortfolioValue';
+import { getBaseTicker } from '@/utils/tickers';
 
-export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange?: () => void }) {
-  const { portfolioData, loading, refreshPortfolio, portfolioVersion } = usePortfolio();
-  const [portfolioSummaryHistoryARS, setPortfolioSummaryHistoryARS] = useState<any[]>([]);
-  const [portfolioSummaryHistoryUSD, setPortfolioSummaryHistoryUSD] = useState<any[]>([]);
+export default function PortfolioPage() {
+  const { portfolioData, loading, refreshPortfolio } = usePortfolio();
   const [depositAmount, setDepositAmount] = useState('');
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
   const [depositCurrency, setDepositCurrency] = useState<'ARS' | 'USD'>('ARS');
@@ -29,40 +22,6 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
   const [depositSuccess, setDepositSuccess] = useState('');
   const [editingDeposit, setEditingDeposit] = useState<DepositTransaction | null>(null);
   const [depositActionError, setDepositActionError] = useState<string | null>(null);
-  // (All code related to ReturnComparison, comparison, excludedPositions, and their logic has been removed)
-
-  // Generate portfolio hash for dependency tracking
-  const portfolioHash = generatePortfolioHash(
-    portfolioVersion, 
-    portfolioData?.historicalPrices || {}
-  );
-
-  useEffect(() => {
-    async function fetchPortfolioSummaryHistory() {
-      if (portfolioData?.transactions && portfolioData?.historicalPrices) {
-        // Calculate portfolio summary histories
-        const summaryHistoryARS = await calculatePortfolioSummaryHistory(
-          portfolioData.transactions,
-          portfolioData.historicalPrices,
-          { days: 90, initialCash: portfolioData.cash }
-        );
-        setPortfolioSummaryHistoryARS(summaryHistoryARS);
-        
-        const summaryHistoryUSD = await calculatePortfolioSummaryHistory(
-          portfolioData.transactions,
-          portfolioData.historicalPrices,
-          { days: 90, initialCash: portfolioData.cash }
-        );
-        setPortfolioSummaryHistoryUSD(summaryHistoryUSD);
-      } else {
-        setPortfolioSummaryHistoryARS([]);
-        setPortfolioSummaryHistoryUSD([]);
-      }
-    }
-    fetchPortfolioSummaryHistory();
-  }, [portfolioData?.transactions, portfolioData?.historicalPrices, portfolioVersion, portfolioHash]);
-
-  // Remove the entire calculateComparison function and its useEffect, as well as any remaining references to setComparison, calculateIRR, calculateAnnualizedReturn, and related variables.
 
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -226,7 +185,7 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
         {depositSuccess && <div className="text-green-600 text-sm">{depositSuccess}</div>}
       </div>
       
-      {/* Nueva grilla con sugerencias y gráficos */}
+      {/* Grilla con gráfico de torta y sugerencias */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Gráfico de torta */}
         <div className="bg-white rounded-lg shadow border border-gray-200 p-6 flex flex-col">
@@ -254,23 +213,6 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
               ))}
             </ul>
           )}
-        </div>
-        {/* Gráficos de resumen del portafolio en filas siguientes */}
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200 lg:col-span-2">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">Portafolio (ARS)</h3>
-          <PortfolioCategoryChart 
-            history={portfolioSummaryHistoryARS} 
-            currency="ARS"
-            height={60}
-          />
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200 lg:col-span-2">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">Portafolio (USD)</h3>
-          <PortfolioCategoryChart 
-            history={portfolioSummaryHistoryUSD} 
-            currency="USD"
-            height={60}
-          />
         </div>
       </div>
 

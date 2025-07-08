@@ -1,17 +1,13 @@
 'use client';
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { InvestmentGoal, StrategyRecommendation } from '@/types';
 import { Bond } from '@/types/finance';
-import { calculatePortfolioValueHistory, PortfolioValueHistory, calculateCurrentValueByCurrency } from '@/utils/calculatePortfolioValue';
-import { calculatePortfolioSummaryHistory } from '@/utils/portfolioSummaryHistory';
+import { calculatePortfolioValueHistory, calculateCurrentValueByCurrency } from '@/utils/calculatePortfolioValue';
 import { calculateInvestedCapital } from '@/utils/investedCapital';
 import { calculatePortfolioPerformance, fetchInflationData, formatPerformance, PerformanceMetrics, InflationData } from '@/utils/portfolioPerformance';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import GoalProgress from './GoalProgress';
-import PortfolioCategoryChart from './PortfolioCategoryChart';
 import { formatCurrency, calculateFixedIncomeGains, calculateFixedIncomeValueHistory } from '@/utils/goalCalculator';
-import { trimHistory, trimCategoryValueHistory } from '@/utils/history';
 import { generatePortfolioHash } from '@/utils/priceDataHash';
 import { calculateNetGainsByCurrency } from '@/utils/positionGains';
 import { getPositionDisplayName } from '@/utils/priceValidation';
@@ -27,8 +23,6 @@ export default function DashboardSummary() {
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
   const [inflationData, setInflationData] = useState<InflationData | null>(null);
   const [goalValueHistories, setGoalValueHistories] = useState<Record<string, { date: string, value: number }[]>>({});
-  const [portfolioSummaryHistoryARS, setPortfolioSummaryHistoryARS] = useState<any[]>([]);
-  const [portfolioSummaryHistoryUSD, setPortfolioSummaryHistoryUSD] = useState<any[]>([]);
   
   const { portfolioData, strategy, loading, error, portfolioVersion } = usePortfolio();
 
@@ -107,21 +101,6 @@ export default function DashboardSummary() {
           portfolioData.historicalPrices || {},
           { days: 365 }
         );
-        
-        // Calculate portfolio summary histories
-        const summaryHistoryARS = await calculatePortfolioSummaryHistory(
-          portfolioData.transactions || [],
-          portfolioData.historicalPrices || {},
-          { days: 365, initialCash: portfolioData.cash }
-        );
-        setPortfolioSummaryHistoryARS(summaryHistoryARS);
-        
-        const summaryHistoryUSD = await calculatePortfolioSummaryHistory(
-          portfolioData.transactions || [],
-          portfolioData.historicalPrices || {},
-          { days: 365, initialCash: portfolioData.cash }
-        );
-        setPortfolioSummaryHistoryUSD(summaryHistoryUSD);
         
         // Verify that the last value in history matches current portfolio value
         if (valueHistory.length > 0) {
@@ -213,111 +192,88 @@ export default function DashboardSummary() {
   const investedCapitalARS = calculateInvestedCapital(portfolioData.transactions, 'ARS');
   const investedCapitalUSD = calculateInvestedCapital(portfolioData.transactions, 'USD');
 
-  // Current value of invested positions only (exclude cash)
-  const investedValues = calculateCurrentValueByCurrency(
+  const { ARS: netGainsARS, USD: netGainsUSD, skipped } = calculateNetGainsByCurrency(
     portfolioData.positions || [],
-    { ARS: 0, USD: 0 },
     portfolioData.historicalPrices || {}
   );
 
-  // Calculate net gains by currency and skipped assets
-  const netGainsResult = calculateNetGainsByCurrency(
-    portfolioData.positions || [],
-    portfolioData.historicalPrices || {}
-  );
-  const netGainsARS = netGainsResult.ARS;
-  const netGainsUSD = netGainsResult.USD;
-  const skippedAssets = netGainsResult.skipped;
   const gainsColorARS = netGainsARS >= 0 ? 'text-green-600' : 'text-red-600';
   const gainsColorUSD = netGainsUSD >= 0 ? 'text-green-600' : 'text-red-600';
 
   return (
-    <div className="space-y-8">
-       {/* Onboarding Banner */}
-       {showOnboarding && (
-        <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-800 p-4 rounded-lg shadow-md relative">
-          <button
-            onClick={handleDismissOnboarding}
-            className="absolute top-2 right-2 text-blue-600 hover:text-blue-800"
-          >
-            &times;
-          </button>
-          <h4 className="font-bold mb-2">¡Bienvenido a TITO!</h4>
-          <p className="mb-4">Tu perfil está completo. Aquí tienes algunos pasos para empezar:</p>
-          <div className="flex flex-wrap gap-4">
-            <Link href="/dashboard/portfolio" className="text-sm font-semibold bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors">
-              Deposita Fondos
-            </Link>
-            <Link href="/dashboard/scoop" className="text-sm font-semibold bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors">
-              Revisa Recomendaciones
-            </Link>
-            <Link href="/dashboard/goals" className="text-sm font-semibold bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors">
-              Define tus Metas
-            </Link>
+    <div>
+      {/* Onboarding Modal */}
+      {showOnboarding && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg max-w-md mx-4">
+            <h2 className="text-2xl font-bold mb-4">¡Bienvenido a TITO!</h2>
+            <p className="text-gray-600 mb-6">
+              TITO es tu asistente personal de inversiones. Te ayudará a:
+            </p>
+            <ul className="list-disc list-inside text-gray-600 mb-6 space-y-2">
+              <li>Gestionar tu portafolio de inversiones</li>
+              <li>Establecer y alcanzar metas financieras</li>
+              <li>Recibir recomendaciones personalizadas</li>
+              <li>Analizar el rendimiento de tus inversiones</li>
+            </ul>
+            <button
+              onClick={handleDismissOnboarding}
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+            >
+              ¡Empezar!
+            </button>
           </div>
         </div>
       )}
 
       {/* Strategy Recommendations */}
-      {strategy && strategy.recommendations.length > 0 && (
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Sugerencias de Estrategia</h3>
-            <span className="text-sm text-gray-500">Perfil: {strategy.riskLevel}</span>
-          </div>
-          
-          <div className="space-y-3 mb-4">
-            {strategy.recommendations.map((recommendation) => (
-              <div key={recommendation.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                <div className={`px-2 py-1 rounded text-xs font-semibold ${getPriorityColor(recommendation.priority)}`}>
-                  {getActionLabel(recommendation)}
+      {strategy && strategy.recommendations && strategy.recommendations.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Recomendaciones de Estrategia</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {strategy.recommendations.map((recommendation, index) => (
+              <div key={index} className="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-semibold text-gray-900">{recommendation.symbol || recommendation.id}</h3>
+                  <span className={`px-2 py-1 text-xs font-medium rounded ${getPriorityColor(recommendation.priority)}`}>
+                    {recommendation.priority.toUpperCase()}
+                  </span>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-800">{recommendation.reason}</p>
-                  {recommendation.symbol && recommendation.targetSymbol && (
-                    <p className="text-xs text-gray-600 mt-1">
-                      {recommendation.symbol} → {recommendation.targetSymbol}
-                    </p>
-                  )}
-                </div>
-                <div className={`text-xs px-2 py-1 rounded ${
-                  recommendation.expectedImpact === 'positive' ? 'bg-green-100 text-green-700' :
-                  recommendation.expectedImpact === 'negative' ? 'bg-red-100 text-red-700' :
-                  'bg-gray-100 text-gray-700'
-                }`}>
-                  {recommendation.expectedImpact === 'positive' ? 'Positivo' :
-                   recommendation.expectedImpact === 'negative' ? 'Negativo' : 'Neutral'}
+                <p className="text-sm text-gray-600 mb-2">{recommendation.reason}</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-blue-600">
+                    {getActionLabel(recommendation)}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {recommendation.expectedImpact || 'N/A'}
+                  </span>
                 </div>
               </div>
             ))}
           </div>
-          
-          <div className="text-xs text-gray-600 text-center border-t pt-3">
-            Esta información es orientativa y no constituye asesoramiento financiero.
-          </div>
         </div>
       )}
 
-      {/* Portfolio Snapshot */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow col-span-1 lg:col-span-3">
-          <h3 className="text-lg font-medium text-gray-800 mb-2">Valor Total del Portafolio</h3>
-          <div className="flex items-baseline gap-x-6">
-            <p className="text-3xl font-semibold text-gray-900">{formatCurrency(portfolioValueARS, 'ARS')}</p>
-            <p className="text-xl font-medium text-gray-600">{formatCurrency(portfolioValueUSD, 'USD')}</p>
-          </div>
+      {/* Portfolio Summary */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-sm font-medium text-gray-700">Valor Total del Portafolio (ARS)</h3>
+          <p className="text-2xl font-semibold text-gray-900">{formatCurrency(portfolioValueARS, 'ARS')}</p>
         </div>
-        
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-sm font-medium text-gray-700">Valor Total del Portafolio (USD)</h3>
+          <p className="text-2xl font-semibold text-gray-900">{formatCurrency(portfolioValueUSD, 'USD')}</p>
+        </div>
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-sm font-medium text-gray-700">Capital Invertido (ARS)</h3>
           <p className="text-2xl font-semibold text-gray-900">{formatCurrency(investedCapitalARS, 'ARS')}</p>
         </div>
         {/* Net Gains Warning */}
-        {skippedAssets.length > 0 && (
+        {skipped.length > 0 && (
           <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-3 rounded mb-4">
             <strong>Advertencia:</strong> Algunos activos no se incluyeron en el cálculo de ganancias por falta de precio actual:
             <ul className="list-disc ml-6 mt-1">
-              {skippedAssets.map(({ position, reason }, i) => (
+              {skipped.map(({ position, reason }, i: number) => (
                 <li key={i}>
                   {position.type} {getPositionDisplayName(position)}: {reason}
                 </li>
@@ -345,28 +301,6 @@ export default function DashboardSummary() {
           <h3 className="text-sm font-medium text-gray-700">Efectivo Disponible</h3>
           <p className="text-xl font-semibold text-blue-600">{formatCurrency(portfolioData.cash?.ARS ?? 0, 'ARS')}</p>
           <p className="text-xl font-semibold text-green-600">{formatCurrency(portfolioData.cash?.USD ?? 0, 'USD')}</p>
-        </div>
-      </div>
-
-
-
-      {/* Portfolio Summary Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Resumen del Portafolio (ARS) */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-800 mb-4">Portafolio (ARS)</h3>
-          <PortfolioCategoryChart 
-            history={portfolioSummaryHistoryARS}
-            currency="ARS"
-          />
-        </div>
-        {/* Resumen del Portafolio (USD) */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-800 mb-4">Portafolio (USD)</h3>
-          <PortfolioCategoryChart 
-            history={portfolioSummaryHistoryUSD}
-            currency="USD"
-          />
         </div>
       </div>
 
