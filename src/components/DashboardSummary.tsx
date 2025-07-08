@@ -99,7 +99,7 @@ export default function DashboardSummary() {
           portfolioData.transactions || [],
           portfolioData.historicalPrices || {},
           'ARS',
-          { days: 365 }
+          { days: 365, initialCash: portfolioData.cash }
         );
         setCategoryValueHistoryARS(categoryHistoryARS.valueHistory);
         
@@ -107,7 +107,7 @@ export default function DashboardSummary() {
           portfolioData.transactions || [],
           portfolioData.historicalPrices || {},
           'USD',
-          { days: 365 }
+          { days: 365, initialCash: portfolioData.cash }
         );
         setCategoryValueHistoryUSD(categoryHistoryUSD.valueHistory);
         

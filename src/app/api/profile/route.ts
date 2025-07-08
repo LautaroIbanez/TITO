@@ -77,7 +77,29 @@ export async function POST(request: Request) {
           ARS: profile.initialBalanceARS || 0,
           USD: profile.initialBalanceUSD || 0,
         },
+        transactions: userData.transactions ? [...userData.transactions] : [],
       };
+
+      // Add Deposit transactions for initial balances if > 0
+      const now = new Date().toISOString().slice(0, 10);
+      if (profile.initialBalanceARS && profile.initialBalanceARS > 0) {
+        updatedUserData.transactions.push({
+          id: `deposit-ARS-initial`,
+          date: now,
+          type: 'Deposit',
+          amount: profile.initialBalanceARS,
+          currency: 'ARS',
+        });
+      }
+      if (profile.initialBalanceUSD && profile.initialBalanceUSD > 0) {
+        updatedUserData.transactions.push({
+          id: `deposit-USD-initial`,
+          date: now,
+          type: 'Deposit',
+          amount: profile.initialBalanceUSD,
+          currency: 'USD',
+        });
+      }
 
       // Save updated user data
       await saveUserData(username, updatedUserData);

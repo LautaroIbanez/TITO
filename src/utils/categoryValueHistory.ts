@@ -30,6 +30,7 @@ export interface CategoryValueOptions {
   startDate?: string; // YYYY-MM-DD
   endDate?: string;   // YYYY-MM-DD
   currency?: 'ARS' | 'USD'; // Target currency for conversion
+  initialCash?: { ARS: number; USD: number }; // Initial cash balances
 }
 
 // Define asset categories
@@ -131,8 +132,8 @@ export async function calculateCategoryValueHistory(
   const maturedCauciones: ActiveCaucion[] = [];
   
   // Initialize cash balances and positions up to the start date
-  let cashARS = 0;
-  let cashUSD = 0;
+  let cashARS = options.initialCash?.ARS || 0;
+  let cashUSD = options.initialCash?.USD || 0;
   
   // Track which transactions have been processed in initialization
   const processedTransactions = new Set<string>();

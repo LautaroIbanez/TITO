@@ -148,5 +148,33 @@ describe('portfolioData', () => {
       expect(result.technicals['AAPL']).toBeNull();
       expect(result.historicalPrices['AAPL']).toEqual([{ date: '2024-01-01', close: 150 }]);
     });
+
+    it('should include deposit transactions for initial balances', async () => {
+      const mockUserData = {
+        positions: [],
+        transactions: [
+          { id: 'deposit-ARS-initial', date: '2024-06-01', type: 'Deposit', amount: 10000, currency: 'ARS' },
+          { id: 'deposit-USD-initial', date: '2024-06-01', type: 'Deposit', amount: 500, currency: 'USD' },
+        ],
+        cash: { ARS: 10000, USD: 500 },
+        goals: [],
+        profile: { initialBalanceARS: 10000, initialBalanceUSD: 500 },
+      };
+
+      mockFs.readFile.mockImplementation((filePath: any, _options?: any) => {
+        if (filePath.includes('users/testuser.json')) {
+          return Promise.resolve(JSON.stringify(mockUserData));
+        }
+        return Promise.reject(new Error('File not found'));
+      });
+
+      const result = await getPortfolioData('testuser');
+      const depositARS = result.transactions.find((tx: any) => tx.type === 'Deposit' && tx.currency === 'ARS');
+      const depositUSD = result.transactions.find((tx: any) => tx.type === 'Deposit' && tx.currency === 'USD');
+      expect(depositARS).toBeDefined();
+      if (depositARS) expect((depositARS as any).amount).toBe(10000);
+      expect(depositUSD).toBeDefined();
+      if (depositUSD) expect((depositUSD as any).amount).toBe(500);
+    });
   });
 }); 

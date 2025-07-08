@@ -60,7 +60,7 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
           portfolioData.transactions,
           portfolioData.historicalPrices,
           'ARS',
-          { days: 90 }
+          { days: 90, initialCash: portfolioData.cash }
         );
         setCategoryValueHistoryARS(categoryHistoryARS.valueHistory);
         
@@ -68,7 +68,7 @@ export default function PortfolioPage({ onPortfolioChange }: { onPortfolioChange
           portfolioData.transactions,
           portfolioData.historicalPrices,
           'USD',
-          { days: 90 }
+          { days: 90, initialCash: portfolioData.cash }
         );
         setCategoryValueHistoryUSD(categoryHistoryUSD.valueHistory);
       } else {

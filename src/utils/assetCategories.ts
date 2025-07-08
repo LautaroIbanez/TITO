@@ -12,4 +12,9 @@ export const STOCK_CATEGORIES = {
   merval: ['ALUAR','BBAR','BYMA','CAPU','GGAL','LOMA','PAMP','TGNO4','TGSU2','TRAN','YPFD','COME','CRES']
 };
 
-export const AR_SOVEREIGN_BONDS = ['AL29D','GD29D','AL30D','GD30D','AE38D','GD38D','AL35D','GD35D','AL41D','GD41D','GD46D']; 
+export const AR_SOVEREIGN_BONDS = [
+  // ARS variants
+  'AL29', 'GD29', 'AL30', 'GD30', 'AE38', 'GD38', 'AL35', 'GD35', 'AL41', 'GD41', 'GD46',
+  // USD variants
+  'AL29D','GD29D','AL30D','GD30D','AE38D','GD38D','AL35D','GD35D','AL41D','GD41D','GD46D'
+]; 
