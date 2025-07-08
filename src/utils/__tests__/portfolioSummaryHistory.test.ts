@@ -89,7 +89,9 @@ describe('calculatePortfolioSummaryHistory', () => {
       },
     ]);
 
-    const result = await calculatePortfolioSummaryHistory(mockTransactions, mockPriceHistory);
+    const result = await calculatePortfolioSummaryHistory(mockTransactions, mockPriceHistory, {
+      initialCash: { ARS: 1000, USD: 100 }
+    });
 
     expect(result).toEqual([
       {
@@ -137,6 +139,7 @@ describe('calculatePortfolioSummaryHistory', () => {
     const result = await calculatePortfolioSummaryHistory(mockTransactions, mockPriceHistory, {
       startDate: '2024-01-15',
       endDate: '2024-01-15',
+      initialCash: { ARS: 5000, USD: 50 }
     });
 
     expect(result).toEqual([
@@ -185,6 +188,7 @@ describe('calculatePortfolioSummaryHistory', () => {
 
     await calculatePortfolioSummaryHistory(mockTransactions, mockPriceHistory, {
       days: 30,
+      initialCash: { ARS: 2000, USD: 25 }
     });
 
     expect(mockCalculateDailyInvestedCapital).toHaveBeenCalledWith(
@@ -215,7 +219,9 @@ describe('calculatePortfolioSummaryHistory', () => {
       },
     ]);
 
-    const result = await calculatePortfolioSummaryHistory(mockTransactions, mockPriceHistory);
+    const result = await calculatePortfolioSummaryHistory(mockTransactions, mockPriceHistory, {
+      initialCash: { ARS: 80000, USD: 1600 }
+    });
 
     expect(result[0].cashARS).toBe(20000); // igual al mock
     expect(result[0].cashUSD).toBe(400);   // igual al mock
@@ -236,7 +242,9 @@ describe('calculatePortfolioSummaryHistory', () => {
 
     mockCalculateDailyInvestedCapital.mockReturnValue([]);
 
-    const result = await calculatePortfolioSummaryHistory(mockTransactions, mockPriceHistory);
+    const result = await calculatePortfolioSummaryHistory(mockTransactions, mockPriceHistory, {
+      initialCash: { ARS: 80000, USD: 1600 }
+    });
 
     expect(result).toEqual([
       {
@@ -249,5 +257,56 @@ describe('calculatePortfolioSummaryHistory', () => {
         cashUSD: 400,
       },
     ]);
+  });
+
+  it('handles initial cash balance correctly to avoid negative cash', async () => {
+    // Mock a scenario where user has initial cash but only buy transactions
+    const transactionsWithInitialCash: PortfolioTransaction[] = [
+      {
+        id: '1',
+        type: 'Buy' as const,
+        symbol: 'AAPL',
+        quantity: 10,
+        price: 150,
+        date: '2024-01-01',
+        assetType: 'Stock' as const,
+        currency: 'USD' as const,
+        market: 'NASDAQ',
+        commissionPct: 1,
+        purchaseFeePct: 0.05
+      }
+    ];
+
+    // Mock portfolio value history that starts with positive cash (initial cash - purchases)
+    mockCalculatePortfolioValueHistory.mockResolvedValue([
+      {
+        date: '2024-01-01',
+        valueARS: 0,
+        valueUSD: 1520, // 10 * 150 + fees
+        valueARSRaw: 0,
+        valueUSDRaw: 1520,
+        cashARS: 1000, // Initial ARS cash
+        cashUSD: 480,  // Initial USD cash (1000 - 520 in purchases)
+      },
+    ]);
+
+    mockCalculateDailyInvestedCapital.mockReturnValue([
+      {
+        date: '2024-01-01',
+        investedARS: 0,
+        investedUSD: 520, // Purchase amount
+      },
+    ]);
+
+    const result = await calculatePortfolioSummaryHistory(transactionsWithInitialCash, mockPriceHistory, {
+      initialCash: { ARS: 1000, USD: 1000 }
+    });
+
+    // Verify that cash values are positive and realistic
+    expect(result[0].cashARS).toBe(1000); // Should be positive
+    expect(result[0].cashUSD).toBe(480);  // Should be positive (1000 - 520)
+    expect(result[0].cashUSD).toBeGreaterThan(0); // Should not be negative
+    expect(result[0].totalUSD).toBe(1520); // Total portfolio value
+    expect(result[0].investedUSD).toBe(520); // Invested amount
   });
 }); 

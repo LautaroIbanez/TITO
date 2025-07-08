@@ -33,6 +33,7 @@ export interface PortfolioValueOptions {
   startDate?: string; // YYYY-MM-DD
   endDate?: string;   // YYYY-MM-DD
   bondFallback?: boolean; // Whether to use bonds.json as a fallback for bonds with no price history
+  initialCash?: { ARS: number; USD: number }; // Initial cash balances before processing transactions
 }
 
 // Bond prices data loaded statically
@@ -91,8 +92,8 @@ export async function calculatePortfolioValueHistory(
   const maturedCauciones: ActiveCaucion[] = [];
   
   // Initialize cash balances and positions up to the start date
-  let cashARS = 0;
-  let cashUSD = 0;
+  let cashARS = options.initialCash?.ARS || 0;
+  let cashUSD = options.initialCash?.USD || 0;
   
   // Build a set of bond tickers from transactions for this portfolio
   const bondTickers = new Set<string>();

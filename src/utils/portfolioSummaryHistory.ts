@@ -63,7 +63,8 @@ export async function calculatePortfolioSummaryHistory(
     { 
       days: options.days,
       startDate: options.startDate,
-      endDate: options.endDate
+      endDate: options.endDate,
+      initialCash: options.initialCash
     }
   );
 
