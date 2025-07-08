@@ -5,6 +5,7 @@ import { PortfolioTransaction } from '@/types';
 import { PriceData } from '@/types/finance';
 import { calculatePortfolioValueHistory } from './calculatePortfolioValue';
 import { calculateDailyInvestedCapital } from './investedCapital';
+import { trimCategoryValueHistory } from './history';
 
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
@@ -17,6 +18,7 @@ export interface PortfolioSummaryEntry {
   investedUSD: number;
   cashARS: number;
   cashUSD: number;
+  totalValue: number; // For trimming
 }
 
 export interface PortfolioSummaryOptions {
@@ -84,7 +86,7 @@ export async function calculatePortfolioSummaryHistory(
   // Combine the data into summary entries
   const summaryHistory: PortfolioSummaryEntry[] = valueHistory.map(entry => {
     const invested = investedByDate.get(entry.date) || { ARS: 0, USD: 0 };
-
+    const totalValue = (entry.valueARS || 0) + (entry.valueUSD || 0);
     return {
       date: entry.date,
       totalARS: entry.valueARS,
@@ -93,8 +95,10 @@ export async function calculatePortfolioSummaryHistory(
       investedUSD: invested.USD,
       cashARS: entry.cashARS,
       cashUSD: entry.cashUSD,
+      totalValue,
     };
   });
 
-  return summaryHistory;
+  // Trim the summary history before returning
+  return trimCategoryValueHistory(summaryHistory);
 } 

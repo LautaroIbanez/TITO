@@ -238,6 +238,8 @@ The test suite depends on [Jest](https://jestjs.io/) being available. You can th
 npm test
 ```
 
+This will run Jest using the local installation (`node ./node_modules/jest/bin/jest.js`) as specified in the `package.json` scripts.
+
 ## Actualización de Datos
 
 La aplicación utiliza datos de mercado (precios históricos, fundamentales y técnicos) que se guardan localmente en el directorio `/data`. Para mantener esta información actualizada, se incluyen scripts que se pueden ejecutar manualmente.

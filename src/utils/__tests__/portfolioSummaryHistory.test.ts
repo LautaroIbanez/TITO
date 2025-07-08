@@ -102,6 +102,7 @@ describe('calculatePortfolioSummaryHistory', () => {
         investedUSD: 1000,
         cashARS: 0, // igual al mock
         cashUSD: 0, // igual al mock
+        totalValue: 1020,
       },
       {
         date: '2024-01-02',
@@ -111,6 +112,7 @@ describe('calculatePortfolioSummaryHistory', () => {
         investedUSD: 1000,
         cashARS: 0, // igual al mock
         cashUSD: 1000, // igual al mock
+        totalValue: 2050,
       },
     ]);
   });
@@ -151,6 +153,7 @@ describe('calculatePortfolioSummaryHistory', () => {
         investedUSD: 800,
         cashARS: 10000,
         cashUSD: 200,
+        totalValue: 51000,
       },
     ]);
 

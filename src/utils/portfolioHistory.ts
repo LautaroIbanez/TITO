@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
 export interface DailyPortfolioRecord {
@@ -18,12 +18,14 @@ export interface DailyPortfolioRecord {
  * @param username The username
  * @param record The daily portfolio record to append
  */
-export function appendDailyRecord(username: string, record: DailyPortfolioRecord): void {
+export async function appendDailyRecord(username: string, record: DailyPortfolioRecord): Promise<void> {
   try {
     // Ensure the data/history directory exists
     const historyDir = path.join(process.cwd(), 'data', 'history');
-    if (!fs.existsSync(historyDir)) {
-      fs.mkdirSync(historyDir, { recursive: true });
+    try {
+      await fs.access(historyDir);
+    } catch {
+      await fs.mkdir(historyDir, { recursive: true });
     }
 
     // Define the file path
@@ -31,9 +33,11 @@ export function appendDailyRecord(username: string, record: DailyPortfolioRecord
 
     // Load existing history or create new array
     let history: DailyPortfolioRecord[] = [];
-    if (fs.existsSync(filePath)) {
-      const fileContent = fs.readFileSync(filePath, 'utf-8');
+    try {
+      const fileContent = await fs.readFile(filePath, 'utf-8');
       history = JSON.parse(fileContent);
+    } catch {
+      // File doesn't exist or is empty, start with empty array
     }
 
     // Check if a record for this date already exists
@@ -51,7 +55,7 @@ export function appendDailyRecord(username: string, record: DailyPortfolioRecord
     history.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
 
     // Write back to file
-    fs.writeFileSync(filePath, JSON.stringify(history, null, 2));
+    await fs.writeFile(filePath, JSON.stringify(history, null, 2));
   } catch (error) {
     console.error(`Error appending daily record for ${username}:`, error);
     // Don't throw - this is a non-critical operation
@@ -63,16 +67,17 @@ export function appendDailyRecord(username: string, record: DailyPortfolioRecord
  * @param username The username
  * @returns Array of daily portfolio records
  */
-export function loadPortfolioHistory(username: string): DailyPortfolioRecord[] {
+export async function loadPortfolioHistory(username: string): Promise<DailyPortfolioRecord[]> {
   try {
     const filePath = path.join(process.cwd(), 'data', 'history', `${username}.json`);
     
-    if (!fs.existsSync(filePath)) {
+    try {
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+      return JSON.parse(fileContent);
+    } catch {
+      // File doesn't exist, return empty array
       return [];
     }
-
-    const fileContent = fs.readFileSync(filePath, 'utf-8');
-    return JSON.parse(fileContent);
   } catch (error) {
     console.error(`Error loading portfolio history for ${username}:`, error);
     return [];

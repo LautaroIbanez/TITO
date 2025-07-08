@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest",
+    "test": "node ./node_modules/jest/bin/jest.js",
     "update-data": "ts-node scripts/update-data.ts",
     "update-benchmarks": "ts-node scripts/update-benchmarks.ts",
     "update-inflation": "ts-node scripts/update-inflation.ts",

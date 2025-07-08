@@ -15,6 +15,8 @@ import { trimHistory, trimCategoryValueHistory } from '@/utils/history';
 import { generatePortfolioHash } from '@/utils/priceDataHash';
 import { calculateNetGainsByCurrency } from '@/utils/positionGains';
 import { getPositionDisplayName } from '@/utils/priceValidation';
+import { usePortfolioHistory } from './usePortfolioHistory';
+import HistoricalPortfolioChart from './HistoricalPortfolioChart';
 
 export default function DashboardSummary() {
   const [portfolioValueARS, setPortfolioValueARS] = useState(0);
@@ -29,6 +31,19 @@ export default function DashboardSummary() {
   const [portfolioSummaryHistoryUSD, setPortfolioSummaryHistoryUSD] = useState<any[]>([]);
   
   const { portfolioData, strategy, loading, error, portfolioVersion } = usePortfolio();
+
+  // Get username from session/localStorage
+  const [username, setUsername] = useState<string | null>(null);
+  useEffect(() => {
+    const session = localStorage.getItem('session');
+    if (session) {
+      const sessionData = JSON.parse(session);
+      setUsername(sessionData.username);
+    }
+  }, []);
+
+  // Fetch portfolio history after username and portfolioData are loaded
+  const { history: portfolioHistory, loading: historyLoading, error: historyError } = usePortfolioHistory(username || undefined);
 
   // Generate portfolio hash for dependency tracking
   const portfolioHash = generatePortfolioHash(
@@ -479,6 +494,18 @@ export default function DashboardSummary() {
         </div>
       )}
       
+      {/* Insert the historical portfolio chart below the main summary */}
+      <div className="mt-8">
+        {historyLoading ? (
+          <div className="text-center text-gray-500">Cargando historial del portafolio...</div>
+        ) : historyError ? (
+          <div className="text-center text-red-500">Error al cargar historial: {historyError}</div>
+        ) : portfolioHistory && portfolioHistory.length > 0 ? (
+          <HistoricalPortfolioChart records={portfolioHistory} />
+        ) : (
+          <div className="text-center text-gray-500">No hay historial de portafolio disponible.</div>
+        )}
+      </div>
     </div>
   );
 } 

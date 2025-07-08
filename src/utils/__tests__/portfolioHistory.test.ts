@@ -1,9 +1,9 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 import { appendDailyRecord, loadPortfolioHistory, DailyPortfolioRecord } from '../portfolioHistory';
 
-// Mock fs module
-jest.mock('fs');
+// Mock fs/promises module
+jest.mock('fs/promises');
 jest.mock('path');
 
 const mockFs = fs as jest.Mocked<typeof fs>;
@@ -34,22 +34,20 @@ describe('portfolioHistory', () => {
   });
 
   describe('appendDailyRecord', () => {
-    it('should create directory and file if they do not exist', () => {
-      mockFs.existsSync.mockReturnValue(false);
-      mockFs.readFileSync.mockImplementation(() => {
-        throw new Error('File not found');
-      });
+    it('should create directory and file if they do not exist', async () => {
+      mockFs.access.mockRejectedValue(new Error('Directory does not exist'));
+      mockFs.readFile.mockRejectedValue(new Error('File not found'));
 
-      appendDailyRecord(mockUsername, mockRecord);
+      await appendDailyRecord(mockUsername, mockRecord);
 
-      expect(mockFs.mkdirSync).toHaveBeenCalledWith('/mock/path/data/history', { recursive: true });
-      expect(mockFs.writeFileSync).toHaveBeenCalledWith(
+      expect(mockFs.mkdir).toHaveBeenCalledWith('/mock/path/data/history', { recursive: true });
+      expect(mockFs.writeFile).toHaveBeenCalledWith(
         '/mock/path/data/history/testuser.json',
         JSON.stringify([mockRecord], null, 2)
       );
     });
 
-    it('should append new record to existing history', () => {
+    it('should append new record to existing history', async () => {
       const existingHistory = [
         {
           fecha: '2023-12-31',
@@ -64,19 +62,19 @@ describe('portfolioHistory', () => {
         },
       ];
 
-      mockFs.existsSync.mockReturnValue(true);
-      mockFs.readFileSync.mockReturnValue(JSON.stringify(existingHistory));
+      mockFs.access.mockResolvedValue(undefined);
+      mockFs.readFile.mockResolvedValue(JSON.stringify(existingHistory));
 
-      appendDailyRecord(mockUsername, mockRecord);
+      await appendDailyRecord(mockUsername, mockRecord);
 
       const expectedHistory = [...existingHistory, mockRecord];
-      expect(mockFs.writeFileSync).toHaveBeenCalledWith(
+      expect(mockFs.writeFile).toHaveBeenCalledWith(
         '/mock/path/data/history/testuser.json',
         JSON.stringify(expectedHistory, null, 2)
       );
     });
 
-    it('should update existing record for the same date', () => {
+    it('should update existing record for the same date', async () => {
       const existingHistory = [
         {
           fecha: '2024-01-01',
@@ -91,18 +89,18 @@ describe('portfolioHistory', () => {
         },
       ];
 
-      mockFs.existsSync.mockReturnValue(true);
-      mockFs.readFileSync.mockReturnValue(JSON.stringify(existingHistory));
+      mockFs.access.mockResolvedValue(undefined);
+      mockFs.readFile.mockResolvedValue(JSON.stringify(existingHistory));
 
-      appendDailyRecord(mockUsername, mockRecord);
+      await appendDailyRecord(mockUsername, mockRecord);
 
-      expect(mockFs.writeFileSync).toHaveBeenCalledWith(
+      expect(mockFs.writeFile).toHaveBeenCalledWith(
         '/mock/path/data/history/testuser.json',
         JSON.stringify([mockRecord], null, 2)
       );
     });
 
-    it('should sort records by date', () => {
+    it('should sort records by date', async () => {
       const existingHistory = [
         {
           fecha: '2024-01-02',
@@ -117,38 +115,36 @@ describe('portfolioHistory', () => {
         },
       ];
 
-      mockFs.existsSync.mockReturnValue(true);
-      mockFs.readFileSync.mockReturnValue(JSON.stringify(existingHistory));
+      mockFs.access.mockResolvedValue(undefined);
+      mockFs.readFile.mockResolvedValue(JSON.stringify(existingHistory));
 
-      appendDailyRecord(mockUsername, mockRecord);
+      await appendDailyRecord(mockUsername, mockRecord);
 
       const expectedHistory = [mockRecord, ...existingHistory];
-      expect(mockFs.writeFileSync).toHaveBeenCalledWith(
+      expect(mockFs.writeFile).toHaveBeenCalledWith(
         '/mock/path/data/history/testuser.json',
         JSON.stringify(expectedHistory, null, 2)
       );
     });
 
-    it('should handle errors gracefully', () => {
-      mockFs.existsSync.mockImplementation(() => {
-        throw new Error('Permission denied');
-      });
+    it('should handle errors gracefully', async () => {
+      mockFs.access.mockRejectedValue(new Error('Permission denied'));
 
       // Should not throw
-      expect(() => appendDailyRecord(mockUsername, mockRecord)).not.toThrow();
+      await expect(appendDailyRecord(mockUsername, mockRecord)).resolves.not.toThrow();
     });
   });
 
   describe('loadPortfolioHistory', () => {
-    it('should return empty array if file does not exist', () => {
-      mockFs.existsSync.mockReturnValue(false);
+    it('should return empty array if file does not exist', async () => {
+      mockFs.readFile.mockRejectedValue(new Error('File not found'));
 
-      const result = loadPortfolioHistory(mockUsername);
+      const result = await loadPortfolioHistory(mockUsername);
 
       expect(result).toEqual([]);
     });
 
-    it('should load and parse existing history', () => {
+    it('should load and parse existing history', async () => {
       const existingHistory = [
         {
           fecha: '2024-01-01',
@@ -163,21 +159,17 @@ describe('portfolioHistory', () => {
         },
       ];
 
-      mockFs.existsSync.mockReturnValue(true);
-      mockFs.readFileSync.mockReturnValue(JSON.stringify(existingHistory));
+      mockFs.readFile.mockResolvedValue(JSON.stringify(existingHistory));
 
-      const result = loadPortfolioHistory(mockUsername);
+      const result = await loadPortfolioHistory(mockUsername);
 
       expect(result).toEqual(existingHistory);
     });
 
-    it('should handle errors gracefully', () => {
-      mockFs.existsSync.mockReturnValue(true);
-      mockFs.readFileSync.mockImplementation(() => {
-        throw new Error('Invalid JSON');
-      });
+    it('should handle errors gracefully', async () => {
+      mockFs.readFile.mockRejectedValue(new Error('Invalid JSON'));
 
-      const result = loadPortfolioHistory(mockUsername);
+      const result = await loadPortfolioHistory(mockUsername);
 
       expect(result).toEqual([]);
     });
