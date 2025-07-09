@@ -1,6 +1,6 @@
 {
   "peRatio": null,
-  "pbRatio": 9.270873,
+  "pbRatio": 9.253717,
   "evToEbitda": null,
   "roe": 0.21783,
   "roa": 0.07151,
@@ -8,12 +8,12 @@
   "debtToEbitda": 1.6065906924804294,
   "netMargin": 0.02747,
   "freeCashFlow": 9960500224,
-  "priceToFCF": 77.93337898608736,
+  "priceToFCF": 77.78916096975333,
   "ebitda": 42757001216,
   "revenueGrowth": 0.025,
   "epsGrowth": null,
   "beta": 0.693,
   "sector": "Consumer Defensive",
   "industry": "Discount Stores",
-  "updatedAt": "2025-06-30T12:14:23.843Z"
+  "updatedAt": "2025-07-09T11:52:12.288Z"
 }

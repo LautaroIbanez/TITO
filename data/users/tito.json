@@ -278,8 +278,8 @@
     "initialBalanceUSD": 3000
   },
   "investmentStrategy": {
-    "id": "strategy-6ffddf14-a371-4348-812a-3bf97d67da6a",
-    "createdAt": "2025-07-09T11:07:55.701Z",
+    "id": "strategy-9f14d6c4-a3f9-4954-b9f3-d5018b5bf3cf",
+    "createdAt": "2025-07-09T11:46:20.715Z",
     "targetAllocation": {
       "stocks": 75,
       "bonds": 15,

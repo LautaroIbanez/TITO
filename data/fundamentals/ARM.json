@@ -1,6 +1,6 @@
 {
   "peRatio": null,
-  "pbRatio": 25.561563,
+  "pbRatio": 22.831762,
   "evToEbitda": null,
   "roe": 0.13054,
   "roa": 0.06161,
@@ -8,12 +8,12 @@
   "debtToEbitda": 0.3585817888799355,
   "netMargin": 0.19765,
   "freeCashFlow": -31625000,
-  "priceToFCF": -5541.981641359684,
+  "priceToFCF": -4950.135609675889,
   "ebitda": 992800000,
   "revenueGrowth": 0.337,
   "epsGrowth": null,
   "beta": null,
   "sector": "Technology",
   "industry": "Semiconductors",
-  "updatedAt": "2025-06-30T12:13:53.406Z"
+  "updatedAt": "2025-07-09T11:51:54.121Z"
 }

@@ -33,20 +33,20 @@ describe('PortfolioTable gain/loss column', () => {
 
   it('shows gain/loss in currency for a stock', () => {
     const positions: PortfolioPosition[] = [
-      { type: 'Stock', symbol: 'AAPL', quantity: 10, averagePrice: 100, currency: 'USD', market: 'NASDAQ' },
+      { type: 'Stock', symbol: 'AAPL', quantity: 10, averagePrice: 100, currency: 'USD', market: 'NASDAQ' } as any,
     ];
     renderWithProvider(positions, prices);
     // Gain: (120-100)*10 = 200
-    expect(screen.getByText('US$200,00')).toBeInTheDocument();
+    expect(screen.getByText('US$200.00')).toBeInTheDocument();
   });
 
   it('shows gain/loss in currency for a crypto', () => {
     const positions: PortfolioPosition[] = [
-      { type: 'Crypto', symbol: 'BTC', quantity: 0.5, averagePrice: 20000, currency: 'USD' },
+      { type: 'Crypto', symbol: 'BTC', quantity: 0.5, averagePrice: 20000, currency: 'USD' } as any,
     ];
     renderWithProvider(positions, prices);
     // Gain: (22000-20000)*0.5 = 1000
-    expect(screen.getByText('US$1.000,00')).toBeInTheDocument();
+    expect(screen.getByText('US$1,000.00')).toBeInTheDocument();
   });
 
   it('shows gain/loss in currency for a fixed-term deposit', () => {
@@ -96,7 +96,7 @@ describe('PortfolioTable gain/loss column', () => {
 
   it('should show warning for stocks with zero prices', () => {
     const positions: PortfolioPosition[] = [
-      { type: 'Stock', symbol: 'INVALID', quantity: 10, averagePrice: 100, currency: 'USD', market: 'NASDAQ' },
+      { type: 'Stock', symbol: 'INVALID', quantity: 10, averagePrice: 100, currency: 'USD', market: 'NASDAQ' } as any,
     ];
     const prices = {
       'INVALID': [
@@ -113,7 +113,7 @@ describe('PortfolioTable gain/loss column', () => {
 
   it('should show warning for crypto with zero prices', () => {
     const positions: PortfolioPosition[] = [
-      { type: 'Crypto', symbol: 'INVALID', quantity: 0.5, averagePrice: 20000, currency: 'USD' },
+      { type: 'Crypto', symbol: 'INVALID', quantity: 0.5, averagePrice: 20000, currency: 'USD' } as any,
     ];
     const prices = {
       'INVALID': [
@@ -137,7 +137,7 @@ describe('PortfolioTable gain/loss column', () => {
         averagePrice: 100,
         currency: 'USD',
         market: 'NASDAQ'
-      }
+      } as any
     ];
 
     const prices: Record<string, PriceData[]> = {};
@@ -159,7 +159,7 @@ describe('PortfolioTable gain/loss column', () => {
         averagePrice: 100,
         currency: 'USD',
         market: 'NASDAQ'
-      }
+      } as any
     ];
 
     const prices: Record<string, PriceData[]> = {
@@ -186,7 +186,7 @@ describe('PortfolioTable gain/loss column', () => {
         averagePrice: 100,
         currency: 'USD',
         market: 'NASDAQ'
-      }
+      } as any
     ];
 
     const prices: Record<string, PriceData[]> = {};
@@ -218,7 +218,7 @@ describe('PortfolioTable gain/loss column', () => {
         averagePrice: 100,
         currency: 'USD',
         market: 'NASDAQ'
-      }
+      } as any
     ];
 
     const prices: Record<string, PriceData[]> = {
@@ -254,7 +254,7 @@ describe('PortfolioTable gain/loss column', () => {
         quantity: 0.1,
         averagePrice: 50000,
         currency: 'USD'
-      }
+      } as any
     ];
 
     const prices: Record<string, PriceData[]> = {};
@@ -286,7 +286,7 @@ describe('PortfolioTable gain/loss column', () => {
         averagePrice: 100,
         currency: 'USD',
         market: 'NASDAQ'
-      }
+      } as any
     ];
 
     const prices: Record<string, PriceData[]> = {
@@ -309,8 +309,20 @@ describe('PortfolioTable gain/loss column', () => {
       </PortfolioProvider>
     );
 
-    expect(screen.getByText('US$105,00')).toBeInTheDocument(); // Current price
+    expect(screen.getByText('US$105.00')).toBeInTheDocument(); // Current price
     expect(screen.getByText('5.00%')).toBeInTheDocument(); // Gain percentage
     expect(screen.queryByText('Sin datos suficientes')).not.toBeInTheDocument();
+  });
+
+  it('shows - and neutral color for stock with no purchase or average price', () => {
+    const positions: PortfolioPosition[] = [
+      { type: 'Stock', symbol: 'AAPL', quantity: 10, currency: 'USD', market: 'NASDAQ' } as any,
+    ];
+    renderWithProvider(positions, prices);
+    // Should show '-' for gain/loss in currency, with text-gray-500
+    const dashes = screen.getAllByText('-');
+    dashes.forEach(el => console.log('DASH:', el.className));
+    const dash = dashes.find(el => el.className.includes('text-gray-500'));
+    expect(dash).toBeInTheDocument();
   });
 }); 

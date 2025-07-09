@@ -1,5 +1,6 @@
 import { PortfolioPosition, StockPosition, CryptoPosition, FixedTermDepositPosition, CaucionPosition } from '@/types';
 import { validatePositionPrice } from './priceValidation';
+import getPurchasePrice from './getPurchasePrice';
 
 /**
  * Computes the gain/loss in currency for a portfolio position.
@@ -16,8 +17,12 @@ export function computePositionGain(
   today: Date = new Date()
 ): number {
   if (pos.type === 'Stock' || pos.type === 'Crypto') {
-    if (typeof currentPrice !== 'number') return 0;
-    return (currentPrice - pos.purchasePrice) * pos.quantity;
+    if (typeof currentPrice !== 'number' || !Number.isFinite(currentPrice)) return 0;
+    
+    const purchasePrice = getPurchasePrice(pos);
+    if (!Number.isFinite(purchasePrice)) return 0;
+    
+    return (currentPrice - purchasePrice) * pos.quantity;
   }
   if (pos.type === 'FixedTermDeposit' || pos.type === 'Caucion') {
     const start = new Date(pos.startDate);
@@ -52,6 +57,14 @@ export function calculateNetGainsByCurrency(
       continue;
     }
     const gain = computePositionGain(pos, validation.currentPrice, today);
+    // If stock/crypto and gain is 0 due to non-finite purchase/current price, skip
+    if ((pos.type === 'Stock' || pos.type === 'Crypto')) {
+      const purchasePrice = getPurchasePrice(pos);
+      if (!Number.isFinite(purchasePrice) || !Number.isFinite(validation.currentPrice)) {
+        skipped.push({ position: pos, reason: 'Precio de compra o actual no válido' });
+        continue;
+      }
+    }
     if (pos.currency === 'ARS') {
       ARS += gain;
     } else if (pos.currency === 'USD') {

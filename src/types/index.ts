@@ -55,6 +55,7 @@ export interface FixedTermDepositPosition {
   startDate: string;
   maturityDate: string;
   currency: 'ARS' | 'USD';
+  termDays?: number;
 }
 
 export interface CaucionPosition {

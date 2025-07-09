@@ -1,0 +1,157 @@
+{
+  "username": "negro",
+  "createdAt": "2025-07-09T11:47:03.598Z",
+  "profileCompleted": true,
+  "positions": [
+    {
+      "type": "Stock",
+      "symbol": "GOOGL.BA",
+      "quantity": 10,
+      "purchasePrice": 176.19078,
+      "currency": "ARS",
+      "market": "BCBA"
+    },
+    {
+      "type": "Stock",
+      "symbol": "NVDA.BA",
+      "quantity": 10,
+      "purchasePrice": 161.68,
+      "currency": "ARS",
+      "market": "BCBA"
+    },
+    {
+      "type": "Stock",
+      "symbol": "MSFT.BA",
+      "quantity": 10,
+      "purchasePrice": 501.824405,
+      "currency": "ARS",
+      "market": "BCBA"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "deposit-ARS-initial",
+      "date": "2025-07-09",
+      "type": "Deposit",
+      "amount": 3000000,
+      "currency": "ARS"
+    },
+    {
+      "id": "deposit-USD-initial",
+      "date": "2025-07-09",
+      "type": "Deposit",
+      "amount": 3000,
+      "currency": "USD"
+    },
+    {
+      "id": "1752062025928",
+      "date": "2025-07-09T11:53:45.928Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "GOOGL.BA",
+      "quantity": 10,
+      "price": 174.36,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1752062076246",
+      "date": "2025-07-09T11:54:36.246Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "NVDA.BA",
+      "quantity": 10,
+      "price": 160,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1752062159798",
+      "date": "2025-07-09T11:55:59.798Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "MSFT.BA",
+      "quantity": 10,
+      "price": 496.61,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    }
+  ],
+  "goals": [],
+  "cash": {
+    "ARS": 2991603.04815,
+    "USD": 3000
+  },
+  "profile": {
+    "instrumentsUsed": [
+      "Plazo Fijo",
+      "Fondos Comunes de Inversión",
+      "Acciones",
+      "Bonos"
+    ],
+    "knowledgeLevels": {
+      "Plazo Fijo": "Medio",
+      "Fondos Comunes de Inversión": "Medio",
+      "Acciones": "Medio",
+      "Bonos": "Bajo"
+    },
+    "holdingPeriod": "1 a 5 años",
+    "ageGroup": "31-40",
+    "riskAppetite": "Balanceado",
+    "investmentAmount": 3003000,
+    "investmentSharePct": 0,
+    "initialBalanceARS": 3000000,
+    "initialBalanceUSD": 3000
+  },
+  "investmentStrategy": {
+    "id": "strategy-e2d34c30-2305-432a-9cc1-fbf2b37f6fc0",
+    "createdAt": "2025-07-09T11:48:02.596Z",
+    "targetAllocation": {
+      "stocks": 59.4,
+      "bonds": 29.7,
+      "deposits": 4.95,
+      "cash": 4.95,
+      "crypto": 1
+    },
+    "recommendations": [
+      {
+        "id": "alloc-6f64a345-46bb-4288-8af7-b2145b189930",
+        "action": "increase",
+        "assetClass": "stocks",
+        "reason": "Tu portafolio tiene 0.0% en acciones, pero tu estrategia objetivo es 59.4%",
+        "priority": "high",
+        "expectedImpact": "positive"
+      },
+      {
+        "id": "alloc-f4be21be-48aa-4b62-bfeb-cbb6b6a0541b",
+        "action": "increase",
+        "assetClass": "bonds",
+        "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 29.7%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
+        "priority": "high",
+        "expectedImpact": "positive",
+        "suggestedAssets": [
+          "GOV-BOND-2025",
+          "CORP-BOND-2026",
+          "MUNI-BOND-2027"
+        ]
+      },
+      {
+        "id": "cash-invest-122cff62-a835-4ba7-85c6-ddaee61711fb",
+        "action": "buy",
+        "assetClass": "cash",
+        "reason": "Tienes un 100.0% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
+        "priority": "high",
+        "expectedImpact": "positive"
+      }
+    ],
+    "riskLevel": "Balanceado",
+    "timeHorizon": "5-10 años",
+    "notes": ""
+  }
+}

@@ -126,7 +126,11 @@ export default function CryptoCard({ symbol, prices, technicals, cash, onTrade }
       </div>
       <div className="mb-2">
         <span className="text-black text-sm">Precio actual: </span>
-        <span className="font-mono text-lg text-black">US${currentPrice?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+        <span className="font-mono text-lg text-black">
+          {currentPrice != null && currentPrice !== 0 && !isNaN(currentPrice) 
+            ? `US$${currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+            : '-'}
+        </span>
         {selectedCurrency === 'ARS' && (
           <div className="text-xs text-black mt-1">
             💱 Las compras en ARS se convertirán automáticamente a USD

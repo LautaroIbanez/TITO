@@ -125,7 +125,13 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
     const currPrice = priceValidation.currentPrice;
     const value = hasValidPrice ? pos.quantity * currPrice! : 0;
     const gain = hasValidPrice && getPurchasePrice(pos) ? ((currPrice! - getPurchasePrice(pos)) / getPurchasePrice(pos)) * 100 : 0;
-    const gainCurrency = hasValidPrice ? computePositionGain(pos, currPrice!) : 0;
+    let gainCurrency: number;
+    if (hasValidPrice) {
+      const purchasePrice = getPurchasePrice(pos);
+      gainCurrency = Number.isFinite(purchasePrice) ? computePositionGain(pos, currPrice!) : NaN;
+    } else {
+      gainCurrency = NaN;
+    }
     const f = fundamentals[pos.symbol];
     const t = technicals[pos.symbol];
 
@@ -145,8 +151,8 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
         <td className={`px-4 py-2 text-right font-semibold ${gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
           {hasValidPrice ? `${gain.toFixed(2)}%` : '-'}
         </td>
-        <td className={`px-4 py-2 text-right font-semibold ${gainCurrency >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-          {hasValidPrice ? formatCurrency(gainCurrency, pos.currency) : '-'}
+        <td className={`px-4 py-2 text-right font-semibold ${Number.isFinite(gainCurrency) ? (gainCurrency >= 0 ? 'text-green-600' : 'text-red-600') : 'text-gray-500'}`}>
+          {Number.isFinite(gainCurrency) ? formatCurrency(gainCurrency, pos.currency) : '-'}
         </td>
         <td className="px-4 py-2 text-right text-gray-900">{f?.peRatio?.toFixed(2) ?? '-'}</td>
         <td className="px-4 py-2 text-right text-gray-900">{t?.rsi?.toFixed(2) ?? '-'}</td>
@@ -188,8 +194,10 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(pos.amount, pos.currency)}</td>
-        <td className="px-4 py-2 text-right text-green-600">{pos.annualRate?.toFixed(2) ?? '-' }%</td>
-        <td className={`px-4 py-2 text-right font-semibold ${gainCurrency >= 0 ? 'text-green-600' : 'text-red-600'}`}>{gainCurrency !== undefined ? formatCurrency(gainCurrency, pos.currency) : '-'}</td>
+        <td className="px-4 py-2 text-right text-green-600">
+          {pos.annualRate?.toFixed(2) ?? '-'}%{pos.termDays ? ` a ${pos.termDays} días` : ''}
+        </td>
+        <td className={`px-4 py-2 text-right font-semibold ${Number.isFinite(gainCurrency) ? (gainCurrency >= 0 ? 'text-green-600' : 'text-red-600') : 'text-gray-500'}`}>{Number.isFinite(gainCurrency) ? formatCurrency(gainCurrency, pos.currency) : '-'}</td>
         <td className="px-4 py-2 text-right text-gray-700">{pos.maturityDate ? new Date(pos.maturityDate).toLocaleDateString() : '-'}</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-center">
@@ -211,7 +219,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(pos.amount, pos.currency)}</td>
         <td className="px-4 py-2 text-right text-green-600">{pos.annualRate?.toFixed(2) ?? '-' }%</td>
-        <td className={`px-4 py-2 text-right font-semibold ${gainCurrency >= 0 ? 'text-green-600' : 'text-red-600'}`}>{gainCurrency !== undefined ? formatCurrency(gainCurrency, pos.currency) : '-'}</td>
+        <td className={`px-4 py-2 text-right font-semibold ${Number.isFinite(gainCurrency) ? (gainCurrency >= 0 ? 'text-green-600' : 'text-red-600') : 'text-gray-500'}`}>{Number.isFinite(gainCurrency) ? formatCurrency(gainCurrency, pos.currency) : '-'}</td>
         <td className="px-4 py-2 text-right text-gray-700">{pos.maturityDate ? new Date(pos.maturityDate).toLocaleDateString() : '-'}</td>
         <td className="px-4 py-2 text-right text-gray-700">{pos.term ? `${pos.term} días` : '-'}</td>
         <td className="px-4 py-2 text-center">
@@ -227,7 +235,13 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
     const currPrice = priceValidation.currentPrice;
     const value = hasValidPrice ? pos.quantity * currPrice! : 0;
     const gain = hasValidPrice && getPurchasePrice(pos) ? ((currPrice! - getPurchasePrice(pos)) / getPurchasePrice(pos)) * 100 : 0;
-    const gainCurrency = hasValidPrice ? computePositionGain(pos, currPrice!) : 0;
+    let gainCurrency: number;
+    if (hasValidPrice) {
+      const purchasePrice = getPurchasePrice(pos);
+      gainCurrency = Number.isFinite(purchasePrice) ? computePositionGain(pos, currPrice!) : NaN;
+    } else {
+      gainCurrency = NaN;
+    }
     const f = fundamentals[pos.symbol];
     const t = technicals[pos.symbol];
 
@@ -247,8 +261,8 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
         <td className={`px-4 py-2 text-right font-semibold ${gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
           {hasValidPrice ? `${gain.toFixed(2)}%` : '-'}
         </td>
-        <td className={`px-4 py-2 text-right font-semibold ${gainCurrency >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-          {hasValidPrice ? formatCurrency(gainCurrency, pos.currency) : '-'}
+        <td className={`px-4 py-2 text-right font-semibold ${Number.isFinite(gainCurrency) ? (gainCurrency >= 0 ? 'text-green-600' : 'text-red-600') : 'text-gray-500'}`}>
+          {Number.isFinite(gainCurrency) ? formatCurrency(gainCurrency, pos.currency) : '-'}
         </td>
         <td className="px-4 py-2 text-right text-gray-900">{f?.peRatio?.toFixed(2) ?? '-'}</td>
         <td className="px-4 py-2 text-right text-gray-900">{t?.rsi?.toFixed(2) ?? '-'}</td>

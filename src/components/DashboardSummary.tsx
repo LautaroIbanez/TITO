@@ -225,11 +225,11 @@ export default function DashboardSummary() {
       {showOnboarding && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-lg max-w-md mx-4">
-            <h2 className="text-2xl font-bold mb-4">¡Bienvenido a TITO!</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className="text-2xl font-bold mb-4 text-black">¡Bienvenido a TITO!</h2>
+            <p className="text-black mb-6">
               TITO es tu asistente personal de inversiones. Te ayudará a:
             </p>
-            <ul className="list-disc list-inside text-gray-600 mb-6 space-y-2">
+            <ul className="list-disc list-inside text-black mb-6 space-y-2">
               <li>Gestionar tu portafolio de inversiones</li>
               <li>Establecer y alcanzar metas financieras</li>
               <li>Recibir recomendaciones personalizadas</li>
