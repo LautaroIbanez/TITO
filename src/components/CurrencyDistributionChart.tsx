@@ -3,6 +3,7 @@ import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { PortfolioPosition } from '@/types';
 import { formatCurrency } from '@/utils/goalCalculator';
+import getPurchasePrice from '../utils/getPurchasePrice';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -22,14 +23,14 @@ export default function CurrencyDistributionChart({ positions, cash }: Props) {
     let value = 0;
     if (pos.type === 'Stock') {
       // This is a simplification. For a real app, you'd fetch current prices.
-      value = pos.quantity * pos.purchasePrice; 
+      value = pos.quantity * getPurchasePrice(pos); 
     } else if (pos.type === 'Bond') {
-      value = pos.quantity * pos.purchasePrice;
+      value = pos.quantity * getPurchasePrice(pos);
     } else if (pos.type === 'FixedTermDeposit') {
       value = pos.amount;
     } else if (pos.type === 'Crypto') {
       // This is a simplification. For a real app, you'd fetch current prices.
-      value = pos.quantity * pos.purchasePrice;
+      value = pos.quantity * getPurchasePrice(pos);
     }
 
     if (pos.currency === 'ARS') {

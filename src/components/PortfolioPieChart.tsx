@@ -2,6 +2,7 @@ import React from 'react';
 import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { PortfolioPosition } from '@/types';
+import getPurchasePrice from '../utils/getPurchasePrice';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -17,7 +18,7 @@ export default function PortfolioPieChart({ positions, prices }: Props) {
       const currPrice = prices[pos.symbol]?.[prices[pos.symbol].length - 1]?.close || 0;
       return { label: pos.symbol, value: pos.quantity * currPrice };
     } else if (pos.type === 'Bond') {
-      return { label: pos.ticker, value: pos.quantity * pos.purchasePrice };
+      return { label: pos.ticker, value: pos.quantity * getPurchasePrice(pos) };
     } else if (pos.type === 'FixedTermDeposit') {
       return { label: pos.provider, value: pos.amount };
     } else if (pos.type === 'Caucion') {

@@ -8,6 +8,7 @@ import { formatCurrency } from '@/utils/goalCalculator';
 import { computePositionGain } from '@/utils/positionGains';
 import { detectDuplicates } from '@/utils/duplicateDetection';
 import { validatePositionPrice } from '@/utils/priceValidation';
+import getPurchasePrice from '../utils/getPurchasePrice';
 
 interface Props {
   positions: PortfolioPosition[];
@@ -47,7 +48,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
         market = modalState.asset.market;
       }
     } else if (assetType === 'Bond' && modalState.asset?.type === 'Bond') {
-      currentPrice = modalState.asset.purchasePrice;
+      currentPrice = getPurchasePrice(modalState.asset);
     } else if (assetType === 'Crypto') {
       const price = getCurrentPrice(prices[identifier]);
       currentPrice = price ?? 0;
@@ -123,7 +124,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
     const hasValidPrice = priceValidation.hasValidPrice;
     const currPrice = priceValidation.currentPrice;
     const value = hasValidPrice ? pos.quantity * currPrice! : 0;
-    const gain = hasValidPrice && pos.purchasePrice ? ((currPrice! - pos.purchasePrice) / pos.purchasePrice) * 100 : 0;
+    const gain = hasValidPrice && getPurchasePrice(pos) ? ((currPrice! - getPurchasePrice(pos)) / getPurchasePrice(pos)) * 100 : 0;
     const gainCurrency = hasValidPrice ? computePositionGain(pos, currPrice!) : 0;
     const f = fundamentals[pos.symbol];
     const t = technicals[pos.symbol];
@@ -134,7 +135,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
         <td className="px-4 py-2 text-gray-700">Acción</td>
         <td className="px-4 py-2 text-gray-700">{pos.currency}</td>
         <td className="px-4 py-2 text-right text-gray-900">{pos.quantity}</td>
-        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(pos.purchasePrice, pos.currency)}</td>
+        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(getPurchasePrice(pos), pos.currency)}</td>
         <td className="px-4 py-2 text-right text-gray-900">
           {hasValidPrice ? formatCurrency(currPrice!, pos.currency) : (
             <span className="text-orange-600 text-xs">Sin datos suficientes</span>
@@ -157,14 +158,14 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
   };
 
   const renderBondRow = (pos: BondPosition) => {
-    const value = pos.quantity * pos.purchasePrice;
+    const value = pos.quantity * getPurchasePrice(pos);
     return (
       <tr key={`${pos.ticker}-${pos.currency}`} className="even:bg-gray-50">
         <td className="px-4 py-2 font-mono text-gray-900">{pos.ticker}</td>
         <td className="px-4 py-2 text-gray-700">Bono</td>
         <td className="px-4 py-2 text-gray-700">{pos.currency}</td>
         <td className="px-4 py-2 text-right text-gray-900">{pos.quantity}</td>
-        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(pos.purchasePrice, pos.currency)}</td>
+        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(getPurchasePrice(pos), pos.currency)}</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(value, pos.currency)}</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
@@ -225,7 +226,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
     const hasValidPrice = priceValidation.hasValidPrice;
     const currPrice = priceValidation.currentPrice;
     const value = hasValidPrice ? pos.quantity * currPrice! : 0;
-    const gain = hasValidPrice && pos.purchasePrice ? ((currPrice! - pos.purchasePrice) / pos.purchasePrice) * 100 : 0;
+    const gain = hasValidPrice && getPurchasePrice(pos) ? ((currPrice! - getPurchasePrice(pos)) / getPurchasePrice(pos)) * 100 : 0;
     const gainCurrency = hasValidPrice ? computePositionGain(pos, currPrice!) : 0;
     const f = fundamentals[pos.symbol];
     const t = technicals[pos.symbol];
@@ -236,7 +237,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
         <td className="px-4 py-2 text-gray-700">Cripto</td>
         <td className="px-4 py-2 text-gray-700">{pos.currency}</td>
         <td className="px-4 py-2 text-right text-gray-900">{pos.quantity}</td>
-        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(pos.purchasePrice, pos.currency)}</td>
+        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(getPurchasePrice(pos), pos.currency)}</td>
         <td className="px-4 py-2 text-right text-gray-900">
           {hasValidPrice ? formatCurrency(currPrice!, pos.currency) : (
             <span className="text-orange-600 text-xs">Sin datos suficientes</span>
@@ -273,7 +274,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
       };
     }
     if (asset.type === 'Bond') {
-      return { assetName: asset.ticker, identifier: asset.ticker, price: asset.purchasePrice, maxShares: asset.quantity, assetType: asset.type, currency: asset.currency };
+      return { assetName: asset.ticker, identifier: asset.ticker, price: getPurchasePrice(asset), maxShares: asset.quantity, assetType: asset.type, currency: asset.currency };
     }
     if (asset.type === 'Crypto') {
       const priceValidation = validatePositionPrice(asset, prices);

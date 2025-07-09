@@ -22,6 +22,7 @@ import { formatCurrency } from '@/utils/goalCalculator';
 import { StockPosition, AssetType } from '@/types';
 import { getTickerCurrency, getBaseTicker } from '@/utils/tickers';
 import SignalBadge from './SignalBadge';
+import getPurchasePrice from '../utils/getPurchasePrice';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
@@ -109,7 +110,7 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
   
   const market = isStockPosition(position) ? position.market : undefined;
   const quantity = (isStockPosition(position) || isBondPosition(position)) ? position.quantity : 0;
-  const averagePrice = (isStockPosition(position) || isBondPosition(position)) ? position.purchasePrice : 0;
+  const averagePrice = getPurchasePrice(position);
   const value = quantity * currentPrice;
   const gain = averagePrice ? ((currentPrice - averagePrice) / averagePrice) * 100 : 0;
 

@@ -103,7 +103,7 @@ describe('calculateFixedIncomeGains', () => {
         type: 'Stock',
         symbol: 'AAPL',
         quantity: 10,
-        averagePrice: 100,
+        purchasePrice: 100,
         currency: 'USD',
         market: 'NASDAQ',
       },
@@ -142,7 +142,7 @@ describe('calculateFixedIncomeGains', () => {
         type: 'Crypto',
         symbol: 'BTCUSDT',
         quantity: 1,
-        averagePrice: 50000,
+        purchasePrice: 50000,
         currency: 'USD',
       },
       {
@@ -181,7 +181,7 @@ describe('calculateFixedIncomeGains', () => {
         type: 'Bond',
         ticker: 'BONAR2024',
         quantity: 100,
-        averagePrice: 100,
+        purchasePrice: 100,
         currency: 'ARS',
       },
       {
@@ -357,7 +357,7 @@ describe('calculateFixedIncomeValueHistory', () => {
         type: 'Stock',
         symbol: 'AAPL',
         quantity: 10,
-        averagePrice: 100,
+        purchasePrice: 100,
         currency: 'USD',
         market: 'NASDAQ',
       },
@@ -388,7 +388,7 @@ describe('calculateFixedIncomeValueHistory', () => {
         type: 'Crypto',
         symbol: 'BTCUSDT',
         quantity: 1,
-        averagePrice: 50000,
+        purchasePrice: 50000,
         currency: 'USD',
       },
       {
@@ -719,14 +719,14 @@ describe('distributeFixedIncomeReturns', () => {
         type: 'Bond',
         ticker: 'BOND1',
         quantity: 100,
-        averagePrice: 100,
+        purchasePrice: 100,
         currency: 'ARS',
       },
       {
         type: 'Bond',
         ticker: 'BOND2',
         quantity: 10,
-        averagePrice: 100,
+        purchasePrice: 100,
         currency: 'USD',
       },
     ];
@@ -833,5 +833,17 @@ describe('distributeFixedIncomeReturns', () => {
     projection.forEach(point => {
       expect(point.value).toBe(10000);
     });
+  });
+}); 
+
+describe('formatCurrency', () => {
+  const { formatCurrency } = require('../goalCalculator');
+  it('formats ARS with es-AR locale', () => {
+    expect(formatCurrency(1234.56, 'ARS')).toBe('$1.234,56');
+    expect(formatCurrency(1000000, 'ARS')).toBe('$1.000.000,00');
+  });
+  it('formats USD with en-US locale', () => {
+    expect(formatCurrency(1234.56, 'USD')).toBe('US$1,234.56');
+    expect(formatCurrency(1000000, 'USD')).toBe('US$1,000,000.00');
   });
 }); 

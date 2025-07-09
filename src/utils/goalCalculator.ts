@@ -113,13 +113,12 @@ export function formatCurrency(value: number, currency: 'ARS' | 'USD' = 'ARS'): 
     'ARS': '$',
     'USD': 'US$'
   };
-  
+  const locale = currency === 'USD' ? 'en-US' : 'es-AR';
   const symbol = symbolMap[currency];
-  const formattedNumber = value.toLocaleString('es-AR', {
+  const formattedNumber = value.toLocaleString(locale, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  
   return `${symbol}${formattedNumber}`;
 }
 
