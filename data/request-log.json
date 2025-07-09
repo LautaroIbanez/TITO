@@ -1,37 +1,40 @@
 {
   "ALUAR": {
-    "history": "2025-07-09T13:22:04.949Z",
-    "fundamentals": "2025-07-09T13:22:04.905Z"
+    "history": "2025-07-09T14:02:46.779Z",
+    "fundamentals": "2025-07-09T14:02:46.744Z"
   },
   "BYMA": {
-    "fundamentals": "2025-07-09T13:22:05.460Z"
+    "fundamentals": "2025-07-09T14:02:47.597Z"
   },
   "CAPU": {
-    "fundamentals": "2025-07-09T13:22:05.627Z"
+    "fundamentals": "2025-07-09T14:02:47.802Z"
   },
   "PAMP": {
-    "fundamentals": "2025-07-09T13:22:06.874Z"
+    "fundamentals": "2025-07-09T14:02:48.653Z"
   },
   "TGNO4": {
-    "fundamentals": "2025-07-09T13:22:06.936Z"
+    "fundamentals": "2025-07-09T14:02:48.734Z"
   },
   "TGSU2": {
-    "fundamentals": "2025-07-09T13:22:07.421Z"
+    "fundamentals": "2025-07-09T14:02:48.996Z"
   },
   "TRAN": {
-    "fundamentals": "2025-07-09T13:22:07.602Z"
+    "fundamentals": "2025-07-09T14:02:49.160Z"
   },
   "YPFD": {
-    "fundamentals": "2025-07-09T13:22:07.947Z"
+    "fundamentals": "2025-07-09T14:02:49.425Z"
   },
   "COME": {
-    "fundamentals": "2025-07-09T13:22:08.140Z"
+    "fundamentals": "2025-07-09T14:02:49.574Z"
   },
   "CRES": {
-    "fundamentals": "2025-07-09T13:22:08.594Z"
+    "fundamentals": "2025-07-09T14:02:49.838Z"
   },
   "BRK.B": {
-    "fundamentals": "2025-07-09T13:21:59.139Z",
-    "history": "2025-07-09T13:21:59.148Z"
+    "fundamentals": "2025-07-09T14:02:41.631Z",
+    "history": "2025-07-09T14:02:41.648Z"
+  },
+  "KO": {
+    "fundamentals": "2025-07-09T14:02:40.560Z"
   }
 }

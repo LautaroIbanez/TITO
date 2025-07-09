@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -48,11 +48,16 @@ export default function ScoopCard({
   onTrade,
   cash,
 }: ScoopCardProps) {
+  // Calculate initial currentPrice before useState calls
+  const initialPrices = stockData?.prices || [];
+  const initialCurrentPrice = initialPrices.length > 0 ? initialPrices[initialPrices.length - 1].close : 0;
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [market, setMarket] = useState<'NASDAQ' | 'BCBA'>(getTickerMarket(stockData.symbol));
+  const [modalPrice, setModalPrice] = useState(initialCurrentPrice);
   
   // Display states for current market data
-  const [displayPrices, setDisplayPrices] = useState<any[]>(stockData?.prices || []);
+  const [displayPrices, setDisplayPrices] = useState<any[]>(initialPrices);
   const [displayFundamentals, setDisplayFundamentals] = useState<Fundamentals | null>(fundamentals);
   const [displayTechnicals, setDisplayTechnicals] = useState<Technicals | null>(technicals);
   
@@ -62,7 +67,14 @@ export default function ScoopCard({
   const [bcbaTechnicals, setBcbaTechnicals] = useState<Technicals | null>(null);
   const [bcbaDataLoaded, setBcbaDataLoaded] = useState(false);
 
+  // Calculate currentPrice from displayPrices
   const currentPrice = displayPrices.length > 0 ? displayPrices[displayPrices.length - 1].close : 0;
+  
+  // Update modalPrice when currentPrice changes
+  useEffect(() => {
+    setModalPrice(currentPrice);
+  }, [currentPrice]);
+  
   const signal = getTradeSignal(displayTechnicals, currentPrice);
   
   const lastPriceDate = displayPrices.length > 0 ? displayPrices[displayPrices.length - 1].date : null;
@@ -111,6 +123,9 @@ export default function ScoopCard({
         setDisplayPrices(bcbaPrices);
         setDisplayFundamentals(bcbaFundamentals || fundamentals);
         setDisplayTechnicals(bcbaTechnicals);
+        // Update modalPrice with BCBA price
+        const bcbaCurrentPrice = bcbaPrices.length > 0 ? bcbaPrices[bcbaPrices.length - 1].close : 0;
+        setModalPrice(bcbaCurrentPrice);
         return;
       }
       
@@ -137,18 +152,28 @@ export default function ScoopCard({
         setDisplayFundamentals(bcbaFundamentalsData);
         setDisplayTechnicals(bcbaTechnicalsData);
         
+        // Update modalPrice with BCBA price
+        const bcbaCurrentPrice = bcbaPricesData.length > 0 ? bcbaPricesData[bcbaPricesData.length - 1].close : 0;
+        setModalPrice(bcbaCurrentPrice);
+        
       } catch (error) {
         console.error('Failed to fetch BCBA data for', stockData.symbol, error);
         // Fallback to original data if BCBA fetch fails
         setDisplayPrices(stockData?.prices || []);
         setDisplayFundamentals(fundamentals);
         setDisplayTechnicals(technicals);
+        // Reset modalPrice to original price
+        const originalPrice = stockData?.prices?.length > 0 ? stockData.prices[stockData.prices.length - 1].close : 0;
+        setModalPrice(originalPrice);
       }
     } else {
       // Switch back to NASDAQ data
       setDisplayPrices(stockData?.prices || []);
       setDisplayFundamentals(fundamentals);
       setDisplayTechnicals(technicals);
+      // Update modalPrice with NASDAQ price
+      const nasdaqCurrentPrice = stockData?.prices?.length > 0 ? stockData.prices[stockData.prices.length - 1].close : 0;
+      setModalPrice(nasdaqCurrentPrice);
     }
   };
 
@@ -165,7 +190,7 @@ export default function ScoopCard({
         assetType: 'Stock',
         symbol,
         quantity,
-        price: purchasePrice ?? currentPrice,
+        price: purchasePrice ?? modalPrice,
         currency,
         market,
         commissionPct,
@@ -196,7 +221,7 @@ export default function ScoopCard({
         assetName={stockData.companyName || stockData.symbol}
         assetType="Stock"
         identifier={stockData.symbol}
-        price={currentPrice}
+        price={modalPrice}
         cash={cash}
         currency={market === 'BCBA' ? 'ARS' : 'USD'}
         assetClass="stocks"
