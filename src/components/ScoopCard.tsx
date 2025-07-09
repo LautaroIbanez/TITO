@@ -200,6 +200,7 @@ export default function ScoopCard({
         cash={cash}
         currency={market === 'BCBA' ? 'ARS' : 'USD'}
         assetClass="stocks"
+        market={market}
       />
       
       <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col gap-4 relative">

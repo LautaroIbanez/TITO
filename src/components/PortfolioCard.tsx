@@ -153,6 +153,7 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
         maxShares={quantity}
         currency={position.currency}
         assetClass={position.type === 'Stock' ? 'stocks' : position.type === 'Bond' ? 'bonds' : position.type === 'FixedTermDeposit' ? 'deposits' : undefined}
+        market={isStockPosition(position) ? position.market : undefined}
       />
       <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col gap-4 relative text-black">
         <div className="flex items-center gap-2 justify-between">

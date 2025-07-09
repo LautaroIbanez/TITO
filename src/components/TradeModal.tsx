@@ -5,6 +5,7 @@ import { PortfolioPosition } from '@/types'; // Import main types
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import { DEFAULT_COMMISSION_PCT, DEFAULT_PURCHASE_FEE_PCT } from '@/utils/constants';
 import { formatCurrency } from '@/utils/goalCalculator';
+import { getCorrectPrice } from '@/utils/tickers';
 
 export type TradeType = 'Buy' | 'Sell' | 'Invest';
 
@@ -22,6 +23,7 @@ export interface TradeModalProps {
   isAmountBased?: boolean;
   currency: 'ARS' | 'USD';
   assetClass?: 'stocks' | 'bonds' | 'deposits';
+  market?: 'NASDAQ' | 'NYSE' | 'BCBA';
 }
 
 export default function TradeModal({
@@ -38,6 +40,7 @@ export default function TradeModal({
   isAmountBased = false,
   currency,
   assetClass,
+  market,
 }: TradeModalProps) {
   const [value, setValue] = useState(1);
   const [commissionPct, setCommissionPct] = useState(DEFAULT_COMMISSION_PCT);
@@ -87,6 +90,14 @@ export default function TradeModal({
     return 'Efectivo Disponible';
   };
 
+  // Get the correct initial price based on currency and market
+  const getInitialPrice = () => {
+    if (!price || isNaN(price)) return 0;
+    
+    // Use the utility function to get the correct price
+    return getCorrectPrice(identifier, price, market || 'NASDAQ', currency);
+  };
+
   useEffect(() => {
     if (isOpen) {
       setValue(isAmountBased ? 50000 : 1);
@@ -94,9 +105,9 @@ export default function TradeModal({
       setPurchaseFeePct(DEFAULT_PURCHASE_FEE_PCT);
       setError('');
       setLoading(false);
-      setPurchasePrice(price);
+      setPurchasePrice(getInitialPrice());
     }
-  }, [isOpen, isAmountBased, price]);
+  }, [isOpen, isAmountBased, price, identifier, market, currency]);
 
   useEffect(() => {
     setError('');

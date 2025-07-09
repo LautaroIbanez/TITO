@@ -325,6 +325,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
           maxShares={modalInfo.maxShares}
           currency={modalInfo.currency}
           assetClass={modalState.asset?.type === 'Stock' ? 'stocks' : modalState.asset?.type === 'Bond' ? 'bonds' : undefined}
+          market={modalState.asset?.type === 'Stock' ? (modalState.asset as any).market : undefined}
         />
       )}
       

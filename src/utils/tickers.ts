@@ -47,6 +47,37 @@ export function getTickerMarket(symbol: string): 'NASDAQ' | 'BCBA' {
 }
 
 /**
+ * Gets the correct price for a ticker based on its currency and market
+ * @param symbol - The ticker symbol (e.g., 'AAPL.BA', 'AAPL')
+ * @param currentPrice - The current price from the data source
+ * @param market - The current market ('NASDAQ' | 'BCBA')
+ * @param currency - The current currency ('USD' | 'ARS')
+ * @returns The correct price rounded to 2 decimal places
+ */
+export function getCorrectPrice(symbol: string, currentPrice: number, market: 'NASDAQ' | 'NYSE' | 'BCBA', currency: 'USD' | 'ARS'): number {
+  if (!currentPrice || isNaN(currentPrice)) return 0;
+  
+  // For BCBA market or ARS currency, ensure we're using ARS prices
+  if (market === 'BCBA' || currency === 'ARS') {
+    // If the symbol has .BA or .AR suffix, the price should already be in ARS
+    if (symbol.match(/\.(BA|AR)$/i)) {
+      return Math.round(currentPrice * 100) / 100; // Round to 2 decimal places
+    }
+  }
+  
+  // For USD markets (NASDAQ, NYSE) or USD currency, ensure we're using USD prices
+  if ((market === 'NASDAQ' || market === 'NYSE') || currency === 'USD') {
+    // If the symbol doesn't have .BA or .AR suffix, the price should be in USD
+    if (!symbol.match(/\.(BA|AR)$/i)) {
+      return Math.round(currentPrice * 100) / 100; // Round to 2 decimal places
+    }
+  }
+  
+  // Default fallback
+  return Math.round(currentPrice * 100) / 100;
+}
+
+/**
  * Gets the display name for a ticker (removes suffixes for display)
  * @param symbol - The ticker symbol (e.g., 'AAPL.BA', 'AAPL')
  * @returns The display name (e.g., 'AAPL', 'AAPL')
