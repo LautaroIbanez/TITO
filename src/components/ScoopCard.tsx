@@ -19,6 +19,7 @@ import { usePortfolio } from '@/contexts/PortfolioContext';
 import { RatioRow, StockBadges, formatDate } from './StockMetrics';
 import FundamentalsCompact from './FundamentalsCompact';
 import { getTickerCurrency, getTickerMarket, ensureBaSuffix } from '@/utils/tickers';
+import { formatCurrency } from '@/utils/goalCalculator';
 import SignalBadge from './SignalBadge';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
@@ -80,8 +81,8 @@ export default function ScoopCard({
   const lastPriceDate = displayPrices.length > 0 ? displayPrices[displayPrices.length - 1].date : null;
   const fundamentalsDate = displayFundamentals?.updatedAt;
   
-  // Get currency and market info
-  const currency = getTickerCurrency(stockData.symbol);
+  // Get currency based on current market
+  const currency = market === 'BCBA' ? 'ARS' : 'USD';
   const tickerMarket = getTickerMarket(stockData.symbol);
   
   const chartData = {
@@ -132,9 +133,9 @@ export default function ScoopCard({
       // Fetch BCBA data for the first time
       try {
         const [pricesRes, fundamentalsRes, technicalsRes] = await Promise.all([
-          fetch(`/api/stocks/${stockData.symbol}.BA?type=prices`),
-          fetch(`/api/stocks/${stockData.symbol}.BA?type=fundamentals`),
-          fetch(`/api/stocks/${stockData.symbol}.BA?type=technicals`)
+          fetch(`/api/stocks/${ensureBaSuffix(stockData.symbol)}?type=prices`),
+          fetch(`/api/stocks/${ensureBaSuffix(stockData.symbol)}?type=fundamentals`),
+          fetch(`/api/stocks/${ensureBaSuffix(stockData.symbol)}?type=technicals`)
         ]);
         
         const bcbaPricesData = pricesRes.ok ? await pricesRes.json() : [];
@@ -223,7 +224,7 @@ export default function ScoopCard({
         identifier={stockData.symbol}
         price={modalPrice}
         cash={cash}
-        currency={market === 'BCBA' ? 'ARS' : 'USD'}
+        currency={currency}
         assetClass="stocks"
         market={market}
       />
@@ -296,7 +297,7 @@ export default function ScoopCard({
         <div className="flex items-center justify-between">
           <div>
             <span className="text-2xl font-bold text-gray-900">
-              {hasPriceData ? `$${currentPrice.toFixed(2)}` : 'Datos no disponibles'}
+              {hasPriceData ? formatCurrency(currentPrice, currency) : 'Datos no disponibles'}
             </span>
           </div>
           {hasTechnicals && <SignalBadge signal={signal} />}
