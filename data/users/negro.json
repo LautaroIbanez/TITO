@@ -26,6 +26,14 @@
       "purchasePrice": 501.824405,
       "currency": "ARS",
       "market": "BCBA"
+    },
+    {
+      "type": "Stock",
+      "symbol": "ASML.BA",
+      "quantity": 11,
+      "purchasePrice": 802.4279449999999,
+      "currency": "ARS",
+      "market": "BCBA"
     }
   ],
   "transactions": [
@@ -81,11 +89,24 @@
       "market": "BCBA",
       "commissionPct": 1,
       "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1752063528694",
+      "date": "2025-07-09T12:18:48.694Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "ASML.BA",
+      "quantity": 11,
+      "price": 794.09,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
     }
   ],
   "goals": [],
   "cash": {
-    "ARS": 2991603.04815,
+    "ARS": 2982776.3407550002,
     "USD": 3000
   },
   "profile": {
@@ -110,8 +131,8 @@
     "initialBalanceUSD": 3000
   },
   "investmentStrategy": {
-    "id": "strategy-e2d34c30-2305-432a-9cc1-fbf2b37f6fc0",
-    "createdAt": "2025-07-09T11:48:02.596Z",
+    "id": "strategy-94d42502-ae18-4604-ad41-a5438e75ac56",
+    "createdAt": "2025-07-09T12:16:54.387Z",
     "targetAllocation": {
       "stocks": 59.4,
       "bonds": 29.7,
@@ -121,15 +142,15 @@
     },
     "recommendations": [
       {
-        "id": "alloc-6f64a345-46bb-4288-8af7-b2145b189930",
+        "id": "alloc-3a4a6fac-1f46-41d6-aaca-99b1b479ede1",
         "action": "increase",
         "assetClass": "stocks",
-        "reason": "Tu portafolio tiene 0.0% en acciones, pero tu estrategia objetivo es 59.4%",
+        "reason": "Tu portafolio tiene 0.3% en acciones, pero tu estrategia objetivo es 59.4%",
         "priority": "high",
         "expectedImpact": "positive"
       },
       {
-        "id": "alloc-f4be21be-48aa-4b62-bfeb-cbb6b6a0541b",
+        "id": "alloc-ea304f83-ffb2-4f74-9eae-1398128fc3ce",
         "action": "increase",
         "assetClass": "bonds",
         "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 29.7%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
@@ -142,10 +163,10 @@
         ]
       },
       {
-        "id": "cash-invest-122cff62-a835-4ba7-85c6-ddaee61711fb",
+        "id": "cash-invest-6c68644f-0bed-44ca-aaa8-ce4e7fefda49",
         "action": "buy",
         "assetClass": "cash",
-        "reason": "Tienes un 100.0% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
+        "reason": "Tienes un 99.7% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
         "priority": "high",
         "expectedImpact": "positive"
       }

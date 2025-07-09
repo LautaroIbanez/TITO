@@ -84,6 +84,7 @@ export default function BondsPage() {
         price={selectedBond?.price || 0}
         cash={portfolioData?.cash || { ARS: 0, USD: 0 }}
         currency={selectedBond?.currency || 'ARS'}
+        assetClass="bonds"
       />
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row gap-2 justify-end">

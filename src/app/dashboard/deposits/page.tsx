@@ -93,6 +93,7 @@ export default function DepositsPage() {
           cash={portfolioData?.cash ?? { ARS: 0, USD: 0 }}
           isAmountBased={true}
           currency={selectedDeposit.currency}
+          assetClass="deposits"
         />
       )}
       <div className="space-y-6">

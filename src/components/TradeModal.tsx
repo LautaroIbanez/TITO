@@ -21,6 +21,7 @@ export interface TradeModalProps {
   cash?: { ARS: number; USD: number };
   isAmountBased?: boolean;
   currency: 'ARS' | 'USD';
+  assetClass?: 'stocks' | 'bonds' | 'deposits';
 }
 
 export default function TradeModal({
@@ -36,6 +37,7 @@ export default function TradeModal({
   cash = { ARS: 0, USD: 0 },
   isAmountBased = false,
   currency,
+  assetClass,
 }: TradeModalProps) {
   const [value, setValue] = useState(1);
   const [commissionPct, setCommissionPct] = useState(DEFAULT_COMMISSION_PCT);
@@ -44,9 +46,20 @@ export default function TradeModal({
   const [loading, setLoading] = useState(false);
   const [purchasePrice, setPurchasePrice] = useState(price);
   
-  const { refreshPortfolio } = usePortfolio();
+  const { refreshPortfolio, strategy } = usePortfolio();
   
-  const availableCash = cash[currency] || 0;
+  // Compute available cash based on assetClass and strategy target allocation
+  const computeAvailableCash = () => {
+    if (assetClass && strategy?.targetAllocation) {
+      const targetAllocation = strategy.targetAllocation[assetClass];
+      if (targetAllocation && targetAllocation > 0) {
+        return (cash[currency] || 0) * (targetAllocation / 100);
+      }
+    }
+    return cash[currency] || 0;
+  };
+  
+  const availableCash = computeAvailableCash();
 
   const baseCost = value * purchasePrice;
   const totalCost = tradeType === 'Buy' && (assetType === 'Stock' || assetType === 'Bond' || assetType === 'Crypto')
@@ -60,6 +73,19 @@ export default function TradeModal({
   const tradeTypeText = getTradeTypeText();
 
   const priceLabel = tradeType === 'Sell' ? 'Precio de Venta' : 'Precio de Compra';
+
+  // Get the appropriate label for available cash display
+  const getAvailableCashLabel = () => {
+    if (assetClass) {
+      const assetClassLabels = {
+        stocks: 'Capital Disponible para Acciones',
+        bonds: 'Capital Disponible para Bonos',
+        deposits: 'Capital Disponible para Plazos Fijos'
+      };
+      return assetClassLabels[assetClass];
+    }
+    return 'Efectivo Disponible';
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -190,7 +216,7 @@ export default function TradeModal({
               </>
             )}
             <p className="text-lg font-bold">{tradeType === 'Buy' ? 'Costo Total' : 'Valor Total'}: <span className="font-semibold text-gray-900">{formatCurrency(totalCost, currency)}</span></p>
-            {tradeType !== 'Sell' && <p>Efectivo Disponible: <span className="font-semibold text-gray-900">{formatCurrency(availableCash, currency)}</span></p>}
+            {tradeType !== 'Sell' && <p>{getAvailableCashLabel()}: <span className="font-semibold text-gray-900">{formatCurrency(availableCash, currency)}</span></p>}
           </div>
 
           {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
