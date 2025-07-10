@@ -196,12 +196,12 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
           </div>
           <div>
             <span className="text-gray-600">Precio Compra:</span>
-            <span className="ml-2 font-semibold">${averagePrice.toFixed(2)}</span>
+            <span className="ml-2 font-semibold">{formatCurrency(averagePrice, position.currency)}</span>
           </div>
           <div>
             <span className="text-gray-600">Precio Actual:</span>
             <span className="ml-2 font-semibold">
-              {hasPriceData ? `$${currentPrice.toFixed(2)}` : 'Datos no disponibles'}
+              {hasPriceData ? formatCurrency(currentPrice, position.currency) : 'Datos no disponibles'}
             </span>
           </div>
           <div>

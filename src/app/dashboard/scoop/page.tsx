@@ -163,34 +163,36 @@ export default function ScoopPage() {
       return ticker;
     });
 
-    // Fetch data separately for each set using the existing enrichment logic
-    // Maintain a cache map keyed by base ticker
-    const baseTickerCache = new Map<string, { fundamentals: any, technicals: any, prices: any }>();
+    // Fetch data separately for each set using the new caching structure
+    // Maintain separate caches for fundamentals (by base ticker) and prices/technicals (by full symbol)
+    const fundamentalsCache = new Map<string, any>();
+    const pricesCache = new Map<string, any[]>();
+    const technicalsCache = new Map<string, any>();
     const { getBaseTicker } = await import('@/utils/tickers');
 
     const enrichStocks = async (tickers: string[]) => {
       return await Promise.all(
         tickers.map(async (symbol: string) => {
           const baseTicker = getBaseTicker(symbol);
-          if (baseTickerCache.has(baseTicker)) {
-            const cached = baseTickerCache.get(baseTicker)!;
-            return {
-              symbol,
-              companyName: cached.fundamentals?.longName || symbol,
-              prices: cached.prices,
-              fundamentals: cached.fundamentals,
-              technicals: cached.technicals,
-              isTrending: trendingSymbols.includes(symbol),
-              currency: getTickerCurrency(symbol),
-              market: getTickerMarket(symbol)
-            };
+          
+          // Get fundamentals from cache or fetch if not available
+          let fundamentals = fundamentalsCache.get(baseTicker);
+          if (!fundamentals) {
+            fundamentals = await fetch(`/api/stocks/${baseTicker}?type=fundamentals`)
+              .then(res => res.ok ? res.json() : null);
+            fundamentalsCache.set(baseTicker, fundamentals);
           }
-          const [fundamentals, technicals, prices] = await Promise.all([
-            fetch(`/api/stocks/${symbol}?type=fundamentals`).then(res => res.ok ? res.json() : null),
-            fetch(`/api/stocks/${symbol}?type=technicals`).then(res => res.ok ? res.json() : null),
-            fetch(`/api/stocks/${symbol}?type=prices`).then(res => res.ok ? res.json() : [])
+          
+          // Always fetch prices and technicals for the specific symbol
+          const [prices, technicals] = await Promise.all([
+            fetch(`/api/stocks/${symbol}?type=prices`).then(res => res.ok ? res.json() : []),
+            fetch(`/api/stocks/${symbol}?type=technicals`).then(res => res.ok ? res.json() : null)
           ]);
-          baseTickerCache.set(baseTicker, { fundamentals, technicals, prices });
+          
+          // Cache the results
+          pricesCache.set(symbol, prices);
+          technicalsCache.set(symbol, technicals);
+          
           return {
             symbol,
             companyName: fundamentals?.longName || symbol,
