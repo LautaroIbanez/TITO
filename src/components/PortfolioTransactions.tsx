@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { PortfolioTransaction, DepositTransaction, FixedTermDepositCreationTransaction, CaucionCreationTransaction, RealEstateTransaction } from '@/types';
 import EditDepositModal from './EditDepositModal';
+import EditTradeModal from './EditTradeModal';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import { formatCurrency } from '@/utils/goalCalculator';
 
@@ -21,9 +22,27 @@ function isRealEstate(tx: PortfolioTransaction): tx is RealEstateTransaction {
   return 'assetType' in tx && tx.assetType === 'RealEstate';
 }
 
+// Helper function to calculate total cost/proceeds with commissions
+function calculateTotalWithCommissions(tx: PortfolioTransaction): { totalCost?: number; totalProceeds?: number } {
+  if (tx.type === 'Buy' || tx.type === 'Sell') {
+    const baseAmount = tx.quantity * tx.price;
+    const commissionAmount = tx.commissionPct ? (baseAmount * tx.commissionPct / 100) : 0;
+    const purchaseFeeAmount = tx.purchaseFeePct ? (baseAmount * tx.purchaseFeePct / 100) : 0;
+    const totalFees = commissionAmount + purchaseFeeAmount;
+    
+    if (tx.type === 'Buy') {
+      return { totalCost: baseAmount + totalFees };
+    } else {
+      return { totalProceeds: baseAmount - totalFees };
+    }
+  }
+  return {};
+}
+
 export default function PortfolioTransactions({ transactions }: Props) {
   const { refreshPortfolio } = usePortfolio();
   const [editingDeposit, setEditingDeposit] = useState<DepositTransaction | null>(null);
+  const [editingTrade, setEditingTrade] = useState<PortfolioTransaction | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const sorted = useMemo(
@@ -82,6 +101,36 @@ export default function PortfolioTransactions({ transactions }: Props) {
       }
       await refreshPortfolio();
       setEditingDeposit(null);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleUpdateTrade = async (transaction: PortfolioTransaction) => {
+    setError(null);
+    const session = localStorage.getItem('session');
+    const username = session ? JSON.parse(session).username : null;
+    if (!username) {
+      setError('You must be logged in.');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/portfolio/trade/${transaction.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username,
+          commissionPct: (transaction as any).commissionPct,
+          purchaseFeePct: (transaction as any).purchaseFeePct,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to update trade');
+      }
+      await refreshPortfolio();
+      setEditingTrade(null);
     } catch (err: any) {
       setError(err.message);
     }
@@ -233,6 +282,7 @@ export default function PortfolioTransactions({ transactions }: Props) {
               <th className="px-4 py-2 text-left">Moneda</th>
               <th className="px-4 py-2 text-right">Precio</th>
               <th className="px-4 py-2 text-right">Comisiones</th>
+              <th className="px-4 py-2 text-right">Costo Final</th>
               <th className="px-4 py-2 text-right">Acciones</th>
             </tr>
           </thead>
@@ -240,6 +290,8 @@ export default function PortfolioTransactions({ transactions }: Props) {
             {sorted.map((tx, i) => {
               const display = getTransactionDisplay(tx);
               const hasFees = display.commissionPct !== undefined || display.purchaseFeePct !== undefined;
+              const totalWithCommissions = calculateTotalWithCommissions(tx);
+              const isTrade = tx.type === 'Buy' || tx.type === 'Sell';
               
               return (
                 <tr key={i} className="even:bg-gray-50">
@@ -274,11 +326,22 @@ export default function PortfolioTransactions({ transactions }: Props) {
                       </div>
                     ) : '—'}
                   </td>
+                  <td className="px-4 py-2 text-right text-gray-800">
+                    {totalWithCommissions.totalCost !== undefined ? 
+                      formatCurrency(totalWithCommissions.totalCost, tx.currency) :
+                     totalWithCommissions.totalProceeds !== undefined ? 
+                      formatCurrency(totalWithCommissions.totalProceeds, tx.currency) :
+                     '—'}
+                  </td>
                   <td className="px-4 py-2 text-right">
                     {tx.type === 'Deposit' ? (
                       <div className="flex justify-end items-center space-x-2">
                         <button onClick={() => setEditingDeposit(tx as DepositTransaction)} className="text-blue-600 hover:text-blue-800 text-xs font-semibold">Editar</button>
                         <button onClick={() => handleDelete(tx.id)} className="text-red-600 hover:text-red-800 text-xs font-semibold">Eliminar</button>
+                      </div>
+                    ) : isTrade ? (
+                      <div className="flex justify-end items-center space-x-2">
+                        <button onClick={() => setEditingTrade(tx)} className="text-blue-600 hover:text-blue-800 text-xs font-semibold">Editar</button>
                       </div>
                     ) : '—'}
                   </td>
@@ -297,6 +360,16 @@ export default function PortfolioTransactions({ transactions }: Props) {
           isOpen={!!editingDeposit}
           onClose={() => { setEditingDeposit(null); setError(null); }}
           onUpdate={handleUpdate}
+          error={error}
+        />
+      )}
+
+      {editingTrade && (
+        <EditTradeModal
+          transaction={editingTrade}
+          isOpen={!!editingTrade}
+          onClose={() => { setEditingTrade(null); setError(null); }}
+          onUpdate={handleUpdateTrade}
           error={error}
         />
       )}

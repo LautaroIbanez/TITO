@@ -14,6 +14,28 @@ async function readJsonSafe<T = unknown>(filePath: string): Promise<T | null> {
   }
 }
 
+// Migration function to standardize field names
+function migratePositionFields(user: UserData): boolean {
+  let changed = false;
+  
+  user.positions.forEach(pos => {
+    // Migrate averagePrice to purchasePrice for all position types that should have it
+    if (pos.type === 'Stock' || pos.type === 'Bond' || pos.type === 'Crypto') {
+      const typedPos = pos as StockPosition | CryptoPosition | { ticker: string; quantity: number; purchasePrice?: number; averagePrice?: number; currency: string };
+      
+      if ('averagePrice' in typedPos && typeof typedPos.averagePrice === 'number' && Number.isFinite(typedPos.averagePrice)) {
+        if (!('purchasePrice' in typedPos) || !Number.isFinite(typedPos.purchasePrice)) {
+          (pos as any).purchasePrice = typedPos.averagePrice;
+          delete (pos as any).averagePrice;
+          changed = true;
+        }
+      }
+    }
+  });
+  
+  return changed;
+}
+
 async function applyMaturityCredits(user: UserData) {
   let changed = false;
   const now = dayjs();
@@ -157,6 +179,9 @@ export async function getPortfolioData(username: string) {
     };
     delete (user as any).availableCash;
   }
+  
+  // Migrate position field names (averagePrice -> purchasePrice)
+  const positionFieldsChanged = migratePositionFields(user);
   // --- End Migration Logic ---
 
   // Initialize missing fields for safety
@@ -217,7 +242,7 @@ export async function getPortfolioData(username: string) {
   ]);
 
   const changed = await applyMaturityCredits(user);
-  if (changed) {
+  if (changed || positionFieldsChanged) {
     await saveUserData(username, user);
   }
 

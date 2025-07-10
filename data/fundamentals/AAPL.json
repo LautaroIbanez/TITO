@@ -1,6 +1,6 @@
 {
   "peRatio": null,
-  "pbRatio": 47.515095,
+  "pbRatio": 47.22433,
   "evToEbitda": null,
   "roe": 1.38015,
   "roa": 0.23809999,
@@ -8,12 +8,12 @@
   "debtToEbitda": 0.7070557409481308,
   "netMargin": 0.24301,
   "freeCashFlow": 97251500032,
-  "priceToFCF": 32.62634872144858,
+  "priceToFCF": 32.42669646122009,
   "ebitda": 138865999872,
   "revenueGrowth": 0.051,
   "epsGrowth": null,
   "beta": 1.211,
   "sector": "Technology",
   "industry": "Consumer Electronics",
-  "updatedAt": "2025-07-02T20:02:29.865Z"
+  "updatedAt": "2025-07-10T11:50:44.518Z"
 }

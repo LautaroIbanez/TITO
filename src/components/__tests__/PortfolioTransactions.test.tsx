@@ -100,6 +100,70 @@ describe('PortfolioTransactions', () => {
     expect(screen.getByText(/Fee: 0.1%/)).toBeInTheDocument();
   });
 
+  it('should display total cost for buy transactions with commissions', () => {
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '1',
+        date: '2024-01-01T00:00:00.000Z',
+        type: 'Buy',
+        assetType: 'Stock',
+        symbol: 'AAPL',
+        quantity: 10,
+        price: 150,
+        commissionPct: 1.5,
+        purchaseFeePct: 0.1,
+        currency: 'USD',
+        market: 'NASDAQ',
+      }
+    ];
+
+    renderWithProvider(transactions);
+    
+    // Calculate expected total cost: 10 * 150 + (10 * 150 * 0.015) + (10 * 150 * 0.001) = 1500 + 22.5 + 1.5 = 1524
+    expect(screen.getByText('US$1,524.00')).toBeInTheDocument();
+  });
+
+  it('should display total proceeds for sell transactions with commissions', () => {
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '2',
+        date: '2024-01-02T00:00:00.000Z',
+        type: 'Sell',
+        assetType: 'Stock',
+        symbol: 'MSFT',
+        quantity: 5,
+        price: 300,
+        commissionPct: 1.0,
+        purchaseFeePct: 0.05,
+        currency: 'USD',
+        market: 'NASDAQ',
+      }
+    ];
+
+    renderWithProvider(transactions);
+    
+    // Calculate expected total proceeds: 5 * 300 - (5 * 300 * 0.01) - (5 * 300 * 0.0005) = 1500 - 15 - 0.75 = 1484.25
+    expect(screen.getByText('US$1,484.25')).toBeInTheDocument();
+  });
+
+  it('should display dash for non-trade transactions in costo final column', () => {
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '6',
+        date: '2024-01-06T00:00:00.000Z',
+        type: 'Deposit',
+        amount: 5000,
+        currency: 'ARS'
+      }
+    ];
+
+    renderWithProvider(transactions);
+    
+    // Check that there are exactly 4 instances of '—' (symbol, price, commission, and costo final columns)
+    const dashElements = screen.getAllByText('—');
+    expect(dashElements).toHaveLength(4);
+  });
+
   it('should render stock sell transaction correctly', () => {
     const transactions: PortfolioTransaction[] = [
       {
@@ -190,7 +254,7 @@ describe('PortfolioTransactions', () => {
     expect(screen.getByText('Venta Bono')).toBeInTheDocument();
     expect(screen.getByText('CORP-BOND-2026')).toBeInTheDocument();
     expect(screen.getByText('50')).toBeInTheDocument();
-    expect(screen.getByText((content) => /\$ ?1020[.,]00/.test(content))).toBeInTheDocument();
+    expect(screen.getByText('$1.020,00')).toBeInTheDocument();
   });
 
   it('should render fixed-term deposit creation correctly', () => {
@@ -213,12 +277,12 @@ describe('PortfolioTransactions', () => {
     
     expect(screen.getByText('Creación Plazo Fijo')).toBeInTheDocument();
     expect(screen.getByText('Banco Santander')).toBeInTheDocument();
-    expect(screen.getByText('$10000.00')).toBeInTheDocument();
+    expect(screen.getByText('$10.000,00')).toBeInTheDocument();
     expect(screen.getByText('ARS')).toBeInTheDocument();
     
-    // Check that there are exactly 2 instances of '—' (price and commission columns)
+    // Check that there are exactly 4 instances of '—' (price, commission, costo final, and actions columns)
     const dashElements = screen.getAllByText('—');
-    expect(dashElements).toHaveLength(2);
+    expect(dashElements).toHaveLength(4);
   });
 
   it('should render deposit transaction correctly in ARS', () => {
@@ -235,12 +299,12 @@ describe('PortfolioTransactions', () => {
     renderWithProvider(transactions);
     
     expect(screen.getByText('Depósito')).toBeInTheDocument();
-    expect(screen.getByText('$5000.00')).toBeInTheDocument();
+    expect(screen.getByText('$5.000,00')).toBeInTheDocument();
     expect(screen.getByText('ARS')).toBeInTheDocument();
     
-    // Check that there are exactly 3 instances of '—' (symbol, price, and commission columns)
+    // Check that there are exactly 4 instances of '—' (symbol, price, commission, and costo final columns)
     const dashElements = screen.getAllByText('—');
-    expect(dashElements).toHaveLength(3);
+    expect(dashElements).toHaveLength(4);
   });
 
   it('should render deposit transaction correctly in USD', () => {
@@ -257,11 +321,11 @@ describe('PortfolioTransactions', () => {
     renderWithProvider(transactions);
     
     expect(screen.getByText('Depósito')).toBeInTheDocument();
-    expect(screen.getByText('$700.00')).toBeInTheDocument();
+    expect(screen.getByText('US$700.00')).toBeInTheDocument();
     expect(screen.getByText('USD')).toBeInTheDocument();
     
     const dashElements = screen.getAllByText('—');
-    expect(dashElements).toHaveLength(3);
+    expect(dashElements).toHaveLength(4);
   });
 
   it('should sort transactions by date (newest first)', () => {
@@ -360,7 +424,7 @@ describe('PortfolioTransactions', () => {
     });
   });
 
-  it('should open edit modal when edit button is clicked', () => {
+  it('should open edit modal when edit button is clicked for deposit', () => {
     const transactions: PortfolioTransaction[] = [
       {
         id: 'edit-me',
@@ -371,22 +435,59 @@ describe('PortfolioTransactions', () => {
       }
     ];
   
-    // Mock the EditDepositModal to check if it's rendered
-    jest.mock('../EditDepositModal', () => ({
-      __esModule: true,
-      default: ({ isOpen }: { isOpen: boolean }) => (
-        isOpen ? <div>EditDepositModal is open</div> : null
-      ),
-    }));
-  
     renderWithProvider(transactions);
   
     const editButton = screen.getByText('Editar');
     fireEvent.click(editButton);
   
-    expect(screen.getByText('EditDepositModal is open')).toBeInTheDocument();
+    // Check that the modal is rendered by looking for the modal title
+    expect(screen.getByText('Editar Depósito')).toBeInTheDocument();
   });
-  
+
+  it('should show edit button for trade transactions', () => {
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: 'trade-edit',
+        date: '2024-01-01T00:00:00.000Z',
+        type: 'Buy',
+        assetType: 'Stock',
+        symbol: 'AAPL',
+        quantity: 10,
+        price: 150,
+        currency: 'USD',
+        market: 'NASDAQ',
+      }
+    ];
+
+    renderWithProvider(transactions);
+
+    const editButton = screen.getByText('Editar');
+    expect(editButton).toBeInTheDocument();
+  });
+
+  it('should show edit button for trade transactions and open modal', () => {
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: 'trade-update',
+        date: '2024-01-01T00:00:00.000Z',
+        type: 'Buy',
+        assetType: 'Stock',
+        symbol: 'AAPL',
+        quantity: 10,
+        price: 150,
+        currency: 'USD',
+        market: 'NASDAQ',
+      }
+    ];
+
+    renderWithProvider(transactions);
+
+    const editButton = screen.getByText('Editar');
+    fireEvent.click(editButton);
+
+    // Check that the trade edit modal is rendered
+    expect(screen.getByText('Editar Comisiones - Compra de AAPL')).toBeInTheDocument();
+  });
 
   it('should handle update transaction correctly', async () => {
     const initialDeposit: DepositTransaction = {
@@ -416,10 +517,10 @@ describe('PortfolioTransactions', () => {
       </PortfolioProvider>
     );
     
-    const amountInput = screen.getByLabelText('Amount');
+    const amountInput = screen.getByLabelText('Monto');
     fireEvent.change(amountInput, { target: { value: '1500' } });
 
-    const updateButton = screen.getByText('Update Deposit');
+    const updateButton = screen.getByText('Guardar Cambios');
     fireEvent.click(updateButton);
 
     await waitFor(() => {
@@ -447,11 +548,54 @@ describe('PortfolioTransactions', () => {
         onClose={mockClose} 
         onUpdate={mockUpdate} 
         deposit={deposit} 
-        error="Update failed" 
+        error="Update failed"
       />
     );
 
     expect(screen.getByText('Update failed')).toBeInTheDocument();
+  });
+
+  it('should show "Costo Final" column header', () => {
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '1',
+        date: '2024-01-01T00:00:00.000Z',
+        type: 'Buy',
+        assetType: 'Stock',
+        symbol: 'AAPL',
+        quantity: 10,
+        price: 150,
+        currency: 'USD',
+        market: 'NASDAQ',
+      }
+    ];
+
+    renderWithProvider(transactions);
+    
+    expect(screen.getByText('Costo Final')).toBeInTheDocument();
+  });
+
+  it('should display dash for non-trade transactions in actions column', () => {
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: '5',
+        date: '2024-01-05T00:00:00.000Z',
+        type: 'Create',
+        assetType: 'FixedTermDeposit',
+        provider: 'Banco Santander',
+        amount: 10000,
+        currency: 'ARS',
+        annualRate: 5.5,
+        termDays: 365,
+        maturityDate: '2025-01-05T00:00:00.000Z'
+      }
+    ];
+
+    renderWithProvider(transactions);
+    
+    // Check that there are exactly 4 instances of '—' (symbol, price, commission, and costo final columns)
+    const dashElements = screen.getAllByText('—');
+    expect(dashElements).toHaveLength(4);
   });
 
   it('should render fixed-term deposit credit transaction correctly', () => {

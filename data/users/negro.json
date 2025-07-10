@@ -14,8 +14,8 @@
     {
       "type": "Stock",
       "symbol": "NVDA.BA",
-      "quantity": 10,
-      "purchasePrice": 161.68,
+      "quantity": 11,
+      "purchasePrice": 985.3627272727274,
       "currency": "ARS",
       "market": "BCBA"
     },
@@ -102,11 +102,24 @@
       "market": "BCBA",
       "commissionPct": 1,
       "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1752148484170",
+      "date": "2025-07-10T11:54:44.170Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "NVDA.BA",
+      "quantity": 1,
+      "price": 8380,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 10,
+      "purchaseFeePct": 0.05
     }
   ],
   "goals": [],
   "cash": {
-    "ARS": 2982776.3407550002,
+    "ARS": 2973554.1507550003,
     "USD": 3000
   },
   "profile": {
@@ -131,8 +144,8 @@
     "initialBalanceUSD": 3000
   },
   "investmentStrategy": {
-    "id": "strategy-dd3b82df-d6d6-4618-80d0-9d1d3e142e2b",
-    "createdAt": "2025-07-10T11:29:24.296Z",
+    "id": "strategy-7386482a-79b7-4340-96f8-a73348a22a69",
+    "createdAt": "2025-07-10T12:42:51.650Z",
     "targetAllocation": {
       "stocks": 59.4,
       "bonds": 29.7,
@@ -142,15 +155,15 @@
     },
     "recommendations": [
       {
-        "id": "alloc-c556a299-5643-4313-a5b0-32803139abb3",
+        "id": "alloc-f593b7e2-3bf4-45dd-8390-adc60e357221",
         "action": "increase",
         "assetClass": "stocks",
-        "reason": "Tu portafolio tiene 0.6% en acciones, pero tu estrategia objetivo es 59.4%",
+        "reason": "Tu portafolio tiene 0.9% en acciones, pero tu estrategia objetivo es 59.4%",
         "priority": "high",
         "expectedImpact": "positive"
       },
       {
-        "id": "alloc-6afe5b8b-6e96-4a4e-b398-3fa858fd9215",
+        "id": "alloc-03699f3f-7efc-4550-a5d0-7bd63ed6aa2f",
         "action": "increase",
         "assetClass": "bonds",
         "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 29.7%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
@@ -163,10 +176,10 @@
         ]
       },
       {
-        "id": "cash-invest-2ed81a53-22fe-4943-96b9-0e3f7869c5c2",
+        "id": "cash-invest-5b6ba682-3bf6-4ab5-ad3b-1d9bd6d2b99c",
         "action": "buy",
         "assetClass": "cash",
-        "reason": "Tienes un 99.4% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
+        "reason": "Tienes un 99.1% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
         "priority": "high",
         "expectedImpact": "positive"
       }

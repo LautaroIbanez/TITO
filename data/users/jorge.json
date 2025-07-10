@@ -1,0 +1,184 @@
+{
+  "username": "jorge",
+  "createdAt": "2025-07-10T12:43:43.725Z",
+  "profileCompleted": true,
+  "positions": [
+    {
+      "type": "Stock",
+      "symbol": "GOOGL.BA",
+      "quantity": 20,
+      "purchasePrice": 3848.745,
+      "currency": "ARS",
+      "market": "BCBA"
+    },
+    {
+      "type": "Stock",
+      "symbol": "MSFT.BA",
+      "quantity": 18,
+      "purchasePrice": 21144.7125,
+      "currency": "ARS",
+      "market": "BCBA"
+    },
+    {
+      "type": "Stock",
+      "symbol": "PFE.BA",
+      "quantity": 15,
+      "purchasePrice": 8185.05,
+      "currency": "ARS",
+      "market": "BCBA"
+    },
+    {
+      "type": "Stock",
+      "symbol": "META",
+      "quantity": 2,
+      "purchasePrice": 744.1380899999998,
+      "currency": "USD",
+      "market": "NASDAQ"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "deposit-ARS-initial",
+      "date": "2025-07-10",
+      "type": "Deposit",
+      "amount": 3000000,
+      "currency": "ARS"
+    },
+    {
+      "id": "deposit-USD-initial",
+      "date": "2025-07-10",
+      "type": "Deposit",
+      "amount": 2000,
+      "currency": "USD"
+    },
+    {
+      "id": "1752151788460",
+      "date": "2025-07-10T12:49:48.460Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "GOOGL.BA",
+      "quantity": 20,
+      "price": 3790,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1.5,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1752151836441",
+      "date": "2025-07-10T12:50:36.441Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "MSFT.BA",
+      "quantity": 18,
+      "price": 20925,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1752151914760",
+      "date": "2025-07-10T12:51:54.760Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "PFE.BA",
+      "quantity": 15,
+      "price": 8100,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1752151981032",
+      "date": "2025-07-10T12:53:01.032Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "META",
+      "quantity": 2,
+      "price": 732.78,
+      "currency": "USD",
+      "market": "NASDAQ",
+      "commissionPct": 1.5,
+      "purchaseFeePct": 0.05
+    }
+  ],
+  "goals": [],
+  "cash": {
+    "ARS": 2419644.525,
+    "USD": 511.7238200000004
+  },
+  "profile": {
+    "instrumentsUsed": [
+      "Fondos Comunes de Inversión",
+      "Plazo Fijo",
+      "Acciones"
+    ],
+    "knowledgeLevels": {
+      "Fondos Comunes de Inversión": "Bajo",
+      "Plazo Fijo": "Medio",
+      "Acciones": "Alto"
+    },
+    "holdingPeriod": "1 a 5 años",
+    "ageGroup": "31-40",
+    "riskAppetite": "Agresivo",
+    "investmentAmount": 3002000,
+    "investmentSharePct": 0,
+    "initialBalanceARS": 3000000,
+    "initialBalanceUSD": 2000
+  },
+  "investmentStrategy": {
+    "id": "strategy-30853b81-9d91-4049-a5a6-7aa430516698",
+    "createdAt": "2025-07-10T12:44:21.199Z",
+    "targetAllocation": {
+      "stocks": 75,
+      "bonds": 15,
+      "deposits": 3,
+      "cash": 2,
+      "crypto": 5
+    },
+    "recommendations": [
+      {
+        "id": "alloc-1fb0e18d-f8a0-4d88-964f-2785dea90407",
+        "action": "increase",
+        "assetClass": "stocks",
+        "reason": "Tu portafolio tiene 0.0% en acciones, pero tu estrategia objetivo es 75%",
+        "priority": "high",
+        "expectedImpact": "positive"
+      },
+      {
+        "id": "alloc-07252d3c-b7bd-413c-97b9-616f4b8cd68c",
+        "action": "increase",
+        "assetClass": "bonds",
+        "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 15%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
+        "priority": "high",
+        "expectedImpact": "positive",
+        "suggestedAssets": [
+          "GOV-BOND-2025",
+          "CORP-BOND-2026",
+          "MUNI-BOND-2027"
+        ]
+      },
+      {
+        "id": "cash-invest-7fa519da-7406-4055-96c6-7ed549760e62",
+        "action": "buy",
+        "assetClass": "cash",
+        "reason": "Tienes un 100.0% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
+        "priority": "high",
+        "expectedImpact": "positive"
+      },
+      {
+        "id": "alloc-1f33a6da-d4b1-4dce-a45a-b2052bca88c0",
+        "action": "increase",
+        "assetClass": "crypto",
+        "reason": "Tu portafolio tiene 0.0% en cripto, pero tu estrategia objetivo es 5% (máximo recomendado por volatilidad).",
+        "priority": "medium",
+        "expectedImpact": "neutral"
+      }
+    ],
+    "riskLevel": "Agresivo",
+    "timeHorizon": "5-10 años",
+    "notes": "Estrategia agresiva: busca maximizar retornos asumiendo mayor riesgo"
+  }
+}
