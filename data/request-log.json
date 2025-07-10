@@ -1,50 +1,8 @@
 {
-  "BRK.B": {
-    "history": "2025-07-09T14:51:31.300Z"
-  },
-  "ALUAR": {
-    "fundamentals": "2025-07-09T14:51:32.277Z",
-    "history": "2025-07-09T14:51:32.296Z"
-  },
-  "CAPU": {
-    "fundamentals": "2025-07-09T14:51:32.788Z"
-  },
-  "PAMP": {
-    "fundamentals": "2025-07-09T14:51:33.224Z"
-  },
-  "BYMA": {
-    "fundamentals": "2025-07-09T14:51:33.582Z"
-  },
-  "TGSU2": {
-    "fundamentals": "2025-07-09T14:51:33.669Z"
-  },
-  "TGNO4": {
-    "fundamentals": "2025-07-09T14:51:34.075Z"
-  },
-  "TRAN": {
-    "fundamentals": "2025-07-09T14:51:34.231Z"
-  },
-  "YPFD": {
-    "fundamentals": "2025-07-09T14:51:34.591Z"
-  },
-  "CRES": {
-    "fundamentals": "2025-07-09T14:51:34.706Z"
-  },
-  "COME": {
-    "fundamentals": "2025-07-09T14:51:35.034Z"
-  },
-  "GOOGL": {
-    "fundamentals": "2025-07-09T21:52:42.959Z"
+  "ASML": {
+    "history": "2025-07-10T11:29:20.890Z"
   },
   "NVDA": {
-    "fundamentals": "2025-07-09T21:52:46.173Z"
-  },
-  "ASML": {
-    "history": "2025-07-10T11:07:53.344Z"
-  },
-  "MSFT": {
-    "history": "2025-07-10T11:07:03.558Z"
+    "history": "2025-07-10T11:29:24.878Z"
   }
-}"history": "2025-07-10T11:07:03.558Z"
-  }
-}
+}}

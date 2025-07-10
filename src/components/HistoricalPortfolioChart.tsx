@@ -9,11 +9,13 @@ import {
   Tooltip,
   Legend,
   Filler,
-  TimeScale
+  TimeScale,
+  TooltipItem
 } from 'chart.js';
 import 'chartjs-adapter-dayjs-4';
 import dayjs from 'dayjs';
 import type { DailyPortfolioRecord } from '@/utils/portfolioHistory';
+import { formatCurrency } from '@/utils/goalCalculator';
 
 ChartJS.register(
   CategoryScale,
@@ -172,7 +174,15 @@ export default function HistoricalPortfolioChart({ records }: Props) {
     responsive: true,
     plugins: {
       legend: { display: true, position: 'top' as const },
-      tooltip: { enabled: true },
+      tooltip: {
+        enabled: true,
+        callbacks: {
+          label: (context: TooltipItem<'line'>) =>
+            `${context.dataset.label}: ${formatCurrency(context.parsed.y, 'ARS')}`,
+          title: (context: TooltipItem<'line'>[]) =>
+            `Fecha: ${dayjs(context[0]?.parsed.x).format('YYYY-MM-DD')}`,
+        }
+      },
     },
     scales: {
       x: {
@@ -196,7 +206,15 @@ export default function HistoricalPortfolioChart({ records }: Props) {
     responsive: true,
     plugins: {
       legend: { display: true, position: 'top' as const },
-      tooltip: { enabled: true },
+      tooltip: {
+        enabled: true,
+        callbacks: {
+          label: (context: TooltipItem<'line'>) =>
+            `${context.dataset.label}: ${formatCurrency(context.parsed.y, 'USD')}`,
+          title: (context: TooltipItem<'line'>[]) =>
+            `Fecha: ${dayjs(context[0]?.parsed.x).format('YYYY-MM-DD')}`,
+        }
+      },
     },
     scales: {
       x: {
