@@ -6,7 +6,7 @@ TITO es una aplicación web construida con Next.js diseñada para ayudarte a ges
 
 - **Gestión de Portafolio**: Visualiza tus posiciones, su valor actual y su rendimiento histórico.
 - **Análisis "Scoop"**: Recibe recomendaciones de acciones personalizadas según tu perfil de riesgo.
-- **Metas Financieras**: Define metas de inversión y sigue tu progreso para alcanzarlas.
+- **Metas Financieras**: Las metas se gestionan automáticamente según tu perfil de inversión.
 - **Simulador de Impuestos**: Estima el impacto fiscal de tus ganancias de capital.
 - **Manejo de Efectivo**: Deposita fondos y úsalos para comprar activos.
 - **Estrategia de Inversión Personalizada**: Recibe una estrategia de asignación de activos y recomendaciones de rebalanceo según tu perfil y metas (ver más abajo).
@@ -162,9 +162,8 @@ La sección "Scoop" analiza acciones y te sugiere las que mejor se alinean con t
 - **Ruta**: `/dashboard/scoop`
 - **Funcionalidad**: Puedes comprar acciones directamente desde las tarjetas de recomendación. El botón de compra se desactivará si no tienes suficiente saldo en la moneda correspondiente (`cash.ARS` o `cash.USD`) para la operación.
 
-### 5. Monitorear Metas e Impuestos
+### 5. Monitorear Impuestos
 
-- **Metas**: En `/dashboard/goals`, puedes crear metas de inversión (ej. "Comprar un auto") y visualizar cómo tu portafolio actual te ayuda a progresar hacia ellas.
 - **Impuestos**: En `/dashboard/taxes`, puedes simular la venta de tus posiciones para estimar el impuesto a las ganancias de capital que tendrías que pagar.
 
 ## Manejo de Posiciones por Mercado y Moneda
@@ -378,9 +377,7 @@ A continuación se describen los principales endpoints de la API REST del proyec
 *   `GET /api/deposits`: Obtiene la lista de depósitos a plazo fijo disponibles.
 
 ### Metas Financieras
-*   `GET /api/goals?username={username}`: Obtiene las metas financieras de un usuario.
-*   `POST /api/goals`: Crea o actualiza una meta financiera.
-*   `DELETE /api/goals`: Elimina una meta financiera.
+*   Las metas se gestionan automáticamente según el perfil de inversión del usuario.
 
 ## Updating Inflation Data
 

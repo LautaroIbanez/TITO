@@ -129,8 +129,8 @@
     "initialBalanceUSD": 2000
   },
   "investmentStrategy": {
-    "id": "strategy-30853b81-9d91-4049-a5a6-7aa430516698",
-    "createdAt": "2025-07-10T12:44:21.199Z",
+    "id": "strategy-32072bc8-cdb2-492e-b580-73c1b4296d65",
+    "createdAt": "2025-07-10T21:13:02.873Z",
     "targetAllocation": {
       "stocks": 75,
       "bonds": 15,
@@ -140,15 +140,15 @@
     },
     "recommendations": [
       {
-        "id": "alloc-1fb0e18d-f8a0-4d88-964f-2785dea90407",
+        "id": "alloc-aa194c26-cdf6-4fc1-9396-a9643288eced",
         "action": "increase",
         "assetClass": "stocks",
-        "reason": "Tu portafolio tiene 0.0% en acciones, pero tu estrategia objetivo es 75%",
+        "reason": "Tu portafolio tiene 19.4% en acciones, pero tu estrategia objetivo es 75%",
         "priority": "high",
         "expectedImpact": "positive"
       },
       {
-        "id": "alloc-07252d3c-b7bd-413c-97b9-616f4b8cd68c",
+        "id": "alloc-13c9901c-6af6-40a6-8148-491ec4f99277",
         "action": "increase",
         "assetClass": "bonds",
         "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 15%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
@@ -161,15 +161,15 @@
         ]
       },
       {
-        "id": "cash-invest-7fa519da-7406-4055-96c6-7ed549760e62",
+        "id": "cash-invest-2dcae3f1-1e0f-458c-b5ca-61cf8db83d2b",
         "action": "buy",
         "assetClass": "cash",
-        "reason": "Tienes un 100.0% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
+        "reason": "Tienes un 80.6% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
         "priority": "high",
         "expectedImpact": "positive"
       },
       {
-        "id": "alloc-1f33a6da-d4b1-4dce-a45a-b2052bca88c0",
+        "id": "alloc-33058d74-0c24-4780-bb23-7c6a57e1caeb",
         "action": "increase",
         "assetClass": "crypto",
         "reason": "Tu portafolio tiene 0.0% en cripto, pero tu estrategia objetivo es 5% (máximo recomendado por volatilidad).",

@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler } from 'chart.js';
-import Link from 'next/link';
 import { InvestmentGoal, PortfolioTransaction, PortfolioPosition } from '@/types';
 import { Bond } from '@/types/finance';
 import { projectFixedIncome } from '@/utils/fixedIncomeProjection';
@@ -30,7 +29,6 @@ interface Props {
   bonds: Bond[];
   allGoals?: InvestmentGoal[]; // Add all goals for equitable distribution
   actionButtons?: React.ReactNode;
-  showManageLink?: boolean;
 }
 
 export default function GoalProgress({ 
@@ -41,8 +39,7 @@ export default function GoalProgress({
   positions, 
   bonds, 
   allGoals = [], 
-  actionButtons, 
-  showManageLink 
+  actionButtons 
 }: Props) {
   // Calculate distributed fixed income returns if we have all goals
   const distributedProjections = useMemo(() => {
@@ -145,13 +142,7 @@ export default function GoalProgress({
       <div className="bg-white rounded-lg shadow p-6 mb-8">
         <div className="text-center">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">No tienes metas de inversión</h3>
-          <p className="text-gray-700 mb-4">Crea tu primera meta para seguir el progreso de tu portafolio.</p>
-          <Link 
-            href="/dashboard/goals" 
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Crear Meta
-          </Link>
+          <p className="text-gray-700 mb-4">Las metas se gestionan automáticamente según tu perfil de inversión.</p>
         </div>
       </div>
     );
@@ -277,9 +268,6 @@ export default function GoalProgress({
         </div>
         <div className="flex items-center space-x-2">
           {actionButtons}
-          {showManageLink && (
-            <Link href="/dashboard/goals" className="text-blue-600 hover:underline text-sm font-medium ml-2">Gestionar Metas</Link>
-          )}
         </div>
       </div>
 

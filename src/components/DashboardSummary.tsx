@@ -18,12 +18,10 @@ import HistoricalPortfolioChart from './HistoricalPortfolioChart';
 export default function DashboardSummary() {
   const [portfolioValueARS, setPortfolioValueARS] = useState(0);
   const [portfolioValueUSD, setPortfolioValueUSD] = useState(0);
-  const [goals, setGoals] = useState<InvestmentGoal[]>([]);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [bonds, setBonds] = useState<Bond[]>([]);
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
   const [inflationData, setInflationData] = useState<InflationData | null>(null);
-  const [goalValueHistories, setGoalValueHistories] = useState<Record<string, { date: string, value: number }[]>>({});
   
   const { portfolioData, strategy, loading, error, portfolioVersion } = usePortfolio();
 
@@ -58,17 +56,7 @@ export default function DashboardSummary() {
         setShowOnboarding(true);
       }
 
-      const [goalsRes, bondsRes] = await Promise.all([
-        fetch(`/api/goals?username=${username}`),
-        fetch('/api/bonds')
-      ]);
-
-      if (goalsRes.ok) {
-        const goals = await goalsRes.json();
-        if (goals.length > 0) {
-          setGoals(goals);
-        }
-      }
+      const bondsRes = await fetch('/api/bonds');
 
       if (bondsRes.ok) {
         const bondsData = await bondsRes.json();
@@ -142,23 +130,7 @@ export default function DashboardSummary() {
     calculateValues();
   }, [portfolioData, portfolioVersion, portfolioHash, inflationData]);
 
-  useEffect(() => {
-    async function fetchGoalValueHistories() {
-      if (!portfolioData || goals.length === 0) return;
-      const histories: Record<string, { date: string, value: number }[]> = {};
-      for (const goal of goals) {
-        // Use fixed-income value history for consistent goal progress tracking
-        const valueHistory = calculateFixedIncomeValueHistory(
-          portfolioData.positions || [],
-          portfolioData.transactions || [],
-          90
-        );
-        histories[goal.id] = valueHistory;
-      }
-      setGoalValueHistories(histories);
-    }
-    fetchGoalValueHistories();
-  }, [goals, portfolioData, portfolioVersion, portfolioHash]);
+
 
   const handleDismissOnboarding = () => {
     setShowOnboarding(false);
@@ -420,35 +392,7 @@ export default function DashboardSummary() {
         </div>
       )}
 
-      {goals.length > 0 && (
-        <div className="space-y-8">
-          {goals.map(goal => {
-            // Calculate fixed-income value for consistent goal progress tracking
-            const fixedIncomeGains = calculateFixedIncomeGains(
-              portfolioData.positions || [],
-              portfolioData.transactions || []
-            );
-            const totalDeposits = (portfolioData.transactions || [])
-              .filter(t => t.type === 'Deposit')
-              .reduce((sum, t) => sum + t.amount, 0);
-            const currentFixedIncomeValue = totalDeposits + fixedIncomeGains;
-            
-            return (
-              <GoalProgress
-                key={goal.id}
-                goal={goal}
-                valueHistory={goalValueHistories[goal.id] || []}
-                currentValue={currentFixedIncomeValue}
-                transactions={portfolioData.transactions}
-                positions={portfolioData.positions}
-                bonds={bonds}
-                allGoals={goals}
-                showManageLink={true}
-              />
-            );
-          })}
-        </div>
-      )}
+
       
       {/* Insert the historical portfolio chart below the main summary */}
       <div className="mt-8">

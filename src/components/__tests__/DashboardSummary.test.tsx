@@ -206,12 +206,6 @@ describe('DashboardSummary', () => {
     
     // Mock API calls made by the component
     global.fetch = jest.fn((url) => {
-      if (url.toString().includes('/api/goals')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve([])
-        } as Response);
-      }
       if (url.toString().includes('/api/bonds')) {
         return Promise.resolve({
           ok: true,

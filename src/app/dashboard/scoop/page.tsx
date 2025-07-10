@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import ScoopCard from '@/components/ScoopCard';
 import AvailableCapitalIndicator from '@/components/AvailableCapitalIndicator';
 import { InvestorProfile, InvestmentGoal } from '@/types';
-import { calculateRequiredReturn } from '@/utils/goalCalculator';
+
 import dayjs from 'dayjs';
 import { useScoop } from '@/contexts/ScoopContext';
 import { usePortfolio } from '@/contexts/PortfolioContext';
@@ -27,14 +27,9 @@ const CATEGORY_NAMES: Record<string, string> = {
 
 function getSuggestedStocks(
   profile: InvestorProfile | null,
-  stocks: any[],
-  requiredReturn: number
+  stocks: any[]
 ) {
   if (!profile || !stocks) return stocks.map(s => ({ ...s, isSuggested: false }));
-
-  // Cap the required return for suggestions to a more realistic number (e.g., 30%)
-  // A very high required return from user goals makes it impossible to find suggestions.
-  const realisticRequiredReturn = Math.min(requiredReturn, 30);
 
   const riskScores: Record<string, number> = {};
   stocks.forEach(stock => {
@@ -62,7 +57,7 @@ function getSuggestedStocks(
     const diff = Math.abs(score - targetRisk);
     const f = stock.fundamentals || {};
     // Suggest if risk is acceptable AND return is high enough
-    const meetsReturn = (f.roe ?? 0) * 100 > realisticRequiredReturn;
+    const meetsReturn = (f.roe ?? 0) * 100 > 15; // Use a reasonable default return expectation
     const isSuggested = diff < 0.2 && meetsReturn;
     return { ...stock, isSuggested };
   });
@@ -74,7 +69,7 @@ export default function ScoopPage() {
   const [profile, setProfile] = useState<InvestorProfile | null>(null);
   const [portfolioSymbols, setPortfolioSymbols] = useState<{ USD: string[]; ARS: string[] }>({ USD: [], ARS: [] });
   const [loading, setLoading] = useState(true);
-  const [requiredReturn, setRequiredReturn] = useState(0);
+
   const { filterMode, currencyFilter } = useScoop();
   const { portfolioData } = usePortfolio();
 
@@ -104,23 +99,7 @@ export default function ScoopPage() {
       setPortfolioSymbols(symbolsByCurrency);
       setProfile(userProfile);
 
-      const goalsRes = await fetch(`/api/goals?username=${username}`);
-      if(goalsRes.ok) {
-        const goals: InvestmentGoal[] = await goalsRes.json();
-        
-        if (goals && goals.length > 0) {
-          const totalTarget = goals.reduce((sum, g) => sum + g.targetAmount, 0);
-          const totalInitial = goals.reduce((sum, g) => sum + g.initialDeposit, 0);
-          const totalMonthly = goals.reduce((sum, g) => sum + g.monthlyContribution, 0);
-          const maxDate = new Date(Math.max(...goals.map(g => new Date(g.targetDate).getTime())));
-          const years = dayjs(maxDate).diff(dayjs(), 'year', true);
 
-          if (years > 0) {
-            const reqReturn = calculateRequiredReturn(totalTarget, years, totalInitial, totalMonthly);
-            setRequiredReturn(reqReturn);
-          }
-        }
-      }
     } catch(e) {
       console.error("Failed to load user data or goals", e);
     }
@@ -209,12 +188,12 @@ export default function ScoopPage() {
 
     // Fetch and process NASDAQ stocks
     const enrichedNasdaqStocks = await enrichStocks(nasdaqTickers);
-    const suggestedNasdaqStocks = getSuggestedStocks(userProfile, enrichedNasdaqStocks, requiredReturn);
+    const suggestedNasdaqStocks = getSuggestedStocks(userProfile, enrichedNasdaqStocks);
     setNasdaqStocks(suggestedNasdaqStocks);
 
     // Fetch and process BCBA stocks
     const enrichedBcbaStocks = await enrichStocks(validatedBcbaTickers);
-    const suggestedBcbaStocks = getSuggestedStocks(userProfile, enrichedBcbaStocks, requiredReturn);
+    const suggestedBcbaStocks = getSuggestedStocks(userProfile, enrichedBcbaStocks);
     setBcbaStocks(suggestedBcbaStocks);
 
     setLoading(false);
@@ -238,12 +217,7 @@ export default function ScoopPage() {
         <AvailableCapitalIndicator assetClass="stocks" currency="USD" />
       </div>
       
-      {requiredReturn > 0 && (
-        <div className="mb-4 p-3 bg-blue-100 border border-blue-200 rounded-lg text-sm text-blue-800">
-          Para alcanzar tus metas, necesitas un retorno anual estimado de <strong>{(requiredReturn * 100).toFixed(2)}%</strong>.
-          Las sugerencias se basan en un retorno más realista.
-        </div>
-      )}
+
 
       {loading ? (
         <div className="text-center text-gray-700 py-10">Cargando Oportunidades...</div>

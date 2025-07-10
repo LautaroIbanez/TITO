@@ -75,7 +75,7 @@ describe('GoalProgress', () => {
         type: 'Stock',
         symbol: 'AAPL',
         quantity: 10,
-        averagePrice: 100,
+        purchasePrice: 100,
         currency: 'USD',
         market: 'NASDAQ',
       },
@@ -119,7 +119,7 @@ describe('GoalProgress', () => {
         type: 'Stock',
         symbol: 'AAPL',
         quantity: 10,
-        averagePrice: 100,
+        purchasePrice: 100,
         currency: 'USD',
         market: 'NASDAQ',
       },
@@ -161,7 +161,7 @@ describe('GoalProgress', () => {
         type: 'Crypto',
         symbol: 'BTCUSDT',
         quantity: 1,
-        averagePrice: 50000,
+        purchasePrice: 50000,
         currency: 'USD',
       },
     ];
@@ -470,7 +470,6 @@ describe('GoalProgress', () => {
         positions={positions}
         bonds={bonds}
         allGoals={[goal1, goal2]}
-        showManageLink={true}
       />
     );
 
@@ -513,7 +512,6 @@ describe('GoalProgress', () => {
         transactions={transactions}
         positions={positions}
         bonds={bonds}
-        showManageLink={true}
       />
     );
 

@@ -15,7 +15,6 @@ const navItems = [
   { label: "🏦 Cauciones", href: "/dashboard/cauciones" },
   { label: "🏠 Bienes Raíces", href: "/dashboard/real-estate" },
   { label: "🧾 Impuestos", href: "/dashboard/taxes" },
-  { label: "🎯 Metas", href: "/dashboard/goals" },
   { label: "👤 Mi Perfil", href: "/dashboard/user" },
 ];
 
