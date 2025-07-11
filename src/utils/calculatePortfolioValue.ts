@@ -6,8 +6,6 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import { getExchangeRate, convertCurrencySync } from './currency';
 import { detectDuplicates, filterDuplicates } from './duplicateDetection';
 import { hasAssetType, isTradeTransaction, isCreationTransaction, getTransactionIdentifier } from './typeGuards';
-import { promises as fs } from 'fs';
-import path from 'path';
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 
@@ -51,25 +49,53 @@ async function loadBondPrices(): Promise<Array<{ ticker: string; price: number; 
   }
   
   try {
-    const bondsPath = path.join(process.cwd(), 'data', 'bonds.json');
-    const fileContents = await fs.readFile(bondsPath, 'utf8');
-    const bondsData = JSON.parse(fileContents);
-    
-    // Handle both old format (array) and new format (object with bonds array)
-    const bonds = bondsData.bonds || bondsData;
-    
-    // Transform to the expected format
-    const transformedBonds = bonds.map((bond: any) => ({
-      ticker: bond.ticker,
-      price: bond.price,
-      currency: bond.currency
-    }));
-    
-    // Update cache
-    bondPricesCache = transformedBonds;
-    bondPricesCacheTimestamp = now;
-    
-    return transformedBonds;
+    if (typeof window !== 'undefined') {
+      // Client environment: fetch from API
+      const response = await fetch('/api/bonds');
+      if (!response.ok) {
+        throw new Error('Failed to fetch bonds from API');
+      }
+      const bondsData = await response.json();
+      
+      // Handle both old format (array) and new format (object with bonds array)
+      const bonds = bondsData.bonds || bondsData;
+      
+      // Transform to the expected format
+      const transformedBonds = bonds.map((bond: any) => ({
+        ticker: bond.ticker,
+        price: bond.price,
+        currency: bond.currency
+      }));
+      
+      // Update cache
+      bondPricesCache = transformedBonds;
+      bondPricesCacheTimestamp = now;
+      
+      return transformedBonds;
+    } else {
+      // Server environment: read from file system
+      const fs = await import('fs');
+      const path = await import('path');
+      const bondsPath = path.default.join(process.cwd(), 'data', 'bonds.json');
+      const fileContents = await fs.promises.readFile(bondsPath, 'utf8');
+      const bondsData = JSON.parse(fileContents);
+      
+      // Handle both old format (array) and new format (object with bonds array)
+      const bonds = bondsData.bonds || bondsData;
+      
+      // Transform to the expected format
+      const transformedBonds = bonds.map((bond: any) => ({
+        ticker: bond.ticker,
+        price: bond.price,
+        currency: bond.currency
+      }));
+      
+      // Update cache
+      bondPricesCache = transformedBonds;
+      bondPricesCacheTimestamp = now;
+      
+      return transformedBonds;
+    }
   } catch (error) {
     console.error('Failed to load bond prices:', error);
     return [];
