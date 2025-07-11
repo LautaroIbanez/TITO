@@ -14,6 +14,18 @@ The Bonistas scraper downloads bond data from bonistas.com and saves it to `data
 - Saves data with metadata (last updated, source, total bonds)
 - Respectful scraping with delays between requests
 
+### How It Works (2024)
+- The scraper fetches the pages `/bonos-bopreal-hoy` and `/bonos-cer-hoy` from bonistas.com.
+- It parses `<script>` tags on those pages, looking for embedded JavaScript arrays or objects containing bond data.
+- The script attempts to convert these JavaScript arrays to JSON and extract all bond entries.
+- All bonds found are included in the output (no artificial limit).
+- The scraper no longer uses mock data; all data is scraped live from the site.
+
+### Troubleshooting
+- If the site structure changes, the scraper may fail to find or parse bond data. In that case, inspect the HTML and update the extraction logic in `scrape_bonistas.py`.
+- Network errors or timeouts will be logged and skipped.
+- If no bonds are found, check that bonistas.com is online and that the relevant pages still contain bond data in `<script>` tags.
+
 ### Dependencies
 Install the required Python packages:
 ```bash
@@ -57,6 +69,5 @@ The scraper generates bond data with the following structure:
 The `/api/bonds` endpoint automatically runs the scraper if the data is older than 24 hours, ensuring fresh data is always available.
 
 ### Development Notes
-- Currently uses mock data for development/testing
-- In production, update the extraction methods to match the actual bonistas.com HTML structure
-- Add proper error handling and rate limiting for production use 
+- If bonistas.com changes its structure, update the extraction logic in `scrape_bonistas.py`.
+- Add proper error handling and rate limiting for production use. 

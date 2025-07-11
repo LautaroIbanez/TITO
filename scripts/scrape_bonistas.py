@@ -8,8 +8,7 @@ import requests
 from bs4 import BeautifulSoup
 import json
 import os
-from datetime import datetime, timedelta
-import time
+from datetime import datetime
 import re
 from typing import List, Dict, Optional
 
@@ -20,251 +19,111 @@ class BonistasScraper:
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         })
+        self.pages = ["/bonos-bopreal-hoy", "/bonos-cer-hoy"]
 
     def get_bond_list(self) -> List[Dict]:
-        """Get the list of available bonds from bonistas.com"""
-        try:
-            # Get the main bonds page
-            response = self.session.get(f"{self.base_url}/bonos")
-            response.raise_for_status()
-            
-            soup = BeautifulSoup(response.content, 'html.parser')
-            
-            # Find bond links - this is a simplified approach
-            # In a real implementation, you'd need to analyze the actual site structure
-            bond_links = soup.find_all('a', href=re.compile(r'/bono/'))
-            
-            bonds = []
-            for link in bond_links[:20]:  # Limit to first 20 for demo
-                bond_url = f"{self.base_url}{link['href']}"
-                bond_data = self.scrape_bond_details(bond_url)
-                if bond_data:
-                    bonds.append(bond_data)
-                time.sleep(1)  # Be respectful to the server
-                
-            return bonds
-            
-        except Exception as e:
-            print(f"Error getting bond list: {e}")
-            return []
+        bonds = []
+        for page in self.pages:
+            try:
+                url = f"{self.base_url}{page}"
+                response = self.session.get(url, timeout=15)
+                response.raise_for_status()
+                soup = BeautifulSoup(response.content, 'html.parser')
+                # Find all <script> tags
+                scripts = soup.find_all('script')
+                for script in scripts:
+                    if not script.string:
+                        continue
+                    # Look for JS arrays/objects with bond data
+                    # Try to find a JS array assignment, e.g. var bonos = [...] or window.__INITIAL_STATE__ = {...}
+                    # We'll look for arrays of objects with ISIN, ticker, etc.
+                    matches = re.findall(r'(\[\{[\s\S]*?\}\])', script.string)
+                    for match in matches:
+                        try:
+                            # Clean up JS to JSON (single to double quotes, remove trailing commas)
+                            json_str = match.replace("'", '"')
+                            json_str = re.sub(r',\s*([}\]])', r'\1', json_str)  # Remove trailing commas
+                            data = json.loads(json_str)
+                            # Heuristic: look for objects with 'ticker' or 'isin'
+                            for bond in data:
+                                if isinstance(bond, dict) and ('ticker' in bond or 'isin' in bond):
+                                    parsed = self.parse_bond(bond)
+                                    if parsed:
+                                        bonds.append(parsed)
+                        except Exception:
+                            continue
+                # Fallback: try to parse tables if present
+                if not bonds:
+                    tables = soup.find_all('table')
+                    for table in tables:
+                        headers = [th.get_text(strip=True) for th in table.find_all('th')]
+                        for row in table.find_all('tr')[1:]:
+                            cells = [td.get_text(strip=True) for td in row.find_all('td')]
+                            if len(cells) == len(headers):
+                                bond = dict(zip(headers, cells))
+                                parsed = self.parse_bond(bond)
+                                if parsed:
+                                    bonds.append(parsed)
+            except Exception as e:
+                print(f"Error scraping {page}: {e}")
+        return bonds
 
-    def scrape_bond_details(self, bond_url: str) -> Optional[Dict]:
-        """Scrape detailed information for a specific bond"""
+    def parse_bond(self, bond: dict) -> Optional[Dict]:
+        # Try to map the bond dict to our schema
         try:
-            response = self.session.get(bond_url)
-            response.raise_for_status()
-            
-            soup = BeautifulSoup(response.content, 'html.parser')
-            
-            # Extract bond information
-            # This is a mock implementation since we don't have the actual site structure
-            # In a real implementation, you'd parse the actual HTML structure
-            
-            # Mock data structure based on the expected format
-            bond_data = {
-                "id": self.extract_bond_id(bond_url),
-                "ticker": self.extract_ticker(bond_url),
-                "name": self.extract_name(soup),
-                "issuer": self.extract_issuer(soup),
-                "maturityDate": self.extract_maturity_date(soup),
-                "couponRate": self.extract_coupon_rate(soup),
-                "price": self.extract_price(soup),
-                "currency": self.extract_currency(soup),
-                "bcbaPrice": self.extract_bcba_price(soup),
-                "mepPrice": self.extract_mep_price(soup),
-                "cclPrice": self.extract_ccl_price(soup),
-                "tna": self.extract_tna(soup),
-                "duration": self.extract_duration(soup)
+            # Heuristic mapping: adapt as needed for real data
+            return {
+                "id": bond.get("ticker") or bond.get("isin") or bond.get("id") or "UNKNOWN",
+                "ticker": bond.get("ticker") or "UNKNOWN",
+                "name": bond.get("nombre") or bond.get("name") or bond.get("descripcion") or "Unknown Bond",
+                "issuer": bond.get("emisor") or bond.get("issuer") or "Desconocido",
+                "maturityDate": bond.get("vencimiento") or bond.get("maturity") or bond.get("maturityDate") or "",
+                "couponRate": self.try_float(bond.get("cupón") or bond.get("cupon") or bond.get("coupon") or bond.get("tasa")),
+                "price": self.try_float(bond.get("precio") or bond.get("price") or bond.get("bcba")),
+                "currency": bond.get("moneda") or bond.get("currency") or "ARS",
+                "bcbaPrice": self.try_float(bond.get("bcba") or bond.get("precioBCBA")),
+                "mepPrice": self.try_float(bond.get("mep") or bond.get("precioMEP")),
+                "cclPrice": self.try_float(bond.get("ccl") or bond.get("precioCCL")),
+                "tna": self.try_float(bond.get("tna") or bond.get("TNA")),
+                "duration": self.try_float(bond.get("duration") or bond.get("duracion")),
             }
-            
-            return bond_data
-            
         except Exception as e:
-            print(f"Error scraping bond details from {bond_url}: {e}")
+            print(f"Error parsing bond: {e}")
             return None
 
-    def extract_bond_id(self, url: str) -> str:
-        """Extract bond ID from URL"""
-        match = re.search(r'/bono/([^/]+)', url)
-        return match.group(1) if match else "UNKNOWN"
-
-    def extract_ticker(self, url: str) -> str:
-        """Extract ticker from URL"""
-        match = re.search(r'/bono/([^/]+)', url)
-        return match.group(1).upper() if match else "UNKNOWN"
-
-    def extract_name(self, soup: BeautifulSoup) -> str:
-        """Extract bond name from page"""
-        # Mock implementation - in real scenario, find the actual element
-        title = soup.find('h1') or soup.find('title')
-        if title:
-            return title.get_text().strip()
-        return "Unknown Bond"
-
-    def extract_issuer(self, soup: BeautifulSoup) -> str:
-        """Extract issuer information"""
-        # Mock implementation
-        return "Gobierno de Argentina"
-
-    def extract_maturity_date(self, soup: BeautifulSoup) -> str:
-        """Extract maturity date"""
-        # Mock implementation - would parse actual date from page
-        return "2030-07-09"
-
-    def extract_coupon_rate(self, soup: BeautifulSoup) -> float:
-        """Extract coupon rate"""
-        # Mock implementation
-        return 7.5
-
-    def extract_price(self, soup: BeautifulSoup) -> float:
-        """Extract current price"""
-        # Mock implementation
-        return 50000.0
-
-    def extract_currency(self, soup: BeautifulSoup) -> str:
-        """Extract currency"""
-        # Mock implementation
-        return "ARS"
-
-    def extract_bcba_price(self, soup: BeautifulSoup) -> Optional[float]:
-        """Extract BCBA price"""
-        # Mock implementation
-        return 50000.0
-
-    def extract_mep_price(self, soup: BeautifulSoup) -> Optional[float]:
-        """Extract MEP price"""
-        # Mock implementation
-        return 45.0
-
-    def extract_ccl_price(self, soup: BeautifulSoup) -> Optional[float]:
-        """Extract CCL price"""
-        # Mock implementation
-        return 42.0
-
-    def extract_tna(self, soup: BeautifulSoup) -> Optional[float]:
-        """Extract TNA (Tasa Nominal Anual)"""
-        # Mock implementation
-        return 7.5
-
-    def extract_duration(self, soup: BeautifulSoup) -> Optional[float]:
-        """Extract duration in years"""
-        # Mock implementation
-        return 6.5
-
-    def generate_mock_data(self) -> List[Dict]:
-        """Generate mock bond data for development/testing"""
-        return [
-            {
-                "id": "AL30",
-                "ticker": "AL30",
-                "name": "Bonar 2030 Ley Arg.",
-                "issuer": "Gobierno de Argentina",
-                "maturityDate": "2030-07-09",
-                "couponRate": 7.5,
-                "price": 50000,
-                "currency": "ARS",
-                "bcbaPrice": 50000,
-                "mepPrice": 45.0,
-                "cclPrice": 42.0,
-                "tna": 7.5,
-                "duration": 6.5
-            },
-            {
-                "id": "GD30",
-                "ticker": "GD30",
-                "name": "Global 2030 Ley NY",
-                "issuer": "Gobierno de Argentina",
-                "maturityDate": "2030-07-09",
-                "couponRate": 7.5,
-                "price": 55,
-                "currency": "USD",
-                "bcbaPrice": 55,
-                "mepPrice": 55,
-                "cclPrice": 55,
-                "tna": 7.5,
-                "duration": 6.5
-            },
-            {
-                "id": "ON-YMC20",
-                "ticker": "YMC2O",
-                "name": "ON YPF 2026",
-                "issuer": "YPF S.A.",
-                "maturityDate": "2026-03-23",
-                "couponRate": 8.5,
-                "price": 98,
-                "currency": "USD",
-                "bcbaPrice": 98,
-                "mepPrice": 98,
-                "cclPrice": 98,
-                "tna": 8.5,
-                "duration": 2.3
-            },
-            {
-                "id": "PARA",
-                "ticker": "PARA",
-                "name": "Par 2038",
-                "issuer": "Gobierno de Argentina",
-                "maturityDate": "2038-01-01",
-                "couponRate": 5.0,
-                "price": 35000,
-                "currency": "ARS",
-                "bcbaPrice": 35000,
-                "mepPrice": 31.5,
-                "cclPrice": 29.4,
-                "tna": 5.0,
-                "duration": 14.0
-            },
-            {
-                "id": "DISCO",
-                "ticker": "DISCO",
-                "name": "Discount 2033",
-                "issuer": "Gobierno de Argentina",
-                "maturityDate": "2033-07-09",
-                "couponRate": 0.0,
-                "price": 25000,
-                "currency": "ARS",
-                "bcbaPrice": 25000,
-                "mepPrice": 22.5,
-                "cclPrice": 21.0,
-                "tna": 0.0,
-                "duration": 9.5
-            }
-        ]
+    def try_float(self, value):
+        try:
+            if value is None:
+                return None
+            if isinstance(value, (int, float)):
+                return float(value)
+            # Remove % and $ and commas
+            value = re.sub(r'[%$,]', '', str(value))
+            return float(value)
+        except Exception:
+            return None
 
     def save_bonds_data(self, bonds: List[Dict], output_path: str = "data/bonds.json"):
-        """Save bonds data to JSON file"""
         try:
-            # Ensure the data directory exists
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            
-            # Add metadata
             data = {
                 "bonds": bonds,
                 "lastUpdated": datetime.now().isoformat(),
                 "source": "bonistas.com",
                 "totalBonds": len(bonds)
             }
-            
             with open(output_path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
-            
             print(f"Successfully saved {len(bonds)} bonds to {output_path}")
             return True
-            
         except Exception as e:
             print(f"Error saving bonds data: {e}")
             return False
 
 def main():
-    """Main function to run the scraper"""
     print("Starting Bonistas bond scraper...")
-    
     scraper = BonistasScraper()
-    
-    # For development/testing, use mock data
-    # In production, you would use: bonds = scraper.get_bond_list()
-    bonds = scraper.generate_mock_data()
-    
+    bonds = scraper.get_bond_list()
     if bonds:
         success = scraper.save_bonds_data(bonds)
         if success:
