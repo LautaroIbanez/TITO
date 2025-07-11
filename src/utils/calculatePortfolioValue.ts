@@ -63,7 +63,7 @@ async function loadBondPrices(): Promise<Array<{ ticker: string; price: number; 
       // Transform to the expected format
       const transformedBonds = bonds.map((bond: any) => ({
         ticker: bond.ticker,
-        price: bond.price,
+        price: bond.price ?? 0,
         currency: bond.currency
       }));
       
@@ -86,7 +86,7 @@ async function loadBondPrices(): Promise<Array<{ ticker: string; price: number; 
       // Transform to the expected format
       const transformedBonds = bonds.map((bond: any) => ({
         ticker: bond.ticker,
-        price: bond.price,
+        price: bond.price ?? 0,
         currency: bond.currency
       }));
       

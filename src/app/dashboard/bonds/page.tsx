@@ -123,7 +123,7 @@ export default function BondsPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{bond.ticker}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{bond.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{new Date(bond.maturityDate).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">{bond.couponRate.toFixed(2)}%</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">{bond.couponRate ? `${bond.couponRate.toFixed(2)}%` : '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{bond.tna ? `${bond.tna.toFixed(2)}%` : '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{bond.duration ? `${bond.duration.toFixed(1)}a` : '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{bond.bcbaPrice ? formatCurrency(bond.bcbaPrice, bond.currency) : '-'}</td>
@@ -133,7 +133,7 @@ export default function BondsPage() {
                       <button 
                         onClick={() => handleOpenModal(bond)}
                         className="text-blue-600 hover:text-blue-800 disabled:text-gray-400"
-                        disabled={(portfolioData?.cash?.[bond.currency] ?? 0) < bond.price}
+                        disabled={(portfolioData?.cash?.[bond.currency] ?? 0) < (bond.price ?? 0)}
                       >
                         Comprar
                       </button>

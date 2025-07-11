@@ -186,7 +186,7 @@ export function calculateEffectiveYield(positions: PortfolioPosition[], bonds: B
       if (bondInfo) {
         const value = pos.quantity * pos.purchasePrice;
         totalValue += value;
-        weightedYield += value * (bondInfo.couponRate / 100);
+        weightedYield += value * ((bondInfo.couponRate ?? 0) / 100);
       }
     }
   });

@@ -105,8 +105,8 @@ export interface Bond {
   name: string;
   issuer: string;
   maturityDate: string;
-  couponRate: number; // Annual coupon rate in percentage
-  price: number; // Clean price
+  couponRate: number | null; // Annual coupon rate in percentage
+  price: number | null; // Clean price
   currency: 'ARS' | 'USD';
   bcbaPrice?: number; // BCBA price
   mepPrice?: number; // MEP price
