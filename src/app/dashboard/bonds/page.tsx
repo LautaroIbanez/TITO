@@ -108,8 +108,12 @@ export default function BondsPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticker</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimiento</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tasa Cupón</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cupón</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TNA</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duración</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">BCBA</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MEP</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CCL</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
                 </tr>
               </thead>
@@ -120,7 +124,11 @@ export default function BondsPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{bond.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{new Date(bond.maturityDate).toLocaleDateString()}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">{bond.couponRate.toFixed(2)}%</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatCurrency(bond.price, bond.currency)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{bond.tna ? `${bond.tna.toFixed(2)}%` : '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{bond.duration ? `${bond.duration.toFixed(1)}a` : '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{bond.bcbaPrice ? formatCurrency(bond.bcbaPrice, bond.currency) : '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{bond.mepPrice ? formatCurrency(bond.mepPrice, bond.currency) : '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{bond.cclPrice ? formatCurrency(bond.cclPrice, bond.currency) : '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button 
                         onClick={() => handleOpenModal(bond)}

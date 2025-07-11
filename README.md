@@ -7,7 +7,6 @@ TITO es una aplicación web construida con Next.js diseñada para ayudarte a ges
 - **Gestión de Portafolio**: Visualiza tus posiciones, su valor actual y su rendimiento histórico.
 - **Análisis "Scoop"**: Recibe recomendaciones de acciones personalizadas según tu perfil de riesgo.
 - **Metas Financieras**: Las metas se gestionan automáticamente según tu perfil de inversión.
-- **Simulador de Impuestos**: Estima el impacto fiscal de tus ganancias de capital.
 - **Manejo de Efectivo**: Deposita fondos y úsalos para comprar activos.
 - **Estrategia de Inversión Personalizada**: Recibe una estrategia de asignación de activos y recomendaciones de rebalanceo según tu perfil y metas (ver más abajo).
 
@@ -162,9 +161,7 @@ La sección "Scoop" analiza acciones y te sugiere las que mejor se alinean con t
 - **Ruta**: `/dashboard/scoop`
 - **Funcionalidad**: Puedes comprar acciones directamente desde las tarjetas de recomendación. El botón de compra se desactivará si no tienes suficiente saldo en la moneda correspondiente (`cash.ARS` o `cash.USD`) para la operación.
 
-### 5. Monitorear Impuestos
 
-- **Impuestos**: En `/dashboard/taxes`, puedes simular la venta de tus posiciones para estimar el impuesto a las ganancias de capital que tendrías que pagar.
 
 ## Manejo de Posiciones por Mercado y Moneda
 

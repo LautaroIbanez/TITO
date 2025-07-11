@@ -48,35 +48,55 @@ if (typeof global.fetch === 'undefined') {
 }
 
 // Mock JSON imports
-jest.mock('../../data/bonds.json', () => [
-  {
-    id: "AL30",
-    ticker: "AL30",
-    name: "Bonar 2030 Ley Arg.",
-    issuer: "Gobierno de Argentina",
-    maturityDate: "2030-07-09",
-    couponRate: 0.75,
-    price: 50000,
-    currency: "ARS"
-  },
-  {
-    id: "GD30",
-    ticker: "GD30",
-    name: "Global 2030 Ley NY",
-    issuer: "Gobierno de Argentina",
-    maturityDate: "2030-07-09",
-    couponRate: 0.75,
-    price: 55,
-    currency: "USD"
-  },
-  {
-    id: "ON-YMC20",
-    ticker: "YMC2O",
-    name: "ON YPF 2026",
-    issuer: "YPF S.A.",
-    maturityDate: "2026-03-23",
-    couponRate: 8.5,
-    price: 98,
-    currency: "USD"
-  }
-], { virtual: true }); 
+jest.mock('../../data/bonds.json', () => ({
+  bonds: [
+    {
+      id: "AL30",
+      ticker: "AL30",
+      name: "Bonar 2030 Ley Arg.",
+      issuer: "Gobierno de Argentina",
+      maturityDate: "2030-07-09",
+      couponRate: 7.5,
+      price: 50000,
+      currency: "ARS",
+      bcbaPrice: 50000,
+      mepPrice: 45.0,
+      cclPrice: 42.0,
+      tna: 7.5,
+      duration: 6.5
+    },
+    {
+      id: "GD30",
+      ticker: "GD30",
+      name: "Global 2030 Ley NY",
+      issuer: "Gobierno de Argentina",
+      maturityDate: "2030-07-09",
+      couponRate: 7.5,
+      price: 55,
+      currency: "USD",
+      bcbaPrice: 55,
+      mepPrice: 55,
+      cclPrice: 55,
+      tna: 7.5,
+      duration: 6.5
+    },
+    {
+      id: "ON-YMC20",
+      ticker: "YMC2O",
+      name: "ON YPF 2026",
+      issuer: "YPF S.A.",
+      maturityDate: "2026-03-23",
+      couponRate: 8.5,
+      price: 98,
+      currency: "USD",
+      bcbaPrice: 98,
+      mepPrice: 98,
+      cclPrice: 98,
+      tna: 8.5,
+      duration: 2.3
+    }
+  ],
+  lastUpdated: "2024-01-15T10:30:00.000Z",
+  source: "bonistas.com",
+  totalBonds: 3
+}), { virtual: true }); 

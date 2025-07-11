@@ -1,32 +1,82 @@
-[
-  {
-    "id": "AL30",
-    "ticker": "AL30",
-    "name": "Bonar 2030 Ley Arg.",
-    "issuer": "Gobierno de Argentina",
-    "maturityDate": "2030-07-09",
-    "couponRate": 0.75,
-    "price": 50000,
-    "currency": "ARS"
-  },
-  {
-    "id": "GD30",
-    "ticker": "GD30",
-    "name": "Global 2030 Ley NY",
-    "issuer": "Gobierno de Argentina",
-    "maturityDate": "2030-07-09",
-    "couponRate": 0.75,
-    "price": 55,
-    "currency": "USD"
-  },
-  {
-    "id": "ON-YMC20",
-    "ticker": "YMC2O",
-    "name": "ON YPF 2026",
-    "issuer": "YPF S.A.",
-    "maturityDate": "2026-03-23",
-    "couponRate": 8.5,
-    "price": 98,
-    "currency": "USD"
-  }
-] 
+{
+  "bonds": [
+    {
+      "id": "AL30",
+      "ticker": "AL30",
+      "name": "Bonar 2030 Ley Arg.",
+      "issuer": "Gobierno de Argentina",
+      "maturityDate": "2030-07-09",
+      "couponRate": 7.5,
+      "price": 50000,
+      "currency": "ARS",
+      "bcbaPrice": 50000,
+      "mepPrice": 45.0,
+      "cclPrice": 42.0,
+      "tna": 7.5,
+      "duration": 6.5
+    },
+    {
+      "id": "GD30",
+      "ticker": "GD30",
+      "name": "Global 2030 Ley NY",
+      "issuer": "Gobierno de Argentina",
+      "maturityDate": "2030-07-09",
+      "couponRate": 7.5,
+      "price": 55,
+      "currency": "USD",
+      "bcbaPrice": 55,
+      "mepPrice": 55,
+      "cclPrice": 55,
+      "tna": 7.5,
+      "duration": 6.5
+    },
+    {
+      "id": "ON-YMC20",
+      "ticker": "YMC2O",
+      "name": "ON YPF 2026",
+      "issuer": "YPF S.A.",
+      "maturityDate": "2026-03-23",
+      "couponRate": 8.5,
+      "price": 98,
+      "currency": "USD",
+      "bcbaPrice": 98,
+      "mepPrice": 98,
+      "cclPrice": 98,
+      "tna": 8.5,
+      "duration": 2.3
+    },
+    {
+      "id": "PARA",
+      "ticker": "PARA",
+      "name": "Par 2038",
+      "issuer": "Gobierno de Argentina",
+      "maturityDate": "2038-01-01",
+      "couponRate": 5.0,
+      "price": 35000,
+      "currency": "ARS",
+      "bcbaPrice": 35000,
+      "mepPrice": 31.5,
+      "cclPrice": 29.4,
+      "tna": 5.0,
+      "duration": 14.0
+    },
+    {
+      "id": "DISCO",
+      "ticker": "DISCO",
+      "name": "Discount 2033",
+      "issuer": "Gobierno de Argentina",
+      "maturityDate": "2033-07-09",
+      "couponRate": 0.0,
+      "price": 25000,
+      "currency": "ARS",
+      "bcbaPrice": 25000,
+      "mepPrice": 22.5,
+      "cclPrice": 21.0,
+      "tna": 0.0,
+      "duration": 9.5
+    }
+  ],
+  "lastUpdated": "2025-07-11T13:26:58.968724",
+  "source": "bonistas.com",
+  "totalBonds": 5
+}

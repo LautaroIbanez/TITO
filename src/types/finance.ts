@@ -108,6 +108,11 @@ export interface Bond {
   couponRate: number; // Annual coupon rate in percentage
   price: number; // Clean price
   currency: 'ARS' | 'USD';
+  bcbaPrice?: number; // BCBA price
+  mepPrice?: number; // MEP price
+  cclPrice?: number; // CCL price
+  tna?: number; // Tasa Nominal Anual
+  duration?: number; // Duration in years
 }
 
 export interface FixedTermDeposit {

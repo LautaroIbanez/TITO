@@ -10,7 +10,6 @@ const getTitle = (pathname: string) => {
   if (pathname.includes('/dashboard/bonds')) return 'Bonos';
   if (pathname.includes('/dashboard/deposits')) return 'Plazos Fijos';
   if (pathname.includes('/dashboard/scoop')) return 'Acciones';
-  if (pathname.includes('/dashboard/taxes')) return 'Impuestos';
   if (pathname.includes('/dashboard/start')) return 'Primeros Pasos';
   return 'Dashboard';
 };
