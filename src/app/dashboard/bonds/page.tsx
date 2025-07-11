@@ -118,8 +118,8 @@ export default function BondsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {bonds.map((bond) => (
-                  <tr key={bond.id}>
+                {bonds.map((bond, index) => (
+                  <tr key={`${bond.id}-${index}`}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{bond.ticker}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{bond.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{new Date(bond.maturityDate).toLocaleDateString()}</td>
