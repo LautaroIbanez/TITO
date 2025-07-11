@@ -108,6 +108,16 @@ export async function getBondPriceFromJson(ticker: string, currency: string): Pr
   return bond?.price;
 }
 
+// Synchronous version for use in calculateCurrentValueByCurrency
+function getBondPriceFromCache(ticker: string, currency: string): number | undefined {
+  // Use the cached bond prices if available
+  if (bondPricesCache.length > 0) {
+    const bond = bondPricesCache.find(b => b.ticker === ticker && b.currency === currency);
+    return bond?.price;
+  }
+  return undefined;
+}
+
 export async function calculatePortfolioValueHistory(
   transactions: PortfolioTransaction[],
   priceHistory: Record<string, PriceData[]>,
@@ -675,10 +685,7 @@ export function calculateCurrentValueByCurrency(
       }
       // Fallback: if bond and no valid price, use bonds.json
       if (pos.type === 'Bond' && currentPrice === undefined) {
-        // Note: This function is synchronous but getBondPriceFromJson is async
-        // For now, we'll skip the fallback in this synchronous context
-        // TODO: Make this function async or implement a synchronous fallback
-        currentPrice = undefined;
+        currentPrice = getBondPriceFromCache(pos.ticker, pos.currency);
       }
       if (currentPrice !== undefined) {
         const positionValue = pos.quantity * currentPrice;
