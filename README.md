@@ -248,6 +248,16 @@ npm run update-data
 
 Este comando descarga automáticamente datos para todos los tickers definidos en `src/utils/assetCategories.ts`, incluyendo todas las categorías de ETFs, acciones y bonos soberanos argentinos. El sistema:
 
+### Actualización de Datos de Bonos
+
+```bash
+npm run scrape-bonds
+```
+
+Este comando ejecuta el scraper de bonistas.com para obtener datos actualizados de bonos argentinos. Los datos se guardan en `data/bonds.json` y se utilizan como fallback cuando no hay datos de precio histórico disponibles.
+
+**Nota**: El archivo `data/bonds.json` está incluido en `.gitignore` y se genera automáticamente al ejecutar el scraper. Para desarrollo local, ejecuta este comando antes de iniciar la aplicación.
+
 - **Descarga datos completos**: Precios históricos, fundamentales e indicadores técnicos
 - **Maneja errores**: Detecta símbolos no soportados en Yahoo Finance y los registra
 - **Control de concurrencia**: Procesa múltiples símbolos simultáneamente sin sobrecargar las APIs

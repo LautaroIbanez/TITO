@@ -12,7 +12,8 @@
     "update-benchmarks": "ts-node scripts/update-benchmarks.ts",
     "update-inflation": "ts-node scripts/update-inflation.ts",
     "update-crypto": "ts-node scripts/update-crypto.ts",
-    "update-cauciones": "ts-node scripts/update-cauciones.ts"
+    "update-cauciones": "ts-node scripts/update-cauciones.ts",
+    "scrape-bonds": "python3 scripts/scrape_bonistas.py"
   },
   "dependencies": {
     "@binance/connector": "^3.6.1",

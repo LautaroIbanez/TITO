@@ -14,10 +14,10 @@ export interface PriceValidationResult {
  * @param priceHistory Price data for stocks/bonds/crypto
  * @returns Object indicating if price is valid and the current price
  */
-export function validatePositionPrice(
+export async function validatePositionPrice(
   position: PortfolioPosition,
   priceHistory: Record<string, PriceData[]>
-): PriceValidationResult {
+): Promise<PriceValidationResult> {
   if (position.type === 'Stock' || position.type === 'Crypto') {
     const symbol = position.symbol;
     const prices = priceHistory[symbol];
@@ -52,7 +52,7 @@ export function validatePositionPrice(
     
     if (!prices || prices.length === 0) {
       // Try fallback from bonds.json
-      const fallbackPrice = getBondPriceFromJson(ticker, position.currency);
+      const fallbackPrice = await getBondPriceFromJson(ticker, position.currency);
       if (fallbackPrice !== undefined) {
         return {
           hasValidPrice: true,
@@ -72,7 +72,7 @@ export function validatePositionPrice(
     
     if (!validPriceEntry) {
       // Try fallback from bonds.json
-      const fallbackPrice = getBondPriceFromJson(ticker, position.currency);
+      const fallbackPrice = await getBondPriceFromJson(ticker, position.currency);
       if (fallbackPrice !== undefined) {
         return {
           hasValidPrice: true,
@@ -112,18 +112,18 @@ export function validatePositionPrice(
  * @param priceHistory Price data for stocks/bonds/crypto
  * @returns Object with filtered positions and excluded positions
  */
-export function filterPositionsWithValidPrices(
+export async function filterPositionsWithValidPrices(
   positions: PortfolioPosition[],
   priceHistory: Record<string, PriceData[]>
-): {
+): Promise<{
   validPositions: PortfolioPosition[];
   excludedPositions: Array<{ position: PortfolioPosition; reason: string }>;
-} {
+}> {
   const validPositions: PortfolioPosition[] = [];
   const excludedPositions: Array<{ position: PortfolioPosition; reason: string }> = [];
   
   for (const position of positions) {
-    const validation = validatePositionPrice(position, priceHistory);
+    const validation = await validatePositionPrice(position, priceHistory);
     
     if (validation.hasValidPrice) {
       validPositions.push(position);

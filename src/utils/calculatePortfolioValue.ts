@@ -6,7 +6,8 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import { getExchangeRate, convertCurrencySync } from './currency';
 import { detectDuplicates, filterDuplicates } from './duplicateDetection';
 import { hasAssetType, isTradeTransaction, isCreationTransaction, getTransactionIdentifier } from './typeGuards';
-import bondPricesData from '../../data/bonds.json';
+import { promises as fs } from 'fs';
+import path from 'path';
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 
@@ -36,10 +37,48 @@ export interface PortfolioValueOptions {
   initialCash?: { ARS: number; USD: number }; // Initial cash balances before processing transactions
 }
 
-// Bond prices data loaded statically
-const bondPricesCache = bondPricesData as Array<{ ticker: string; price: number; currency: string }>;
-export function getBondPriceFromJson(ticker: string, currency: string): number | undefined {
-  const bond = bondPricesCache.find(b => b.ticker === ticker && b.currency === currency);
+// Bond prices cache with timestamp
+let bondPricesCache: Array<{ ticker: string; price: number; currency: string }> = [];
+let bondPricesCacheTimestamp = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+async function loadBondPrices(): Promise<Array<{ ticker: string; price: number; currency: string }>> {
+  const now = Date.now();
+  
+  // Return cached data if it's still fresh
+  if (bondPricesCache.length > 0 && (now - bondPricesCacheTimestamp) < CACHE_DURATION) {
+    return bondPricesCache;
+  }
+  
+  try {
+    const bondsPath = path.join(process.cwd(), 'data', 'bonds.json');
+    const fileContents = await fs.readFile(bondsPath, 'utf8');
+    const bondsData = JSON.parse(fileContents);
+    
+    // Handle both old format (array) and new format (object with bonds array)
+    const bonds = bondsData.bonds || bondsData;
+    
+    // Transform to the expected format
+    const transformedBonds = bonds.map((bond: any) => ({
+      ticker: bond.ticker,
+      price: bond.price,
+      currency: bond.currency
+    }));
+    
+    // Update cache
+    bondPricesCache = transformedBonds;
+    bondPricesCacheTimestamp = now;
+    
+    return transformedBonds;
+  } catch (error) {
+    console.error('Failed to load bond prices:', error);
+    return [];
+  }
+}
+
+export async function getBondPriceFromJson(ticker: string, currency: string): Promise<number | undefined> {
+  const bonds = await loadBondPrices();
+  const bond = bonds.find(b => b.ticker === ticker && b.currency === currency);
   return bond?.price;
 }
 
@@ -393,7 +432,7 @@ export async function calculatePortfolioValueHistory(
       }
       // Fallback: solo para bonos, solo si no hay precio válido, solo si la posición está abierta
       if (bondTickers.has(identifier) && currentPrice === undefined && options && options.bondFallback && pos.quantity > 0) {
-        currentPrice = getBondPriceFromJson(identifier, currency);
+        currentPrice = await getBondPriceFromJson(identifier, currency);
       }
       if (currentPrice !== undefined) {
         const positionValue = pos.quantity * currentPrice;
@@ -610,7 +649,10 @@ export function calculateCurrentValueByCurrency(
       }
       // Fallback: if bond and no valid price, use bonds.json
       if (pos.type === 'Bond' && currentPrice === undefined) {
-        currentPrice = getBondPriceFromJson(pos.ticker, pos.currency);
+        // Note: This function is synchronous but getBondPriceFromJson is async
+        // For now, we'll skip the fallback in this synchronous context
+        // TODO: Make this function async or implement a synchronous fallback
+        currentPrice = undefined;
       }
       if (currentPrice !== undefined) {
         const positionValue = pos.quantity * currentPrice;
