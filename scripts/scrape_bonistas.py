@@ -24,11 +24,13 @@ class BonistasScraper:
     def get_bond_list(self) -> List[Dict]:
         bonds = []
         for page in self.pages:
+            page_bonds = []
             try:
                 url = f"{self.base_url}{page}"
                 response = self.session.get(url, timeout=15)
                 response.raise_for_status()
                 soup = BeautifulSoup(response.content, 'html.parser')
+                
                 # Find all <script> tags
                 scripts = soup.find_all('script')
                 for script in scripts:
@@ -49,11 +51,12 @@ class BonistasScraper:
                                 if isinstance(bond, dict) and ('ticker' in bond or 'isin' in bond):
                                     parsed = self.parse_bond(bond)
                                     if parsed:
-                                        bonds.append(parsed)
+                                        page_bonds.append(parsed)
                         except Exception:
                             continue
+                
                 # Fallback: try to parse tables if present
-                if not bonds:
+                if not page_bonds:
                     tables = soup.find_all('table')
                     for table in tables:
                         headers = [th.get_text(strip=True) for th in table.find_all('th')]
@@ -63,7 +66,11 @@ class BonistasScraper:
                                 bond = dict(zip(headers, cells))
                                 parsed = self.parse_bond(bond)
                                 if parsed:
-                                    bonds.append(parsed)
+                                    page_bonds.append(parsed)
+                
+                bonds.extend(page_bonds)
+                print(f"Found {len(page_bonds)} bonds from {page}")
+                
             except Exception as e:
                 print(f"Error scraping {page}: {e}")
         return bonds
@@ -71,7 +78,7 @@ class BonistasScraper:
     def parse_bond(self, bond: dict) -> Optional[Dict]:
         # Try to map the bond dict to our schema
         try:
-            # Heuristic mapping: adapt as needed for real data
+            # Enhanced mapping for bondData entries
             return {
                 "id": bond.get("ticker") or bond.get("isin") or bond.get("id") or "UNKNOWN",
                 "ticker": bond.get("ticker") or "UNKNOWN",
@@ -79,13 +86,20 @@ class BonistasScraper:
                 "issuer": bond.get("emisor") or bond.get("issuer") or "Desconocido",
                 "maturityDate": bond.get("vencimiento") or bond.get("maturity") or bond.get("maturityDate") or "",
                 "couponRate": self.try_float(bond.get("cupón") or bond.get("cupon") or bond.get("coupon") or bond.get("tasa")),
-                "price": self.try_float(bond.get("precio") or bond.get("price") or bond.get("bcba")),
+                "price": self.try_float(bond.get("last_price") or bond.get("precio") or bond.get("price") or bond.get("bcba")),
                 "currency": bond.get("moneda") or bond.get("currency") or "ARS",
                 "bcbaPrice": self.try_float(bond.get("bcba") or bond.get("precioBCBA")),
                 "mepPrice": self.try_float(bond.get("mep") or bond.get("precioMEP")),
                 "cclPrice": self.try_float(bond.get("ccl") or bond.get("precioCCL")),
                 "tna": self.try_float(bond.get("tna") or bond.get("TNA")),
-                "duration": self.try_float(bond.get("duration") or bond.get("duracion")),
+                "duration": self.try_float(bond.get("modified_duration") or bond.get("duration") or bond.get("duracion")),
+                "difference": self.try_float(bond.get("day_difference") or bond.get("difference") or bond.get("dif")),
+                "tir": self.try_float(bond.get("tir") or bond.get("TIR")),
+                "mtir": self.try_float(bond.get("mtir") or bond.get("MTIR")),
+                "volume": self.try_float(bond.get("volume") or bond.get("vol")),
+                "parity": self.try_float(bond.get("parity") or bond.get("paridad")),
+                "ttir": self.try_float(bond.get("ttir") or bond.get("TTIR")),
+                "uptir": self.try_float(bond.get("uptir") or bond.get("upTTir")),
             }
         except Exception as e:
             print(f"Error parsing bond: {e}")
