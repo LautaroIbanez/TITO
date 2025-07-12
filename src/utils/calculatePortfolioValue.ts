@@ -109,7 +109,7 @@ export async function getBondPriceFromJson(ticker: string, currency: string): Pr
 }
 
 // Synchronous version for use in calculateCurrentValueByCurrency
-function getBondPriceFromCache(ticker: string, currency: string): number | undefined {
+export function getBondPriceFromCache(ticker: string, currency: string): number | undefined {
   // Use the cached bond prices if available
   if (bondPricesCache.length > 0) {
     const bond = bondPricesCache.find(b => b.ticker === ticker && b.currency === currency);

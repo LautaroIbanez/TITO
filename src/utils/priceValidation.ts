@@ -1,6 +1,6 @@
 import { PortfolioPosition, StockPosition, BondPosition, CryptoPosition } from '@/types';
 import { PriceData } from '@/types/finance';
-import { getBondPriceFromJson } from './calculatePortfolioValue';
+import { getBondPriceFromJson, getBondPriceFromCache } from './calculatePortfolioValue';
 
 export interface PriceValidationResult {
   hasValidPrice: boolean;
@@ -14,15 +14,16 @@ export interface PriceValidationResult {
  * @param priceHistory Price data for stocks/bonds/crypto
  * @returns Object indicating if price is valid and the current price
  */
-export async function validatePositionPrice(
+export function validatePositionPrice(
   position: PortfolioPosition,
   priceHistory: Record<string, PriceData[]>
-): Promise<PriceValidationResult> {
+): PriceValidationResult {
   if (position.type === 'Stock' || position.type === 'Crypto') {
     const symbol = position.symbol;
     const prices = priceHistory[symbol];
     
     if (!prices || prices.length === 0) {
+      console.warn(`Missing price data for ${symbol}: No hay datos de precio disponibles`);
       return {
         hasValidPrice: false,
         reason: 'No hay datos de precio disponibles'
@@ -34,6 +35,7 @@ export async function validatePositionPrice(
     const validPriceEntry = recentPrices.find(p => p.close > 0);
     
     if (!validPriceEntry) {
+      console.warn(`Invalid price data for ${symbol}: Precios recientes son cero o inválidos`);
       return {
         hasValidPrice: false,
         reason: 'Precios recientes son cero o inválidos'
@@ -51,8 +53,8 @@ export async function validatePositionPrice(
     const prices = priceHistory[ticker];
     
     if (!prices || prices.length === 0) {
-      // Try fallback from bonds.json
-      const fallbackPrice = await getBondPriceFromJson(ticker, position.currency);
+      // Try fallback from bonds.json synchronously
+      const fallbackPrice = getBondPriceFromCache(ticker, position.currency);
       if (fallbackPrice !== undefined) {
         return {
           hasValidPrice: true,
@@ -60,6 +62,7 @@ export async function validatePositionPrice(
         };
       }
       
+      console.warn(`Missing price data for bond ${ticker}: No hay datos de precio disponibles`);
       return {
         hasValidPrice: false,
         reason: 'No hay datos de precio disponibles'
@@ -71,8 +74,8 @@ export async function validatePositionPrice(
     const validPriceEntry = recentPrices.find(p => p.close > 0);
     
     if (!validPriceEntry) {
-      // Try fallback from bonds.json
-      const fallbackPrice = await getBondPriceFromJson(ticker, position.currency);
+      // Try fallback from bonds.json synchronously
+      const fallbackPrice = getBondPriceFromCache(ticker, position.currency);
       if (fallbackPrice !== undefined) {
         return {
           hasValidPrice: true,
@@ -80,6 +83,7 @@ export async function validatePositionPrice(
         };
       }
       
+      console.warn(`Invalid price data for bond ${ticker}: Precios recientes son cero o inválidos`);
       return {
         hasValidPrice: false,
         reason: 'Precios recientes son cero o inválidos'
@@ -100,6 +104,7 @@ export async function validatePositionPrice(
     };
   }
   
+  console.warn(`Unsupported asset type for ${position.type}: Tipo de activo no soportado`);
   return {
     hasValidPrice: false,
     reason: 'Tipo de activo no soportado'
@@ -112,18 +117,18 @@ export async function validatePositionPrice(
  * @param priceHistory Price data for stocks/bonds/crypto
  * @returns Object with filtered positions and excluded positions
  */
-export async function filterPositionsWithValidPrices(
+export function filterPositionsWithValidPrices(
   positions: PortfolioPosition[],
   priceHistory: Record<string, PriceData[]>
-): Promise<{
+): {
   validPositions: PortfolioPosition[];
   excludedPositions: Array<{ position: PortfolioPosition; reason: string }>;
-}> {
+} {
   const validPositions: PortfolioPosition[] = [];
   const excludedPositions: Array<{ position: PortfolioPosition; reason: string }> = [];
   
   for (const position of positions) {
-    const validation = await validatePositionPrice(position, priceHistory);
+    const validation = validatePositionPrice(position, priceHistory);
     
     if (validation.hasValidPrice) {
       validPositions.push(position);

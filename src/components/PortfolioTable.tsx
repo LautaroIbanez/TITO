@@ -164,7 +164,19 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
   };
 
   const renderBondRow = (pos: BondPosition) => {
-    const value = pos.quantity * getPurchasePrice(pos);
+    const priceValidation = validatePositionPrice(pos, prices);
+    const hasValidPrice = priceValidation.hasValidPrice;
+    const currPrice = priceValidation.currentPrice;
+    const value = hasValidPrice ? pos.quantity * currPrice! : pos.quantity * getPurchasePrice(pos);
+    const gain = hasValidPrice && getPurchasePrice(pos) ? ((currPrice! - getPurchasePrice(pos)) / getPurchasePrice(pos)) * 100 : 0;
+    let gainCurrency: number;
+    if (hasValidPrice) {
+      const purchasePrice = getPurchasePrice(pos);
+      gainCurrency = Number.isFinite(purchasePrice) ? computePositionGain(pos, currPrice!) : NaN;
+    } else {
+      gainCurrency = NaN;
+    }
+
     return (
       <tr key={`${pos.ticker}-${pos.currency}`} className="even:bg-gray-50">
         <td className="px-4 py-2 font-mono text-gray-900">{pos.ticker}</td>
@@ -172,13 +184,23 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
         <td className="px-4 py-2 text-gray-700">{pos.currency}</td>
         <td className="px-4 py-2 text-right text-gray-900">{pos.quantity}</td>
         <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(getPurchasePrice(pos), pos.currency)}</td>
-        <td className="px-4 py-2 text-right text-gray-700">-</td>
+        <td className="px-4 py-2 text-right text-gray-900">
+          {hasValidPrice ? formatCurrency(currPrice!, pos.currency) : (
+            <span className="text-orange-600 text-xs">Sin datos suficientes</span>
+          )}
+        </td>
         <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(value, pos.currency)}</td>
+        <td className={`px-4 py-2 text-right font-semibold ${gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          {hasValidPrice ? `${gain.toFixed(2)}%` : '-'}
+        </td>
+        <td className={`px-4 py-2 text-right font-semibold ${Number.isFinite(gainCurrency) ? (gainCurrency >= 0 ? 'text-green-600' : 'text-red-600') : 'text-gray-500'}`}>
+          {Number.isFinite(gainCurrency) ? formatCurrency(gainCurrency, pos.currency) : '-'}
+        </td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
-        <td className="px-4 py-2 text-right text-gray-700">-</td>
-        <td className="px-4 py-2 text-right text-gray-700">-</td>
-        <td className="px-4 py-2 text-center">-</td>
+        <td className="px-4 py-2 text-center">
+          <button onClick={() => openSellModal(pos)} className="text-red-600 hover:text-red-800 text-xs font-semibold">Vender</button>
+        </td>
       </tr>
     );
   };

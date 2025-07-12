@@ -2,12 +2,13 @@ import { validatePositionPrice, filterPositionsWithValidPrices, getPositionDispl
 import { PortfolioPosition } from '@/types';
 import { PriceData } from '@/types/finance';
 
-// Mock the getBondPriceFromJson function
+// Mock the getBondPriceFromJson and getBondPriceFromCache functions
 jest.mock('../calculatePortfolioValue', () => ({
-  getBondPriceFromJson: jest.fn()
+  getBondPriceFromJson: jest.fn(),
+  getBondPriceFromCache: jest.fn()
 }));
 
-const { getBondPriceFromJson } = require('../calculatePortfolioValue');
+const { getBondPriceFromJson, getBondPriceFromCache } = require('../calculatePortfolioValue');
 
 describe('priceValidation', () => {
   beforeEach(() => {
@@ -15,7 +16,7 @@ describe('priceValidation', () => {
   });
 
   describe('validatePositionPrice', () => {
-    it('should validate stock position with valid price data', async () => {
+    it('should validate stock position with valid price data', () => {
       const position: PortfolioPosition = {
         type: 'Stock',
         symbol: 'AAPL',
@@ -32,12 +33,12 @@ describe('priceValidation', () => {
         ]
       };
 
-      const result = await validatePositionPrice(position, priceHistory);
+      const result = validatePositionPrice(position, priceHistory);
       expect(result.hasValidPrice).toBe(true);
       expect(result.currentPrice).toBe(105);
     });
 
-    it('should reject stock position with no price data', async () => {
+    it('should reject stock position with no price data', () => {
       const position: PortfolioPosition = {
         type: 'Stock',
         symbol: 'INVALID',
@@ -49,12 +50,12 @@ describe('priceValidation', () => {
 
       const priceHistory: Record<string, PriceData[]> = {};
 
-      const result = await validatePositionPrice(position, priceHistory);
+      const result = validatePositionPrice(position, priceHistory);
       expect(result.hasValidPrice).toBe(false);
       expect(result.reason).toBe('No hay datos de precio disponibles');
     });
 
-    it('should reject stock position with all zero prices', async () => {
+    it('should reject stock position with all zero prices', () => {
       const position: PortfolioPosition = {
         type: 'Stock',
         symbol: 'ZERO',
@@ -71,17 +72,17 @@ describe('priceValidation', () => {
         ]
       };
 
-      const result = await validatePositionPrice(position, priceHistory);
+      const result = validatePositionPrice(position, priceHistory);
       expect(result.hasValidPrice).toBe(false);
       expect(result.reason).toBe('Precios recientes son cero o inválidos');
     });
 
-    it('should validate bond position with valid price data', async () => {
+    it('should validate bond position with valid price data', () => {
       const position: PortfolioPosition = {
         type: 'Bond',
         ticker: 'GD30',
         quantity: 100,
-        averagePrice: 50,
+        purchasePrice: 50,
         currency: 'USD'
       };
 
@@ -92,54 +93,54 @@ describe('priceValidation', () => {
         ]
       };
 
-      const result = await validatePositionPrice(position, priceHistory);
+      const result = validatePositionPrice(position, priceHistory);
       expect(result.hasValidPrice).toBe(true);
       expect(result.currentPrice).toBe(53);
     });
 
-    it('should validate bond position using fallback when no price history', async () => {
+    it('should validate bond position using fallback when no price history', () => {
       const position: PortfolioPosition = {
         type: 'Bond',
         ticker: 'GD30',
         quantity: 100,
-        averagePrice: 50,
+        purchasePrice: 50,
         currency: 'USD'
       };
 
       const priceHistory: Record<string, PriceData[]> = {};
       
-      (getBondPriceFromJson as jest.Mock).mockResolvedValue(55);
+      (getBondPriceFromCache as jest.Mock).mockReturnValue(55);
 
-      const result = await validatePositionPrice(position, priceHistory);
+      const result = validatePositionPrice(position, priceHistory);
       expect(result.hasValidPrice).toBe(true);
       expect(result.currentPrice).toBe(55);
-      expect(getBondPriceFromJson).toHaveBeenCalledWith('GD30', 'USD');
+      expect(getBondPriceFromCache).toHaveBeenCalledWith('GD30', 'USD');
     });
 
-    it('should reject bond position when no price data and no fallback', async () => {
+    it('should reject bond position when no price data and no fallback', () => {
       const position: PortfolioPosition = {
         type: 'Bond',
         ticker: 'INVALID',
         quantity: 100,
-        averagePrice: 50,
+        purchasePrice: 50,
         currency: 'USD'
       };
 
       const priceHistory: Record<string, PriceData[]> = {};
       
-      (getBondPriceFromJson as jest.Mock).mockResolvedValue(undefined);
+      (getBondPriceFromCache as jest.Mock).mockReturnValue(undefined);
 
-      const result = await validatePositionPrice(position, priceHistory);
+      const result = validatePositionPrice(position, priceHistory);
       expect(result.hasValidPrice).toBe(false);
       expect(result.reason).toBe('No hay datos de precio disponibles');
     });
 
-    it('should validate crypto position with valid price data', async () => {
+    it('should validate crypto position with valid price data', () => {
       const position: PortfolioPosition = {
         type: 'Crypto',
         symbol: 'BTCUSDT',
         quantity: 0.1,
-        averagePrice: 50000,
+        purchasePrice: 50000,
         currency: 'USD'
       };
 
@@ -150,12 +151,12 @@ describe('priceValidation', () => {
         ]
       };
 
-      const result = await validatePositionPrice(position, priceHistory);
+      const result = validatePositionPrice(position, priceHistory);
       expect(result.hasValidPrice).toBe(true);
       expect(result.currentPrice).toBe(53000);
     });
 
-    it('should validate fixed-term deposit position', async () => {
+    it('should validate fixed-term deposit position', () => {
       const position: PortfolioPosition = {
         type: 'FixedTermDeposit',
         id: '1',
@@ -169,12 +170,12 @@ describe('priceValidation', () => {
 
       const priceHistory: Record<string, PriceData[]> = {};
 
-      const result = await validatePositionPrice(position, priceHistory);
+      const result = validatePositionPrice(position, priceHistory);
       expect(result.hasValidPrice).toBe(true);
       expect(result.currentPrice).toBe(10000);
     });
 
-    it('should validate caucion position', async () => {
+    it('should validate caucion position', () => {
       const position: PortfolioPosition = {
         type: 'Caucion',
         id: '1',
@@ -189,20 +190,20 @@ describe('priceValidation', () => {
 
       const priceHistory: Record<string, PriceData[]> = {};
 
-      const result = await validatePositionPrice(position, priceHistory);
+      const result = validatePositionPrice(position, priceHistory);
       expect(result.hasValidPrice).toBe(true);
       expect(result.currentPrice).toBe(5000);
     });
   });
 
   describe('filterPositionsWithValidPrices', () => {
-    it('should filter positions correctly', async () => {
+    it('should filter positions correctly', () => {
       const positions: PortfolioPosition[] = [
         {
           type: 'Stock',
           symbol: 'AAPL',
           quantity: 10,
-          averagePrice: 100,
+          purchasePrice: 100,
           currency: 'USD',
           market: 'NASDAQ'
         },
@@ -210,7 +211,7 @@ describe('priceValidation', () => {
           type: 'Stock',
           symbol: 'GOOGL',
           quantity: 5,
-          averagePrice: 150,
+          purchasePrice: 150,
           currency: 'USD',
           market: 'NASDAQ'
         },
@@ -218,7 +219,7 @@ describe('priceValidation', () => {
           type: 'Stock',
           symbol: 'INVALID',
           quantity: 10,
-          averagePrice: 100,
+          purchasePrice: 100,
           currency: 'USD',
           market: 'NASDAQ'
         }
@@ -233,7 +234,7 @@ describe('priceValidation', () => {
         ]
       };
 
-      const result = await filterPositionsWithValidPrices(positions, priceHistory);
+      const result = filterPositionsWithValidPrices(positions, priceHistory);
       
       expect(result.validPositions).toHaveLength(2);
       expect(result.excludedPositions).toHaveLength(1);
@@ -242,11 +243,11 @@ describe('priceValidation', () => {
       expect(result.excludedPositions[0].reason).toBe('No hay datos de precio disponibles');
     });
 
-    it('should handle empty positions array', async () => {
+    it('should handle empty positions array', () => {
       const positions: PortfolioPosition[] = [];
       const priceHistory: Record<string, PriceData[]> = {};
 
-      const result = await filterPositionsWithValidPrices(positions, priceHistory);
+      const result = filterPositionsWithValidPrices(positions, priceHistory);
       
       expect(result.validPositions).toHaveLength(0);
       expect(result.excludedPositions).toHaveLength(0);
@@ -259,7 +260,7 @@ describe('priceValidation', () => {
         type: 'Stock',
         symbol: 'AAPL',
         quantity: 10,
-        averagePrice: 100,
+        purchasePrice: 100,
         currency: 'USD',
         market: 'NASDAQ'
       };
@@ -268,7 +269,7 @@ describe('priceValidation', () => {
         type: 'Bond',
         ticker: 'GD30',
         quantity: 100,
-        averagePrice: 50,
+        purchasePrice: 50,
         currency: 'USD'
       };
 
@@ -276,7 +277,7 @@ describe('priceValidation', () => {
         type: 'Crypto',
         symbol: 'BTCUSDT',
         quantity: 0.1,
-        averagePrice: 50000,
+        purchasePrice: 50000,
         currency: 'USD'
       };
 

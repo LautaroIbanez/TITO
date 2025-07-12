@@ -99,19 +99,20 @@ export async function getHistoricalPrices(symbol: string, interval: '1d' | '1wk'
       await writeJson(filePath, prices);
       console.log(`[${symbol}] Fetched and saved 5y history (${interval}).`);
       return prices;
-    } catch (err) {
-      // Check if it's an unsupported symbol error
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      if (errorMessage.includes('No data found') || 
-          errorMessage.includes('Invalid symbol') || 
-          errorMessage.includes('not found') ||
-          errorMessage.includes('No data available')) {
-        console.log(`Symbol ${symbol} not supported on Yahoo Finance`);
-        return [];
+          } catch (err) {
+        // Check if it's an unsupported symbol error
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        if (errorMessage.includes('No data found') || 
+            errorMessage.includes('Invalid symbol') || 
+            errorMessage.includes('not found') ||
+            errorMessage.includes('No data available')) {
+          console.log(`Symbol ${symbol} not supported on Yahoo Finance`);
+          return [];
+        }
+        console.error(`[${symbol}] Error fetching history (${interval}):`, err);
+        // Return existing prices as fallback if available
+        return prices;
       }
-      console.error(`[${symbol}] Error fetching history (${interval}):`, err);
-      return [];
-    }
   } else {
     // File exists, check last date
     prices = (await readJsonSafe(filePath)) || [];
@@ -150,19 +151,19 @@ export async function getHistoricalPrices(symbol: string, interval: '1d' | '1wk'
         await writeJson(filePath, merged);
         console.log(`[${symbol}] Appended ${newPrices.length} new ${interval === '1d' ? 'days' : 'weeks'} to history.`);
         return merged;
-      } catch (err) {
-        // Check if it's an unsupported symbol error
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        if (errorMessage.includes('No data found') || 
-            errorMessage.includes('Invalid symbol') || 
-            errorMessage.includes('not found') ||
-            errorMessage.includes('No data available')) {
-          console.log(`Symbol ${symbol} not supported on Yahoo Finance`);
-          return [];
+              } catch (err) {
+          // Check if it's an unsupported symbol error
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          if (errorMessage.includes('No data found') || 
+              errorMessage.includes('Invalid symbol') || 
+              errorMessage.includes('not found') ||
+              errorMessage.includes('No data available')) {
+            console.log(`Symbol ${symbol} not supported on Yahoo Finance`);
+            return prices;
+          }
+          console.error(`[${symbol}] Error fetching incremental history (${interval}):`, err);
+          return prices;
         }
-        console.error(`[${symbol}] Error fetching incremental history (${interval}):`, err);
-        return prices;
-      }
     }
   }
 }
@@ -241,7 +242,7 @@ export async function getFundamentals(symbol: string): Promise<Fundamentals | nu
         errorMessage.includes('not found') ||
         errorMessage.includes('No data available')) {
       console.log(`Symbol ${baseSymbol} not supported on Yahoo Finance`);
-      return null;
+      return fundamentals; // Return existing fundamentals as fallback
     }
     console.error(`[${baseSymbol}] Error fetching fundamentals:`, err);
     return fundamentals;

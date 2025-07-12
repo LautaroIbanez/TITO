@@ -21,6 +21,7 @@ import FundamentalsCompact from './FundamentalsCompact';
 import { formatCurrency } from '@/utils/goalCalculator';
 import { StockPosition, AssetType } from '@/types';
 import { getTickerCurrency, getBaseTicker } from '@/utils/tickers';
+import { validatePositionPrice } from '@/utils/priceValidation';
 import SignalBadge from './SignalBadge';
 import getPurchasePrice from '../utils/getPurchasePrice';
 
@@ -51,7 +52,12 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
   
   // Ensure prices is always an array to prevent undefined errors
   const safePrices = prices || [];
-  const currentPrice = safePrices.length > 0 ? safePrices[safePrices.length - 1].close : 0;
+  
+  // Use price validation to get current price with fallback
+  const priceHistory = { [symbol]: safePrices };
+  const priceValidation = validatePositionPrice(position, priceHistory);
+  const hasValidPrice = priceValidation.hasValidPrice;
+  const currentPrice = priceValidation.currentPrice || 0;
   const signal = getTradeSignal(technicals, currentPrice);
 
   // Compute last price date
@@ -59,7 +65,7 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
   const fundamentalsDate = fundamentals?.updatedAt;
 
   // Check if data is available
-  const hasPriceData = safePrices.length > 0;
+  const hasPriceData = hasValidPrice;
   const hasFundamentals = fundamentals !== null;
   const hasTechnicals = technicals !== null;
 
@@ -201,19 +207,23 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
           <div>
             <span className="text-gray-600">Precio Actual:</span>
             <span className="ml-2 font-semibold">
-              {hasPriceData ? formatCurrency(currentPrice, position.currency) : 'Datos no disponibles'}
+              {hasValidPrice ? formatCurrency(currentPrice, position.currency) : (
+                <span className="text-orange-600 text-xs">Sin datos suficientes</span>
+              )}
             </span>
           </div>
           <div>
             <span className="text-gray-600">Valor:</span>
             <span className="ml-2 font-semibold">
-              {hasPriceData ? formatCurrency(value, position.currency) : 'Datos no disponibles'}
+              {hasValidPrice ? formatCurrency(value, position.currency) : (
+                <span className="text-orange-600 text-xs">Sin datos suficientes</span>
+              )}
             </span>
           </div>
           <div>
             <span className="text-gray-600">Ganancia:</span>
             <span className={`ml-2 font-semibold ${gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {hasPriceData ? `${gain >= 0 ? '+' : ''}${gain.toFixed(2)}%` : 'Datos no disponibles'}
+              {hasValidPrice ? `${gain >= 0 ? '+' : ''}${gain.toFixed(2)}%` : '-'}
             </span>
           </div>
         </div>
