@@ -22,11 +22,14 @@ class BonistasScraper:
         self.pages = ["/bonos-bopreal-hoy", "/bonos-cer-hoy"]
 
     def get_bond_list(self) -> List[Dict]:
-        bonds = []
+        bonds_dict = {}  # Dictionary to prevent duplicates: (ticker, currency) -> bond
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
         for page in self.pages:
             page_bonds = []
             try:
                 url = f"{self.base_url}{page}"
+                print(f"[{timestamp}] Scraping {url}...")
                 response = self.session.get(url, timeout=15)
                 response.raise_for_status()
                 soup = BeautifulSoup(response.content, 'html.parser')
@@ -68,18 +71,29 @@ class BonistasScraper:
                                 if parsed:
                                     page_bonds.append(parsed)
                 
-                bonds.extend(page_bonds)
-                print(f"Found {len(page_bonds)} bonds from {page}")
+                # Add unique bonds from this page
+                for bond in page_bonds:
+                    key = (bond['ticker'], bond['currency'])
+                    if key not in bonds_dict:
+                        bonds_dict[key] = bond
+                        print(f"[{timestamp}] {page}: Added {bond['ticker']} - Price: {bond.get('price', 'N/A')}, TIR: {bond.get('tir', 'N/A')}, TNA: {bond.get('tna', 'N/A')}")
+                    else:
+                        print(f"[{timestamp}] {page}: Skipped duplicate {bond['ticker']}")
+                
+                print(f"[{timestamp}] Found {len(page_bonds)} bonds from {page}, {len([b for b in page_bonds if (b['ticker'], b['currency']) not in bonds_dict])} duplicates skipped")
                 
             except Exception as e:
-                print(f"Error scraping {page}: {e}")
+                print(f"[{timestamp}] Error scraping {page}: {e}")
+        
+        bonds = list(bonds_dict.values())
+        print(f"[{timestamp}] Total unique bonds: {len(bonds)}")
         return bonds
 
     def parse_bond(self, bond: dict) -> Optional[Dict]:
         # Try to map the bond dict to our schema
         try:
             # Enhanced mapping for bondData entries
-            return {
+            parsed_bond = {
                 "id": bond.get("ticker") or bond.get("isin") or bond.get("id") or "UNKNOWN",
                 "ticker": bond.get("ticker") or "UNKNOWN",
                 "name": bond.get("nombre") or bond.get("name") or bond.get("descripcion") or "Unknown Bond",
@@ -101,6 +115,14 @@ class BonistasScraper:
                 "ttir": self.try_float(bond.get("ttir") or bond.get("TTIR")),
                 "uptir": self.try_float(bond.get("uptir") or bond.get("upTTir")),
             }
+            
+            # Multiply percentage fields by 100
+            percentage_fields = ['tir', 'mtir', 'tna', 'ttir', 'uptir']
+            for field in percentage_fields:
+                if parsed_bond[field] is not None:
+                    parsed_bond[field] = parsed_bond[field] * 100
+            
+            return parsed_bond
         except Exception as e:
             print(f"Error parsing bond: {e}")
             return None

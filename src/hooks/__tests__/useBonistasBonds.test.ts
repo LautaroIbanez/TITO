@@ -48,17 +48,17 @@ describe('useBonistasBonds', () => {
     expect(mockFetch).toHaveBeenCalledWith('/api/bonds');
   });
 
-  it('should fallback to public JSON when API fails', async () => {
+  it('should fallback to raw API when main API fails', async () => {
     const mockBonds = [
       { id: '1', ticker: 'AL30', price: 100, tir: 15.5 }
     ];
 
-    // API fails
+    // Main API fails
     mockFetch.mockResolvedValueOnce({
       ok: false
     });
 
-    // Fallback succeeds
+    // Raw API succeeds
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ bonds: mockBonds })
@@ -73,11 +73,49 @@ describe('useBonistasBonds', () => {
     expect(result.current.bonds).toEqual(mockBonds);
     expect(result.current.error).toBe(null);
     expect(mockFetch).toHaveBeenCalledWith('/api/bonds');
+    expect(mockFetch).toHaveBeenCalledWith('/api/bonds/raw');
+  });
+
+  it('should fallback to public JSON when both APIs fail', async () => {
+    const mockBonds = [
+      { id: '1', ticker: 'AL30', price: 100, tir: 15.5 }
+    ];
+
+    // Main API fails
+    mockFetch.mockResolvedValueOnce({
+      ok: false
+    });
+
+    // Raw API fails
+    mockFetch.mockResolvedValueOnce({
+      ok: false
+    });
+
+    // Public JSON succeeds
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ bonds: mockBonds })
+    });
+
+    const { result } = renderHook(() => useBonistasBonds());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.bonds).toEqual(mockBonds);
+    expect(result.current.error).toBe(null);
+    expect(mockFetch).toHaveBeenCalledWith('/api/bonds');
+    expect(mockFetch).toHaveBeenCalledWith('/api/bonds/raw');
     expect(mockFetch).toHaveBeenCalledWith('/data/bonistas_bonds.json');
   });
 
-  it('should handle both API and fallback failures', async () => {
-    // Both API and fallback fail
+  it('should handle all API and fallback failures', async () => {
+    // All sources fail
+    mockFetch.mockResolvedValueOnce({
+      ok: false
+    });
+
     mockFetch.mockResolvedValueOnce({
       ok: false
     });
@@ -93,7 +131,7 @@ describe('useBonistasBonds', () => {
     });
 
     expect(result.current.bonds).toEqual([]);
-    expect(result.current.error).toBe('Failed to fetch bonds data from both API and fallback');
+    expect(result.current.error).toBe('Failed to fetch bonds data from all sources');
   });
 
   it('should handle network errors', async () => {
@@ -109,17 +147,17 @@ describe('useBonistasBonds', () => {
     expect(result.current.error).toBe('Network error');
   });
 
-  it('should handle fallback data without bonds property', async () => {
+  it('should handle raw API data without bonds property', async () => {
     const mockBonds = [
       { id: '1', ticker: 'AL30', price: 100 }
     ];
 
-    // API fails
+    // Main API fails
     mockFetch.mockResolvedValueOnce({
       ok: false
     });
 
-    // Fallback returns data directly (not wrapped in bonds property)
+    // Raw API returns data directly (not wrapped in bonds property)
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => mockBonds

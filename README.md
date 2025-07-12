@@ -73,7 +73,9 @@ TITO genera automáticamente una **estrategia de inversión personalizada** para
 
 > Las recomendaciones de estrategia son generadas automáticamente y no constituyen asesoramiento financiero profesional. Consulta siempre con un asesor calificado antes de tomar decisiones de inversión.
 
-## API: Endpoint de Estrategia de Inversión
+## API Endpoints
+
+### Estrategia de Inversión
 
 - **`GET /api/strategy?username={username}`**
 
@@ -114,6 +116,44 @@ Este endpoint calcula y devuelve la estrategia de inversión personalizada para 
 ```
 
 Puedes consultar este endpoint directamente o dejar que el frontend lo consuma automáticamente al cargar el dashboard.
+
+### Datos de Bonos
+
+- **`GET /api/bonds`**
+
+Endpoint principal que devuelve datos de bonos procesados y transformados para el frontend.
+
+- **`GET /api/bonds/raw`**
+
+Endpoint que devuelve los datos raw de bonos directamente desde `data/bonds.json` sin transformación. Útil para debugging o cuando se necesita acceso directo a los datos originales del scraper.
+
+**Ejemplo de respuesta del endpoint raw:**
+
+```json
+{
+  "bonds": [
+    {
+      "id": "AL30",
+      "ticker": "AL30",
+      "name": "Bono AL30",
+      "issuer": "Argentina",
+      "price": 75930.0,
+      "tir": 1311.3706087763877,
+      "tna": 1238.5821314373313,
+      "currency": "ARS"
+    }
+  ],
+  "lastUpdated": "2024-07-12T11:43:17.123456",
+  "source": "bonistas.com",
+  "totalBonds": 94
+}
+```
+
+Los datos de bonos se actualizan automáticamente ejecutando el scraper:
+
+```bash
+python3 scripts/scrape_bonistas.py
+```
 
 ## Cómo Empezar
 

@@ -27,7 +27,16 @@ export function useBonistasBonds(): UseBonistasBondsReturn {
         return;
       }
       
-      // Fallback to public JSON file
+      // Fallback to raw API endpoint
+      const rawResponse = await fetch('/api/bonds/raw');
+      
+      if (rawResponse.ok) {
+        const rawData = await rawResponse.json();
+        setBonds(rawData.bonds || rawData);
+        return;
+      }
+      
+      // Final fallback to public JSON file
       const fallbackResponse = await fetch('/data/bonistas_bonds.json');
       
       if (fallbackResponse.ok) {
@@ -36,7 +45,7 @@ export function useBonistasBonds(): UseBonistasBondsReturn {
         return;
       }
       
-      throw new Error('Failed to fetch bonds data from both API and fallback');
+      throw new Error('Failed to fetch bonds data from all sources');
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
