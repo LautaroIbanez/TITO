@@ -113,6 +113,13 @@ export interface Bond {
   cclPrice?: number; // CCL price
   tna?: number; // Tasa Nominal Anual
   duration?: number; // Duration in years
+  difference?: number | null; // Day difference
+  tir?: number | null; // Tasa Interna de Retorno
+  mtir?: number | null; // Tasa Efectiva Mensual
+  volume?: number | null; // Volume in millions
+  parity?: number | null; // Parity value
+  ttir?: number | null; // Tasa Total Interna de Retorno
+  uptir?: number | null; // Upper Tasa Total Interna de Retorno
 }
 
 export interface FixedTermDeposit {

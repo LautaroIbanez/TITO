@@ -1,42 +1,18 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Bond } from '@/types/finance';
 import TradeModal, { TradeModalProps } from '@/components/TradeModal';
 import AvailableCapitalIndicator from '@/components/AvailableCapitalIndicator';
 import { usePortfolio } from '@/contexts/PortfolioContext';
-import { formatCurrency } from '@/utils/goalCalculator';
+
+import { useBonistasBonds } from '@/hooks/useBonistasBonds';
+import { formatNumericValue, formatPercentage, formatVolume, logMissingMetrics } from '@/utils/bondUtils';
 
 export default function BondsPage() {
-  const [bonds, setBonds] = useState<Bond[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedBond, setSelectedBond] = useState<Bond | null>(null);
   const [showTradeModal, setShowTradeModal] = useState(false);
   const { portfolioData } = usePortfolio();
-
-  async function fetchInitialData() {
-    setLoading(true);
-    try {
-      const session = localStorage.getItem('session');
-      if (!session) throw new Error('User not logged in');
-      const username = JSON.parse(session).username;
-
-      const bondsRes = await fetch('/api/bonds');
-
-      if (!bondsRes.ok) throw new Error('Failed to fetch bonds data');
-      const bondsData = await bondsRes.json();
-      setBonds(bondsData);
-
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchInitialData();
-  }, []);
+  const { bonds, loading, error, refetch } = useBonistasBonds();
 
   const handleOpenModal = (bond: Bond) => {
     setSelectedBond(bond);
@@ -47,15 +23,24 @@ export default function BondsPage() {
     const session = localStorage.getItem('session');
     if (!session) throw new Error("Session not found");
     const username = JSON.parse(session).username;
-    const payload: any = {
+    const payload: {
+      username: string;
+      assetType: string;
+      ticker: string;
+      quantity: number;
+      price: number;
+      currency: string;
+      commissionPct: number;
+      purchaseFeePct: number;
+    } = {
       username,
       assetType,
       ticker: identifier,
       quantity: Number(quantity),
       price: Number(purchasePrice),
       currency,
-      commissionPct,
-      purchaseFeePct,
+      commissionPct: commissionPct || 0,
+      purchaseFeePct: purchaseFeePct || 0,
     };
     console.log('Payload enviado al backend:', payload);
     const res = await fetch('/api/portfolio/buy', {
@@ -68,7 +53,7 @@ export default function BondsPage() {
       throw new Error(data.error || 'La compra falló');
     }
     setShowTradeModal(false);
-    await fetchInitialData();
+    await refetch();
   };
 
   return (
@@ -106,40 +91,51 @@ export default function BondsPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticker</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimiento</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cupón</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dif</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TIR</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TEM</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TNA</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duración</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">BCBA</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MEP</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CCL</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MD</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vol(M)</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paridad</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">VT</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TTIr</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">upTTir</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {bonds.map((bond, index) => (
-                  <tr key={`${bond.id}-${index}`}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{bond.ticker}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{bond.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{new Date(bond.maturityDate).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">{bond.couponRate ? `${bond.couponRate.toFixed(2)}%` : '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{bond.tna ? `${bond.tna.toFixed(2)}%` : '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{bond.duration ? `${bond.duration.toFixed(1)}a` : '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{bond.bcbaPrice ? formatCurrency(bond.bcbaPrice, bond.currency) : '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{bond.mepPrice ? formatCurrency(bond.mepPrice, bond.currency) : '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{bond.cclPrice ? formatCurrency(bond.cclPrice, bond.currency) : '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button 
-                        onClick={() => handleOpenModal(bond)}
-                        className="text-blue-600 hover:text-blue-800 disabled:text-gray-400"
-                        disabled={(portfolioData?.cash?.[bond.currency] ?? 0) < (bond.price ?? 0)}
-                      >
-                        Comprar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {bonds.map((bond, index) => {
+                  // Log missing metrics for debugging
+                  logMissingMetrics(bond);
+                  
+                  return (
+                    <tr key={`${bond.id}-${index}`}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{bond.ticker}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatNumericValue(bond.price)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{formatNumericValue(bond.difference)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{formatPercentage(bond.tir)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{formatPercentage(bond.mtir)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{formatPercentage(bond.tna)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{formatNumericValue(bond.duration, 1)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{formatVolume(bond.volume)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{formatNumericValue(bond.parity)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{formatVolume(bond.volume)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{formatPercentage(bond.ttir)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{formatPercentage(bond.uptir)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button 
+                          onClick={() => handleOpenModal(bond)}
+                          className="text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+                          disabled={(portfolioData?.cash?.[bond.currency] ?? 0) < (bond.price ?? 0)}
+                        >
+                          Comprar
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
