@@ -7,66 +7,55 @@
       "type": "Stock",
       "symbol": "META",
       "quantity": 2,
-      "averagePrice": 726.5596049999999,
       "currency": "USD",
-      "market": "NASDAQ"
+      "market": "NASDAQ",
+      "purchasePrice": 726.5596049999999
     },
     {
       "type": "Stock",
       "symbol": "NVDA",
       "quantity": 4,
-      "averagePrice": 161.00296500000002,
       "currency": "USD",
-      "market": "NASDAQ"
+      "market": "NASDAQ",
+      "purchasePrice": 161.00296500000002
     },
     {
       "type": "Stock",
       "symbol": "NU",
       "quantity": 25,
-      "averagePrice": 13.742799999999999,
       "currency": "USD",
-      "market": "NASDAQ"
+      "market": "NASDAQ",
+      "purchasePrice": 13.742799999999999
     },
     {
       "type": "Stock",
       "symbol": "MELI.BA",
       "quantity": 25,
-      "averagePrice": 2540.4475250000005,
       "currency": "ARS",
-      "market": "BCBA"
+      "market": "BCBA",
+      "purchasePrice": 2540.4475250000005
     },
     {
       "type": "Stock",
       "symbol": "NFLX.BA",
       "quantity": 15,
-      "averagePrice": 1310.80039,
       "currency": "ARS",
-      "market": "BCBA"
+      "market": "BCBA",
+      "purchasePrice": 1310.80039
     },
     {
       "type": "Crypto",
       "symbol": "BTCUSDT",
       "quantity": 0.005,
-      "averagePrice": 108863.54977999999,
-      "currency": "USD"
-    },
-    {
-      "type": "Caucion",
-      "id": "caucion_1751663291521",
-      "provider": "BYMA",
-      "amount": 700000,
-      "annualRate": 120.2,
-      "startDate": "2025-07-04T21:08:11.521Z",
-      "maturityDate": "2025-07-11T21:08:11.521Z",
-      "currency": "ARS",
-      "term": 7
+      "currency": "USD",
+      "purchasePrice": 108863.54977999999
     },
     {
       "type": "Bond",
       "ticker": "AL30",
       "quantity": 2,
-      "averagePrice": 50525,
-      "currency": "ARS"
+      "currency": "ARS",
+      "purchasePrice": 50525
     },
     {
       "type": "FixedTermDeposit",
@@ -84,17 +73,17 @@
       "type": "Stock",
       "symbol": "GOOGL.BA",
       "quantity": 15,
-      "averagePrice": 181.40496,
       "currency": "ARS",
-      "market": "BCBA"
+      "market": "BCBA",
+      "purchasePrice": 181.40496
     },
     {
       "type": "Stock",
       "symbol": "CAT.BA",
       "quantity": 13,
-      "averagePrice": 402.027425,
       "currency": "ARS",
-      "market": "BCBA"
+      "market": "BCBA",
+      "purchasePrice": 402.027425
     }
   ],
   "transactions": [
@@ -247,11 +236,23 @@
       "currency": "ARS",
       "market": "BCBA",
       "commissionPct": 1
+    },
+    {
+      "id": "caucion-credit-caucion_1751663291521",
+      "date": "2025-07-11T21:08:11.521Z",
+      "type": "Acreditación Caución",
+      "assetType": "Caucion",
+      "provider": "BYMA",
+      "amount": 716136.4383561644,
+      "principal": 700000,
+      "interest": 16136.438356164384,
+      "currency": "ARS",
+      "caucionId": "caucion_1751663291521"
     }
   ],
   "goals": [],
   "cash": {
-    "ARS": 62874.80070000006,
+    "ARS": 779011.2390561644,
     "USD": 14.981181100000185
   },
   "profile": {
@@ -278,8 +279,8 @@
     "initialBalanceUSD": 3000
   },
   "investmentStrategy": {
-    "id": "strategy-0d71b17b-4e68-4f5a-9b15-f6ffd1399fac",
-    "createdAt": "2025-07-09T21:52:46.050Z",
+    "id": "strategy-a6545666-2a0b-4c42-a8f8-a948ccd75bd5",
+    "createdAt": "2025-07-18T14:49:18.256Z",
     "targetAllocation": {
       "stocks": 75,
       "bonds": 15,
@@ -287,7 +288,45 @@
       "cash": 2,
       "crypto": 5
     },
-    "recommendations": [],
+    "recommendations": [
+      {
+        "id": "alloc-76553bb2-ba6f-4aa9-a68c-17db557014e8",
+        "action": "increase",
+        "assetClass": "stocks",
+        "reason": "Tu portafolio tiene 8.7% en acciones, pero tu estrategia objetivo es 75%",
+        "priority": "high",
+        "expectedImpact": "positive"
+      },
+      {
+        "id": "alloc-d80a2752-9767-4b94-82cf-ed925fee0499",
+        "action": "increase",
+        "assetClass": "bonds",
+        "reason": "Tu portafolio tiene 9.4% en bonos, pero tu estrategia objetivo es 15%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
+        "priority": "high",
+        "expectedImpact": "positive",
+        "suggestedAssets": [
+          "GOV-BOND-2025",
+          "CORP-BOND-2026",
+          "MUNI-BOND-2027"
+        ]
+      },
+      {
+        "id": "cash-invest-118e417b-bc3e-4cb1-9076-64bfed80c6e1",
+        "action": "buy",
+        "assetClass": "cash",
+        "reason": "Tienes un 72.5% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
+        "priority": "high",
+        "expectedImpact": "positive"
+      },
+      {
+        "id": "alloc-cfeff7f4-1f09-4628-97cb-6f2596168170",
+        "action": "increase",
+        "assetClass": "crypto",
+        "reason": "Tu portafolio tiene 0.1% en cripto, pero tu estrategia objetivo es 5% (máximo recomendado por volatilidad).",
+        "priority": "medium",
+        "expectedImpact": "neutral"
+      }
+    ],
     "riskLevel": "Agresivo",
     "timeHorizon": "5-10 años",
     "notes": "Estrategia agresiva: busca maximizar retornos asumiendo mayor riesgo"

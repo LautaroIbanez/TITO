@@ -34,6 +34,13 @@
       "purchasePrice": 744.1380899999998,
       "currency": "USD",
       "market": "NASDAQ"
+    },
+    {
+      "type": "Bond",
+      "ticker": "YCA6P",
+      "quantity": 100,
+      "purchasePrice": 103.4752,
+      "currency": "ARS"
     }
   ],
   "transactions": [
@@ -102,11 +109,23 @@
       "market": "NASDAQ",
       "commissionPct": 1.5,
       "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1752354550881",
+      "date": "2025-07-12T21:09:10.881Z",
+      "type": "Buy",
+      "assetType": "Bond",
+      "ticker": "YCA6P",
+      "quantity": 100,
+      "price": 102.4,
+      "currency": "ARS",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
     }
   ],
   "goals": [],
   "cash": {
-    "ARS": 2419644.525,
+    "ARS": 2409297.005,
     "USD": 511.7238200000004
   },
   "profile": {
@@ -129,8 +148,8 @@
     "initialBalanceUSD": 2000
   },
   "investmentStrategy": {
-    "id": "strategy-9017f7b3-10da-473f-8734-6f97fe20ec1e",
-    "createdAt": "2025-07-12T20:17:14.068Z",
+    "id": "strategy-1806f836-9c42-4e00-a7c4-b4d1914cc03f",
+    "createdAt": "2025-07-19T11:27:45.279Z",
     "targetAllocation": {
       "stocks": 75,
       "bonds": 15,
@@ -140,7 +159,7 @@
     },
     "recommendations": [
       {
-        "id": "alloc-c68224fc-c2a1-4787-853e-c5fa3bc75da6",
+        "id": "alloc-e987caeb-e59f-4e9c-bb26-66c11043ef39",
         "action": "increase",
         "assetClass": "stocks",
         "reason": "Tu portafolio tiene 19.4% en acciones, pero tu estrategia objetivo es 75%",
@@ -148,10 +167,10 @@
         "expectedImpact": "positive"
       },
       {
-        "id": "alloc-79731a2c-9742-4dce-821d-ce4ec7f7f63d",
+        "id": "alloc-b2fbefde-9855-429a-9f42-26f38e253e63",
         "action": "increase",
         "assetClass": "bonds",
-        "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 15%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
+        "reason": "Tu portafolio tiene 0.3% en bonos, pero tu estrategia objetivo es 15%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
         "priority": "high",
         "expectedImpact": "positive",
         "suggestedAssets": [
@@ -161,15 +180,15 @@
         ]
       },
       {
-        "id": "cash-invest-d816320a-a3b6-4973-955b-bd7f8e77aa52",
+        "id": "cash-invest-3e4c057b-83f7-4591-a6da-bd6391a29359",
         "action": "buy",
         "assetClass": "cash",
-        "reason": "Tienes un 80.6% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
+        "reason": "Tienes un 80.3% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
         "priority": "high",
         "expectedImpact": "positive"
       },
       {
-        "id": "alloc-4877f120-d2ee-460b-949b-d9d8f5c96640",
+        "id": "alloc-c6c34946-8f2a-4e04-9312-61973e770f6e",
         "action": "increase",
         "assetClass": "crypto",
         "reason": "Tu portafolio tiene 0.0% en cripto, pero tu estrategia objetivo es 5% (máximo recomendado por volatilidad).",

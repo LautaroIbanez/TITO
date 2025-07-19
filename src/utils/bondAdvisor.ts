@@ -1,6 +1,14 @@
 import { Bond } from '@/types/finance';
+import { RiskAppetite } from '@/types';
 
 export type RiskProfile = 'conservador' | 'moderado' | 'arriesgado';
+
+export function mapRiskAppetiteToProfile(appetite?: RiskAppetite | null): RiskProfile {
+  if (appetite === 'Conservador') return 'conservador';
+  if (appetite === 'Agresivo') return 'arriesgado';
+  // "Balanceado" o undefined/null
+  return 'moderado';
+}
 
 export interface BondRecommendation {
   bond: Bond;

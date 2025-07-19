@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Bond } from '@/types/finance';
 import TradeModal, { TradeModalProps } from '@/components/TradeModal';
 import AvailableCapitalIndicator from '@/components/AvailableCapitalIndicator';
@@ -8,17 +8,25 @@ import { usePortfolio } from '@/contexts/PortfolioContext';
 import { useBonistasBonds } from '@/hooks/useBonistasBonds';
 import { formatNumericValue, formatPercentage, formatVolume, logMissingMetrics } from '@/utils/bondUtils';
 import { sortBonds, toggleSortDirection, getSortIndicator, SortDirection } from '@/utils/bondSort';
-import { suggestBondsByProfile, getProfileDisplayName, RiskProfile } from '@/utils/bondAdvisor';
+import { suggestBondsByProfile, getProfileDisplayName, RiskProfile, mapRiskAppetiteToProfile } from '@/utils/bondAdvisor';
 
 export default function BondsPage() {
   const [selectedBond, setSelectedBond] = useState<Bond | null>(null);
   const [showTradeModal, setShowTradeModal] = useState(false);
   const [sortColumn, setSortColumn] = useState<keyof Bond>('ticker');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [selectedProfile, setSelectedProfile] = useState<RiskProfile>('moderado');
   
   const { portfolioData } = usePortfolio();
   const { bonds, loading, error, refetch } = useBonistasBonds();
+
+  // Derivar el perfil de usuario desde el portfolio usando el mapeo
+  const userProfile = mapRiskAppetiteToProfile(portfolioData?.profile?.riskAppetite);
+  const [selectedProfile, setSelectedProfile] = useState<RiskProfile>(userProfile);
+
+  // Sincronizar el perfil seleccionado con el perfil del portfolio
+  useEffect(() => {
+    setSelectedProfile(userProfile);
+  }, [userProfile]);
 
   const handleOpenModal = (bond: Bond) => {
     setSelectedBond(bond);
@@ -70,9 +78,6 @@ export default function BondsPage() {
       setSortDirection('asc');
     }
   };
-
-  // Get user's risk profile from portfolio data
-  const userProfile = portfolioData?.profile?.riskAppetite as RiskProfile || 'moderado';
 
   // Sort bonds based on current sort configuration
   const sortedBonds = useMemo(() => {
