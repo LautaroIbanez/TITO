@@ -48,20 +48,20 @@ describe('HistoricalPortfolioChart', () => {
 
   it('should filter out records with invalid numeric fields', () => {
     const invalid1 = { ...validRecord, fecha: '2024-01-02', total_portfolio_ars: null } as any;
-    const invalid2 = { ...validRecord, fecha: '2024-01-03', ganancias_netas_usd: undefined } as any;
-    const invalid3 = { ...validRecord, fecha: '2024-01-04', efectivo_disponible_ars: NaN } as any;
-    render(<HistoricalPortfolioChart records={[validRecord, invalid1, invalid2, invalid3]} />);
-    // Only the valid record should be rendered
+    const invalid2 = { ...validRecord, fecha: '2024-01-03', efectivo_disponible_ars: NaN } as any;
+    const validWithNullGains = { ...validRecord, fecha: '2024-01-04', ganancias_netas_ars: null, ganancias_netas_usd: null };
+    render(<HistoricalPortfolioChart records={[validRecord, invalid1, invalid2, validWithNullGains]} />);
+    // Only the valid records should be rendered (including the one with null gains)
     const arsDataDiv = screen.getByTestId('ars-line-chart').querySelector('[data-testid="chart-data"]');
     expect(arsDataDiv).not.toBeNull();
     const arsData = JSON.parse(arsDataDiv!.textContent || '{}');
-    expect(arsData.labels.length).toBe(1);
-    expect(arsData.datasets[0].data).toEqual([10000]);
+    expect(arsData.labels.length).toBe(2);
+    expect(arsData.datasets[0].data).toEqual([10000, 10000]);
     const usdDataDiv = screen.getByTestId('usd-line-chart').querySelector('[data-testid="chart-data"]');
     expect(usdDataDiv).not.toBeNull();
     const usdData = JSON.parse(usdDataDiv!.textContent || '{}');
-    expect(usdData.labels.length).toBe(1);
-    expect(usdData.datasets[0].data).toEqual([2000]);
+    expect(usdData.labels.length).toBe(2);
+    expect(usdData.datasets[0].data).toEqual([2000, 2000]);
   });
 
   it('should filter out records with missing or invalid fecha', () => {
@@ -107,5 +107,21 @@ describe('HistoricalPortfolioChart', () => {
   it('should handle null/undefined records', () => {
     render(<HistoricalPortfolioChart records={null as any} />);
     expect(screen.getByText('No hay datos históricos disponibles')).toBeInTheDocument();
+  });
+
+  it('should show warning when all computed gains are zero', () => {
+    const recordWithZeroGains = {
+      fecha: '2024-01-01',
+      total_portfolio_ars: 10000,
+      total_portfolio_usd: 2000,
+      capital_invertido_ars: 10000, // Same as total, so gain is 0
+      capital_invertido_usd: 2000,  // Same as total, so gain is 0
+      ganancias_netas_ars: null,
+      ganancias_netas_usd: null,
+      efectivo_disponible_ars: 0,
+      efectivo_disponible_usd: 0,
+    };
+    render(<HistoricalPortfolioChart records={[recordWithZeroGains]} />);
+    expect(screen.getByText(/No se detectaron ganancias en este período/)).toBeInTheDocument();
   });
 }); 

@@ -38,14 +38,13 @@ function isValidRecord(r: DailyPortfolioRecord) {
     return false;
   }
 
-  // Check that all numeric fields are valid
+  // Only require fecha, totals, invested, and cash to be finite
+  // Allow ganancias_netas to be null/undefined
   return [
     r.total_portfolio_ars,
     r.total_portfolio_usd,
     r.capital_invertido_ars,
     r.capital_invertido_usd,
-    r.ganancias_netas_ars,
-    r.ganancias_netas_usd,
     r.efectivo_disponible_ars,
     r.efectivo_disponible_usd,
   ].every(
@@ -69,6 +68,43 @@ export default function HistoricalPortfolioChart({ records }: Props) {
   }
 
   const labels = sortedAndFilteredRecords.map((r) => dayjs(r.fecha).toDate());
+
+  // Compute gains as total_portfolio - capital_invertido instead of reading ganancias_netas
+  const computedGainsARS = sortedAndFilteredRecords.map((r) => 
+    r.total_portfolio_ars - r.capital_invertido_ars
+  );
+  const computedGainsUSD = sortedAndFilteredRecords.map((r) => 
+    r.total_portfolio_usd - r.capital_invertido_usd
+  );
+
+  // Check if all computed gains are zero
+  const allGainsZero = computedGainsARS.every(gain => gain === 0) && 
+                      computedGainsUSD.every(gain => gain === 0);
+
+  // Calculate Y-axis ranges with ±10% padding
+  const arsValues = [
+    ...sortedAndFilteredRecords.map(r => r.total_portfolio_ars),
+    ...sortedAndFilteredRecords.map(r => r.capital_invertido_ars),
+    ...computedGainsARS,
+    ...sortedAndFilteredRecords.map(r => r.efectivo_disponible_ars)
+  ].filter(v => Number.isFinite(v));
+  
+  const usdValues = [
+    ...sortedAndFilteredRecords.map(r => r.total_portfolio_usd),
+    ...sortedAndFilteredRecords.map(r => r.capital_invertido_usd),
+    ...computedGainsUSD,
+    ...sortedAndFilteredRecords.map(r => r.efectivo_disponible_usd)
+  ].filter(v => Number.isFinite(v));
+
+  const arsMin = Math.min(...arsValues);
+  const arsMax = Math.max(...arsValues);
+  const arsRange = arsMax - arsMin;
+  const arsPadding = arsRange * 0.1;
+
+  const usdMin = Math.min(...usdValues);
+  const usdMax = Math.max(...usdValues);
+  const usdRange = usdMax - usdMin;
+  const usdPadding = usdRange * 0.1;
 
   // ARS datasets
   const arsChartData = {
@@ -97,7 +133,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
       },
       {
         label: 'Ganancia Neta ARS',
-        data: sortedAndFilteredRecords.map((r) => r.ganancias_netas_ars),
+        data: computedGainsARS,
         borderColor: '#059669',
         backgroundColor: 'rgba(5,150,105,0.08)',
         fill: false,
@@ -147,7 +183,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
       },
       {
         label: 'Ganancia Neta USD',
-        data: sortedAndFilteredRecords.map((r) => r.ganancias_netas_usd),
+        data: computedGainsUSD,
         borderColor: '#facc15',
         backgroundColor: 'rgba(250,204,21,0.08)',
         fill: false,
@@ -195,6 +231,8 @@ export default function HistoricalPortfolioChart({ records }: Props) {
         display: true,
         position: 'left' as const,
         title: { display: true, text: 'ARS' },
+        min: arsMin - arsPadding,
+        max: arsMax + arsPadding,
       },
     },
     elements: { line: { borderWidth: 2 } },
@@ -227,6 +265,8 @@ export default function HistoricalPortfolioChart({ records }: Props) {
         display: true,
         position: 'left' as const,
         title: { display: true, text: 'USD' },
+        min: usdMin - usdPadding,
+        max: usdMax + usdPadding,
       },
     },
     elements: { line: { borderWidth: 2 } },
@@ -247,6 +287,13 @@ export default function HistoricalPortfolioChart({ records }: Props) {
           <Line data={usdChartData} options={usdChartOptions} height={300} className="w-full" data-testid="usd-line-chart" />
         </div>
       </div>
+      {allGainsZero && (
+        <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-yellow-800 text-sm">
+            <strong>Advertencia:</strong> No se detectaron ganancias en este período. Verificá si los precios están actualizados.
+          </p>
+        </div>
+      )}
     </div>
   );
 } 

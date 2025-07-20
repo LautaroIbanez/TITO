@@ -2,6 +2,10 @@ import fs from 'fs/promises';
 import path from 'path';
 import { getUserData } from './userData';
 import { calculatePortfolioSummaryHistory } from './portfolioSummaryHistory';
+import { getPortfolioData } from './portfolioData';
+import { calculateCurrentValueByCurrency } from './calculatePortfolioValue';
+import { calculateInvestedCapital } from './investedCapital';
+import { calculateNetGainsByCurrency } from './positionGains';
 
 export interface DailyPortfolioRecord {
   fecha: string; // YYYY-MM-DD
@@ -9,10 +13,11 @@ export interface DailyPortfolioRecord {
   total_portfolio_usd: number;
   capital_invertido_ars: number;
   capital_invertido_usd: number;
-  ganancias_netas_ars: number;
-  ganancias_netas_usd: number;
+  ganancias_netas_ars: number | null;
+  ganancias_netas_usd: number | null;
   efectivo_disponible_ars: number;
   efectivo_disponible_usd: number;
+  incompleto?: boolean; // New field to indicate incomplete data
 }
 
 /**
@@ -119,5 +124,91 @@ export async function loadOrGeneratePortfolioHistory(username: string): Promise<
   } catch (error) {
     console.error(`Error loading or generating portfolio history for ${username}:`, error);
     return [];
+  }
+} 
+
+/**
+ * Saves a daily portfolio snapshot for a user
+ * @param username The username
+ * @returns Promise<void>
+ */
+export async function guardarSnapshotDiario(username: string): Promise<void> {
+  try {
+    // Load the user's current portfolio data
+    const portfolioData = await getPortfolioData(username);
+    
+    // Calculate current portfolio values
+    const { ARS: totalARS, USD: totalUSD } = calculateCurrentValueByCurrency(
+      portfolioData.positions || [],
+      portfolioData.cash || { ARS: 0, USD: 0 },
+      portfolioData.historicalPrices || {}
+    );
+    
+    // Calculate invested capital
+    const investedARS = calculateInvestedCapital(portfolioData.transactions || [], 'ARS');
+    const investedUSD = calculateInvestedCapital(portfolioData.transactions || [], 'USD');
+    
+    // Calculate net gains
+    const { ARS: netGainsARS, USD: netGainsUSD, skipped } = calculateNetGainsByCurrency(
+      portfolioData.positions || [],
+      portfolioData.historicalPrices || {}
+    );
+    
+    // Check if any metrics couldn't be computed
+    const hasInvalidMetrics = !Number.isFinite(totalARS) || 
+                             !Number.isFinite(totalUSD) || 
+                             !Number.isFinite(investedARS) || 
+                             !Number.isFinite(investedUSD) || 
+                             !Number.isFinite(netGainsARS) || 
+                             !Number.isFinite(netGainsUSD) ||
+                             !Number.isFinite(portfolioData.cash?.ARS) ||
+                             !Number.isFinite(portfolioData.cash?.USD);
+    
+    // Create today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Check if a record for today already exists
+    const historyDir = path.join(process.cwd(), 'data', 'history');
+    const filePath = path.join(historyDir, `${username}.json`);
+    
+    let history: DailyPortfolioRecord[] = [];
+    try {
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+      history = JSON.parse(fileContent);
+    } catch {
+      // File doesn't exist, start with empty array
+    }
+    
+    const existingRecordIndex = history.findIndex(entry => entry.fecha === today);
+    
+    if (existingRecordIndex === -1) {
+      // Create snapshot object
+      const snapshot: DailyPortfolioRecord = {
+        fecha: today,
+        total_portfolio_ars: Number.isFinite(totalARS) ? totalARS : 0,
+        total_portfolio_usd: Number.isFinite(totalUSD) ? totalUSD : 0,
+        capital_invertido_ars: Number.isFinite(investedARS) ? investedARS : 0,
+        capital_invertido_usd: Number.isFinite(investedUSD) ? investedUSD : 0,
+        ganancias_netas_ars: Number.isFinite(netGainsARS) ? netGainsARS : 0,
+        ganancias_netas_usd: Number.isFinite(netGainsUSD) ? netGainsUSD : 0,
+        efectivo_disponible_ars: Number.isFinite(portfolioData.cash?.ARS) ? portfolioData.cash.ARS : 0,
+        efectivo_disponible_usd: Number.isFinite(portfolioData.cash?.USD) ? portfolioData.cash.USD : 0,
+      };
+      
+      // Add incompleto flag if any metrics couldn't be computed
+      if (hasInvalidMetrics) {
+        snapshot.incompleto = true;
+      }
+      
+      // Append the daily record
+      await appendDailyRecord(username, snapshot);
+      
+      console.log(`Daily snapshot saved for ${username} on ${today}${hasInvalidMetrics ? ' (incomplete data)' : ''}`);
+    } else {
+      console.log(`Daily snapshot already exists for ${username} on ${today}`);
+    }
+  } catch (error) {
+    console.error(`Error saving daily snapshot for ${username}:`, error);
+    // Don't throw - this is a non-critical operation
   }
 } 

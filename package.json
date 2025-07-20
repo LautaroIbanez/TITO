@@ -13,7 +13,8 @@
     "update-inflation": "ts-node scripts/update-inflation.ts",
     "update-crypto": "ts-node scripts/update-crypto.ts",
     "update-cauciones": "ts-node scripts/update-cauciones.ts",
-    "scrape-bonds": "python3 scripts/scrape_bonistas.py"
+    "scrape-bonds": "python3 scripts/scrape_bonistas.py",
+    "daily-snapshot": "ts-node --project scripts/tsconfig.json scripts/daily-snapshot.ts"
   },
   "dependencies": {
     "@binance/connector": "^3.6.1",

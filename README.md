@@ -438,6 +438,51 @@ This will update `data/inflation.json` with the latest monthly and annual inflat
 
 > Note: You may need to set a FRED API key in the environment as `FRED_API_KEY` for more reliable U.S. data fetching, or the script will use a public CSV fallback.
 
+## Daily Portfolio Snapshots
+
+To generate daily portfolio snapshots for all users, run:
+
+```
+npm run daily-snapshot
+```
+
+This script will:
+1. Read all usernames from `data/users/` directory
+2. Calculate current portfolio values, invested capital, and net gains for each user
+3. Save daily snapshots to `data/history/<username>.json` if no record exists for today
+4. Mark snapshots as incomplete if any metrics couldn't be computed due to missing price data
+
+### Scheduling Daily Snapshots
+
+You can schedule this script to run automatically using cron (Linux/macOS) or Task Scheduler (Windows):
+
+**Linux/macOS (cron):**
+```bash
+# Add to crontab to run daily at 6:00 AM
+0 6 * * * cd /path/to/tito && npm run daily-snapshot
+```
+
+**Windows (Task Scheduler):**
+1. Open Task Scheduler
+2. Create a new Basic Task
+3. Set trigger to Daily at 6:00 AM
+4. Set action to start a program: `npm`
+5. Add arguments: `run daily-snapshot`
+6. Set start in: `/path/to/tito`
+
+### CI/CD Integration
+
+For automated deployments, you can add this to your CI pipeline:
+
+```yaml
+# Example GitHub Actions workflow
+- name: Generate Daily Snapshots
+  run: npm run daily-snapshot
+  if: github.event_name == 'schedule' && github.event.schedule == '0 6 * * *'
+```
+
+The snapshots are used by the Historical Portfolio Chart component to display portfolio performance over time.
+
 ## Crypto Data Update Script
 
 To fetch and update recent price data for major cryptocurrencies (BTC, ETH, etc.) from Binance and store it under `data/crypto/`, run:

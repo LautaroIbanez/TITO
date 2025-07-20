@@ -158,7 +158,7 @@ export function calculateDailyInvestedCapital(
         const currency = (tx as { currency: 'ARS' | 'USD' }).currency;
         if (cryptoTx.originalCurrency === currency && typeof cryptoTx.originalAmount === 'number') {
           if (currency === 'ARS') investedARS += cryptoTx.originalAmount;
-          if (currency === 'USD') investedUSD += cryptoTx.originalAmount;
+          if ((currency as any) === 'USD') investedUSD += cryptoTx.originalAmount;
         } else {
           // Fallback to normal logic if not a special ARS-paid crypto buy
           if (tx.type === 'Buy') {

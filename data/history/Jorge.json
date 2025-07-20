@@ -64,5 +64,16 @@
     "ganancias_netas_usd": -79.71612140624961,
     "efectivo_disponible_ars": 2409297.005,
     "efectivo_disponible_usd": 511.7238200000004
+  },
+  {
+    "fecha": "2025-07-20",
+    "total_portfolio_ars": 3007547.005,
+    "total_portfolio_usd": 1920.2838785937504,
+    "capital_invertido_ars": 590702.995,
+    "capital_invertido_usd": 1488.2761799999996,
+    "ganancias_netas_ars": 17894.524999999972,
+    "ganancias_netas_usd": -79.71612140624961,
+    "efectivo_disponible_ars": 2409297.005,
+    "efectivo_disponible_usd": 511.7238200000004
   }
 ]
