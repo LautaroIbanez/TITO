@@ -14,6 +14,7 @@ import { getPositionDisplayName } from '@/utils/priceValidation';
 import { getRecommendationLabel } from '@/utils/assetClassLabels';
 import { usePortfolioHistory } from './usePortfolioHistory';
 import HistoricalPortfolioChart from './HistoricalPortfolioChart';
+import DailyGainChart from './DailyGainChart';
 
 export default function DashboardSummary() {
   const [portfolioValueARS, setPortfolioValueARS] = useState(0);
@@ -401,7 +402,15 @@ export default function DashboardSummary() {
         ) : historyError ? (
           <div className="text-center text-red-500">Error al cargar historial: {historyError}</div>
         ) : portfolioHistory && portfolioHistory.length > 0 ? (
-          <HistoricalPortfolioChart records={portfolioHistory} />
+          <>
+            <HistoricalPortfolioChart records={portfolioHistory} />
+            <div className="mt-8">
+              <DailyGainChart records={portfolioHistory} currency="ARS" />
+            </div>
+            <div className="mt-8">
+              <DailyGainChart records={portfolioHistory} currency="USD" />
+            </div>
+          </>
         ) : (
           <div className="text-center text-gray-500">No hay historial de portafolio disponible.</div>
         )}
