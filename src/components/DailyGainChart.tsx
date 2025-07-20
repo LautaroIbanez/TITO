@@ -152,14 +152,17 @@ export default function DailyGainChart({ records, currency = 'ARS' }: Props) {
         enabled: true,
         callbacks: {
           label: (context: TooltipItem<'bar'>) => {
+            const y = context.parsed?.y ?? 0;
             if (context.datasetIndex === 0) {
-              return `${context.dataset.label}: ${formatCurrency(context.parsed.y, currency)}`;
+              return `${context.dataset.label}: ${formatCurrency(y, currency)}`;
             } else {
-              return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}%`;
+              return `${context.dataset.label}: ${y.toFixed(2)}%`;
             }
           },
-          title: (context: TooltipItem<'bar'>[]) =>
-            `Fecha: ${dayjs(context[0]?.parsed.x).format('YYYY-MM-DD')}`,
+          title: (context: TooltipItem<'bar'>[]) => {
+            const x = context[0]?.parsed?.x;
+            return `Fecha: ${x ? dayjs(x).format('YYYY-MM-DD') : 'Fecha desconocida'}`;
+          },
         }
       },
       datalabels: {
@@ -181,8 +184,11 @@ export default function DailyGainChart({ records, currency = 'ARS' }: Props) {
         // Hide labels if they would overlap
         display: (context: any) => {
           if (context.datasetIndex === 0) {
-            const value = context.parsed.y;
-            const percentageValue = context.chart.data.datasets[1]?.data[context.dataIndex];
+            const value = context.parsed?.y;
+            const percentageValue = context.chart?.data?.datasets?.[1]?.data?.[context.dataIndex];
+            
+            // Check if values exist before using them
+            if (value === undefined || percentageValue === undefined) return false;
             
             // Hide if gain value is too small or would overlap with percentage
             if (Math.abs(value) < Math.abs(percentageValue) * 0.1) {

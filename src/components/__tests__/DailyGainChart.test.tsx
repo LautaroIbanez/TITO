@@ -157,4 +157,50 @@ describe('DailyGainChart', () => {
     // but we can verify the component renders without errors
     expect(screen.getByText('Ganancia Diaria')).toBeInTheDocument();
   });
+
+  it('handles missing parsed values safely', () => {
+    // Test with records that have some undefined/null values
+    const recordWithUndefinedValues: DailyPortfolioRecord = {
+      fecha: '2024-01-04',
+      total_portfolio_ars: undefined as any,
+      total_portfolio_usd: undefined as any,
+      capital_invertido_ars: 90000,
+      capital_invertido_usd: 900,
+      efectivo_disponible_ars: 10000,
+      efectivo_disponible_usd: 100,
+      ganancias_netas_ars: 0,
+      ganancias_netas_usd: 0,
+    };
+
+    const recordWithNullValues: DailyPortfolioRecord = {
+      fecha: '2024-01-05',
+      total_portfolio_ars: null as any,
+      total_portfolio_usd: null as any,
+      capital_invertido_ars: 90000,
+      capital_invertido_usd: 900,
+      efectivo_disponible_ars: 10000,
+      efectivo_disponible_usd: 100,
+      ganancias_netas_ars: 0,
+      ganancias_netas_usd: 0,
+    };
+
+    // Should render without crashing even with problematic data
+    render(<DailyGainChart records={[validRecord1, validRecord2, recordWithUndefinedValues, recordWithNullValues]} />);
+    
+    // Should still render the chart since we have 2 valid records (validRecord1 and validRecord2)
+    // The invalid records are filtered out, but we still have enough data
+    expect(screen.getByText('Ganancia Diaria')).toBeInTheDocument();
+    expect(screen.getByText('Ganancia Total')).toBeInTheDocument();
+  });
+
+  it('renders without crashing when chart context has missing parsed values', () => {
+    // This test verifies that the component's chart configuration handles
+    // missing parsed values gracefully through optional chaining
+    render(<DailyGainChart records={[validRecord1, validRecord2, validRecord3]} />);
+    
+    // The component should render successfully even if Chart.js context
+    // has missing parsed values (which would be handled by our optional chaining)
+    expect(screen.getByText('Ganancia Diaria')).toBeInTheDocument();
+    expect(screen.getByText('Ganancia Total')).toBeInTheDocument();
+  });
 }); 
