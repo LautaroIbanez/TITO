@@ -7,6 +7,10 @@ import { calculateCurrentValueByCurrency } from '@/utils/calculatePortfolioValue
 import { calculateInvestedCapital } from '@/utils/investedCapital';
 import { calculateNetGainsByCurrency } from '@/utils/positionGains';
 import { appendDailyRecord } from '@/utils/portfolioHistory';
+import NodeCache from 'node-cache';
+
+// Cache for portfolio data with 5-minute TTL
+const portfolioCache = new NodeCache({ stdTTL: 300 }); // 5 minutes
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -16,6 +20,14 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    // Check cache first
+    const cacheKey = `portfolio_data_${username}`;
+    const cachedData = portfolioCache.get(cacheKey);
+    if (cachedData) {
+      console.log(`[Portfolio Data] Returning cached data for ${username}`);
+      return NextResponse.json(cachedData);
+    }
+
     // Validate username before proceeding
     const user = await getUserData(username);
     if (!user) {
@@ -90,12 +102,17 @@ export async function GET(req: NextRequest) {
       efectivo_disponible_usd: data.cash.USD,
     });
 
-    return NextResponse.json({
+    const responseData = {
       ...data,
       historicalPrices,
       fundamentals,
       technicals,
-    });
+    };
+
+    // Cache the result
+    portfolioCache.set(cacheKey, responseData);
+
+    return NextResponse.json(responseData);
   } catch (error) {
     if (error instanceof Error && error.message === 'User not found') {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });

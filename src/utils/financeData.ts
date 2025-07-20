@@ -1,4 +1,4 @@
-import yahooFinance from 'yahoo-finance2';
+import yahooFinance from './yahooFinance';
 import dayjs from 'dayjs';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -83,12 +83,12 @@ export async function getHistoricalPrices(symbol: string, interval: '1d' | '1wk'
       return [];
     }
     try {
-      const result = await yahooFinance.historical(symbol, {
+      const result = await yahooFinance.chart(symbol, {
         period1: dayjs().subtract(5, 'year').format('YYYY-MM-DD'),
         period2: dayjs().format('YYYY-MM-DD'),
         interval,
       });
-      prices = (result || []).map((d: any) => ({
+      prices = (result?.quotes || []).map((d: any) => ({
         date: d.date,
         open: d.open,
         high: d.high,
@@ -134,12 +134,12 @@ export async function getHistoricalPrices(symbol: string, interval: '1d' | '1wk'
       }
       try {
         const fromDate = lastDate.add(interval === '1d' ? 1 : 7, 'day').format('YYYY-MM-DD');
-        const result = await yahooFinance.historical(symbol, {
+        const result = await yahooFinance.chart(symbol, {
           period1: fromDate,
           period2: dayjs().format('YYYY-MM-DD'),
           interval,
         });
-        const newPrices = (result || []).map((d: any) => ({
+        const newPrices = (result?.quotes || []).map((d: any) => ({
           date: d.date,
           open: d.open,
           high: d.high,

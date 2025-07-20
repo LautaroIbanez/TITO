@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs').promises;
-const yahooFinance = require('yahoo-finance2').default;
+const yahooFinance = require('../src/utils/yahooFinance').default;
 const dayjs = require('dayjs');
 
 // Benchmark definitions
@@ -41,16 +41,16 @@ async function fetchBenchmarkData(symbol: string, name: string) {
     // Get historical data for 1 year ago
     const oneYearAgo = dayjs().subtract(1, 'year').format('YYYY-MM-DD');
     const today = dayjs().format('YYYY-MM-DD');
-    const historical = await yahooFinance.historical(symbol, {
+    const historical = await yahooFinance.chart(symbol, {
       period1: oneYearAgo,
       period2: today,
       interval: '1d'
     });
-    if (!historical || historical.length === 0) {
+    if (!historical?.quotes || historical.quotes.length === 0) {
       throw new Error(`No historical data available for ${symbol}`);
     }
     const currentPrice = quote.regularMarketPrice || 0;
-    const previousPrice = historical[0].close || 0;
+    const previousPrice = historical.quotes[0].close || 0;
     // Calculate 1-year return
     const oneYearReturn = previousPrice > 0 
       ? ((currentPrice - previousPrice) / previousPrice) * 100 

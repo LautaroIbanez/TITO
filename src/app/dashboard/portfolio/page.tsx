@@ -11,6 +11,7 @@ import { formatCurrency } from '@/utils/goalCalculator';
 import { generateInvestmentStrategy } from '@/utils/strategyAdvisor';
 import { InvestmentGoal, InvestorProfile, PortfolioPosition } from '@/types';
 import { getBaseTicker } from '@/utils/tickers';
+import { getSessionData } from '@/utils/sessionStorage';
 
 export default function PortfolioPage() {
   const { portfolioData, loading, refreshPortfolio } = usePortfolio();
@@ -28,9 +29,9 @@ export default function PortfolioPage() {
     setDepositError('');
     setDepositSuccess('');
     setDepositLoading(true);
-    const session = localStorage.getItem('session');
-    if (!session) return;
-    const username = JSON.parse(session).username;
+    const sessionData = getSessionData();
+    if (!sessionData) return;
+    const username = sessionData.username;
     const amount = parseFloat(depositAmount);
     if (isNaN(amount) || amount <= 0) {
       setDepositError('Por favor, ingrese un monto válido');
@@ -90,8 +91,8 @@ export default function PortfolioPage() {
 
   const handleUpdateDeposit = async (deposit: DepositTransaction) => {
     setDepositActionError(null);
-    const session = localStorage.getItem('session');
-    const username = session ? JSON.parse(session).username : null;
+    const sessionData = getSessionData();
+    const username = sessionData?.username || null;
     if (!username) {
       setDepositActionError('You must be logged in.');
       return;
@@ -116,8 +117,8 @@ export default function PortfolioPage() {
   const handleDeleteDeposit = async (depositId: string) => {
     if (!window.confirm('Are you sure you want to delete this deposit?')) return;
     setDepositActionError(null);
-    const session = localStorage.getItem('session');
-    const username = session ? JSON.parse(session).username : null;
+    const sessionData = getSessionData();
+    const username = sessionData?.username || null;
     if (!username) {
       setDepositActionError('You must be logged in.');
       return;

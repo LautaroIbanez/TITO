@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import yahooFinance from 'yahoo-finance2';
+import yahooFinance from '@/utils/yahooFinance';
 import NodeCache from 'node-cache';
 import { promises as fs } from 'fs';
 import path from 'path';

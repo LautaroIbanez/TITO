@@ -3,10 +3,16 @@ import path from 'path';
 import { promises as fs } from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import NodeCache from 'node-cache';
 
 const execAsync = promisify(exec);
 const bondsDataPath = path.join(process.cwd(), 'data', 'bonds.json');
 const scraperPath = path.join(process.cwd(), 'scripts', 'scrape_bonistas.py');
+
+// Lock mechanism to prevent concurrent scraper runs
+const scraperLock = new NodeCache();
+const LOCK_KEY = 'bonds_scraper_lock';
+const LOCK_TTL = 300; // 5 minutes
 
 export async function GET() {
   try {
@@ -26,13 +32,26 @@ export async function GET() {
 
     // Run scraper if data is old or doesn't exist
     if (shouldRefresh) {
-      console.log('Bonds data is stale or missing, running scraper...');
-      try {
-        await execAsync(`python3 "${scraperPath}"`);
-        console.log('Bond scraper completed successfully');
-      } catch (error) {
-        console.error('Failed to run bond scraper:', error);
-        // Continue with existing data if scraper fails
+      // Check if scraper is already running
+      if (scraperLock.get(LOCK_KEY)) {
+        console.log('Bonds scraper is already running, skipping...');
+        // Continue with existing data
+      } else {
+        console.log('Bonds data is stale or missing, running scraper...');
+        
+        // Set lock
+        scraperLock.set(LOCK_KEY, true, LOCK_TTL);
+        
+        try {
+          await execAsync(`python3 "${scraperPath}"`);
+          console.log('Bond scraper completed successfully');
+        } catch (error) {
+          console.error('Failed to run bond scraper:', error);
+          // Continue with existing data if scraper fails
+        } finally {
+          // Clear lock
+          scraperLock.del(LOCK_KEY);
+        }
       }
     }
 

@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserData, saveUserData } from '@/utils/userData';
 import { InvestmentStrategy } from '@/types';
 import { generateInvestmentStrategy } from '@/utils/strategyAdvisor';
+import NodeCache from 'node-cache';
+
+// Cache for strategy data with 10-minute TTL
+const strategyCache = new NodeCache({ stdTTL: 600 }); // 10 minutes
 
 async function generateAndSaveStrategy(username: string): Promise<InvestmentStrategy> {
   const user = await getUserData(username);
@@ -39,7 +43,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Username is required' }, { status: 400 });
     }
 
+    // Check cache first
+    const cacheKey = `strategy_${username}`;
+    const cachedStrategy = strategyCache.get<InvestmentStrategy>(cacheKey);
+    if (cachedStrategy) {
+      console.log(`[Strategy] Returning cached strategy for ${username}`);
+      return NextResponse.json(cachedStrategy);
+    }
+
     const strategy = await generateAndSaveStrategy(username);
+    
+    // Cache the result
+    strategyCache.set(cacheKey, strategy);
+    
     return NextResponse.json(strategy);
   } catch (error) {
     console.error('Strategy generation error:', error);
@@ -65,7 +81,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Username is required' }, { status: 400 });
     }
 
+    // Check cache first
+    const cacheKey = `strategy_${username}`;
+    const cachedStrategy = strategyCache.get<InvestmentStrategy>(cacheKey);
+    if (cachedStrategy) {
+      console.log(`[Strategy] Returning cached strategy for ${username}`);
+      return NextResponse.json(cachedStrategy);
+    }
+
     const strategy = await generateAndSaveStrategy(username);
+    
+    // Cache the result
+    strategyCache.set(cacheKey, strategy);
+    
     return NextResponse.json(strategy);
   } catch (error) {
     console.error('Strategy generation error:', error);
