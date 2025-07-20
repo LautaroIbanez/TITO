@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, Dispatch, SetStateAction } from 'react';
+import { getSessionData, clearSessionData } from '@/utils/sessionStorage';
 
 const navItems = [
   { label: "🏠 Resumen", href: "/dashboard" },
@@ -28,14 +29,14 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const [username, setUsername] = useState('');
 
   useEffect(() => {
-    const session = localStorage.getItem('session');
-    if (session) {
-      setUsername(JSON.parse(session).username);
+    const sessionData = getSessionData();
+    if (sessionData) {
+      setUsername(sessionData.username);
     }
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('session');
+    clearSessionData();
     router.push('/login');
   };
 

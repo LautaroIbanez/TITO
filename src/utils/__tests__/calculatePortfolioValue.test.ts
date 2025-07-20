@@ -1,5 +1,5 @@
-import { calculatePortfolioValueHistory, calculateCurrentValueByCurrency } from '../calculatePortfolioValue';
-import { PortfolioTransaction } from '@/types';
+import { calculatePortfolioValueHistory, calculateCurrentValueByCurrency, getBondPriceFromCache, getBondPriceFromJson } from '../calculatePortfolioValue';
+import { PortfolioTransaction, PortfolioPosition } from '@/types';
 import { PriceData } from '@/types/finance';
 import dayjs from 'dayjs';
 import * as currencyUtils from '../currency';
@@ -1778,4 +1778,215 @@ describe('import bonds.json data correctly', () => {
   
   // Test that non-existent bonds return undefined
   expect(getBondPriceFromJson('NONEXISTENT', 'ARS')).toBeUndefined();
+});
+
+describe('Bond Price Loading', () => {
+  const mockFs = require('fs');
+  const mockPath = require('path');
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Reset the cache
+    (global as any).bondPricesCache = [];
+    (global as any).bondPricesCacheTimestamp = 0;
+  });
+
+  describe('getBondPriceFromCache', () => {
+    it('should return undefined when cache is empty and no bonds.json file exists', () => {
+      mockPath.join.mockReturnValue('/fake/path/bonds.json');
+      mockFs.existsSync.mockReturnValue(false);
+
+      const result = getBondPriceFromCache('YCA6P', 'ARS');
+      expect(result).toBeUndefined();
+    });
+
+    it('should return bond price from bonds.json when cache is empty', () => {
+      const mockBondsData = {
+        bonds: [
+          { ticker: 'YCA6P', price: 150.50, currency: 'ARS' },
+          { ticker: 'GD30', price: 200.75, currency: 'ARS' }
+        ]
+      };
+
+      mockPath.join.mockReturnValue('/fake/path/bonds.json');
+      mockFs.existsSync.mockReturnValue(true);
+      mockFs.readFileSync.mockReturnValue(JSON.stringify(mockBondsData));
+
+      const result = getBondPriceFromCache('YCA6P', 'ARS');
+      expect(result).toBe(150.50);
+    });
+
+    it('should return bond price from cache when available', () => {
+      // Manually set cache
+      (global as any).bondPricesCache = [
+        { ticker: 'YCA6P', price: 150.50, currency: 'ARS' }
+      ];
+      (global as any).bondPricesCacheTimestamp = Date.now();
+
+      const result = getBondPriceFromCache('YCA6P', 'ARS');
+      expect(result).toBe(150.50);
+    });
+
+    it('should return undefined for non-existent bond', () => {
+      const mockBondsData = {
+        bonds: [
+          { ticker: 'GD30', price: 200.75, currency: 'ARS' }
+        ]
+      };
+
+      mockPath.join.mockReturnValue('/fake/path/bonds.json');
+      mockFs.existsSync.mockReturnValue(true);
+      mockFs.readFileSync.mockReturnValue(JSON.stringify(mockBondsData));
+
+      const result = getBondPriceFromCache('NONEXISTENT', 'ARS');
+      expect(result).toBeUndefined();
+    });
+
+    it('should handle old format bonds.json (array instead of object)', () => {
+      const mockBondsData = [
+        { ticker: 'YCA6P', price: 150.50, currency: 'ARS' },
+        { ticker: 'GD30', price: 200.75, currency: 'ARS' }
+      ];
+
+      mockPath.join.mockReturnValue('/fake/path/bonds.json');
+      mockFs.existsSync.mockReturnValue(true);
+      mockFs.readFileSync.mockReturnValue(JSON.stringify(mockBondsData));
+
+      const result = getBondPriceFromCache('YCA6P', 'ARS');
+      expect(result).toBe(150.50);
+    });
+
+    it('should handle JSON parsing errors gracefully', () => {
+      mockPath.join.mockReturnValue('/fake/path/bonds.json');
+      mockFs.existsSync.mockReturnValue(true);
+      mockFs.readFileSync.mockReturnValue('invalid json');
+
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const result = getBondPriceFromCache('YCA6P', 'ARS');
+      
+      expect(result).toBeUndefined();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Failed to load bond price synchronously:',
+        expect.any(Error)
+      );
+      consoleSpy.mockRestore();
+    });
+
+    it('should handle file system errors gracefully', () => {
+      mockPath.join.mockReturnValue('/fake/path/bonds.json');
+      mockFs.existsSync.mockReturnValue(true);
+      mockFs.readFileSync.mockImplementation(() => {
+        throw new Error('File system error');
+      });
+
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const result = getBondPriceFromCache('YCA6P', 'ARS');
+      
+      expect(result).toBeUndefined();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Failed to load bond price synchronously:',
+        expect.any(Error)
+      );
+      consoleSpy.mockRestore();
+    });
+  });
+
+  describe('getBondPriceFromJson', () => {
+    it('should return bond price from API in client environment', async () => {
+      // Mock fetch for client environment
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          bonds: [
+            { ticker: 'YCA6P', price: 150.50, currency: 'ARS' }
+          ]
+        })
+      });
+
+      const result = await getBondPriceFromJson('YCA6P', 'ARS');
+      expect(result).toBe(150.50);
+    });
+
+    it('should handle API errors gracefully', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false
+      });
+
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const result = await getBondPriceFromJson('YCA6P', 'ARS');
+      
+      expect(result).toBeUndefined();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Failed to load bond prices:',
+        expect.any(Error)
+      );
+      consoleSpy.mockRestore();
+    });
+  });
+
+  describe('calculateCurrentValueByCurrency with bond fallback', () => {
+    it('should use bond fallback prices when price history is empty', () => {
+      const mockBondsData = {
+        bonds: [
+          { ticker: 'YCA6P', price: 150.50, currency: 'ARS' }
+        ]
+      };
+
+      mockPath.join.mockReturnValue('/fake/path/bonds.json');
+      mockFs.existsSync.mockReturnValue(true);
+      mockFs.readFileSync.mockReturnValue(JSON.stringify(mockBondsData));
+
+      const bondPosition = {
+        type: 'Bond' as const,
+        ticker: 'YCA6P',
+        quantity: 100,
+        purchasePrice: 140.00,
+        currency: 'ARS' as const
+      };
+
+      const positions = [bondPosition];
+      const cash = { ARS: 1000, USD: 100 };
+      const priceHistory = {}; // Empty price history
+
+      const result = calculateCurrentValueByCurrency(positions, cash, priceHistory);
+      
+      // Should calculate value using fallback price: 100 * 150.50 = 15050
+      expect(result.ARS).toBe(16050); // 15050 + 1000 cash
+      expect(result.USD).toBe(100);
+    });
+
+    it('should prioritize price history over fallback when available', () => {
+      const mockBondsData = {
+        bonds: [
+          { ticker: 'YCA6P', price: 150.50, currency: 'ARS' }
+        ]
+      };
+
+      mockPath.join.mockReturnValue('/fake/path/bonds.json');
+      mockFs.existsSync.mockReturnValue(true);
+      mockFs.readFileSync.mockReturnValue(JSON.stringify(mockBondsData));
+
+      const bondPosition = {
+        type: 'Bond' as const,
+        ticker: 'YCA6P',
+        quantity: 100,
+        purchasePrice: 140.00,
+        currency: 'ARS' as const
+      };
+
+      const positions = [bondPosition];
+      const cash = { ARS: 1000, USD: 100 };
+      const priceHistory = {
+        'YCA6P': [
+          { date: '2024-01-01', open: 160, high: 165, low: 155, close: 160.75, volume: 1000 }
+        ]
+      };
+
+      const result = calculateCurrentValueByCurrency(positions, cash, priceHistory);
+      
+      // Should use price history: 100 * 160.75 = 16075
+      expect(result.ARS).toBe(17075); // 16075 + 1000 cash
+      expect(result.USD).toBe(100);
+    });
+  });
 });

@@ -15,6 +15,7 @@ import { getRecommendationLabel } from '@/utils/assetClassLabels';
 import { usePortfolioHistory } from './usePortfolioHistory';
 import HistoricalPortfolioChart from './HistoricalPortfolioChart';
 import DailyGainChart from './DailyGainChart';
+import { getSessionData, setSessionData } from '@/utils/sessionStorage';
 
 export default function DashboardSummary() {
   const [portfolioValueARS, setPortfolioValueARS] = useState(0);
@@ -29,9 +30,8 @@ export default function DashboardSummary() {
   // Get username from session/localStorage
   const [username, setUsername] = useState<string | null>(null);
   useEffect(() => {
-    const session = localStorage.getItem('session');
-    if (session) {
-      const sessionData = JSON.parse(session);
+    const sessionData = getSessionData();
+    if (sessionData) {
       setUsername(sessionData.username);
     }
   }, []);
@@ -48,9 +48,8 @@ export default function DashboardSummary() {
   // 1. Fetch goals and bonds only when portfolioData or portfolioVersion changes
   useEffect(() => {
     async function fetchData() {
-      const session = localStorage.getItem('session');
-      if (!session) return;
-      const sessionData = JSON.parse(session);
+      const sessionData = getSessionData();
+      if (!sessionData) return;
       const username = sessionData.username;
       
       if (sessionData.firstTime) {
@@ -135,11 +134,10 @@ export default function DashboardSummary() {
 
   const handleDismissOnboarding = () => {
     setShowOnboarding(false);
-    const session = localStorage.getItem('session');
-    if (session) {
-      const sessionData = JSON.parse(session);
+    const sessionData = getSessionData();
+    if (sessionData) {
       delete sessionData.firstTime;
-      localStorage.setItem('session', JSON.stringify(sessionData));
+      setSessionData(sessionData);
     }
   };
 

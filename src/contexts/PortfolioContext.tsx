@@ -1,6 +1,7 @@
 'use client';
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { UserData, InvestmentStrategy } from '@/types';
+import { getSessionData } from '@/utils/sessionStorage';
 
 // Extended type to match what the API actually returns
 interface PortfolioData extends UserData {
@@ -38,13 +39,12 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     setError(null);
     
     try {
-      const session = localStorage.getItem('session');
-      if (!session) {
+      const sessionData = getSessionData();
+      if (!sessionData) {
         setLoading(false);
         return;
       }
       
-      const sessionData = JSON.parse(session);
       const username = sessionData.username;
       
       const response = await fetch(`/api/portfolio/data?username=${username}`);
@@ -66,13 +66,12 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     setStrategyLoading(true);
     setStrategyError(null);
     try {
-      const session = localStorage.getItem('session');
-      if (!session) {
+      const sessionData = getSessionData();
+      if (!sessionData) {
         setStrategyLoading(false);
         return;
       }
       
-      const sessionData = JSON.parse(session);
       const username = sessionData.username;
       
       const response = await fetch(`/api/strategy?username=${username}`);

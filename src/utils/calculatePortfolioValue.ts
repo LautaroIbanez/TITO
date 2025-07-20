@@ -115,7 +115,55 @@ export function getBondPriceFromCache(ticker: string, currency: string): number 
     const bond = bondPricesCache.find(b => b.ticker === ticker && b.currency === currency);
     return bond?.price;
   }
-  return undefined;
+  
+  // If cache is empty, try to load synchronously from bonds.json
+  return loadBondPricesSync(ticker, currency);
+}
+
+// Synchronous loader for bond prices from bonds.json
+function loadBondPricesSync(ticker: string, currency: string): number | undefined {
+  try {
+    if (typeof window !== 'undefined') {
+      // Client environment: can't load synchronously, return undefined
+      return undefined;
+    } else {
+      // Server environment: read from file system synchronously
+      const fs = require('fs');
+      const path = require('path');
+      const bondsPath = path.join(process.cwd(), 'data', 'bonds.json');
+      
+      if (!fs.existsSync(bondsPath)) {
+        return undefined;
+      }
+      
+      const fileContents = fs.readFileSync(bondsPath, 'utf8');
+      const bondsData = JSON.parse(fileContents);
+      
+      // Handle both old format (array) and new format (object with bonds array)
+      const bonds = bondsData.bonds || bondsData;
+      
+      // Find the specific bond
+      const bond = bonds.find((b: any) => b.ticker === ticker && b.currency === currency);
+      
+      if (bond && typeof bond.price === 'number') {
+        // Update cache with this bond
+        const existingIndex = bondPricesCache.findIndex(b => b.ticker === ticker && b.currency === currency);
+        if (existingIndex >= 0) {
+          bondPricesCache[existingIndex] = { ticker, price: bond.price, currency };
+        } else {
+          bondPricesCache.push({ ticker, price: bond.price, currency });
+        }
+        bondPricesCacheTimestamp = Date.now();
+        
+        return bond.price;
+      }
+      
+      return undefined;
+    }
+  } catch (error) {
+    console.error('Failed to load bond price synchronously:', error);
+    return undefined;
+  }
 }
 
 export async function calculatePortfolioValueHistory(

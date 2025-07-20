@@ -24,6 +24,7 @@ import { getTickerCurrency, getBaseTicker } from '@/utils/tickers';
 import { validatePositionPrice } from '@/utils/priceValidation';
 import SignalBadge from './SignalBadge';
 import getPurchasePrice from '../utils/getPurchasePrice';
+import { getSessionData } from '@/utils/sessionStorage';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
@@ -78,9 +79,9 @@ export default function PortfolioCard({ symbol, fundamentals, technicals, prices
   };
 
   const handleTradeSubmit: TradeModalProps['onSubmit'] = async (quantity, assetType, identifier, currency, commissionPct, purchaseFeePct, purchasePrice) => {
-    const session = localStorage.getItem('session');
-    if (!session) throw new Error("Session not found");
-    const username = JSON.parse(session).username;
+    const sessionData = getSessionData();
+    if (!sessionData) throw new Error("Session not found");
+    const username = sessionData.username;
     const url = tradeType === 'Buy' ? '/api/portfolio/buy' : '/api/portfolio/sell';
     // Use 'ticker' for Bond, 'symbol' otherwise
     const payload = {
