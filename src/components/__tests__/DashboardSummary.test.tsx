@@ -12,6 +12,7 @@ import { calculateInvestedCapital } from '../../utils/investedCapital';
 import { calculatePortfolioSummaryHistory } from '../../utils/portfolioSummaryHistory';
 import { renderHook, act } from '@testing-library/react-hooks';
 import { usePortfolioHistory } from '../usePortfolioHistory';
+import { getLatestPortfolioSnapshot } from '../../utils/portfolioHistory';
 
 // Mock the hooks and utilities
 jest.mock('../../contexts/PortfolioContext');
@@ -25,6 +26,9 @@ jest.mock('../../utils/currency');
 jest.mock('../../utils/portfolioSummaryHistory', () => ({
   calculatePortfolioSummaryHistory: jest.fn(),
 }));
+jest.mock('../../utils/portfolioHistory', () => ({
+  getLatestPortfolioSnapshot: jest.fn(),
+}));
 
 const mockUsePortfolio = usePortfolio as jest.Mock;
 const mockCalculatePortfolioValueHistory = calculatePortfolioValueHistory as jest.Mock;
@@ -34,6 +38,7 @@ const mockFetchInflationData = fetchInflationData as jest.Mock;
 const mockCalculateInvestedCapital = calculateInvestedCapital as jest.Mock;
 const mockCalculateDailyInvestedCapital = require('../../utils/investedCapital').calculateDailyInvestedCapital as jest.Mock;
 const mockCalculatePortfolioSummaryHistory = calculatePortfolioSummaryHistory as jest.Mock;
+const mockGetLatestPortfolioSnapshot = getLatestPortfolioSnapshot as jest.Mock;
 
 // Mock chart components to avoid canvas context issues
 jest.mock('../PortfolioHistoryChart', () => {
@@ -394,6 +399,63 @@ describe('DashboardSummary', () => {
       expect(screen.getByText('Acciones')).toBeInTheDocument();
       // Should display "Efectivo" for cash recommendations (based on ID starting with 'cash-')
       expect(screen.getByText('Efectivo')).toBeInTheDocument();
+    });
+  });
+
+  it('uses snapshot values when available instead of recalculating', async () => {
+    const mockSnapshot = {
+      fecha: '2024-01-01',
+      total_portfolio_ars: 120000,
+      total_portfolio_usd: 1200,
+      capital_invertido_ars: 90000,
+      capital_invertido_usd: 900,
+      ganancias_netas_ars: 30000,
+      ganancias_netas_usd: 300,
+      efectivo_disponible_ars: 15000,
+      efectivo_disponible_usd: 150,
+    };
+
+    mockUsePortfolio.mockReturnValue({
+      portfolioData: mockPortfolioData,
+      strategy: null,
+      loading: false,
+      error: null,
+      portfolioVersion: 1,
+    });
+
+    mockCalculateCurrentValueByCurrency.mockReturnValue({ ARS: 100000, USD: 1000 });
+    mockCalculateInvestedCapital.mockReturnValue(90000);
+    mockCalculatePortfolioValueHistory.mockResolvedValue([]);
+    mockCalculatePortfolioPerformance.mockReturnValue({
+      monthlyReturnARS: 5.2,
+      monthlyReturnUSD: 3.1,
+      annualReturnARS: 15.8,
+      annualReturnUSD: 12.4,
+      monthlyReturnARSReal: 1.0,
+      monthlyReturnUSDReal: 2.8,
+      annualReturnARSReal: -126.9,
+      annualReturnUSDReal: 9.3,
+    });
+    mockFetchInflationData.mockResolvedValue({
+      argentina: { monthly: 4.2, annual: 142.7 },
+      usa: { monthly: 0.3, annual: 3.1 }
+    });
+    mockGetLatestPortfolioSnapshot.mockReturnValue(mockSnapshot);
+
+    render(
+      <PortfolioProvider>
+        <ScoopProvider>
+          <DashboardSummary />
+        </ScoopProvider>
+      </PortfolioProvider>
+    );
+
+    await waitFor(() => {
+      // Should display snapshot values instead of calculated values
+      expect(screen.getByText('ARS 120,000.00')).toBeInTheDocument(); // From snapshot
+      expect(screen.getByText('USD 1,200.00')).toBeInTheDocument();   // From snapshot
+      expect(screen.getByText('ARS 30,000.00')).toBeInTheDocument();  // From snapshot gains
+      expect(screen.getByText('USD 300.00')).toBeInTheDocument();     // From snapshot gains
     });
   });
 });

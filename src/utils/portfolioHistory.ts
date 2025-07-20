@@ -217,4 +217,78 @@ export async function guardarSnapshotDiario(username: string): Promise<void> {
     console.error(`Error saving daily snapshot for ${username}:`, error);
     // Don't throw - this is a non-critical operation
   }
-} 
+}
+
+/**
+ * Gets the latest portfolio snapshot from an array of daily records
+ * @param history Array of daily portfolio records
+ * @returns The latest record or null if no records exist
+ */
+export function getLatestPortfolioSnapshot(history: DailyPortfolioRecord[]): DailyPortfolioRecord | null {
+  if (!history || history.length === 0) {
+    return null;
+  }
+  
+  // Sort by date to ensure we get the latest record
+  const sortedHistory = [...history].sort((a, b) => 
+    new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
+  );
+  
+  return sortedHistory[sortedHistory.length - 1];
+}
+
+/**
+ * Normalizes portfolio history records by ensuring ganancias_netas_* values
+ * match the calculated values (total_portfolio_* - capital_invertido_*)
+ * @param records Array of daily portfolio records to normalize
+ * @returns Array of normalized records
+ */
+export function normalizePortfolioHistory(records: DailyPortfolioRecord[]): DailyPortfolioRecord[] {
+  return records.map(record => {
+    const calculatedGainsARS = record.total_portfolio_ars - record.capital_invertido_ars;
+    const calculatedGainsUSD = record.total_portfolio_usd - record.capital_invertido_usd;
+    
+    // Check if the stored gains differ from calculated gains
+    const gainsARSChanged = record.ganancias_netas_ars !== calculatedGainsARS;
+    const gainsUSDChanged = record.ganancias_netas_usd !== calculatedGainsUSD;
+    
+    if (gainsARSChanged || gainsUSDChanged) {
+      return {
+        ...record,
+        ganancias_netas_ars: calculatedGainsARS,
+        ganancias_netas_usd: calculatedGainsUSD,
+      };
+    }
+    
+    return record;
+  });
+}
+
+/**
+ * Loads and normalizes portfolio history for a user
+ * @param username The username
+ * @returns Promise<DailyPortfolioRecord[]> Normalized portfolio history
+ */
+export async function loadAndNormalizePortfolioHistory(username: string): Promise<DailyPortfolioRecord[]> {
+  const records = await loadPortfolioHistory(username);
+  const normalizedRecords = normalizePortfolioHistory(records);
+  
+  // Save the normalized records if any changes were made
+  const hasChanges = normalizedRecords.some((record, index) => 
+    record.ganancias_netas_ars !== records[index]?.ganancias_netas_ars ||
+    record.ganancias_netas_usd !== records[index]?.ganancias_netas_usd
+  );
+  
+  if (hasChanges) {
+    try {
+      const historyDir = path.join(process.cwd(), 'data', 'history');
+      const filePath = path.join(historyDir, `${username}.json`);
+      await fs.writeFile(filePath, JSON.stringify(normalizedRecords, null, 2));
+      console.log(`Normalized portfolio history for ${username}`);
+    } catch (error) {
+      console.error(`Error saving normalized history for ${username}:`, error);
+    }
+  }
+  
+  return normalizedRecords;
+}

@@ -5,7 +5,7 @@ import { getBaseTicker, ensureBaSuffix } from '@/utils/tickers';
 import { getUserData } from '@/utils/userData';
 import { calculateCurrentValueByCurrency } from '@/utils/calculatePortfolioValue';
 import { calculateInvestedCapital } from '@/utils/investedCapital';
-import { calculateNetGainsByCurrency } from '@/utils/positionGains';
+import { recalculateNetGains } from '@/utils/netGainsCalculator';
 import { appendDailyRecord } from '@/utils/portfolioHistory';
 import NodeCache from 'node-cache';
 
@@ -84,23 +84,32 @@ export async function GET(req: NextRequest) {
     const { ARS, USD } = calculateCurrentValueByCurrency(data.positions, data.cash, historicalPrices);
     const investedARS = calculateInvestedCapital(data.transactions, 'ARS');
     const investedUSD = calculateInvestedCapital(data.transactions, 'USD');
-    const gains = calculateNetGainsByCurrency(data.positions, historicalPrices);
     
     // Create today's date in YYYY-MM-DD format
     const today = new Date().toISOString().split('T')[0];
     
-    // Append daily record to user's history
-    appendDailyRecord(username, {
+    // Create the daily record
+    const dailyRecord = {
       fecha: today,
       total_portfolio_ars: ARS,
       total_portfolio_usd: USD,
       capital_invertido_ars: investedARS,
       capital_invertido_usd: investedUSD,
-      ganancias_netas_ars: gains.ARS,
-      ganancias_netas_usd: gains.USD,
+      ganancias_netas_ars: 0, // Will be calculated by recalculateNetGains
+      ganancias_netas_usd: 0, // Will be calculated by recalculateNetGains
       efectivo_disponible_ars: data.cash.ARS,
       efectivo_disponible_usd: data.cash.USD,
-    });
+    };
+    
+    // Calculate net gains using the standardized formula
+    const netGains = recalculateNetGains(dailyRecord);
+    
+    // Update the record with calculated net gains
+    dailyRecord.ganancias_netas_ars = netGains.ARS;
+    dailyRecord.ganancias_netas_usd = netGains.USD;
+    
+    // Append daily record to user's history
+    appendDailyRecord(username, dailyRecord);
 
     const responseData = {
       ...data,

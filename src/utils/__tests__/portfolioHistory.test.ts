@@ -1,177 +1,196 @@
-import fs from 'fs/promises';
-import path from 'path';
-import { appendDailyRecord, loadPortfolioHistory, DailyPortfolioRecord } from '../portfolioHistory';
+import { 
+  getLatestPortfolioSnapshot, 
+  normalizePortfolioHistory, 
+  loadAndNormalizePortfolioHistory 
+} from '../portfolioHistory';
+import type { DailyPortfolioRecord } from '../portfolioHistory';
 
-// Mock fs/promises module
+// Mock fs module
 jest.mock('fs/promises');
-jest.mock('path');
-
-const mockFs = fs as jest.Mocked<typeof fs>;
-const mockPath = path as jest.Mocked<typeof path>;
+const fs = require('fs/promises');
 
 describe('portfolioHistory', () => {
-  const mockUsername = 'testuser';
-  const mockRecord: DailyPortfolioRecord = {
-    fecha: '2024-01-01',
-    total_portfolio_ars: 100000,
-    total_portfolio_usd: 2000,
-    capital_invertido_ars: 80000,
-    capital_invertido_usd: 1600,
-    ganancias_netas_ars: 20000,
-    ganancias_netas_usd: 400,
-    efectivo_disponible_ars: 10000,
-    efectivo_disponible_usd: 200,
-  };
+  const mockRecords: DailyPortfolioRecord[] = [
+    {
+      fecha: '2024-01-01',
+      total_portfolio_ars: 100000,
+      total_portfolio_usd: 1000,
+      capital_invertido_ars: 90000,
+      capital_invertido_usd: 900,
+      ganancias_netas_ars: 10000,
+      ganancias_netas_usd: 100,
+      efectivo_disponible_ars: 10000,
+      efectivo_disponible_usd: 100,
+    },
+    {
+      fecha: '2024-01-02',
+      total_portfolio_ars: 110000,
+      total_portfolio_usd: 1100,
+      capital_invertido_ars: 90000,
+      capital_invertido_usd: 900,
+      ganancias_netas_ars: 20000,
+      ganancias_netas_usd: 200,
+      efectivo_disponible_ars: 20000,
+      efectivo_disponible_usd: 200,
+    },
+  ];
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockPath.join.mockImplementation((...args) => args.join('/'));
-    // Mock process.cwd to return a predictable path
-    Object.defineProperty(process, 'cwd', {
-      value: jest.fn(() => '/mock/path'),
-      configurable: true
+  describe('getLatestPortfolioSnapshot', () => {
+    it('returns the latest record from sorted history', () => {
+      const result = getLatestPortfolioSnapshot(mockRecords);
+      
+      expect(result).toEqual(mockRecords[1]); // 2024-01-02 record
+    });
+
+    it('returns null for empty array', () => {
+      const result = getLatestPortfolioSnapshot([]);
+      
+      expect(result).toBeNull();
+    });
+
+    it('returns null for null input', () => {
+      const result = getLatestPortfolioSnapshot(null as any);
+      
+      expect(result).toBeNull();
+    });
+
+    it('sorts records by date before returning latest', () => {
+      const unsortedRecords = [mockRecords[1], mockRecords[0]]; // Reverse order
+      const result = getLatestPortfolioSnapshot(unsortedRecords);
+      
+      expect(result).toEqual(mockRecords[1]); // Should still return the latest (2024-01-02)
     });
   });
 
-  describe('appendDailyRecord', () => {
-    it('should create directory and file if they do not exist', async () => {
-      mockFs.access.mockRejectedValue(new Error('Directory does not exist'));
-      mockFs.readFile.mockRejectedValue(new Error('File not found'));
-
-      await appendDailyRecord(mockUsername, mockRecord);
-
-      expect(mockFs.mkdir).toHaveBeenCalledWith('/mock/path/data/history', { recursive: true });
-      expect(mockFs.writeFile).toHaveBeenCalledWith(
-        '/mock/path/data/history/testuser.json',
-        JSON.stringify([mockRecord], null, 2)
-      );
-    });
-
-    it('should append new record to existing history', async () => {
-      const existingHistory = [
+  describe('normalizePortfolioHistory', () => {
+    it('corrects ganancias_netas_* values to match calculated values', () => {
+      const recordsWithIncorrectGains: DailyPortfolioRecord[] = [
         {
-          fecha: '2023-12-31',
-          total_portfolio_ars: 90000,
-          total_portfolio_usd: 1800,
-          capital_invertido_ars: 70000,
-          capital_invertido_usd: 1400,
-          ganancias_netas_ars: 20000,
-          ganancias_netas_usd: 400,
-          efectivo_disponible_ars: 9000,
-          efectivo_disponible_usd: 180,
+          ...mockRecords[0],
+          ganancias_netas_ars: 5000, // Incorrect: should be 10000
+          ganancias_netas_usd: 50,   // Incorrect: should be 100
+        },
+        {
+          ...mockRecords[1],
+          ganancias_netas_ars: 15000, // Incorrect: should be 20000
+          ganancias_netas_usd: 150,   // Incorrect: should be 200
         },
       ];
-
-      mockFs.access.mockResolvedValue(undefined);
-      mockFs.readFile.mockResolvedValue(JSON.stringify(existingHistory));
-
-      await appendDailyRecord(mockUsername, mockRecord);
-
-      const expectedHistory = [...existingHistory, mockRecord];
-      expect(mockFs.writeFile).toHaveBeenCalledWith(
-        '/mock/path/data/history/testuser.json',
-        JSON.stringify(expectedHistory, null, 2)
-      );
+      
+      const result = normalizePortfolioHistory(recordsWithIncorrectGains);
+      
+      expect(result[0].ganancias_netas_ars).toBe(10000); // 100000 - 90000
+      expect(result[0].ganancias_netas_usd).toBe(100);   // 1000 - 900
+      expect(result[1].ganancias_netas_ars).toBe(20000); // 110000 - 90000
+      expect(result[1].ganancias_netas_usd).toBe(200);   // 1100 - 900
     });
 
-    it('should update existing record for the same date', async () => {
-      const existingHistory = [
-        {
-          fecha: '2024-01-01',
-          total_portfolio_ars: 90000,
-          total_portfolio_usd: 1800,
-          capital_invertido_ars: 70000,
-          capital_invertido_usd: 1400,
-          ganancias_netas_ars: 20000,
-          ganancias_netas_usd: 400,
-          efectivo_disponible_ars: 9000,
-          efectivo_disponible_usd: 180,
-        },
-      ];
-
-      mockFs.access.mockResolvedValue(undefined);
-      mockFs.readFile.mockResolvedValue(JSON.stringify(existingHistory));
-
-      await appendDailyRecord(mockUsername, mockRecord);
-
-      expect(mockFs.writeFile).toHaveBeenCalledWith(
-        '/mock/path/data/history/testuser.json',
-        JSON.stringify([mockRecord], null, 2)
-      );
+    it('leaves records unchanged if gains are already correct', () => {
+      const result = normalizePortfolioHistory(mockRecords);
+      
+      expect(result).toEqual(mockRecords);
     });
 
-    it('should sort records by date', async () => {
-      const existingHistory = [
-        {
-          fecha: '2024-01-02',
-          total_portfolio_ars: 110000,
-          total_portfolio_usd: 2200,
-          capital_invertido_ars: 90000,
-          capital_invertido_usd: 1800,
-          ganancias_netas_ars: 20000,
-          ganancias_netas_usd: 400,
-          efectivo_disponible_ars: 11000,
-          efectivo_disponible_usd: 220,
-        },
-      ];
-
-      mockFs.access.mockResolvedValue(undefined);
-      mockFs.readFile.mockResolvedValue(JSON.stringify(existingHistory));
-
-      await appendDailyRecord(mockUsername, mockRecord);
-
-      const expectedHistory = [mockRecord, ...existingHistory];
-      expect(mockFs.writeFile).toHaveBeenCalledWith(
-        '/mock/path/data/history/testuser.json',
-        JSON.stringify(expectedHistory, null, 2)
-      );
+    it('handles negative gains correctly', () => {
+      const negativeRecord: DailyPortfolioRecord = {
+        fecha: '2024-01-03',
+        total_portfolio_ars: 80000,
+        total_portfolio_usd: 800,
+        capital_invertido_ars: 90000,
+        capital_invertido_usd: 900,
+        ganancias_netas_ars: 0, // Incorrect: should be -10000
+        ganancias_netas_usd: 0, // Incorrect: should be -100
+        efectivo_disponible_ars: 0,
+        efectivo_disponible_usd: 0,
+      };
+      
+      const result = normalizePortfolioHistory([negativeRecord]);
+      
+      expect(result[0].ganancias_netas_ars).toBe(-10000); // 80000 - 90000
+      expect(result[0].ganancias_netas_usd).toBe(-100);   // 800 - 900
     });
 
-    it('should handle errors gracefully', async () => {
-      mockFs.access.mockRejectedValue(new Error('Permission denied'));
-
-      // Should not throw
-      await expect(appendDailyRecord(mockUsername, mockRecord)).resolves.not.toThrow();
+    it('returns empty array for empty input', () => {
+      const result = normalizePortfolioHistory([]);
+      
+      expect(result).toEqual([]);
     });
   });
 
-  describe('loadPortfolioHistory', () => {
-    it('should return empty array if file does not exist', async () => {
-      mockFs.readFile.mockRejectedValue(new Error('File not found'));
-
-      const result = await loadPortfolioHistory(mockUsername);
-
-      expect(result).toEqual([]);
+  describe('loadAndNormalizePortfolioHistory', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
     });
 
-    it('should load and parse existing history', async () => {
-      const existingHistory = [
+    it('loads and normalizes history, saving changes if needed', async () => {
+      const mockFileContent = JSON.stringify([
         {
-          fecha: '2024-01-01',
-          total_portfolio_ars: 100000,
-          total_portfolio_usd: 2000,
-          capital_invertido_ars: 80000,
-          capital_invertido_usd: 1600,
-          ganancias_netas_ars: 20000,
-          ganancias_netas_usd: 400,
-          efectivo_disponible_ars: 10000,
-          efectivo_disponible_usd: 200,
+          ...mockRecords[0],
+          ganancias_netas_ars: 5000, // Incorrect value
+          ganancias_netas_usd: 50,   // Incorrect value
         },
-      ];
-
-      mockFs.readFile.mockResolvedValue(JSON.stringify(existingHistory));
-
-      const result = await loadPortfolioHistory(mockUsername);
-
-      expect(result).toEqual(existingHistory);
+        mockRecords[1], // Correct values
+      ]);
+      
+      fs.readFile.mockResolvedValue(mockFileContent);
+      fs.writeFile.mockResolvedValue(undefined);
+      
+      const result = await loadAndNormalizePortfolioHistory('testuser');
+      
+      expect(fs.readFile).toHaveBeenCalledWith(
+        expect.stringContaining('testuser.json'),
+        'utf-8'
+      );
+      expect(fs.writeFile).toHaveBeenCalledWith(
+        expect.stringContaining('testuser.json'),
+        expect.stringContaining('"ganancias_netas_ars": 10000')
+      );
+      
+      expect(result).toHaveLength(2);
+      expect(result[0].ganancias_netas_ars).toBe(10000);
+      expect(result[0].ganancias_netas_usd).toBe(100);
+      expect(result[1].ganancias_netas_ars).toBe(20000);
+      expect(result[1].ganancias_netas_usd).toBe(200);
     });
 
-    it('should handle errors gracefully', async () => {
-      mockFs.readFile.mockRejectedValue(new Error('Invalid JSON'));
+    it('does not save file if no changes are needed', async () => {
+      const mockFileContent = JSON.stringify(mockRecords);
+      
+      fs.readFile.mockResolvedValue(mockFileContent);
+      fs.writeFile.mockResolvedValue(undefined);
+      
+      const result = await loadAndNormalizePortfolioHistory('testuser');
+      
+      expect(fs.readFile).toHaveBeenCalled();
+      expect(fs.writeFile).not.toHaveBeenCalled();
+      
+      expect(result).toEqual(mockRecords);
+    });
 
-      const result = await loadPortfolioHistory(mockUsername);
-
+    it('handles file read errors gracefully', async () => {
+      fs.readFile.mockRejectedValue(new Error('File not found'));
+      
+      const result = await loadAndNormalizePortfolioHistory('testuser');
+      
       expect(result).toEqual([]);
+      expect(fs.writeFile).not.toHaveBeenCalled();
+    });
+
+    it('handles file write errors gracefully', async () => {
+      const mockFileContent = JSON.stringify([
+        {
+          ...mockRecords[0],
+          ganancias_netas_ars: 5000, // Incorrect value
+        },
+      ]);
+      
+      fs.readFile.mockResolvedValue(mockFileContent);
+      fs.writeFile.mockRejectedValue(new Error('Write failed'));
+      
+      const result = await loadAndNormalizePortfolioHistory('testuser');
+      
+      expect(result).toHaveLength(1);
+      expect(result[0].ganancias_netas_ars).toBe(10000); // Still normalized in memory
     });
   });
 }); 

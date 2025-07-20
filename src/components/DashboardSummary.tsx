@@ -13,6 +13,7 @@ import { calculateNetGainsByCurrency } from '@/utils/positionGains';
 import { getPositionDisplayName } from '@/utils/priceValidation';
 import { getRecommendationLabel } from '@/utils/assetClassLabels';
 import { usePortfolioHistory } from './usePortfolioHistory';
+import { getLatestPortfolioSnapshot } from '@/utils/portfolioHistory';
 import HistoricalPortfolioChart from './HistoricalPortfolioChart';
 import DailyGainChart from './DailyGainChart';
 import { getSessionData, setSessionData } from '@/utils/sessionStorage';
@@ -38,6 +39,9 @@ export default function DashboardSummary() {
 
   // Fetch portfolio history after username and portfolioData are loaded
   const { history: portfolioHistory, loading: historyLoading, error: historyError } = usePortfolioHistory(username || undefined);
+
+  // Get the latest portfolio snapshot from history
+  const latestSnapshot = getLatestPortfolioSnapshot(portfolioHistory || []);
 
   // Generate portfolio hash for dependency tracking
   const portfolioHash = generatePortfolioHash(
@@ -174,19 +178,28 @@ export default function DashboardSummary() {
     return <div className="text-center text-gray-500">Could not load user data.</div>;
   }
   
-  const investedCapitalARS = Number.isFinite(calculateInvestedCapital(portfolioData.transactions, 'ARS'))
-    ? calculateInvestedCapital(portfolioData.transactions, 'ARS')
+  // Use latest snapshot values if available, otherwise fall back to calculated values
+  const snapshotTotalARS = latestSnapshot?.total_portfolio_ars ?? portfolioValueARS;
+  const snapshotTotalUSD = latestSnapshot?.total_portfolio_usd ?? portfolioValueUSD;
+  const snapshotInvestedARS = latestSnapshot?.capital_invertido_ars ?? calculateInvestedCapital(portfolioData.transactions, 'ARS');
+  const snapshotInvestedUSD = latestSnapshot?.capital_invertido_usd ?? calculateInvestedCapital(portfolioData.transactions, 'USD');
+  const snapshotGainsARS = latestSnapshot?.ganancias_netas_ars ?? 0;
+  const snapshotGainsUSD = latestSnapshot?.ganancias_netas_usd ?? 0;
+  
+  // Fallback calculations if snapshot is not available
+  const investedCapitalARS = Number.isFinite(snapshotInvestedARS)
+    ? snapshotInvestedARS
     : (console.warn('investedCapitalARS is not finite'), 0);
-  const investedCapitalUSD = Number.isFinite(calculateInvestedCapital(portfolioData.transactions, 'USD'))
-    ? calculateInvestedCapital(portfolioData.transactions, 'USD')
+  const investedCapitalUSD = Number.isFinite(snapshotInvestedUSD)
+    ? snapshotInvestedUSD
     : (console.warn('investedCapitalUSD is not finite'), 0);
 
   const { ARS: netGainsARS, USD: netGainsUSD, skipped } = calculateNetGainsByCurrency(
     portfolioData.positions || [],
     portfolioData.historicalPrices || {}
   );
-  const safeNetGainsARS = Number.isFinite(netGainsARS) ? netGainsARS : (console.warn('netGainsARS is not finite', netGainsARS), 0);
-  const safeNetGainsUSD = Number.isFinite(netGainsUSD) ? netGainsUSD : (console.warn('netGainsUSD is not finite', netGainsUSD), 0);
+  const safeNetGainsARS = latestSnapshot ? snapshotGainsARS : (Number.isFinite(netGainsARS) ? netGainsARS : (console.warn('netGainsARS is not finite', netGainsARS), 0));
+  const safeNetGainsUSD = latestSnapshot ? snapshotGainsUSD : (Number.isFinite(netGainsUSD) ? netGainsUSD : (console.warn('netGainsUSD is not finite', netGainsUSD), 0));
   const gainsColorARS = safeNetGainsARS >= 0 ? 'text-green-600' : 'text-red-600';
   const gainsColorUSD = safeNetGainsUSD >= 0 ? 'text-green-600' : 'text-red-600';
 
@@ -250,11 +263,11 @@ export default function DashboardSummary() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-sm font-medium text-gray-700">Valor Total del Portafolio (ARS)</h3>
-          <p className="text-2xl font-semibold text-gray-900">{formatCurrency(portfolioValueARS, 'ARS')}</p>
+          <p className="text-2xl font-semibold text-gray-900">{formatCurrency(snapshotTotalARS, 'ARS')}</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-sm font-medium text-gray-700">Valor Total del Portafolio (USD)</h3>
-          <p className="text-2xl font-semibold text-gray-900">{formatCurrency(portfolioValueUSD, 'USD')}</p>
+          <p className="text-2xl font-semibold text-gray-900">{formatCurrency(snapshotTotalUSD, 'USD')}</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-sm font-medium text-gray-700">Capital Invertido (ARS)</h3>
