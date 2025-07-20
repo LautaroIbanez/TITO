@@ -162,6 +162,37 @@ export default function DailyGainChart({ records, currency = 'ARS' }: Props) {
             `Fecha: ${dayjs(context[0]?.parsed.x).format('YYYY-MM-DD')}`,
         }
       },
+      datalabels: {
+        color: '#374151',
+        anchor: 'end' as const,
+        align: 'top' as const,
+        offset: 4,
+        font: {
+          size: 10,
+          weight: 'bold' as const
+        },
+        formatter: (value: number, context: any) => {
+          // Only show labels for gain dataset (index 0)
+          if (context.datasetIndex === 0) {
+            return formatCurrency(value, currency);
+          }
+          return null;
+        },
+        // Hide labels if they would overlap
+        display: (context: any) => {
+          if (context.datasetIndex === 0) {
+            const value = context.parsed.y;
+            const percentageValue = context.chart.data.datasets[1]?.data[context.dataIndex];
+            
+            // Hide if gain value is too small or would overlap with percentage
+            if (Math.abs(value) < Math.abs(percentageValue) * 0.1) {
+              return false;
+            }
+            return true;
+          }
+          return false;
+        }
+      },
     },
     scales: {
       x: {

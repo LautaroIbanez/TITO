@@ -14,7 +14,8 @@
     "update-crypto": "ts-node scripts/update-crypto.ts",
     "update-cauciones": "ts-node scripts/update-cauciones.ts",
     "scrape-bonds": "python3 scripts/scrape_bonistas.py",
-    "daily-snapshot": "ts-node --project scripts/tsconfig.json scripts/daily-snapshot.ts"
+    "daily-snapshot": "ts-node --project scripts/tsconfig.json scripts/daily-snapshot.ts",
+    "migrate-net-gains": "ts-node --project scripts/tsconfig.json scripts/migrate-net-gains.ts"
   },
   "dependencies": {
     "@binance/connector": "^3.6.1",
@@ -44,6 +45,7 @@
     "@testing-library/react": "^16.3.0",
     "@testing-library/react-hooks": "^8.0.1",
     "@testing-library/user-event": "^14.6.1",
+    "@types/chartjs-plugin-crosshair": "^1.1.5",
     "@types/jest": "^30.0.0",
     "@types/node": "^20.19.7",
     "@types/node-fetch": "^2.6.12",

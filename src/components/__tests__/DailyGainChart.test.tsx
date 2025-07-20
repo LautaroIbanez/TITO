@@ -148,4 +148,13 @@ describe('DailyGainChart', () => {
     expect(screen.getByText('Días con ganancia')).toBeInTheDocument();
     expect(screen.getByText('Días con pérdida')).toBeInTheDocument();
   });
+
+  it('configures datalabels plugin correctly', () => {
+    render(<DailyGainChart records={[validRecord1, validRecord2, validRecord3]} />);
+    
+    // The chart should be rendered with datalabels configuration
+    // We can't directly test the chart.js configuration in unit tests,
+    // but we can verify the component renders without errors
+    expect(screen.getByText('Ganancia Diaria')).toBeInTheDocument();
+  });
 }); 

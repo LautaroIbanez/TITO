@@ -262,7 +262,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
           // Add annotations for the last value of each dataset
           totalARS: {
             type: 'point' as const,
-            xValue: labels[labels.length - 1],
+            xValue: new Date(sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1].fecha).toISOString(),
             yValue: sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1].total_portfolio_ars,
             backgroundColor: '#2563eb',
             borderColor: '#2563eb',
@@ -278,7 +278,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
           },
           invertidoARS: {
             type: 'point' as const,
-            xValue: labels[labels.length - 1],
+            xValue: new Date(sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1].fecha).toISOString(),
             yValue: sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1].capital_invertido_ars,
             backgroundColor: '#7c2d12',
             borderColor: '#7c2d12',
@@ -294,7 +294,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
           },
           gananciaARS: {
             type: 'point' as const,
-            xValue: labels[labels.length - 1],
+            xValue: new Date(sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1].fecha).toISOString(),
             yValue: computedGainsARS[computedGainsARS.length - 1],
             backgroundColor: '#166534',
             borderColor: '#166534',
@@ -310,7 +310,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
           },
           efectivoARS: {
             type: 'point' as const,
-            xValue: labels[labels.length - 1],
+            xValue: new Date(sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1].fecha).toISOString(),
             yValue: sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1].efectivo_disponible_ars,
             backgroundColor: '#ea580c',
             borderColor: '#ea580c',
@@ -387,7 +387,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
           // Add annotations for the last value of each dataset
           totalUSD: {
             type: 'point' as const,
-            xValue: labels[labels.length - 1],
+            xValue: new Date(sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1].fecha).toISOString(),
             yValue: sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1].total_portfolio_usd,
             backgroundColor: '#3730a3',
             borderColor: '#3730a3',
@@ -403,7 +403,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
           },
           invertidoUSD: {
             type: 'point' as const,
-            xValue: labels[labels.length - 1],
+            xValue: new Date(sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1].fecha).toISOString(),
             yValue: sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1].capital_invertido_usd,
             backgroundColor: '#be185d',
             borderColor: '#be185d',
@@ -419,7 +419,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
           },
           gananciaUSD: {
             type: 'point' as const,
-            xValue: labels[labels.length - 1],
+            xValue: new Date(sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1].fecha).toISOString(),
             yValue: computedGainsUSD[computedGainsUSD.length - 1],
             backgroundColor: '#a16207',
             borderColor: '#a16207',
@@ -435,7 +435,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
           },
           efectivoUSD: {
             type: 'point' as const,
-            xValue: labels[labels.length - 1],
+            xValue: new Date(sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1].fecha).toISOString(),
             yValue: sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1].efectivo_disponible_usd,
             backgroundColor: '#0369a1',
             borderColor: '#0369a1',

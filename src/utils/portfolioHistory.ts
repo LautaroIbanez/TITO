@@ -6,6 +6,7 @@ import { getPortfolioData } from './portfolioData';
 import { calculateCurrentValueByCurrency } from './calculatePortfolioValue';
 import { calculateInvestedCapital } from './investedCapital';
 import { calculateNetGainsByCurrency } from './positionGains';
+import { recalculateNetGains } from './netGainsCalculator';
 
 export interface DailyPortfolioRecord {
   fecha: string; // YYYY-MM-DD
@@ -182,18 +183,23 @@ export async function guardarSnapshotDiario(username: string): Promise<void> {
     const existingRecordIndex = history.findIndex(entry => entry.fecha === today);
     
     if (existingRecordIndex === -1) {
-      // Create snapshot object
+      // Create snapshot object with standardized net gains calculation
       const snapshot: DailyPortfolioRecord = {
         fecha: today,
         total_portfolio_ars: Number.isFinite(totalARS) ? totalARS : 0,
         total_portfolio_usd: Number.isFinite(totalUSD) ? totalUSD : 0,
         capital_invertido_ars: Number.isFinite(investedARS) ? investedARS : 0,
         capital_invertido_usd: Number.isFinite(investedUSD) ? investedUSD : 0,
-        ganancias_netas_ars: Number.isFinite(netGainsARS) ? netGainsARS : 0,
-        ganancias_netas_usd: Number.isFinite(netGainsUSD) ? netGainsUSD : 0,
+        ganancias_netas_ars: null, // Will be calculated using standardized formula
+        ganancias_netas_usd: null, // Will be calculated using standardized formula
         efectivo_disponible_ars: Number.isFinite(portfolioData.cash?.ARS) ? portfolioData.cash.ARS : 0,
         efectivo_disponible_usd: Number.isFinite(portfolioData.cash?.USD) ? portfolioData.cash.USD : 0,
       };
+      
+      // Calculate net gains using standardized formula
+      const netGains = recalculateNetGains(snapshot);
+      snapshot.ganancias_netas_ars = netGains.ARS;
+      snapshot.ganancias_netas_usd = netGains.USD;
       
       // Add incompleto flag if any metrics couldn't be computed
       if (hasInvalidMetrics) {
