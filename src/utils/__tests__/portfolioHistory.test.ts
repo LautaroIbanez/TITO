@@ -1,9 +1,9 @@
 import { 
   getLatestPortfolioSnapshot, 
-  normalizePortfolioHistory, 
-  loadAndNormalizePortfolioHistory 
-} from '../portfolioHistory';
-import type { DailyPortfolioRecord } from '../portfolioHistory';
+  normalizePortfolioHistory
+} from '../portfolioHistoryClient';
+import { loadAndNormalizePortfolioHistory } from '../portfolioHistory';
+import type { DailyPortfolioRecord } from '../portfolioHistoryClient';
 
 // Mock fs module
 jest.mock('fs/promises');

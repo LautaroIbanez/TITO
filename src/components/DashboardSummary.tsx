@@ -13,7 +13,7 @@ import { calculateNetGainsByCurrency } from '@/utils/positionGains';
 import { getPositionDisplayName } from '@/utils/priceValidation';
 import { getRecommendationLabel } from '@/utils/assetClassLabels';
 import { usePortfolioHistory } from './usePortfolioHistory';
-import { getLatestPortfolioSnapshot } from '@/utils/portfolioHistory';
+import { getLatestPortfolioSnapshot } from '@/utils/portfolioHistoryClient';
 import HistoricalPortfolioChart from './HistoricalPortfolioChart';
 import DailyGainChart from './DailyGainChart';
 import { getSessionData, setSessionData } from '@/utils/sessionStorage';

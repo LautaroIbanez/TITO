@@ -12,7 +12,7 @@ import { calculateInvestedCapital } from '../../utils/investedCapital';
 import { calculatePortfolioSummaryHistory } from '../../utils/portfolioSummaryHistory';
 import { renderHook, act } from '@testing-library/react-hooks';
 import { usePortfolioHistory } from '../usePortfolioHistory';
-import { getLatestPortfolioSnapshot } from '../../utils/portfolioHistory';
+import { getLatestPortfolioSnapshot } from '../../utils/portfolioHistoryClient';
 
 // Mock the hooks and utilities
 jest.mock('../../contexts/PortfolioContext');
@@ -26,7 +26,7 @@ jest.mock('../../utils/currency');
 jest.mock('../../utils/portfolioSummaryHistory', () => ({
   calculatePortfolioSummaryHistory: jest.fn(),
 }));
-jest.mock('../../utils/portfolioHistory', () => ({
+jest.mock('../../utils/portfolioHistoryClient', () => ({
   getLatestPortfolioSnapshot: jest.fn(),
 }));
 

@@ -8,18 +8,13 @@ import { calculateInvestedCapital } from './investedCapital';
 import { calculateNetGainsByCurrency } from './positionGains';
 import { recalculateNetGains } from './netGainsCalculator';
 
-export interface DailyPortfolioRecord {
-  fecha: string; // YYYY-MM-DD
-  total_portfolio_ars: number;
-  total_portfolio_usd: number;
-  capital_invertido_ars: number;
-  capital_invertido_usd: number;
-  ganancias_netas_ars: number | null;
-  ganancias_netas_usd: number | null;
-  efectivo_disponible_ars: number;
-  efectivo_disponible_usd: number;
-  incompleto?: boolean; // New field to indicate incomplete data
-}
+// Import the interface and client-safe functions from the client module
+import type { DailyPortfolioRecord } from './portfolioHistoryClient';
+import { normalizePortfolioHistory } from './portfolioHistoryClient';
+
+// Re-export for server code that needs them
+export type { DailyPortfolioRecord } from './portfolioHistoryClient';
+export { getLatestPortfolioSnapshot, normalizePortfolioHistory } from './portfolioHistoryClient';
 
 /**
  * Appends a daily portfolio record to the user's history file
@@ -217,51 +212,6 @@ export async function guardarSnapshotDiario(username: string): Promise<void> {
     console.error(`Error saving daily snapshot for ${username}:`, error);
     // Don't throw - this is a non-critical operation
   }
-}
-
-/**
- * Gets the latest portfolio snapshot from an array of daily records
- * @param history Array of daily portfolio records
- * @returns The latest record or null if no records exist
- */
-export function getLatestPortfolioSnapshot(history: DailyPortfolioRecord[]): DailyPortfolioRecord | null {
-  if (!history || history.length === 0) {
-    return null;
-  }
-  
-  // Sort by date to ensure we get the latest record
-  const sortedHistory = [...history].sort((a, b) => 
-    new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
-  );
-  
-  return sortedHistory[sortedHistory.length - 1];
-}
-
-/**
- * Normalizes portfolio history records by ensuring ganancias_netas_* values
- * match the calculated values (total_portfolio_* - capital_invertido_*)
- * @param records Array of daily portfolio records to normalize
- * @returns Array of normalized records
- */
-export function normalizePortfolioHistory(records: DailyPortfolioRecord[]): DailyPortfolioRecord[] {
-  return records.map(record => {
-    const calculatedGainsARS = record.total_portfolio_ars - record.capital_invertido_ars;
-    const calculatedGainsUSD = record.total_portfolio_usd - record.capital_invertido_usd;
-    
-    // Check if the stored gains differ from calculated gains
-    const gainsARSChanged = record.ganancias_netas_ars !== calculatedGainsARS;
-    const gainsUSDChanged = record.ganancias_netas_usd !== calculatedGainsUSD;
-    
-    if (gainsARSChanged || gainsUSDChanged) {
-      return {
-        ...record,
-        ganancias_netas_ars: calculatedGainsARS,
-        ganancias_netas_usd: calculatedGainsUSD,
-      };
-    }
-    
-    return record;
-  });
 }
 
 /**

@@ -1,5 +1,5 @@
 import { recalculateNetGains, recalculateNetGainsForRecords, getLatestNetGains } from '../netGainsCalculator';
-import type { DailyPortfolioRecord } from '../portfolioHistory';
+import type { DailyPortfolioRecord } from '../portfolioHistoryClient';
 
 describe('netGainsCalculator', () => {
   const mockRecord: DailyPortfolioRecord = {
