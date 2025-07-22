@@ -211,6 +211,11 @@ export default function DashboardSummary() {
   const safeNetGainsUSD = portfolioHistory && portfolioHistory.length > 0 
     ? historyGainsUSD 
     : snapshotTotalUSD - investedCapitalUSD;
+  
+  // Calculate total values - use the original snapshot totals which include cash
+  const valorTotalARS = snapshotTotalARS;
+  const valorTotalUSD = snapshotTotalUSD;
+  
   const gainsColorARS = safeNetGainsARS >= 0 ? 'text-green-600' : 'text-red-600';
   const gainsColorUSD = safeNetGainsUSD >= 0 ? 'text-green-600' : 'text-red-600';
 
@@ -274,11 +279,11 @@ export default function DashboardSummary() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-sm font-medium text-gray-700">Valor Total del Portafolio (ARS)</h3>
-          <p className="text-2xl font-semibold text-gray-900">{formatCurrency(snapshotTotalARS, 'ARS')}</p>
+          <p className="text-2xl font-semibold text-gray-900">{formatCurrency(Number.isFinite(valorTotalARS) ? valorTotalARS : 0, 'ARS')}</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-sm font-medium text-gray-700">Valor Total del Portafolio (USD)</h3>
-          <p className="text-2xl font-semibold text-gray-900">{formatCurrency(snapshotTotalUSD, 'USD')}</p>
+          <p className="text-2xl font-semibold text-gray-900">{formatCurrency(Number.isFinite(valorTotalUSD) ? valorTotalUSD : 0, 'USD')}</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-sm font-medium text-gray-700">Capital Invertido (ARS)</h3>
