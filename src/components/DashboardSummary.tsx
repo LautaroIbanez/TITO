@@ -9,7 +9,7 @@ import { usePortfolio } from '@/contexts/PortfolioContext';
 import GoalProgress from './GoalProgress';
 import { formatCurrency, calculateFixedIncomeGains, calculateFixedIncomeValueHistory } from '@/utils/goalCalculator';
 import { generatePortfolioHash } from '@/utils/priceDataHash';
-import { calculateNetGainsByCurrency } from '@/utils/positionGains';
+import { getPortfolioNetGains } from '@/utils/positionGains';
 import { getPositionDisplayName } from '@/utils/priceValidation';
 import { getRecommendationLabel } from '@/utils/assetClassLabels';
 import { usePortfolioHistory } from './usePortfolioHistory';
@@ -194,12 +194,22 @@ export default function DashboardSummary() {
     ? snapshotInvestedUSD
     : (console.warn('investedCapitalUSD is not finite'), 0);
 
-  const { ARS: netGainsARS, USD: netGainsUSD, skipped } = calculateNetGainsByCurrency(
+  const { totals: calculatedGains, excludedPositions } = getPortfolioNetGains(
     portfolioData.positions || [],
     portfolioData.historicalPrices || {}
   );
-  const safeNetGainsARS = latestSnapshot ? snapshotGainsARS : (Number.isFinite(netGainsARS) ? netGainsARS : (console.warn('netGainsARS is not finite', netGainsARS), 0));
-  const safeNetGainsUSD = latestSnapshot ? snapshotGainsUSD : (Number.isFinite(netGainsUSD) ? netGainsUSD : (console.warn('netGainsUSD is not finite', netGainsUSD), 0));
+  
+  // Validate snapshot gains against calculated gains if snapshot exists
+  const snapshotGainsValid = latestSnapshot && 
+    Math.abs(snapshotGainsARS - calculatedGains.ARS) < 1 && 
+    Math.abs(snapshotGainsUSD - calculatedGains.USD) < 1;
+  
+  const safeNetGainsARS = latestSnapshot && snapshotGainsValid 
+    ? snapshotGainsARS 
+    : (Number.isFinite(calculatedGains.ARS) ? calculatedGains.ARS : (console.warn('calculatedGains.ARS is not finite', calculatedGains.ARS), 0));
+  const safeNetGainsUSD = latestSnapshot && snapshotGainsValid 
+    ? snapshotGainsUSD 
+    : (Number.isFinite(calculatedGains.USD) ? calculatedGains.USD : (console.warn('calculatedGains.USD is not finite', calculatedGains.USD), 0));
   const gainsColorARS = safeNetGainsARS >= 0 ? 'text-green-600' : 'text-red-600';
   const gainsColorUSD = safeNetGainsUSD >= 0 ? 'text-green-600' : 'text-red-600';
 
@@ -274,11 +284,11 @@ export default function DashboardSummary() {
           <p className="text-2xl font-semibold text-gray-900">{formatCurrency(investedCapitalARS, 'ARS')}</p>
         </div>
         {/* Net Gains Warning */}
-        {skipped.length > 0 && (
+        {excludedPositions.length > 0 && (
           <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-3 rounded mb-4">
             <strong>Advertencia:</strong> Algunos activos no se incluyeron en el cálculo de ganancias por falta de precio actual:
             <ul className="list-disc ml-6 mt-1">
-              {skipped.map(({ position, reason }, i: number) => (
+              {excludedPositions.map(({ position, reason }, i: number) => (
                 <li key={i}>
                   {position.type} {getPositionDisplayName(position)}: {reason}
                 </li>

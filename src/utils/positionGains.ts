@@ -72,4 +72,68 @@ export function calculateNetGainsByCurrency(
     }
   }
   return { ARS, USD, skipped };
+}
+
+/**
+ * Calculates portfolio net gains with detailed information per position.
+ * Returns gains per position, totals by currency, and list of excluded positions.
+ * @param positions Array of portfolio positions
+ * @param priceHistory Price data for stocks/bonds/crypto
+ * @param today Optional date for calculations (defaults to current date)
+ * @returns Object with position gains, currency totals, and excluded positions
+ */
+export function getPortfolioNetGains(
+  positions: PortfolioPosition[],
+  priceHistory: Record<string, any>,
+  today: Date = new Date()
+): {
+  positionGains: Map<string, number>;
+  totals: { ARS: number; USD: number };
+  excludedPositions: Array<{ position: PortfolioPosition; reason: string }>;
+} {
+  const positionGains = new Map<string, number>();
+  let ARS = 0;
+  let USD = 0;
+  const excludedPositions: Array<{ position: PortfolioPosition; reason: string }> = [];
+
+  for (const pos of positions) {
+    const validation = validatePositionPrice(pos, priceHistory);
+    
+    if (!validation.hasValidPrice || typeof validation.currentPrice !== 'number') {
+      excludedPositions.push({ position: pos, reason: validation.reason || 'Precio no disponible' });
+      continue;
+    }
+
+    const gain = computePositionGain(pos, validation.currentPrice, today);
+    
+    // For stocks/crypto, validate that both purchase and current prices are finite
+    if (pos.type === 'Stock' || pos.type === 'Crypto') {
+      const purchasePrice = getPurchasePrice(pos);
+      if (!Number.isFinite(purchasePrice) || !Number.isFinite(validation.currentPrice)) {
+        excludedPositions.push({ position: pos, reason: 'Precio de compra o actual no válido' });
+        continue;
+      }
+    }
+
+    // Generate unique key for position
+    const positionKey = pos.type === 'Stock' || pos.type === 'Crypto' 
+      ? `${pos.symbol}-${pos.currency}`
+      : pos.type === 'Bond'
+      ? `${pos.ticker}-${pos.currency}`
+      : pos.id;
+
+    positionGains.set(positionKey, gain);
+
+    if (pos.currency === 'ARS') {
+      ARS += gain;
+    } else if (pos.currency === 'USD') {
+      USD += gain;
+    }
+  }
+
+  return {
+    positionGains,
+    totals: { ARS, USD },
+    excludedPositions
+  };
 } 

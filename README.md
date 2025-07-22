@@ -508,6 +508,42 @@ This will download daily price history for the following symbols:
 
 The data is saved as JSON files in `data/crypto/` (e.g., `data/crypto/BTCUSDT.json`).
 
+## Portfolio Gains Calculation
+
+TITO uses a unified gains calculation system through the `getPortfolioNetGains` function in `src/utils/positionGains.ts`. This function provides consistent gain calculations across all components and ensures data integrity.
+
+### How Gains Are Calculated
+
+The system calculates gains using the following approach:
+
+1. **Position-by-Position Analysis**: Each position is validated for price availability using `validatePositionPrice`
+2. **Gain Computation**: Individual gains are calculated using `computePositionGain`:
+   - **Stocks/Crypto**: `(currentPrice - purchasePrice) * quantity`
+   - **Fixed-term Deposits/Cauciones**: `amount * annualRate * (days/365)`
+3. **Currency Aggregation**: Gains are summed by currency (ARS/USD)
+4. **Excluded Positions**: Positions without valid prices are tracked separately
+
+### Components Using the Same Calculation
+
+Both `DashboardSummary` and `PortfolioTable` components use the same `getPortfolioNetGains` function to ensure consistency:
+
+- **DashboardSummary**: Displays total gains by currency and shows warnings for excluded positions
+- **PortfolioTable**: Shows individual position gains and displays "Sin datos suficientes" for excluded positions
+
+### Snapshot Validation
+
+When portfolio snapshots are available, the system validates that the snapshot gains match the calculated gains (within 1 unit tolerance). If they don't match, the calculated gains are used instead.
+
+### Position Exclusion Handling
+
+Positions are excluded from gain calculations when:
+- No price data is available for the symbol
+- Current prices are zero or invalid
+- Purchase prices are not finite (NaN, Infinity)
+- Position type is not supported
+
+Excluded positions are clearly marked in the UI and don't contribute to total gains.
+
 ## Crypto Currency Conversion
 
 TITO supports purchasing cryptocurrencies using either USD or ARS. When ARS is selected for crypto purchases, the system automatically converts the ARS amount to USD using the current exchange rate.

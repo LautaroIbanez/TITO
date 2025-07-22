@@ -402,7 +402,7 @@ describe('DashboardSummary', () => {
     });
   });
 
-  it('uses snapshot values when available instead of recalculating', async () => {
+  it('uses snapshot values when available and valid', async () => {
     const mockSnapshot = {
       fecha: '2024-01-01',
       total_portfolio_ars: 120000,
@@ -456,6 +456,93 @@ describe('DashboardSummary', () => {
       expect(screen.getByText('USD 1,200.00')).toBeInTheDocument();   // From snapshot
       expect(screen.getByText('ARS 30,000.00')).toBeInTheDocument();  // From snapshot gains
       expect(screen.getByText('USD 300.00')).toBeInTheDocument();     // From snapshot gains
+    });
+  });
+
+  it('uses calculated gains when snapshot gains are invalid', async () => {
+    const mockSnapshot = {
+      fecha: '2024-01-01',
+      total_portfolio_ars: 120000,
+      total_portfolio_usd: 1200,
+      capital_invertido_ars: 90000,
+      capital_invertido_usd: 900,
+      ganancias_netas_ars: 50000, // Invalid: doesn't match calculated gains
+      ganancias_netas_usd: 500,   // Invalid: doesn't match calculated gains
+      efectivo_disponible_ars: 15000,
+      efectivo_disponible_usd: 150,
+    };
+
+    mockUsePortfolio.mockReturnValue({
+      portfolioData: mockPortfolioData,
+      strategy: null,
+      loading: false,
+      error: null,
+      portfolioVersion: 1,
+    });
+
+    mockCalculateCurrentValueByCurrency.mockReturnValue({ ARS: 100000, USD: 1000 });
+    mockCalculateInvestedCapital.mockReturnValue(90000);
+    mockCalculatePortfolioValueHistory.mockResolvedValue([]);
+    mockCalculatePortfolioPerformance.mockReturnValue({
+      monthlyReturnARS: 5.2,
+      monthlyReturnUSD: 3.1,
+      annualReturnARS: 15.8,
+      annualReturnUSD: 12.4,
+      monthlyReturnARSReal: 1.0,
+      monthlyReturnUSDReal: 2.8,
+      annualReturnARSReal: -126.9,
+      annualReturnUSDReal: 9.3,
+    });
+    mockFetchInflationData.mockResolvedValue({
+      argentina: { monthly: 4.2, annual: 142.7 },
+      usa: { monthly: 0.3, annual: 3.1 }
+    });
+    mockGetLatestPortfolioSnapshot.mockReturnValue(mockSnapshot);
+
+    render(
+      <PortfolioProvider>
+        <ScoopProvider>
+          <DashboardSummary />
+        </ScoopProvider>
+      </PortfolioProvider>
+    );
+
+    await waitFor(() => {
+      // Should display calculated gains instead of invalid snapshot gains
+      expect(screen.getByText('ARS 10,000.00')).toBeInTheDocument(); // Calculated gains (100000 - 90000)
+      expect(screen.getByText('USD 100.00')).toBeInTheDocument();    // Calculated gains (1000 - 900)
+    });
+  });
+
+  it('shows warning for excluded positions', async () => {
+    const mockPortfolioDataWithExcluded = {
+      ...mockPortfolioData,
+      positions: [
+        {
+          type: 'Stock' as const,
+          symbol: 'INVALID',
+          quantity: 10,
+          purchasePrice: 150,
+          currency: 'USD' as const,
+          market: 'NASDAQ' as const
+        }
+      ],
+      historicalPrices: {} // Empty prices will cause position to be excluded
+    };
+
+    mockUsePortfolio.mockReturnValue({
+      portfolioData: mockPortfolioDataWithExcluded,
+      strategy: null,
+      loading: false,
+      error: null,
+      portfolioVersion: 1,
+    });
+
+    render(<DashboardSummary />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Advertencia:')).toBeInTheDocument();
+      expect(screen.getByText(/Stock INVALID: No hay datos de precio disponibles/)).toBeInTheDocument();
     });
   });
 });
