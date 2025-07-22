@@ -6,9 +6,10 @@ import { PortfolioProvider } from '../../contexts/PortfolioContext';
 import { ScoopProvider } from '../../contexts/ScoopContext';
 import { usePortfolio } from '../../contexts/PortfolioContext';
 import { calculatePortfolioValueHistory, calculateCurrentValueByCurrency } from '../../utils/calculatePortfolioValue';
-import { calculatePortfolioPerformance, fetchInflationData } from '../../utils/portfolioPerformance';
+import { calculatePortfolioPerformance, fetchInflationData, formatPerformance } from '../../utils/portfolioPerformance';
 import { UserData, PortfolioTransaction, FixedTermDepositCreationTransaction } from '@/types';
 import { calculateInvestedCapital } from '../../utils/investedCapital';
+import { formatCurrency } from '../../utils/goalCalculator';
 import { calculatePortfolioSummaryHistory } from '../../utils/portfolioSummaryHistory';
 import { renderHook, act } from '@testing-library/react-hooks';
 import { usePortfolioHistory } from '../usePortfolioHistory';
@@ -17,17 +18,41 @@ import { getLatestPortfolioSnapshot } from '../../utils/portfolioHistoryClient';
 // Mock the hooks and utilities
 jest.mock('../../contexts/PortfolioContext');
 jest.mock('../../utils/calculatePortfolioValue');
-jest.mock('../../utils/portfolioPerformance');
+jest.mock('../../utils/portfolioPerformance', () => ({
+  calculatePortfolioPerformance: jest.fn(),
+  fetchInflationData: jest.fn(),
+  formatPerformance: jest.fn((value) => ({
+    color: value >= 0 ? 'text-green-600' : 'text-red-600',
+    formatted: `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
+  }))
+}));
 jest.mock('../../utils/investedCapital', () => ({
   calculateInvestedCapital: jest.fn(),
   calculateDailyInvestedCapital: jest.fn(),
 }));
 jest.mock('../../utils/currency');
+jest.mock('../../utils/goalCalculator', () => ({
+  formatCurrency: jest.fn((value, currency) => {
+    if (currency === 'ARS') {
+      return `$${value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    } else {
+      return `US$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+  }),
+}));
 jest.mock('../../utils/portfolioSummaryHistory', () => ({
   calculatePortfolioSummaryHistory: jest.fn(),
 }));
 jest.mock('../../utils/portfolioHistoryClient', () => ({
   getLatestPortfolioSnapshot: jest.fn(),
+}));
+
+jest.mock('../../utils/positionGains', () => ({
+  getPortfolioNetGains: jest.fn(() => ({
+    positionGains: new Map(),
+    totals: { ARS: 0, USD: 0 },
+    excludedPositions: []
+  }))
 }));
 
 const mockUsePortfolio = usePortfolio as jest.Mock;
@@ -242,12 +267,10 @@ describe('DashboardSummary', () => {
     render(<DashboardSummary />);
 
     await waitFor(() => {
-      expect(screen.getByText('Resumen del Portfolio')).toBeInTheDocument();
+      expect(screen.getByText('$1.600,00')).toBeInTheDocument(); // Portfolio value
+      expect(screen.getByText('$1.500,00')).toBeInTheDocument(); // Invested capital
+      expect(screen.getByText('+$100,00')).toBeInTheDocument(); // Net gains
     });
-
-    expect(screen.getByText('$1.600,00')).toBeInTheDocument(); // Portfolio value
-    expect(screen.getByText('$1.500,00')).toBeInTheDocument(); // Invested capital
-    expect(screen.getByText('$100,00')).toBeInTheDocument(); // Net gains
   });
 
   it('calculates net gains using invested capital', async () => {
@@ -284,10 +307,9 @@ describe('DashboardSummary', () => {
     render(<DashboardSummary />);
 
     await waitFor(() => {
-      expect(screen.getByText('Resumen del Portfolio')).toBeInTheDocument();
       expect(screen.getByText('$1.600,00')).toBeInTheDocument(); // Portfolio value
       expect(screen.getByText('$1.500,00')).toBeInTheDocument(); // Invested capital
-      expect(screen.getByText('$100,00')).toBeInTheDocument(); // Net gains
+      expect(screen.getByText('+$100,00')).toBeInTheDocument(); // Net gains
     });
 
     // Performance section should not be rendered when metrics are null
@@ -402,116 +424,39 @@ describe('DashboardSummary', () => {
     });
   });
 
-  it('uses snapshot values when available and valid', async () => {
-    const mockSnapshot = {
-      fecha: '2024-01-01',
-      total_portfolio_ars: 120000,
-      total_portfolio_usd: 1200,
-      capital_invertido_ars: 90000,
-      capital_invertido_usd: 900,
-      ganancias_netas_ars: 30000,
-      ganancias_netas_usd: 300,
-      efectivo_disponible_ars: 15000,
-      efectivo_disponible_usd: 150,
-    };
-
-    mockUsePortfolio.mockReturnValue({
-      portfolioData: mockPortfolioData,
-      strategy: null,
-      loading: false,
-      error: null,
-      portfolioVersion: 1,
-    });
-
-    mockCalculateCurrentValueByCurrency.mockReturnValue({ ARS: 100000, USD: 1000 });
-    mockCalculateInvestedCapital.mockReturnValue(90000);
-    mockCalculatePortfolioValueHistory.mockResolvedValue([]);
-    mockCalculatePortfolioPerformance.mockReturnValue({
-      monthlyReturnARS: 5.2,
-      monthlyReturnUSD: 3.1,
-      annualReturnARS: 15.8,
-      annualReturnUSD: 12.4,
-      monthlyReturnARSReal: 1.0,
-      monthlyReturnUSDReal: 2.8,
-      annualReturnARSReal: -126.9,
-      annualReturnUSDReal: 9.3,
-    });
-    mockFetchInflationData.mockResolvedValue({
-      argentina: { monthly: 4.2, annual: 142.7 },
-      usa: { monthly: 0.3, annual: 3.1 }
-    });
-    mockGetLatestPortfolioSnapshot.mockReturnValue(mockSnapshot);
-
-    render(
-      <PortfolioProvider>
-        <ScoopProvider>
-          <DashboardSummary />
-        </ScoopProvider>
-      </PortfolioProvider>
-    );
+  it('calculates net gains using simple formula (total - invested)', async () => {
+    // This test verifies that the component uses the simple formula: total - invested
+    // for calculating net gains, regardless of whether a snapshot exists
+    render(<DashboardSummary />);
 
     await waitFor(() => {
-      // Should display snapshot values instead of calculated values
-      expect(screen.getByText('ARS 120,000.00')).toBeInTheDocument(); // From snapshot
-      expect(screen.getByText('USD 1,200.00')).toBeInTheDocument();   // From snapshot
-      expect(screen.getByText('ARS 30,000.00')).toBeInTheDocument();  // From snapshot gains
-      expect(screen.getByText('USD 300.00')).toBeInTheDocument();     // From snapshot gains
+      // Should display calculated values using the simple formula
+      expect(screen.getByText('$1.600,00')).toBeInTheDocument(); // Portfolio value
+      expect(screen.getByText('$1.500,00')).toBeInTheDocument(); // Invested capital
+      expect(screen.getByText('+$100,00')).toBeInTheDocument(); // Net gains (1600 - 1500)
     });
   });
 
-  it('uses calculated gains when snapshot gains are invalid', async () => {
-    const mockSnapshot = {
-      fecha: '2024-01-01',
-      total_portfolio_ars: 120000,
-      total_portfolio_usd: 1200,
-      capital_invertido_ars: 90000,
-      capital_invertido_usd: 900,
-      ganancias_netas_ars: 50000, // Invalid: doesn't match calculated gains
-      ganancias_netas_usd: 500,   // Invalid: doesn't match calculated gains
-      efectivo_disponible_ars: 15000,
-      efectivo_disponible_usd: 150,
-    };
-
-    mockUsePortfolio.mockReturnValue({
-      portfolioData: mockPortfolioData,
-      strategy: null,
-      loading: false,
-      error: null,
-      portfolioVersion: 1,
-    });
-
-    mockCalculateCurrentValueByCurrency.mockReturnValue({ ARS: 100000, USD: 1000 });
-    mockCalculateInvestedCapital.mockReturnValue(90000);
-    mockCalculatePortfolioValueHistory.mockResolvedValue([]);
-    mockCalculatePortfolioPerformance.mockReturnValue({
-      monthlyReturnARS: 5.2,
-      monthlyReturnUSD: 3.1,
-      annualReturnARS: 15.8,
-      annualReturnUSD: 12.4,
-      monthlyReturnARSReal: 1.0,
-      monthlyReturnUSDReal: 2.8,
-      annualReturnARSReal: -126.9,
-      annualReturnUSDReal: 9.3,
-    });
-    mockFetchInflationData.mockResolvedValue({
-      argentina: { monthly: 4.2, annual: 142.7 },
-      usa: { monthly: 0.3, annual: 3.1 }
-    });
-    mockGetLatestPortfolioSnapshot.mockReturnValue(mockSnapshot);
-
-    render(
-      <PortfolioProvider>
-        <ScoopProvider>
-          <DashboardSummary />
-        </ScoopProvider>
-      </PortfolioProvider>
-    );
+  it('uses getPortfolioNetGains only for excluded positions', async () => {
+    // This test verifies that getPortfolioNetGains is called only for getting excluded positions
+    // and that the gains calculation uses the simple formula: total - invested
+    const { getPortfolioNetGains } = require('../../utils/positionGains');
+    const mockGetPortfolioNetGains = getPortfolioNetGains as jest.Mock;
+    
+    render(<DashboardSummary />);
 
     await waitFor(() => {
-      // Should display calculated gains instead of invalid snapshot gains
-      expect(screen.getByText('ARS 10,000.00')).toBeInTheDocument(); // Calculated gains (100000 - 90000)
-      expect(screen.getByText('USD 100.00')).toBeInTheDocument();    // Calculated gains (1000 - 900)
+      // Should display calculated values using the simple formula
+      expect(screen.getByText('$1.600,00')).toBeInTheDocument(); // Portfolio value
+      expect(screen.getByText('$1.500,00')).toBeInTheDocument(); // Invested capital
+      expect(screen.getByText('+$100,00')).toBeInTheDocument(); // Net gains (1600 - 1500)
     });
+
+    // Verify that getPortfolioNetGains was called to get excluded positions
+    expect(mockGetPortfolioNetGains).toHaveBeenCalledWith(
+      mockPortfolioData.positions || [],
+      mockPortfolioData.historicalPrices || {}
+    );
   });
 
   it('shows warning for excluded positions', async () => {

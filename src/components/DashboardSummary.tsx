@@ -194,22 +194,15 @@ export default function DashboardSummary() {
     ? snapshotInvestedUSD
     : (console.warn('investedCapitalUSD is not finite'), 0);
 
-  const { totals: calculatedGains, excludedPositions } = getPortfolioNetGains(
+  // Get excluded positions for warning display
+  const { excludedPositions } = getPortfolioNetGains(
     portfolioData.positions || [],
     portfolioData.historicalPrices || {}
   );
   
-  // Validate snapshot gains against calculated gains if snapshot exists
-  const snapshotGainsValid = latestSnapshot && 
-    Math.abs(snapshotGainsARS - calculatedGains.ARS) < 1 && 
-    Math.abs(snapshotGainsUSD - calculatedGains.USD) < 1;
-  
-  const safeNetGainsARS = latestSnapshot && snapshotGainsValid 
-    ? snapshotGainsARS 
-    : (Number.isFinite(calculatedGains.ARS) ? calculatedGains.ARS : (console.warn('calculatedGains.ARS is not finite', calculatedGains.ARS), 0));
-  const safeNetGainsUSD = latestSnapshot && snapshotGainsValid 
-    ? snapshotGainsUSD 
-    : (Number.isFinite(calculatedGains.USD) ? calculatedGains.USD : (console.warn('calculatedGains.USD is not finite', calculatedGains.USD), 0));
+  // Calculate net gains using simple formula: total - invested
+  const safeNetGainsARS = snapshotTotalARS - investedCapitalARS;
+  const safeNetGainsUSD = snapshotTotalUSD - investedCapitalUSD;
   const gainsColorARS = safeNetGainsARS >= 0 ? 'text-green-600' : 'text-red-600';
   const gainsColorUSD = safeNetGainsUSD >= 0 ? 'text-green-600' : 'text-red-600';
 
