@@ -6,7 +6,7 @@ import { getPortfolioData } from './portfolioData';
 import { calculateCurrentValueByCurrency } from './calculatePortfolioValue';
 import { calculateInvestedCapital } from './investedCapital';
 import { calculateNetGainsByCurrency } from './positionGains';
-import { recalculateNetGains } from './netGainsCalculator';
+import { getLatestCumulativeNetGains } from './netGainsCalculator';
 
 // Import the interface and client-safe functions from the client module
 import type { DailyPortfolioRecord } from './portfolioHistoryClient';
@@ -191,10 +191,11 @@ export async function guardarSnapshotDiario(username: string): Promise<void> {
         efectivo_disponible_usd: Number.isFinite(portfolioData.cash?.USD) ? portfolioData.cash.USD : 0,
       };
       
-      // Calculate net gains using standardized formula
-      const netGains = recalculateNetGains(snapshot);
-      snapshot.ganancias_netas_ars = netGains.ARS;
-      snapshot.ganancias_netas_usd = netGains.USD;
+      // Calculate net gains using cumulative approach
+      const updatedHistory = [...history, snapshot];
+      const { cumulativeARS, cumulativeUSD } = getLatestCumulativeNetGains(updatedHistory);
+      snapshot.ganancias_netas_ars = cumulativeARS;
+      snapshot.ganancias_netas_usd = cumulativeUSD;
       
       // Add incompleto flag if any metrics couldn't be computed
       if (hasInvalidMetrics) {

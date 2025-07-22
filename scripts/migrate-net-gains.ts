@@ -1,26 +1,90 @@
-import fs from 'fs/promises';
-import path from 'path';
-import { recalculateNetGains } from '../src/utils/netGainsCalculator';
-import type { DailyPortfolioRecord } from '../src/utils/portfolioHistory';
+#!/usr/bin/env tsx
 
 /**
- * Migration script to recompute net gains for all history files
- * using the standardized formula: total_portfolio - capital_invertido
+ * Migration script to recompute all portfolio history files using the new
+ * cumulative daily differences approach for net gains calculation.
+ * 
+ * This script will:
+ * 1. Load all existing portfolio history files
+ * 2. Recompute ganancias_netas_ars and ganancias_netas_usd using calculateCumulativeNetGains
+ * 3. Save the updated files
  */
-async function migrateNetGains(): Promise<void> {
+
+import fs from 'fs/promises';
+import path from 'path';
+import { calculateCumulativeNetGains } from '../src/utils/netGainsCalculator';
+import type { DailyPortfolioRecord } from '../src/utils/portfolioHistoryClient';
+
+const HISTORY_DIR = path.join(process.cwd(), 'data', 'history');
+
+async function migrateHistoryFile(filePath: string): Promise<void> {
   try {
-    const historyDir = path.join(process.cwd(), 'data', 'history');
+    console.log(`Processing ${path.basename(filePath)}...`);
+    
+    // Read the history file
+    const fileContent = await fs.readFile(filePath, 'utf-8');
+    const history: DailyPortfolioRecord[] = JSON.parse(fileContent);
+    
+    if (history.length === 0) {
+      console.log(`  Skipping empty file`);
+      return;
+    }
+    
+    // Sort records by date to ensure chronological order
+    const sortedHistory = [...history].sort((a, b) => 
+      new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
+    );
+    
+    // Calculate cumulative gains
+    const { cumulativeARS, cumulativeUSD, dailyGains } = calculateCumulativeNetGains(sortedHistory);
+    
+    // Update each record with cumulative gains up to that point
+    const updatedHistory: DailyPortfolioRecord[] = [];
+    
+    for (let i = 0; i < sortedHistory.length; i++) {
+      const record = { ...sortedHistory[i] };
+      
+      if (i === 0) {
+        // First record has no gains
+        record.ganancias_netas_ars = 0;
+        record.ganancias_netas_usd = 0;
+      } else {
+        // Calculate cumulative gains up to this record
+        const recordsUpToThis = sortedHistory.slice(0, i + 1);
+        const { cumulativeARS: gainsUpToThisARS, cumulativeUSD: gainsUpToThisUSD } = calculateCumulativeNetGains(recordsUpToThis);
+        record.ganancias_netas_ars = gainsUpToThisARS;
+        record.ganancias_netas_usd = gainsUpToThisUSD;
+      }
+      
+      updatedHistory.push(record);
+    }
+    
+    // Write the updated history back to file
+    await fs.writeFile(filePath, JSON.stringify(updatedHistory, null, 2));
+    
+    console.log(`  Updated ${updatedHistory.length} records`);
+    console.log(`  Final cumulative gains: ARS ${cumulativeARS.toFixed(2)}, USD ${cumulativeUSD.toFixed(2)}`);
+    
+  } catch (error) {
+    console.error(`Error processing ${filePath}:`, error);
+  }
+}
+
+async function main(): Promise<void> {
+  try {
+    console.log('Starting net gains migration...');
+    console.log(`History directory: ${HISTORY_DIR}`);
     
     // Check if history directory exists
     try {
-      await fs.access(historyDir);
+      await fs.access(HISTORY_DIR);
     } catch {
-      console.log('History directory does not exist. No files to migrate.');
+      console.log('History directory does not exist. Nothing to migrate.');
       return;
     }
     
     // Get all JSON files in the history directory
-    const files = await fs.readdir(historyDir);
+    const files = await fs.readdir(HISTORY_DIR);
     const jsonFiles = files.filter(file => file.endsWith('.json'));
     
     if (jsonFiles.length === 0) {
@@ -30,61 +94,16 @@ async function migrateNetGains(): Promise<void> {
     
     console.log(`Found ${jsonFiles.length} history files to migrate.`);
     
-    let totalRecords = 0;
-    let updatedRecords = 0;
-    
+    // Process each file
     for (const file of jsonFiles) {
-      const filePath = path.join(historyDir, file);
-      const username = file.replace('.json', '');
-      
-      try {
-        // Read the file
-        const fileContent = await fs.readFile(filePath, 'utf-8');
-        const history: DailyPortfolioRecord[] = JSON.parse(fileContent);
-        
-        if (!Array.isArray(history)) {
-          console.warn(`Skipping ${file}: Invalid format (not an array)`);
-          continue;
-        }
-        
-        totalRecords += history.length;
-        let fileUpdated = false;
-        
-        // Process each record
-        for (const record of history) {
-          // Calculate net gains using standardized formula
-          const netGains = recalculateNetGains(record);
-          
-          // Check if the values need to be updated
-          const needsUpdate = 
-            record.ganancias_netas_ars !== netGains.ARS ||
-            record.ganancias_netas_usd !== netGains.USD;
-          
-          if (needsUpdate) {
-            record.ganancias_netas_ars = netGains.ARS;
-            record.ganancias_netas_usd = netGains.USD;
-            updatedRecords++;
-            fileUpdated = true;
-          }
-        }
-        
-        // Write back to file if any records were updated
-        if (fileUpdated) {
-          await fs.writeFile(filePath, JSON.stringify(history, null, 2));
-          console.log(`✓ Updated ${username}: ${history.length} records`);
-        } else {
-          console.log(`- No changes needed for ${username}: ${history.length} records`);
-        }
-        
-      } catch (error) {
-        console.error(`Error processing ${file}:`, error);
-      }
+      const filePath = path.join(HISTORY_DIR, file);
+      await migrateHistoryFile(filePath);
     }
     
-    console.log('\nMigration completed!');
-    console.log(`Total records processed: ${totalRecords}`);
-    console.log(`Records updated: ${updatedRecords}`);
-    console.log(`Files processed: ${jsonFiles.length}`);
+    console.log('\nMigration completed successfully!');
+    console.log('\nNote: All portfolio history files have been updated to use the new');
+    console.log('cumulative daily differences approach for net gains calculation.');
+    console.log('This ensures consistency with the new DashboardSummary and chart components.');
     
   } catch (error) {
     console.error('Migration failed:', error);
@@ -92,17 +111,7 @@ async function migrateNetGains(): Promise<void> {
   }
 }
 
-// Run the migration if this script is executed directly
+// Run the migration
 if (require.main === module) {
-  migrateNetGains()
-    .then(() => {
-      console.log('Migration script completed successfully.');
-      process.exit(0);
-    })
-    .catch((error) => {
-      console.error('Migration script failed:', error);
-      process.exit(1);
-    });
-}
-
-export { migrateNetGains }; 
+  main();
+} 

@@ -1,4 +1,62 @@
-# Bond Scraper
+# Scripts
+
+This directory contains various utility scripts for data management, scraping, and migration.
+
+## Net Gains Migration (`migrate-net-gains.ts`)
+
+### Overview
+Migration script to recompute all portfolio history files using the new cumulative daily differences approach for net gains calculation.
+
+### Purpose
+This script updates existing portfolio history files to use the new cumulative gains calculation method, ensuring consistency across all components.
+
+### What It Does
+1. Loads all existing portfolio history files from `data/history/`
+2. Recomputes `ganancias_netas_ars` and `ganancias_netas_usd` using `calculateCumulativeNetGains`
+3. Updates each record with cumulative gains up to that point in time
+4. Saves the updated files back to disk
+
+### Usage
+```bash
+# Run the migration
+npx tsx scripts/migrate-net-gains.ts
+```
+
+### When to Use
+- After deploying the new cumulative gains calculation system
+- When you need to ensure all history files are consistent with the new approach
+- Before running the application with the updated DashboardSummary component
+
+### Output
+The script will:
+- Process each `.json` file in `data/history/`
+- Display progress for each file
+- Show final cumulative gains for each user
+- Confirm successful migration
+
+### Example Output
+```
+Starting net gains migration...
+History directory: /path/to/data/history
+Found 3 history files to migrate.
+Processing user1.json...
+  Updated 15 records
+  Final cumulative gains: ARS 1250.50, USD 45.20
+Processing user2.json...
+  Updated 8 records
+  Final cumulative gains: ARS 890.30, USD 32.10
+Processing user3.json...
+  Updated 22 records
+  Final cumulative gains: ARS 2100.75, USD 78.90
+
+Migration completed successfully!
+
+Note: All portfolio history files have been updated to use the new
+cumulative daily differences approach for net gains calculation.
+This ensures consistency with the new DashboardSummary and chart components.
+```
+
+## Bond Scraper
 
 This directory contains scripts for scraping financial data, including the Bonistas bond scraper.
 

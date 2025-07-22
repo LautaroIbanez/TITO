@@ -10,6 +10,7 @@ import GoalProgress from './GoalProgress';
 import { formatCurrency, calculateFixedIncomeGains, calculateFixedIncomeValueHistory } from '@/utils/goalCalculator';
 import { generatePortfolioHash } from '@/utils/priceDataHash';
 import { getPortfolioNetGains } from '@/utils/positionGains';
+import { getLatestCumulativeNetGains } from '@/utils/netGainsCalculator';
 import { getPositionDisplayName } from '@/utils/priceValidation';
 import { getRecommendationLabel } from '@/utils/assetClassLabels';
 import { usePortfolioHistory } from './usePortfolioHistory';
@@ -200,9 +201,16 @@ export default function DashboardSummary() {
     portfolioData.historicalPrices || {}
   );
   
-  // Calculate net gains using simple formula: total - invested
-  const safeNetGainsARS = snapshotTotalARS - investedCapitalARS;
-  const safeNetGainsUSD = snapshotTotalUSD - investedCapitalUSD;
+  // Calculate net gains using cumulative approach from portfolio history
+  const { cumulativeARS: historyGainsARS, cumulativeUSD: historyGainsUSD } = getLatestCumulativeNetGains(portfolioHistory || []);
+  
+  // Use history gains if available, otherwise fall back to simple formula
+  const safeNetGainsARS = portfolioHistory && portfolioHistory.length > 0 
+    ? historyGainsARS 
+    : snapshotTotalARS - investedCapitalARS;
+  const safeNetGainsUSD = portfolioHistory && portfolioHistory.length > 0 
+    ? historyGainsUSD 
+    : snapshotTotalUSD - investedCapitalUSD;
   const gainsColorARS = safeNetGainsARS >= 0 ? 'text-green-600' : 'text-red-600';
   const gainsColorUSD = safeNetGainsUSD >= 0 ? 'text-green-600' : 'text-red-600';
 

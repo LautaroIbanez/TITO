@@ -5,8 +5,8 @@ import { getBaseTicker, ensureBaSuffix } from '@/utils/tickers';
 import { getUserData } from '@/utils/userData';
 import { calculateCurrentValueByCurrency } from '@/utils/calculatePortfolioValue';
 import { calculateInvestedCapital } from '@/utils/investedCapital';
-import { recalculateNetGains } from '@/utils/netGainsCalculator';
-import { appendDailyRecord } from '@/utils/portfolioHistory';
+import { getLatestCumulativeNetGains } from '@/utils/netGainsCalculator';
+import { appendDailyRecord, loadPortfolioHistory } from '@/utils/portfolioHistory';
 import NodeCache from 'node-cache';
 
 // Cache for portfolio data with 5-minute TTL
@@ -101,12 +101,14 @@ export async function GET(req: NextRequest) {
       efectivo_disponible_usd: data.cash.USD,
     };
     
-    // Calculate net gains using the standardized formula
-    const netGains = recalculateNetGains(dailyRecord);
+    // Load existing history to calculate cumulative gains
+    const existingHistory = await loadPortfolioHistory(username);
+    const updatedHistory = [...existingHistory, dailyRecord];
+    const { cumulativeARS, cumulativeUSD } = getLatestCumulativeNetGains(updatedHistory);
     
-    // Update the record with calculated net gains
-    dailyRecord.ganancias_netas_ars = netGains.ARS;
-    dailyRecord.ganancias_netas_usd = netGains.USD;
+    // Update the record with calculated cumulative gains
+    dailyRecord.ganancias_netas_ars = cumulativeARS;
+    dailyRecord.ganancias_netas_usd = cumulativeUSD;
     
     // Append daily record to user's history
     appendDailyRecord(username, dailyRecord);

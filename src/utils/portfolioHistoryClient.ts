@@ -1,6 +1,8 @@
 // Client-safe portfolio history utilities
 // These functions don't require Node.js APIs and can be used in browser components
 
+import { recalculateNetGainsForRecords } from './netGainsCalculator';
+
 export interface DailyPortfolioRecord {
   fecha: string; // YYYY-MM-DD
   total_portfolio_ars: number;
@@ -33,28 +35,11 @@ export function getLatestPortfolioSnapshot(history: DailyPortfolioRecord[]): Dai
 }
 
 /**
- * Normalizes portfolio history records by ensuring ganancias_netas_* values
- * match the calculated values (total_portfolio_* - capital_invertido_*)
+ * Normalizes portfolio history records by recomputing ganancias_netas_* values
+ * using cumulative daily differences approach
  * @param records Array of daily portfolio records to normalize
  * @returns Array of normalized records
  */
 export function normalizePortfolioHistory(records: DailyPortfolioRecord[]): DailyPortfolioRecord[] {
-  return records.map(record => {
-    const calculatedGainsARS = record.total_portfolio_ars - record.capital_invertido_ars;
-    const calculatedGainsUSD = record.total_portfolio_usd - record.capital_invertido_usd;
-    
-    // Check if the stored gains differ from calculated gains
-    const gainsARSChanged = record.ganancias_netas_ars !== calculatedGainsARS;
-    const gainsUSDChanged = record.ganancias_netas_usd !== calculatedGainsUSD;
-    
-    if (gainsARSChanged || gainsUSDChanged) {
-      return {
-        ...record,
-        ganancias_netas_ars: calculatedGainsARS,
-        ganancias_netas_usd: calculatedGainsUSD,
-      };
-    }
-    
-    return record;
-  });
+  return recalculateNetGainsForRecords(records);
 } 

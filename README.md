@@ -510,29 +510,47 @@ The data is saved as JSON files in `data/crypto/` (e.g., `data/crypto/BTCUSDT.js
 
 ## Portfolio Gains Calculation
 
-TITO uses a unified gains calculation system through the `getPortfolioNetGains` function in `src/utils/positionGains.ts`. This function provides consistent gain calculations across all components and ensures data integrity.
+TITO uses a cumulative daily differences approach for calculating portfolio gains, implemented through the `calculateCumulativeNetGains` function in `src/utils/netGainsCalculator.ts`. This approach ensures consistency across all components and provides accurate historical gain tracking.
 
 ### How Gains Are Calculated
 
 The system calculates gains using the following approach:
 
-1. **Position-by-Position Analysis**: Each position is validated for price availability using `validatePositionPrice`
-2. **Gain Computation**: Individual gains are calculated using `computePositionGain`:
-   - **Stocks/Crypto**: `(currentPrice - purchasePrice) * quantity`
-   - **Fixed-term Deposits/Cauciones**: `amount * annualRate * (days/365)`
-3. **Currency Aggregation**: Gains are summed by currency (ARS/USD)
-4. **Excluded Positions**: Positions without valid prices are tracked separately
+1. **Daily Portfolio Records**: Each day's portfolio value is recorded in `DailyPortfolioRecord` format
+2. **Cumulative Differences**: Gains are calculated as the sum of daily differences in `total_portfolio_ars` and `total_portfolio_usd` between consecutive days
+3. **Historical Consistency**: Each record stores cumulative gains up to that point in time
+4. **Position-Level Details**: Individual position gains are still calculated using `getPortfolioNetGains` for detailed analysis
+
+### Cumulative Calculation Formula
+
+```typescript
+// For each consecutive pair of days (i, i+1):
+dailyGainARS = day[i+1].total_portfolio_ars - day[i].total_portfolio_ars
+dailyGainUSD = day[i+1].total_portfolio_usd - day[i].total_portfolio_usd
+
+// Cumulative gains are the sum of all daily gains
+cumulativeGainsARS = sum(dailyGainARS for all days)
+cumulativeGainsUSD = sum(dailyGainUSD for all days)
+```
 
 ### Components Using the Same Calculation
 
-Both `DashboardSummary` and `PortfolioTable` components use the same `getPortfolioNetGains` function to ensure consistency:
+All components now use the cumulative approach for consistency:
 
-- **DashboardSummary**: Displays total gains by currency and shows warnings for excluded positions
-- **PortfolioTable**: Shows individual position gains and displays "Sin datos suficientes" for excluded positions
+- **DashboardSummary**: Displays cumulative gains from portfolio history
+- **PortfolioTable**: Shows individual position gains using `getPortfolioNetGains`
+- **HistoricalPortfolioChart**: Uses cumulative gains for chart datasets
+- **PortfolioCategoryChart**: Uses cumulative gains for category analysis
 
-### Snapshot Validation
+### Migration from Previous System
 
-When portfolio snapshots are available, the system validates that the snapshot gains match the calculated gains (within 1 unit tolerance). If they don't match, the calculated gains are used instead.
+The system has been migrated from the simple `total - invested` formula to the cumulative approach. A migration script is available:
+
+```bash
+npx tsx scripts/migrate-net-gains.ts
+```
+
+This script updates all existing portfolio history files to use the new calculation method.
 
 ### Position Exclusion Handling
 
@@ -543,6 +561,13 @@ Positions are excluded from gain calculations when:
 - Position type is not supported
 
 Excluded positions are clearly marked in the UI and don't contribute to total gains.
+
+### Benefits of Cumulative Approach
+
+1. **Historical Accuracy**: Gains reflect actual daily portfolio value changes
+2. **Consistency**: All components use the same calculation method
+3. **Chart Alignment**: Dashboard gains match chart datasets exactly
+4. **Data Integrity**: Eliminates discrepancies between different calculation methods
 
 ## Crypto Currency Conversion
 
