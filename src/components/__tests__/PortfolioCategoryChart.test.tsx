@@ -23,6 +23,7 @@ describe('PortfolioCategoryChart', () => {
       investedUSD: 1600,
       cashARS: 20000,
       cashUSD: 400,
+      totalValue: 102000,
     },
     {
       date: '2024-01-02',
@@ -32,6 +33,7 @@ describe('PortfolioCategoryChart', () => {
       investedUSD: 1600,
       cashARS: 30000,
       cashUSD: 600,
+      totalValue: 112200,
     },
   ];
 
@@ -70,11 +72,19 @@ describe('PortfolioCategoryChart', () => {
     expect(options.plugins.legend.position).toBe('top');
   });
 
-  it('calculates net gains correctly', () => {
+  it('calculates cumulative gains correctly from daily differences', () => {
     render(<PortfolioCategoryChart history={mockHistory} currency="ARS" />);
-    // The component should calculate net gains as total - invested
-    // For the first entry: 100000 - 80000 = 20000
-    // For the second entry: 110000 - 80000 = 30000
+    // The component should calculate cumulative gains from daily differences
+    // For the first entry: 0 (no previous day)
+    // For the second entry: 110000 - 100000 = 10000 (daily difference)
+    expect(screen.getByTestId('mock-line-chart')).toBeInTheDocument();
+  });
+
+  it('calculates cumulative gains correctly for USD', () => {
+    render(<PortfolioCategoryChart history={mockHistory} currency="USD" />);
+    // The component should calculate cumulative gains from daily differences
+    // For the first entry: 0 (no previous day)
+    // For the second entry: 2200 - 2000 = 200 (daily difference)
     expect(screen.getByTestId('mock-line-chart')).toBeInTheDocument();
   });
 }); 

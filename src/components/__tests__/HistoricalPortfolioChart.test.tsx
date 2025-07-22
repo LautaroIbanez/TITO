@@ -109,6 +109,103 @@ describe('HistoricalPortfolioChart', () => {
     expect(screen.getByText('No hay datos históricos disponibles')).toBeInTheDocument();
   });
 
+  it('should calculate cumulative gains correctly from daily differences', () => {
+    const records = [
+      {
+        ...validRecord,
+        fecha: '2024-01-01',
+        total_portfolio_ars: 1000,
+        total_portfolio_usd: 100,
+        capital_invertido_ars: 800,
+        capital_invertido_usd: 80,
+      },
+      {
+        ...validRecord,
+        fecha: '2024-01-02',
+        total_portfolio_ars: 1050, // +50 ARS gain
+        total_portfolio_usd: 105,  // +5 USD gain
+        capital_invertido_ars: 800,
+        capital_invertido_usd: 80,
+      },
+      {
+        ...validRecord,
+        fecha: '2024-01-03',
+        total_portfolio_ars: 1100, // +50 ARS gain (total: +100)
+        total_portfolio_usd: 110,  // +5 USD gain (total: +10)
+        capital_invertido_ars: 800,
+        capital_invertido_usd: 80,
+      }
+    ];
+
+    render(<HistoricalPortfolioChart records={records} />);
+    
+    // Get the chart data to verify cumulative gains
+    const arsDataDiv = screen.getByTestId('ars-line-chart').querySelector('[data-testid="chart-data"]');
+    expect(arsDataDiv).not.toBeNull();
+    const arsData = JSON.parse(arsDataDiv!.textContent || '{}');
+    
+    // Find the Ganancia Neta ARS dataset (index 2)
+    const gananciaNetaARS = arsData.datasets.find((ds: any) => ds.label === 'Ganancia Neta ARS');
+    expect(gananciaNetaARS).toBeDefined();
+    expect(gananciaNetaARS.data).toEqual([0, 50, 100]); // Cumulative gains: 0, 50, 100
+
+    const usdDataDiv = screen.getByTestId('usd-line-chart').querySelector('[data-testid="chart-data"]');
+    expect(usdDataDiv).not.toBeNull();
+    const usdData = JSON.parse(usdDataDiv!.textContent || '{}');
+    
+    // Find the Ganancia Neta USD dataset (index 2)
+    const gananciaNetaUSD = usdData.datasets.find((ds: any) => ds.label === 'Ganancia Neta USD');
+    expect(gananciaNetaUSD).toBeDefined();
+    expect(gananciaNetaUSD.data).toEqual([0, 5, 10]); // Cumulative gains: 0, 5, 10
+  });
+
+  it('should handle negative daily gains in cumulative calculation', () => {
+    const records = [
+      {
+        ...validRecord,
+        fecha: '2024-01-01',
+        total_portfolio_ars: 1000,
+        total_portfolio_usd: 100,
+        capital_invertido_ars: 800,
+        capital_invertido_usd: 80,
+      },
+      {
+        ...validRecord,
+        fecha: '2024-01-02',
+        total_portfolio_ars: 950,  // -50 ARS loss
+        total_portfolio_usd: 95,   // -5 USD loss
+        capital_invertido_ars: 800,
+        capital_invertido_usd: 80,
+      },
+      {
+        ...validRecord,
+        fecha: '2024-01-03',
+        total_portfolio_ars: 1000, // +50 ARS gain (total: 0)
+        total_portfolio_usd: 100,  // +5 USD gain (total: 0)
+        capital_invertido_ars: 800,
+        capital_invertido_usd: 80,
+      }
+    ];
+
+    render(<HistoricalPortfolioChart records={records} />);
+    
+    const arsDataDiv = screen.getByTestId('ars-line-chart').querySelector('[data-testid="chart-data"]');
+    expect(arsDataDiv).not.toBeNull();
+    const arsData = JSON.parse(arsDataDiv!.textContent || '{}');
+    
+    const gananciaNetaARS = arsData.datasets.find((ds: any) => ds.label === 'Ganancia Neta ARS');
+    expect(gananciaNetaARS).toBeDefined();
+    expect(gananciaNetaARS.data).toEqual([0, -50, 0]); // Cumulative gains: 0, -50, 0
+
+    const usdDataDiv = screen.getByTestId('usd-line-chart').querySelector('[data-testid="chart-data"]');
+    expect(usdDataDiv).not.toBeNull();
+    const usdData = JSON.parse(usdDataDiv!.textContent || '{}');
+    
+    const gananciaNetaUSD = usdData.datasets.find((ds: any) => ds.label === 'Ganancia Neta USD');
+    expect(gananciaNetaUSD).toBeDefined();
+    expect(gananciaNetaUSD.data).toEqual([0, -5, 0]); // Cumulative gains: 0, -5, 0
+  });
+
   it('should show warning when all computed gains are zero', () => {
     const recordWithZeroGains = {
       fecha: '2024-01-01',

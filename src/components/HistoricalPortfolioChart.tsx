@@ -99,13 +99,26 @@ export default function HistoricalPortfolioChart({ records }: Props) {
 
   const labels = sortedAndFilteredRecords.map((r) => dayjs(r.fecha).toDate());
 
-  // Compute gains as total_portfolio - capital_invertido instead of reading ganancias_netas
-  const computedGainsARS = sortedAndFilteredRecords.map((r) => 
-    r.total_portfolio_ars - r.capital_invertido_ars
-  );
-  const computedGainsUSD = sortedAndFilteredRecords.map((r) => 
-    r.total_portfolio_usd - r.capital_invertido_usd
-  );
+  // Compute cumulative gains from daily differences
+  const computedGainsARS: number[] = [];
+  const computedGainsUSD: number[] = [];
+  let accARS = 0;
+  let accUSD = 0;
+
+  sortedAndFilteredRecords.forEach((record, idx) => {
+    if (idx === 0) {
+      computedGainsARS.push(0);
+      computedGainsUSD.push(0);
+      return;
+    }
+
+    const prev = sortedAndFilteredRecords[idx - 1];
+    accARS += record.total_portfolio_ars - prev.total_portfolio_ars;
+    accUSD += record.total_portfolio_usd - prev.total_portfolio_usd;
+
+    computedGainsARS.push(accARS);
+    computedGainsUSD.push(accUSD);
+  });
 
   // Check if all computed gains are zero
   const allGainsZero = computedGainsARS.every(gain => gain === 0) && 

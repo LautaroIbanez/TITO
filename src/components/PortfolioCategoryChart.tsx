@@ -56,14 +56,31 @@ export const PortfolioCategoryChart: React.FC<PortfolioCategoryChartProps> = ({
     return entry[field];
   };
 
-  // Calculate net gains (total - invested)
-  const getNetGains = (entry: PortfolioSummaryEntry) => {
-    if (currency === 'ARS') {
-      return entry.totalARS - entry.investedARS;
-    } else {
-      return entry.totalUSD - entry.investedUSD;
-    }
+  // Calculate cumulative gains from daily differences
+  const getCumulativeGains = () => {
+    const gains: number[] = [];
+    let acc = 0;
+
+    history.forEach((entry, idx) => {
+      if (idx === 0) {
+        gains.push(0);
+        return;
+      }
+
+      const prev = history[idx - 1];
+      if (currency === 'ARS') {
+        acc += entry.totalARS - prev.totalARS;
+      } else {
+        acc += entry.totalUSD - prev.totalUSD;
+      }
+
+      gains.push(acc);
+    });
+
+    return gains;
   };
+
+  const cumulativeGains = getCumulativeGains();
 
   const datasets = [
     {
@@ -88,7 +105,7 @@ export const PortfolioCategoryChart: React.FC<PortfolioCategoryChartProps> = ({
     },
     {
       label: `${CATEGORY_LABELS.gains} (${currency})`,
-      data: history.map(getNetGains),
+      data: cumulativeGains,
       borderColor: COLORS.gains,
       backgroundColor: COLORS.gains,
       fill: false,
