@@ -212,9 +212,65 @@ export default function DashboardSummary() {
     ? historyGainsUSD 
     : snapshotTotalUSD - investedCapitalUSD;
   
-  // Calculate total values - use the original snapshot totals which include cash
-  const valorTotalARS = snapshotTotalARS;
-  const valorTotalUSD = snapshotTotalUSD;
+  // Calculate total values using the exact formula: capital + gains + cash
+  const valorTotalARS = investedCapitalARS + safeNetGainsARS + (portfolioData.cash?.ARS ?? 0);
+  const valorTotalUSD = investedCapitalUSD + safeNetGainsUSD + (portfolioData.cash?.USD ?? 0);
+  
+  // Validation test to ensure the calculation matches the expected formula
+  const expectedTotalARS = investedCapitalARS + safeNetGainsARS + (portfolioData.cash?.ARS ?? 0);
+  const expectedTotalUSD = investedCapitalUSD + safeNetGainsUSD + (portfolioData.cash?.USD ?? 0);
+  
+  // Validate that our total matches the expected formula
+  if (Math.abs(valorTotalARS - expectedTotalARS) > 0.01 || Math.abs(valorTotalUSD - expectedTotalUSD) > 0.01) {
+    console.warn('🚨 PORTFOLIO TOTAL CALCULATION MISMATCH DETECTED:', {
+      valorTotalARS,
+      expectedTotalARS,
+      differenceARS: Math.abs(valorTotalARS - expectedTotalARS),
+      valorTotalUSD,
+      expectedTotalUSD,
+      differenceUSD: Math.abs(valorTotalUSD - expectedTotalUSD),
+      components: {
+        investedCapitalARS,
+        safeNetGainsARS,
+        cashARS: portfolioData.cash?.ARS ?? 0,
+        investedCapitalUSD,
+        safeNetGainsUSD,
+        cashUSD: portfolioData.cash?.USD ?? 0
+      },
+      formula: {
+        ars: `${investedCapitalARS} + ${safeNetGainsARS} + ${portfolioData.cash?.ARS ?? 0} = ${expectedTotalARS}`,
+        usd: `${investedCapitalUSD} + ${safeNetGainsUSD} + ${portfolioData.cash?.USD ?? 0} = ${expectedTotalUSD}`
+      }
+    });
+  }
+  
+  // Additional validation: check if our total matches the current portfolio value
+  if (Math.abs(valorTotalARS - portfolioValueARS) > 0.01 || Math.abs(valorTotalUSD - portfolioValueUSD) > 0.01) {
+    console.warn('🚨 PORTFOLIO TOTAL DOES NOT MATCH CURRENT PORTFOLIO VALUE:', {
+      valorTotalARS,
+      portfolioValueARS,
+      differenceARS: Math.abs(valorTotalARS - portfolioValueARS),
+      valorTotalUSD,
+      portfolioValueUSD,
+      differenceUSD: Math.abs(valorTotalUSD - portfolioValueUSD)
+    });
+  }
+  
+  // Final validation: ensure the formula is correct
+  const formulaCheckARS = investedCapitalARS + safeNetGainsARS + (portfolioData.cash?.ARS ?? 0);
+  const formulaCheckUSD = investedCapitalUSD + safeNetGainsUSD + (portfolioData.cash?.USD ?? 0);
+  
+  if (Math.abs(formulaCheckARS - valorTotalARS) > 0.01 || Math.abs(formulaCheckUSD - valorTotalUSD) > 0.01) {
+    console.error('🚨 CRITICAL: Portfolio total does not match the formula!', {
+      formulaResult: { ARS: formulaCheckARS, USD: formulaCheckUSD },
+      actualTotal: { ARS: valorTotalARS, USD: valorTotalUSD },
+      components: {
+        investedCapital: { ARS: investedCapitalARS, USD: investedCapitalUSD },
+        netGains: { ARS: safeNetGainsARS, USD: safeNetGainsUSD },
+        cash: { ARS: portfolioData.cash?.ARS ?? 0, USD: portfolioData.cash?.USD ?? 0 }
+      }
+    });
+  }
   
   const gainsColorARS = safeNetGainsARS >= 0 ? 'text-green-600' : 'text-red-600';
   const gainsColorUSD = safeNetGainsUSD >= 0 ? 'text-green-600' : 'text-red-600';

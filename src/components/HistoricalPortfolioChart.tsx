@@ -88,6 +88,30 @@ export default function HistoricalPortfolioChart({ records }: Props) {
     .filter(isValidRecord)
     .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
 
+  // Validation: Check if the total values in historical records match the expected formula
+  if (sortedAndFilteredRecords.length > 0) {
+    const latestRecord = sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1];
+    const expectedTotalARS = latestRecord.capital_invertido_ars + (latestRecord.ganancias_netas_ars || 0) + latestRecord.efectivo_disponible_ars;
+    const expectedTotalUSD = latestRecord.capital_invertido_usd + (latestRecord.ganancias_netas_usd || 0) + latestRecord.efectivo_disponible_usd;
+    
+    if (Math.abs(latestRecord.total_portfolio_ars - expectedTotalARS) > 0.01 || Math.abs(latestRecord.total_portfolio_usd - expectedTotalUSD) > 0.01) {
+      console.warn('🚨 HISTORICAL CHART: Portfolio total does not match formula!', {
+        recordDate: latestRecord.fecha,
+        actualTotal: { ARS: latestRecord.total_portfolio_ars, USD: latestRecord.total_portfolio_usd },
+        expectedTotal: { ARS: expectedTotalARS, USD: expectedTotalUSD },
+        components: {
+          investedCapital: { ARS: latestRecord.capital_invertido_ars, USD: latestRecord.capital_invertido_usd },
+          netGains: { ARS: latestRecord.ganancias_netas_ars || 0, USD: latestRecord.ganancias_netas_usd || 0 },
+          cash: { ARS: latestRecord.efectivo_disponible_ars, USD: latestRecord.efectivo_disponible_usd }
+        },
+        formula: {
+          ars: `${latestRecord.capital_invertido_ars} + ${latestRecord.ganancias_netas_ars || 0} + ${latestRecord.efectivo_disponible_ars} = ${expectedTotalARS}`,
+          usd: `${latestRecord.capital_invertido_usd} + ${latestRecord.ganancias_netas_usd || 0} + ${latestRecord.efectivo_disponible_usd} = ${expectedTotalUSD}`
+        }
+      });
+    }
+  }
+
   if (!sortedAndFilteredRecords || sortedAndFilteredRecords.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-6">

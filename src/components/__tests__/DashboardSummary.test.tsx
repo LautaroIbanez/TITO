@@ -490,6 +490,29 @@ describe('DashboardSummary', () => {
       expect(screen.getByText(/Stock INVALID: No hay datos de precio disponibles/)).toBeInTheDocument();
     });
   });
+
+  it('validates portfolio total calculation formula', async () => {
+    // Test that validates the exact formula: valorTotal = capitalInvertido + gananciaNeta + efectivoDisponible
+    const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+    
+    render(<DashboardSummary />);
+
+    await waitFor(() => {
+      // Verify that the portfolio total is calculated correctly
+      // Expected: $1.500,00 (capital) + $100,00 (gains) + $4.300,00 (cash) = $5.900,00
+      expect(screen.getByText('$5.900,00')).toBeInTheDocument(); // Valor Total del Portafolio (ARS)
+      expect(screen.getByText('$1.500,00')).toBeInTheDocument(); // Capital Invertido (ARS)
+      expect(screen.getByText('+$100,00')).toBeInTheDocument(); // Ganancias Netas (ARS)
+      expect(screen.getByText('$4.300,00')).toBeInTheDocument(); // Efectivo Disponible (ARS)
+    });
+
+    // Verify that no calculation mismatch warnings were logged
+    expect(consoleSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining('PORTFOLIO TOTAL CALCULATION MISMATCH')
+    );
+
+    consoleSpy.mockRestore();
+  });
 });
 
 describe('usePortfolioHistory', () => {
