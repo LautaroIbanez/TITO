@@ -1,6 +1,6 @@
 {
   "peRatio": null,
-  "pbRatio": 3.4242244,
+  "pbRatio": 3.552777,
   "evToEbitda": null,
   "roe": 0.13302,
   "roa": 0.03691,
@@ -8,12 +8,12 @@
   "debtToEbitda": 3.5773875203950305,
   "netMargin": 0.09875,
   "freeCashFlow": 3596750080,
-  "priceToFCF": 24.548210313239224,
+  "priceToFCF": 25.46980260580129,
   "ebitda": 5633999872,
   "revenueGrowth": 0.002,
   "epsGrowth": null,
-  "beta": 0.499,
+  "beta": 0.491,
   "sector": "Consumer Defensive",
   "industry": "Confectioners",
-  "updatedAt": "2025-07-09T11:52:00.844Z"
+  "updatedAt": "2025-07-22T23:37:10.252Z"
 }

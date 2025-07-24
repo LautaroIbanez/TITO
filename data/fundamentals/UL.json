@@ -1,6 +1,6 @@
 {
   "peRatio": null,
-  "pbRatio": 7.543034,
+  "pbRatio": 7.472446,
   "evToEbitda": null,
   "roe": 0.29405,
   "roa": 0.09069,
@@ -8,12 +8,12 @@
   "debtToEbitda": 2.609966644331721,
   "netMargin": 0.09453,
   "freeCashFlow": 6307624960,
-  "priceToFCF": 23.8547119301145,
+  "priceToFCF": 23.45421775742355,
   "ebitda": 12280999936,
   "revenueGrowth": 0.016,
   "epsGrowth": null,
-  "beta": 0.217,
+  "beta": 0.21,
   "sector": "Consumer Defensive",
   "industry": "Household & Personal Products",
-  "updatedAt": "2025-07-09T11:52:07.066Z"
+  "updatedAt": "2025-07-22T23:37:11.944Z"
 }

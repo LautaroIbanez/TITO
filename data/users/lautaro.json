@@ -1,0 +1,229 @@
+{
+  "username": "lautaro",
+  "createdAt": "2025-07-22T23:35:47.240Z",
+  "profileCompleted": true,
+  "positions": [
+    {
+      "type": "Stock",
+      "symbol": "AAPL.BA",
+      "quantity": 22,
+      "purchasePrice": 13793.324999999999,
+      "currency": "ARS",
+      "market": "BCBA"
+    },
+    {
+      "type": "Stock",
+      "symbol": "TSM.BA",
+      "quantity": 14,
+      "purchasePrice": 34533.8375,
+      "currency": "ARS",
+      "market": "BCBA"
+    },
+    {
+      "type": "Stock",
+      "symbol": "NVDA.BA",
+      "quantity": 34,
+      "purchasePrice": 9276.39,
+      "currency": "ARS",
+      "market": "BCBA"
+    },
+    {
+      "type": "Stock",
+      "symbol": "META.BA",
+      "quantity": 10,
+      "purchasePrice": 38272.6875,
+      "currency": "ARS",
+      "market": "BCBA"
+    },
+    {
+      "type": "Stock",
+      "symbol": "MSFT.BA",
+      "quantity": 15,
+      "purchasePrice": 22104.6875,
+      "currency": "ARS",
+      "market": "BCBA"
+    },
+    {
+      "type": "Bond",
+      "ticker": "YCA6P",
+      "quantity": 20,
+      "purchasePrice": 103.4752,
+      "currency": "ARS"
+    },
+    {
+      "type": "Bond",
+      "ticker": "S15G5",
+      "quantity": 20,
+      "purchasePrice": 144.39034499999997,
+      "currency": "ARS"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "deposit-ARS-initial",
+      "date": "2025-07-22",
+      "type": "Deposit",
+      "amount": 3000000,
+      "currency": "ARS"
+    },
+    {
+      "id": "deposit-USD-initial",
+      "date": "2025-07-22",
+      "type": "Deposit",
+      "amount": 2000,
+      "currency": "USD"
+    },
+    {
+      "id": "1753227641565",
+      "date": "2025-07-22T23:40:41.566Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "AAPL.BA",
+      "quantity": 22,
+      "price": 13650,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1753227696804",
+      "date": "2025-07-22T23:41:36.804Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "TSM.BA",
+      "quantity": 14,
+      "price": 34175,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1753227737069",
+      "date": "2025-07-22T23:42:17.069Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "NVDA.BA",
+      "quantity": 34,
+      "price": 9180,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1753227798667",
+      "date": "2025-07-22T23:43:18.667Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "META.BA",
+      "quantity": 10,
+      "price": 37875,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1753227834645",
+      "date": "2025-07-22T23:43:54.645Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "MSFT.BA",
+      "quantity": 15,
+      "price": 21875,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1753227991691",
+      "date": "2025-07-22T23:46:31.691Z",
+      "type": "Buy",
+      "assetType": "Bond",
+      "ticker": "YCA6P",
+      "quantity": 20,
+      "price": 102.4,
+      "currency": "ARS",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1753228011240",
+      "date": "2025-07-22T23:46:51.240Z",
+      "type": "Buy",
+      "assetType": "Bond",
+      "ticker": "S15G5",
+      "quantity": 20,
+      "price": 142.89,
+      "currency": "ARS",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    }
+  ],
+  "goals": [],
+  "cash": {
+    "ARS": 1178421.3666,
+    "USD": 2000
+  },
+  "profile": {
+    "instrumentsUsed": [
+      "Plazo Fijo",
+      "Acciones",
+      "Fondos Comunes de Inversión",
+      "Futuros"
+    ],
+    "knowledgeLevels": {
+      "Plazo Fijo": "Medio",
+      "Acciones": "Medio",
+      "Fondos Comunes de Inversión": "Bajo",
+      "Futuros": "Bajo"
+    },
+    "holdingPeriod": "1 a 5 años",
+    "ageGroup": "31-40",
+    "riskAppetite": "Balanceado",
+    "investmentAmount": 3002000,
+    "investmentSharePct": 0,
+    "initialBalanceARS": 3000000,
+    "initialBalanceUSD": 2000
+  },
+  "investmentStrategy": {
+    "id": "strategy-a05021e8-0718-4edb-b863-36d369afaeae",
+    "createdAt": "2025-07-23T11:20:43.985Z",
+    "targetAllocation": {
+      "stocks": 59.4,
+      "bonds": 29.7,
+      "deposits": 4.95,
+      "cash": 4.95,
+      "crypto": 1
+    },
+    "recommendations": [
+      {
+        "id": "alloc-11a99d15-4603-4ef1-b905-c41b3f599a17",
+        "action": "increase",
+        "assetClass": "bonds",
+        "reason": "Tu portafolio tiene 0.2% en bonos, pero tu estrategia objetivo es 29.7%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
+        "priority": "high",
+        "expectedImpact": "positive",
+        "suggestedAssets": [
+          "GOV-BOND-2025",
+          "CORP-BOND-2026",
+          "MUNI-BOND-2027"
+        ]
+      },
+      {
+        "id": "cash-invest-7c991b43-5f9f-4596-862e-36dffc26e90b",
+        "action": "buy",
+        "assetClass": "cash",
+        "reason": "Tienes un 39.3% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
+        "priority": "high",
+        "expectedImpact": "positive"
+      }
+    ],
+    "riskLevel": "Balanceado",
+    "timeHorizon": "5-10 años",
+    "notes": ""
+  }
+}

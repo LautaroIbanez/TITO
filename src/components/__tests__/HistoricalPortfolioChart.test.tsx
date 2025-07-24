@@ -206,6 +206,51 @@ describe('HistoricalPortfolioChart', () => {
     expect(gananciaNetaUSD.data).toEqual([0, -5, 0]); // Cumulative gains: 0, -5, 0
   });
 
+  it('should use calculated totals instead of record totals when they differ', () => {
+    // Create a record where total_portfolio_ars and total_portfolio_usd are intentionally wrong
+    // but the component fields form a correct total
+    const recordWithWrongTotals = {
+      fecha: '2024-01-01',
+      // Wrong totals in the record
+      total_portfolio_ars: 5000, // Wrong value
+      total_portfolio_usd: 500,  // Wrong value
+      // Correct component values that should sum to the right total
+      capital_invertido_ars: 8000,
+      capital_invertido_usd: 800,
+      ganancias_netas_ars: 2000,
+      ganancias_netas_usd: 200,
+      efectivo_disponible_ars: 1000,
+      efectivo_disponible_usd: 100,
+    };
+
+    render(<HistoricalPortfolioChart records={[recordWithWrongTotals]} />);
+    
+    // Parse the chart data to verify that the component uses calculated totals
+    const arsDataDiv = screen.getByTestId('ars-line-chart').querySelector('[data-testid="chart-data"]');
+    expect(arsDataDiv).not.toBeNull();
+    const arsData = JSON.parse(arsDataDiv!.textContent || '{}');
+    
+    // Find the Total ARS dataset (index 0)
+    const totalARS = arsData.datasets.find((ds: any) => ds.label === 'Total ARS');
+    expect(totalARS).toBeDefined();
+    
+    // Should use calculated total: 8000 + 2000 + 1000 = 11000, not the wrong 5000
+    const expectedTotalARS = 8000 + 2000 + 1000; // capital + gains + cash
+    expect(totalARS.data).toEqual([expectedTotalARS]);
+
+    const usdDataDiv = screen.getByTestId('usd-line-chart').querySelector('[data-testid="chart-data"]');
+    expect(usdDataDiv).not.toBeNull();
+    const usdData = JSON.parse(usdDataDiv!.textContent || '{}');
+    
+    // Find the Total USD dataset (index 0)
+    const totalUSD = usdData.datasets.find((ds: any) => ds.label === 'Total USD');
+    expect(totalUSD).toBeDefined();
+    
+    // Should use calculated total: 800 + 200 + 100 = 1100, not the wrong 500
+    const expectedTotalUSD = 800 + 200 + 100; // capital + gains + cash
+    expect(totalUSD.data).toEqual([expectedTotalUSD]);
+  });
+
   it('should show warning when all computed gains are zero', () => {
     const recordWithZeroGains = {
       fecha: '2024-01-01',

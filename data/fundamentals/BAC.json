@@ -1,19 +1,19 @@
 {
   "peRatio": null,
-  "pbRatio": 1.2958281,
+  "pbRatio": 1.2866647,
   "evToEbitda": null,
-  "roe": 0.094560005,
-  "roa": 0.00841,
+  "roe": 0.0946,
+  "roa": 0.00838,
   "debtToEquity": null,
   "debtToEbitda": null,
-  "netMargin": 0.28582,
+  "netMargin": 0.28514,
   "freeCashFlow": null,
   "priceToFCF": null,
   "ebitda": null,
-  "revenueGrowth": 0.057,
+  "revenueGrowth": 0.042,
   "epsGrowth": null,
-  "beta": 1.307,
+  "beta": 1.31,
   "sector": "Financial Services",
   "industry": "Banks - Diversified",
-  "updatedAt": "2025-07-09T11:52:07.647Z"
+  "updatedAt": "2025-07-22T23:37:11.946Z"
 }

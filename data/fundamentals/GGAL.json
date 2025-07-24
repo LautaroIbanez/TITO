@@ -1,6 +1,6 @@
 {
   "peRatio": null,
-  "pbRatio": 0.012048794,
+  "pbRatio": 0.011364231,
   "evToEbitda": null,
   "roe": 0.27425,
   "roa": 0.05728,
@@ -12,8 +12,8 @@
   "ebitda": null,
   "revenueGrowth": -0.463,
   "epsGrowth": null,
-  "beta": 1.023,
+  "beta": 0.913,
   "sector": "Financial Services",
   "industry": "Banks - Regional",
-  "updatedAt": "2025-07-09T11:52:21.686Z"
+  "updatedAt": "2025-07-22T23:37:54.348Z"
 }

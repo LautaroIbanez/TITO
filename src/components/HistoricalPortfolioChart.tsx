@@ -83,6 +83,12 @@ function calculateDynamicScaling(values: number[]) {
 }
 
 export default function HistoricalPortfolioChart({ records }: Props) {
+  // Helper functions to calculate total values using the correct formula
+  const calcTotalARS = (r: DailyPortfolioRecord) =>
+    r.capital_invertido_ars + (r.ganancias_netas_ars || 0) + r.efectivo_disponible_ars;
+  const calcTotalUSD = (r: DailyPortfolioRecord) =>
+    r.capital_invertido_usd + (r.ganancias_netas_usd || 0) + r.efectivo_disponible_usd;
+
   // Sort records by fecha and filter out invalid ones
   const sortedAndFilteredRecords = (records || [])
     .filter(isValidRecord)
@@ -90,26 +96,29 @@ export default function HistoricalPortfolioChart({ records }: Props) {
 
   // Validation: Check if the total values in historical records match the expected formula
   if (sortedAndFilteredRecords.length > 0) {
-    const latestRecord = sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1];
-    const expectedTotalARS = latestRecord.capital_invertido_ars + (latestRecord.ganancias_netas_ars || 0) + latestRecord.efectivo_disponible_ars;
-    const expectedTotalUSD = latestRecord.capital_invertido_usd + (latestRecord.ganancias_netas_usd || 0) + latestRecord.efectivo_disponible_usd;
-    
-    if (Math.abs(latestRecord.total_portfolio_ars - expectedTotalARS) > 0.01 || Math.abs(latestRecord.total_portfolio_usd - expectedTotalUSD) > 0.01) {
-      console.warn('🚨 HISTORICAL CHART: Portfolio total does not match formula!', {
-        recordDate: latestRecord.fecha,
-        actualTotal: { ARS: latestRecord.total_portfolio_ars, USD: latestRecord.total_portfolio_usd },
-        expectedTotal: { ARS: expectedTotalARS, USD: expectedTotalUSD },
-        components: {
-          investedCapital: { ARS: latestRecord.capital_invertido_ars, USD: latestRecord.capital_invertido_usd },
-          netGains: { ARS: latestRecord.ganancias_netas_ars || 0, USD: latestRecord.ganancias_netas_usd || 0 },
-          cash: { ARS: latestRecord.efectivo_disponible_ars, USD: latestRecord.efectivo_disponible_usd }
-        },
-        formula: {
-          ars: `${latestRecord.capital_invertido_ars} + ${latestRecord.ganancias_netas_ars || 0} + ${latestRecord.efectivo_disponible_ars} = ${expectedTotalARS}`,
-          usd: `${latestRecord.capital_invertido_usd} + ${latestRecord.ganancias_netas_usd || 0} + ${latestRecord.efectivo_disponible_usd} = ${expectedTotalUSD}`
-        }
-      });
-    }
+    // Check each record for discrepancies
+    sortedAndFilteredRecords.forEach((record, index) => {
+      const expectedTotalARS = calcTotalARS(record);
+      const expectedTotalUSD = calcTotalUSD(record);
+      
+      if (Math.abs(record.total_portfolio_ars - expectedTotalARS) > 0.01 || Math.abs(record.total_portfolio_usd - expectedTotalUSD) > 0.01) {
+        console.warn('🚨 HISTORICAL CHART: Portfolio total does not match formula!', {
+          recordDate: record.fecha,
+          recordIndex: index,
+          actualTotal: { ARS: record.total_portfolio_ars, USD: record.total_portfolio_usd },
+          expectedTotal: { ARS: expectedTotalARS, USD: expectedTotalUSD },
+          components: {
+            investedCapital: { ARS: record.capital_invertido_ars, USD: record.capital_invertido_usd },
+            netGains: { ARS: record.ganancias_netas_ars || 0, USD: record.ganancias_netas_usd || 0 },
+            cash: { ARS: record.efectivo_disponible_ars, USD: record.efectivo_disponible_usd }
+          },
+          formula: {
+            ars: `${record.capital_invertido_ars} + ${record.ganancias_netas_ars || 0} + ${record.efectivo_disponible_ars} = ${expectedTotalARS}`,
+            usd: `${record.capital_invertido_usd} + ${record.ganancias_netas_usd || 0} + ${record.efectivo_disponible_usd} = ${expectedTotalUSD}`
+          }
+        });
+      }
+    });
   }
 
   if (!sortedAndFilteredRecords || sortedAndFilteredRecords.length === 0) {
@@ -137,8 +146,8 @@ export default function HistoricalPortfolioChart({ records }: Props) {
     }
 
     const prev = sortedAndFilteredRecords[idx - 1];
-    accARS += record.total_portfolio_ars - prev.total_portfolio_ars;
-    accUSD += record.total_portfolio_usd - prev.total_portfolio_usd;
+    accARS += calcTotalARS(record) - calcTotalARS(prev);
+    accUSD += calcTotalUSD(record) - calcTotalUSD(prev);
 
     computedGainsARS.push(accARS);
     computedGainsUSD.push(accUSD);
@@ -150,14 +159,14 @@ export default function HistoricalPortfolioChart({ records }: Props) {
 
   // Calculate Y-axis ranges with dynamic scaling
   const arsValues = [
-    ...sortedAndFilteredRecords.map(r => r.total_portfolio_ars),
+    ...sortedAndFilteredRecords.map(r => calcTotalARS(r)),
     ...sortedAndFilteredRecords.map(r => r.capital_invertido_ars),
     ...computedGainsARS,
     ...sortedAndFilteredRecords.map(r => r.efectivo_disponible_ars)
   ].filter(v => Number.isFinite(v));
   
   const usdValues = [
-    ...sortedAndFilteredRecords.map(r => r.total_portfolio_usd),
+    ...sortedAndFilteredRecords.map(r => calcTotalUSD(r)),
     ...sortedAndFilteredRecords.map(r => r.capital_invertido_usd),
     ...computedGainsUSD,
     ...sortedAndFilteredRecords.map(r => r.efectivo_disponible_usd)
@@ -172,7 +181,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
     datasets: [
       {
         label: 'Total ARS',
-        data: sortedAndFilteredRecords.map((r) => r.total_portfolio_ars),
+        data: sortedAndFilteredRecords.map((r) => calcTotalARS(r)),
         borderColor: '#2563eb',
         backgroundColor: 'rgba(37,99,235,0.08)',
         fill: false,
@@ -226,7 +235,7 @@ export default function HistoricalPortfolioChart({ records }: Props) {
     datasets: [
       {
         label: 'Total USD',
-        data: sortedAndFilteredRecords.map((r) => r.total_portfolio_usd),
+        data: sortedAndFilteredRecords.map((r) => calcTotalUSD(r)),
         borderColor: '#3730a3', // Darker indigo for better contrast
         backgroundColor: 'rgba(55,48,163,0.08)',
         fill: false,
@@ -300,13 +309,13 @@ export default function HistoricalPortfolioChart({ records }: Props) {
           totalARS: {
             type: 'point' as const,
             xValue: new Date(sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1].fecha).toISOString(),
-            yValue: sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1].total_portfolio_ars,
+            yValue: calcTotalARS(sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1]),
             backgroundColor: '#2563eb',
             borderColor: '#2563eb',
             borderWidth: 2,
             radius: 4,
             label: {
-              content: formatCurrency(sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1].total_portfolio_ars, 'ARS'),
+              content: formatCurrency(calcTotalARS(sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1]), 'ARS'),
               enabled: true,
               position: 'top' as const,
               color: '#2563eb',
@@ -425,13 +434,13 @@ export default function HistoricalPortfolioChart({ records }: Props) {
           totalUSD: {
             type: 'point' as const,
             xValue: new Date(sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1].fecha).toISOString(),
-            yValue: sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1].total_portfolio_usd,
+            yValue: calcTotalUSD(sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1]),
             backgroundColor: '#3730a3',
             borderColor: '#3730a3',
             borderWidth: 2,
             radius: 4,
             label: {
-              content: formatCurrency(sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1].total_portfolio_usd, 'USD'),
+              content: formatCurrency(calcTotalUSD(sortedAndFilteredRecords[sortedAndFilteredRecords.length - 1]), 'USD'),
               enabled: true,
               position: 'top' as const,
               color: '#3730a3',

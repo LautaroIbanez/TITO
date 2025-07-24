@@ -1,6 +1,6 @@
 {
   "peRatio": null,
-  "pbRatio": 11.429862,
+  "pbRatio": 11.442183,
   "evToEbitda": null,
   "roe": 0.38776,
   "roa": 0.088929996,
@@ -8,12 +8,12 @@
   "debtToEbitda": 3.247400472099394,
   "netMargin": 0.22999,
   "freeCashFlow": 4730375168,
-  "priceToFCF": 63.31688641233794,
+  "priceToFCF": 63.3851326559306,
   "ebitda": 15388000256,
   "revenueGrowth": -0.015,
   "epsGrowth": null,
-  "beta": 0.464,
+  "beta": 0.45,
   "sector": "Consumer Defensive",
   "industry": "Beverages - Non-Alcoholic",
-  "updatedAt": "2025-07-09T14:02:42.938Z"
+  "updatedAt": "2025-07-22T23:37:09.756Z"
 }
