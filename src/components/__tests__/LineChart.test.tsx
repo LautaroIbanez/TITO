@@ -10,6 +10,37 @@ jest.mock('chart.js/auto', () => ({
   })),
 }));
 
+// Mock canvas context
+const mockContext = {
+  fillRect: jest.fn(),
+  clearRect: jest.fn(),
+  getImageData: jest.fn(() => ({ data: new Array(4) })),
+  putImageData: jest.fn(),
+  createImageData: jest.fn(() => []),
+  setTransform: jest.fn(),
+  drawImage: jest.fn(),
+  save: jest.fn(),
+  fillText: jest.fn(),
+  restore: jest.fn(),
+  beginPath: jest.fn(),
+  moveTo: jest.fn(),
+  lineTo: jest.fn(),
+  closePath: jest.fn(),
+  stroke: jest.fn(),
+  translate: jest.fn(),
+  scale: jest.fn(),
+  rotate: jest.fn(),
+  arc: jest.fn(),
+  fill: jest.fn(),
+  measureText: jest.fn(() => ({ width: 0 })),
+  transform: jest.fn(),
+  rect: jest.fn(),
+  clip: jest.fn(),
+};
+
+// Mock getContext
+const mockGetContext = jest.fn(() => mockContext);
+
 describe('LineChart', () => {
   const mockSingleSeriesData = [
     { fecha: '2024-01-01', valor: 100 },
@@ -25,6 +56,10 @@ describe('LineChart', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Mock canvas getContext
+    Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+      value: mockGetContext,
+    });
   });
 
   it('renders single series chart correctly', () => {
@@ -37,7 +72,8 @@ describe('LineChart', () => {
     );
 
     expect(screen.getByText('Test Single Series')).toBeInTheDocument();
-    expect(screen.getByRole('img', { hidden: true })).toBeInTheDocument(); // canvas element
+    const canvas = document.querySelector('canvas');
+    expect(canvas).toBeInTheDocument();
   });
 
   it('renders multi-series chart correctly', () => {
@@ -62,7 +98,8 @@ describe('LineChart', () => {
     );
 
     expect(screen.getByText('Test Multi Series')).toBeInTheDocument();
-    expect(screen.getByRole('img', { hidden: true })).toBeInTheDocument(); // canvas element
+    const canvas = document.querySelector('canvas');
+    expect(canvas).toBeInTheDocument();
   });
 
   it('shows no data message when data is empty', () => {
@@ -146,5 +183,18 @@ describe('LineChart', () => {
     );
 
     expect(screen.getByText('Test Dollar Processing')).toBeInTheDocument();
+  });
+
+  it('renders canvas element when chart is displayed', () => {
+    render(
+      <LineChart
+        data={mockSingleSeriesData}
+        title="Test Canvas"
+        multiSeries={false}
+      />
+    );
+
+    const canvas = document.querySelector('canvas');
+    expect(canvas).toBeInTheDocument();
   });
 }); 
