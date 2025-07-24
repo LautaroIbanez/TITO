@@ -15,7 +15,8 @@
     "update-cauciones": "ts-node scripts/update-cauciones.ts",
     "scrape-bonds": "python3 scripts/scrape_bonistas.py",
     "daily-snapshot": "ts-node --project scripts/tsconfig.json scripts/daily-snapshot.ts",
-    "migrate-net-gains": "ts-node --project scripts/tsconfig.json scripts/migrate-net-gains.ts"
+    "migrate-net-gains": "ts-node --project scripts/tsconfig.json scripts/migrate-net-gains.ts",
+    "update-indicators": "ts-node --project scripts/tsconfig.json scripts/update-indicators.ts"
   },
   "dependencies": {
     "@binance/connector": "^3.6.1",

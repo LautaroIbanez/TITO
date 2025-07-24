@@ -18,6 +18,7 @@ import { getLatestPortfolioSnapshot } from '@/utils/portfolioHistoryClient';
 import HistoricalPortfolioChart from './HistoricalPortfolioChart';
 import DailyGainChart from './DailyGainChart';
 import { getSessionData, setSessionData } from '@/utils/sessionStorage';
+import EconomicIndicators from './EconomicIndicators';
 
 export default function DashboardSummary() {
   const [portfolioValueARS, setPortfolioValueARS] = useState(0);
@@ -443,38 +444,7 @@ export default function DashboardSummary() {
         </div>
       )}
 
-      {/* Inflation Data */}
-      {inflationData && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-medium text-gray-800 mb-4">Inflación Argentina</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-600">Mensual</p>
-                <p className="text-2xl font-semibold text-red-600">+{inflationData.argentina.monthly.toFixed(1)}%</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Anual</p>
-                <p className="text-2xl font-semibold text-red-600">+{inflationData.argentina.annual.toFixed(1)}%</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-medium text-gray-800 mb-4">Inflación EE.UU.</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-600">Mensual</p>
-                <p className="text-2xl font-semibold text-orange-600">+{inflationData.usa.monthly.toFixed(1)}%</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Anual</p>
-                <p className="text-2xl font-semibold text-orange-600">+{inflationData.usa.annual.toFixed(1)}%</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+
 
 
       
@@ -497,6 +467,11 @@ export default function DashboardSummary() {
         ) : (
           <div className="text-center text-gray-500">No hay historial de portafolio disponible.</div>
         )}
+      </div>
+
+      {/* Economic Indicators Section */}
+      <div className="mt-12">
+        <EconomicIndicators />
       </div>
     </div>
   );

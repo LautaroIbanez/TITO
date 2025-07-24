@@ -1,0 +1,118 @@
+{
+  "inflation": {
+    "data": [
+      { "fecha": "2024-01-01", "valor": 4.2, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "fecha": "2024-02-01", "valor": 3.8, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "fecha": "2024-03-01", "valor": 4.5, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "fecha": "2024-04-01", "valor": 4.1, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "fecha": "2024-05-01", "valor": 4.3, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "fecha": "2024-06-01", "valor": 4.0, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "fecha": "2024-07-01", "valor": 4.7, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "fecha": "2024-08-01", "valor": 4.2, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "fecha": "2024-09-01", "valor": 4.4, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "fecha": "2024-10-01", "valor": 4.1, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "fecha": "2024-11-01", "valor": 4.6, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "fecha": "2024-12-01", "valor": 4.3, "fecha_consulta": "2024-12-19T10:00:00.000Z" }
+    ],
+    "lastValue": 4.3,
+    "previousValue": 4.6,
+    "variation": -0.3
+  },
+  "dollars": {
+    "data": [
+      { "fecha": "2024-12-15", "casa": "oficial", "nombre": "Dólar Oficial", "compra": 845, "venta": 850, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "fecha": "2024-12-16", "casa": "oficial", "nombre": "Dólar Oficial", "compra": 847, "venta": 852, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "fecha": "2024-12-17", "casa": "oficial", "nombre": "Dólar Oficial", "compra": 848, "venta": 853, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "fecha": "2024-12-18", "casa": "oficial", "nombre": "Dólar Oficial", "compra": 849, "venta": 854, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "fecha": "2024-12-19", "casa": "oficial", "nombre": "Dólar Oficial", "compra": 845, "venta": 850, "fecha_consulta": "2024-12-19T10:00:00.000Z" }
+    ],
+    "lastValues": {
+      "oficial": { "venta": 850, "compra": 845, "variation": 5 },
+      "blue": { "venta": 1200, "compra": 1195, "variation": -10 },
+      "bolsa": { "venta": 1100, "compra": 1095, "variation": 15 },
+      "contadoconliqui": { "venta": 1150, "compra": 1145, "variation": 8 }
+    }
+  },
+  "fixedTerm": {
+    "data": [
+      { "entidad": "BANCO MACRO S.A.", "tnaClientes": 0.75, "tnaNoClientes": 0.65, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "entidad": "BANCO SANTANDER ARGENTINA S.A.", "tnaClientes": 0.72, "tnaNoClientes": 0.62, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "entidad": "BANCO BBVA ARGENTINA S.A.", "tnaClientes": 0.70, "tnaNoClientes": 0.60, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "entidad": "BANCO DE GALICIA Y BUENOS AIRES S.A.", "tnaClientes": 0.68, "tnaNoClientes": 0.58, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "entidad": "BANCO DE LA NACION ARGENTINA", "tnaClientes": 0.65, "tnaNoClientes": 0.55, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "entidad": "BANCO DE LA PROVINCIA DE BUENOS AIRES", "tnaClientes": 0.63, "tnaNoClientes": 0.53, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "entidad": "BANCO DE LA CIUDAD DE BUENOS AIRES", "tnaClientes": 0.60, "tnaNoClientes": 0.50, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "entidad": "HSBC BANK ARGENTINA S.A.", "tnaClientes": 0.58, "tnaNoClientes": 0.48, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "entidad": "BANCO CREDICOOP COOPERATIVO LIMITADO", "tnaClientes": 0.55, "tnaNoClientes": 0.45, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "entidad": "BANCO HIPOTECARIO S.A.", "tnaClientes": 0.52, "tnaNoClientes": 0.42, "fecha_consulta": "2024-12-19T10:00:00.000Z" }
+    ],
+    "top10": [
+      { "entidad": "BANCO MACRO S.A.", "tnaClientes": 0.75, "tnaNoClientes": 0.65, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "entidad": "BANCO SANTANDER ARGENTINA S.A.", "tnaClientes": 0.72, "tnaNoClientes": 0.62, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "entidad": "BANCO BBVA ARGENTINA S.A.", "tnaClientes": 0.70, "tnaNoClientes": 0.60, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "entidad": "BANCO DE GALICIA Y BUENOS AIRES S.A.", "tnaClientes": 0.68, "tnaNoClientes": 0.58, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "entidad": "BANCO DE LA NACION ARGENTINA", "tnaClientes": 0.65, "tnaNoClientes": 0.55, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "entidad": "BANCO DE LA PROVINCIA DE BUENOS AIRES", "tnaClientes": 0.63, "tnaNoClientes": 0.53, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "entidad": "BANCO DE LA CIUDAD DE BUENOS AIRES", "tnaClientes": 0.60, "tnaNoClientes": 0.50, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "entidad": "HSBC BANK ARGENTINA S.A.", "tnaClientes": 0.58, "tnaNoClientes": 0.48, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "entidad": "BANCO CREDICOOP COOPERATIVO LIMITADO", "tnaClientes": 0.55, "tnaNoClientes": 0.45, "fecha_consulta": "2024-12-19T10:00:00.000Z" },
+      { "entidad": "BANCO HIPOTECARIO S.A.", "tnaClientes": 0.52, "tnaNoClientes": 0.42, "fecha_consulta": "2024-12-19T10:00:00.000Z" }
+    ]
+  },
+  "mutualFunds": {
+    "moneyMarket": [
+      { "fondo": "Schroder Liquidez - Clase B", "tna": 0.85, "rendimiento_mensual": 0.72, "categoria": "Money Market" },
+      { "fondo": "MAF Liquidez - Clase A", "tna": 0.82, "rendimiento_mensual": 0.68, "categoria": "Money Market" },
+      { "fondo": "Chaco FCI Money Market - Clase A", "tna": 0.80, "rendimiento_mensual": 0.65, "categoria": "Money Market" },
+      { "fondo": "Delta Pesos - Clase X", "tna": 0.78, "rendimiento_mensual": 0.62, "categoria": "Money Market" },
+      { "fondo": "Balanz Capital Money Market - Clase A", "tna": 0.75, "rendimiento_mensual": 0.60, "categoria": "Money Market" }
+    ],
+    "rentaFija": [
+      { "fondo": "MAF Ahorro Plus - Clase C", "tna": 0.95, "rendimiento_mensual": 0.78, "categoria": "Renta Fija" },
+      { "fondo": "Compass Opportunity - Clase F", "tna": 0.92, "rendimiento_mensual": 0.75, "categoria": "Renta Fija" },
+      { "fondo": "Compass Renta Fija III - Clase F", "tna": 0.88, "rendimiento_mensual": 0.72, "categoria": "Renta Fija" },
+      { "fondo": "IOL Dólar Ahorro Plus - Clase C", "tna": 0.85, "rendimiento_mensual": 0.70, "categoria": "Renta Fija" }
+    ],
+    "rentaVariable": [
+      { "fondo": "Alpha Latam - Clase A", "tna": 1.05, "rendimiento_mensual": 0.85, "categoria": "Renta Variable" },
+      { "fondo": "Fima Acciones Latinoamerica - Clase A", "tna": 1.02, "rendimiento_mensual": 0.82, "categoria": "Renta Variable" },
+      { "fondo": "Delta Select - Clase G", "tna": 0.98, "rendimiento_mensual": 0.78, "categoria": "Renta Variable" },
+      { "fondo": "Alpha Latam - Clase Q Ley N° 27.743", "tna": 0.95, "rendimiento_mensual": 0.75, "categoria": "Renta Variable" }
+    ],
+    "rentaMixta": [
+      { "fondo": "Schroder Retorno Absoluto Dólares - Clase B", "tna": 1.15, "rendimiento_mensual": 0.92, "categoria": "Renta Mixta" },
+      { "fondo": "Delta Multimercado I - Clase G", "tna": 1.12, "rendimiento_mensual": 0.88, "categoria": "Renta Mixta" },
+      { "fondo": "Gainvest Balanceado - Clase E", "tna": 1.08, "rendimiento_mensual": 0.85, "categoria": "Renta Mixta" },
+      { "fondo": "Alpha Renta Balanceada Global - Clase D", "tna": 1.05, "rendimiento_mensual": 0.82, "categoria": "Renta Mixta" },
+      { "fondo": "Alpha Retorno Total - Clase I", "tna": 1.02, "rendimiento_mensual": 0.80, "categoria": "Renta Mixta" },
+      { "fondo": "Gainvest Balanceado - Clase F", "tna": 0.98, "rendimiento_mensual": 0.78, "categoria": "Renta Mixta" }
+    ]
+  },
+  "otherFunds": {
+    "data": [
+      { "fondo": "Fondo A", "tna": 1.20, "categoria": "Otros" },
+      { "fondo": "Fondo B", "tna": 1.18, "categoria": "Otros" },
+      { "fondo": "Fondo C", "tna": 1.15, "categoria": "Otros" },
+      { "fondo": "Fondo D", "tna": 1.12, "categoria": "Otros" },
+      { "fondo": "Fondo E", "tna": 1.10, "categoria": "Otros" },
+      { "fondo": "Fondo F", "tna": 1.08, "categoria": "Otros" },
+      { "fondo": "Fondo G", "tna": 1.05, "categoria": "Otros" },
+      { "fondo": "Fondo H", "tna": 1.02, "categoria": "Otros" },
+      { "fondo": "Fondo I", "tna": 0.98, "categoria": "Otros" },
+      { "fondo": "Fondo J", "tna": 0.95, "categoria": "Otros" }
+    ],
+    "top10": [
+      { "fondo": "Fondo A", "tna": 1.20, "categoria": "Otros" },
+      { "fondo": "Fondo B", "tna": 1.18, "categoria": "Otros" },
+      { "fondo": "Fondo C", "tna": 1.15, "categoria": "Otros" },
+      { "fondo": "Fondo D", "tna": 1.12, "categoria": "Otros" },
+      { "fondo": "Fondo E", "tna": 1.10, "categoria": "Otros" },
+      { "fondo": "Fondo F", "tna": 1.08, "categoria": "Otros" },
+      { "fondo": "Fondo G", "tna": 1.05, "categoria": "Otros" },
+      { "fondo": "Fondo H", "tna": 1.02, "categoria": "Otros" },
+      { "fondo": "Fondo I", "tna": 0.98, "categoria": "Otros" },
+      { "fondo": "Fondo J", "tna": 0.95, "categoria": "Otros" }
+    ]
+  },
+  "lastUpdated": "2024-12-19T10:00:00.000Z"
+} 
