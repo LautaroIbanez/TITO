@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { EconomicIndicators } from '@/types/indicators';
-import { fetchEconomicIndicators, getMockEconomicIndicators } from '@/services/indicators';
 import LineChart from './LineChart';
 import BarChart from './BarChart';
 import IndicatorCard from './IndicatorCard';
@@ -18,8 +17,11 @@ export default function EconomicIndicators() {
         setLoading(true);
         setError(null);
         
-        // Fetch data from API (with mock fallback for development)
-        const response = await fetch('/api/indicators?mock=true');
+        // Use environment variable to determine if we should use mock data
+        const useMock = process.env.NEXT_PUBLIC_USE_MOCK_INDICATORS === 'true';
+        const url = useMock ? '/api/indicators?mock=true' : '/api/indicators';
+        
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error('Failed to fetch indicators');
         }
@@ -152,12 +154,24 @@ export default function EconomicIndicators() {
               <LineChart
                 data={indicators.dollars.data.map(item => ({
                   fecha: item.fecha,
-                  valor: item.venta
+                  [item.casa]: item.venta
                 }))}
                 title="Cotización del Dólar - Últimos 30 días"
                 xLabel="Fecha"
                 yLabel="Precio (ARS)"
-                color="#10B981"
+                multiSeries={true}
+                seriesLabels={{
+                  oficial: 'Dólar Oficial',
+                  blue: 'Dólar Blue',
+                  bolsa: 'Dólar Bolsa',
+                  contadoconliqui: 'Dólar CCL'
+                }}
+                seriesColors={{
+                  oficial: '#10B981',
+                  blue: '#EF4444',
+                  bolsa: '#3B82F6',
+                  contadoconliqui: '#F59E0B'
+                }}
                 height={400}
               />
             )}

@@ -283,6 +283,47 @@ export async function fetchEconomicIndicators(): Promise<EconomicIndicators> {
 
 // Función para obtener datos mock (para desarrollo/testing)
 export function getMockEconomicIndicators(): EconomicIndicators {
+  // Generate mock dollar data for the last 30 days
+  const generateMockDollarData = () => {
+    const data: DollarData[] = [];
+    const today = new Date();
+    
+    // Base prices for each dollar type
+    const basePrices = {
+      oficial: { compra: 850, venta: 860 },
+      blue: { compra: 1200, venta: 1250 },
+      bolsa: { compra: 1100, venta: 1150 },
+      contadoconliqui: { compra: 1050, venta: 1100 }
+    };
+    
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      
+      Object.entries(basePrices).forEach(([type, prices]) => {
+        // Add some random variation to make it realistic
+        const variation = (Math.random() - 0.5) * 0.1; // ±5% variation
+        const compra = Math.round(prices.compra * (1 + variation));
+        const venta = Math.round(prices.venta * (1 + variation));
+        
+        data.push({
+          fecha: date.toISOString().split('T')[0],
+          casa: type,
+          nombre: type === 'oficial' ? 'Dólar Oficial' : 
+                  type === 'blue' ? 'Dólar Blue' :
+                  type === 'bolsa' ? 'Dólar Bolsa' : 'Dólar CCL',
+          compra,
+          venta,
+          fecha_consulta: new Date().toISOString()
+        });
+      });
+    }
+    
+    return data;
+  };
+
+  const mockDollarData = generateMockDollarData();
+
   return {
     inflation: {
       data: [
@@ -304,12 +345,12 @@ export function getMockEconomicIndicators(): EconomicIndicators {
       variation: -0.3,
     },
     dollars: {
-      data: [],
+      data: mockDollarData,
       lastValues: {
-        oficial: { venta: 850, compra: 845, variation: 5 },
-        blue: { venta: 1200, compra: 1195, variation: -10 },
-        bolsa: { venta: 1100, compra: 1095, variation: 15 },
-        contadoconliqui: { venta: 1150, compra: 1145, variation: 8 },
+        oficial: { venta: 860, compra: 850, variation: 5 },
+        blue: { venta: 1250, compra: 1200, variation: -10 },
+        bolsa: { venta: 1150, compra: 1100, variation: 15 },
+        contadoconliqui: { venta: 1100, compra: 1050, variation: 8 },
       },
     },
     fixedTerm: {

@@ -14,7 +14,11 @@ if (typeof global.Request === 'undefined') {
   global.Request = class Request {
     constructor(input, init) {
       // Basic mock properties
-      this.url = typeof input === 'string' ? input : input.url;
+      Object.defineProperty(this, 'url', {
+        value: typeof input === 'string' ? input : input.url,
+        writable: true,
+        configurable: true
+      });
       this.method = init?.method || 'GET';
       this.headers = new Headers(init?.headers);
       this.body = init?.body;

@@ -11,6 +11,7 @@ const customJestConfig = {
     '^@/components/(.*)$': '<rootDir>/src/components/$1',
     '^@/utils/(.*)$': '<rootDir>/src/utils/$1',
     '^@/types/(.*)$': '<rootDir>/src/types/$1',
+    '^@/services/(.*)$': '<rootDir>/src/services/$1',
   },
   transformIgnorePatterns: [
     'node_modules/(?!(.*\\.mjs$))',

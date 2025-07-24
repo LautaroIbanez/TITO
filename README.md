@@ -667,6 +667,26 @@ The test suite depends on [Jest](https://jestjs.io/) being available. You can th
 npm test
 ```
 
+## Environment Variables
+
+### NEXT_PUBLIC_USE_MOCK_INDICATORS
+
+Controls whether the Economic Indicators component uses mock data or real API data.
+
+- **`true`**: Uses mock data for development/testing purposes
+- **`false`** or **undefined**: Uses real API data from external sources
+
+**Usage:**
+```bash
+# For development with mock data
+NEXT_PUBLIC_USE_MOCK_INDICATORS=true npm run dev
+
+# For production with real data
+NEXT_PUBLIC_USE_MOCK_INDICATORS=false npm run dev
+```
+
+**Note:** This variable affects the `/api/indicators` endpoint behavior. When set to `true`, the endpoint will return mock data regardless of the `?mock=true` query parameter.
+
 ## Contributing
 - Use TypeScript for all code.
 - Follow the existing code style; ESLint is used for linting (run `npx eslint .` to check).
