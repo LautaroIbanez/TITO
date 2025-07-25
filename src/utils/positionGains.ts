@@ -1,6 +1,40 @@
-import { PortfolioPosition, StockPosition, CryptoPosition, FixedTermDepositPosition, CaucionPosition } from '@/types';
+import { PortfolioPosition, StockPosition, CryptoPosition, FixedTermDepositPosition, CaucionPosition, MutualFundPosition } from '@/types';
 import { validatePositionPrice } from './priceValidation';
 import getPurchasePrice from './getPurchasePrice';
+
+/**
+ * Detects if a mutual fund is a Money Market fund based on name and category
+ */
+export function isMoneyMarketFund(fund: MutualFundPosition): boolean {
+  return fund.name.toLowerCase().includes('money market') || 
+         fund.category.toLowerCase().includes('money market') ||
+         fund.name.toLowerCase().includes('mercado monetario') ||
+         fund.category.toLowerCase().includes('mercado monetario');
+}
+
+/**
+ * Calculates Money Market fund returns based on annual rate and assumed time period
+ * @param fund MutualFundPosition
+ * @param daysElapsed Number of days since investment (defaults to 30)
+ * @returns Object with gainCurrency, currentValue, and gainPct
+ */
+export function calculateMoneyMarketReturns(
+  fund: MutualFundPosition, 
+  daysElapsed: number = 30
+): { gainCurrency: number; currentValue: number; gainPct: number } {
+  if (!fund.annualRate) {
+    return { gainCurrency: 0, currentValue: fund.amount, gainPct: 0 };
+  }
+  
+  const annualRate = fund.annualRate / 100;
+  const dailyRate = annualRate / 365;
+  
+  const gainCurrency = fund.amount * dailyRate * daysElapsed;
+  const currentValue = fund.amount + gainCurrency;
+  const gainPct = (gainCurrency / fund.amount) * 100;
+  
+  return { gainCurrency, currentValue, gainPct };
+}
 
 /**
  * Computes the gain/loss in currency for a portfolio position.
@@ -33,6 +67,14 @@ export function computePositionGain(
       : Math.round((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
     if (days < 0) return 0;
     return pos.amount * (pos.annualRate / 100) * (days / 365);
+  }
+  if (pos.type === 'MutualFund') {
+    if (isMoneyMarketFund(pos)) {
+      const { gainCurrency } = calculateMoneyMarketReturns(pos);
+      return gainCurrency;
+    }
+    // For non-Money Market funds, return 0 as we don't have price data
+    return 0;
   }
   return 0;
 }

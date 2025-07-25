@@ -9,6 +9,7 @@ import { getPortfolioNetGains } from '@/utils/positionGains';
 import { detectDuplicates } from '@/utils/duplicateDetection';
 import { validatePositionPrice } from '@/utils/priceValidation';
 import getPurchasePrice from '../utils/getPurchasePrice';
+import { isMoneyMarketFund, calculateMoneyMarketReturns } from '@/utils/positionGains';
 
 interface Props {
   positions: PortfolioPosition[];
@@ -17,6 +18,7 @@ interface Props {
   technicals: Record<string, Technicals | null>;
   cash: { ARS: number; USD: number };
   onPortfolioUpdate: () => void;
+  bondPrices?: Record<string, number>;
 }
 
 function getCurrentPrice(prices: PriceData[]): number | undefined {
@@ -25,7 +27,7 @@ function getCurrentPrice(prices: PriceData[]): number | undefined {
   return latestPrice === 0 ? undefined : latestPrice;
 }
 
-export default function PortfolioTable({ positions, prices, fundamentals, technicals, cash, onPortfolioUpdate }: Props) {
+export default function PortfolioTable({ positions, prices, fundamentals, technicals, cash, onPortfolioUpdate, bondPrices }: Props) {
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     tradeType: TradeType;
@@ -79,7 +81,16 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
     }
     
     // Create payload object according to requirements
-    const payload: any = {
+    const payload: {
+      username: string;
+      assetType: string;
+      quantity: number;
+      price: number;
+      currency: string;
+      ticker?: string;
+      symbol?: string;
+      market?: string;
+    } = {
       username,
       assetType,
       quantity,
@@ -155,7 +166,6 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
     const gainCurrency = positionGains.has(positionKey) ? positionGains.get(positionKey)! : NaN;
     
     const f = fundamentals[pos.symbol];
-    const t = technicals[pos.symbol];
 
     return (
       <tr key={`${pos.symbol}-${pos.currency}`} className="even:bg-gray-50">
@@ -179,7 +189,6 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
           ) : Number.isFinite(gainCurrency) ? formatCurrency(gainCurrency, pos.currency) : '-'}
         </td>
         <td className="px-4 py-2 text-right text-gray-900">{f?.peRatio?.toFixed(2) ?? '-'}</td>
-        <td className="px-4 py-2 text-right text-gray-900">{t?.rsi?.toFixed(2) ?? '-'}</td>
         <td className="px-4 py-2 text-center">
           <button onClick={() => openSellModal(pos)} className="text-red-600 hover:text-red-800 text-xs font-semibold">Vender</button>
         </td>
@@ -188,9 +197,19 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
   };
 
   const renderBondRow = (pos: BondPosition) => {
-    const priceValidation = validatePositionPrice(pos, prices);
-    const hasValidPrice = priceValidation.hasValidPrice;
-    const currPrice = priceValidation.currentPrice;
+    // Use bondPrices if available, otherwise fall back to price validation
+    let hasValidPrice = false;
+    let currPrice: number | undefined;
+    
+    if (bondPrices && bondPrices[pos.ticker] !== undefined) {
+      hasValidPrice = true;
+      currPrice = bondPrices[pos.ticker];
+    } else {
+      const priceValidation = validatePositionPrice(pos, prices);
+      hasValidPrice = priceValidation.hasValidPrice;
+      currPrice = priceValidation.currentPrice;
+    }
+    
     const value = hasValidPrice ? pos.quantity * currPrice! : pos.quantity * getPurchasePrice(pos);
     const gain = hasValidPrice && getPurchasePrice(pos) ? ((currPrice! - getPurchasePrice(pos)) / getPurchasePrice(pos)) * 100 : 0;
     
@@ -229,8 +248,23 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
   };
 
   const renderDepositRow = (pos: FixedTermDepositPosition) => {
-    // Get pre-calculated gain from the new function
-    const gainCurrency = positionGains.has(pos.id) ? positionGains.get(pos.id)! : NaN;
+    // Calculate gains for fixed term deposits
+    let gainCurrency = NaN;
+    let currentValue = pos.amount;
+    let gainPct = 0;
+    
+    if (pos.annualRate && pos.startDate) {
+      const startDate = new Date(pos.startDate);
+      const currentDate = new Date();
+      const daysElapsed = Math.max(0, (currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      const annualRate = pos.annualRate / 100;
+      const dailyRate = annualRate / 365;
+      
+      gainCurrency = pos.amount * dailyRate * daysElapsed;
+      currentValue = pos.amount + gainCurrency;
+      gainPct = (gainCurrency / pos.amount) * 100;
+    }
+    
     return (
       <tr key={pos.id} className="even:bg-gray-50">
         <td className="px-4 py-2 font-medium text-gray-900">{pos.provider}</td>
@@ -239,14 +273,12 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
-        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(pos.amount, pos.currency)}</td>
+        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(currentValue, pos.currency)}</td>
         <td className="px-4 py-2 text-right text-green-600">
-          {pos.annualRate?.toFixed(2) ?? '-'}%{pos.termDays ? ` a ${pos.termDays} días` : ''}
+          {gainPct.toFixed(2)}% ({pos.annualRate?.toFixed(2) ?? '-'}% TNA)
         </td>
-        <td className={`px-4 py-2 text-right font-semibold ${Number.isFinite(gainCurrency) ? (gainCurrency >= 0 ? 'text-green-600' : 'text-red-600') : 'text-gray-500'}`}>
-          {isPositionExcluded(pos) ? (
-            <span className="text-orange-600 text-xs">Sin datos suficientes</span>
-          ) : Number.isFinite(gainCurrency) ? formatCurrency(gainCurrency, pos.currency) : '-'}
+        <td className={`px-4 py-2 text-right font-semibold ${gainCurrency >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          {formatCurrency(gainCurrency, pos.currency)}
         </td>
         <td className="px-4 py-2 text-right text-gray-700">{pos.maturityDate ? new Date(pos.maturityDate).toLocaleDateString() : '-'}</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
@@ -296,7 +328,6 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
     const gainCurrency = positionGains.has(positionKey) ? positionGains.get(positionKey)! : NaN;
     
     const f = fundamentals[pos.symbol];
-    const t = technicals[pos.symbol];
 
     return (
       <tr key={`${pos.symbol}-${pos.currency}`} className="even:bg-gray-50">
@@ -320,7 +351,6 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
           ) : Number.isFinite(gainCurrency) ? formatCurrency(gainCurrency, pos.currency) : '-'}
         </td>
         <td className="px-4 py-2 text-right text-gray-900">{f?.peRatio?.toFixed(2) ?? '-'}</td>
-        <td className="px-4 py-2 text-right text-gray-900">{t?.rsi?.toFixed(2) ?? '-'}</td>
         <td className="px-4 py-2 text-center">
           <button onClick={() => openSellModal(pos)} className="text-red-600 hover:text-red-800 text-xs font-semibold">Vender</button>
         </td>
@@ -329,24 +359,39 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
   };
 
   const renderFundRow = (pos: MutualFundPosition) => {
-    // Get pre-calculated gain from the new function
-    const gainCurrency = positionGains.has(pos.id) ? positionGains.get(pos.id)! : NaN;
+    // Detect Money Market funds and calculate performance
+    const isMoneyMarket = isMoneyMarketFund(pos);
+    
+    let gainCurrency = NaN;
+    let currentValue = pos.amount;
+    let gainPct = 0;
+    
+    // For Money Market funds, calculate performance using the helper function
+    if (isMoneyMarket && pos.annualRate) {
+      const { gainCurrency: calculatedGain, currentValue: calculatedValue, gainPct: calculatedPct } = calculateMoneyMarketReturns(pos);
+      gainCurrency = calculatedGain;
+      currentValue = calculatedValue;
+      gainPct = calculatedPct;
+    }
+    
     return (
       <tr key={pos.id} className="even:bg-gray-50">
         <td className="px-4 py-2 font-medium text-gray-900">{pos.name}</td>
-        <td className="px-4 py-2 text-gray-700">Fondo Mutuo</td>
+        <td className="px-4 py-2 text-gray-700">{isMoneyMarket ? 'Money Market' : 'Fondo Mutuo'}</td>
         <td className="px-4 py-2 text-gray-700">{pos.currency}</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
-        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(pos.amount, pos.currency)}</td>
+        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(currentValue, pos.currency)}</td>
         <td className="px-4 py-2 text-right text-green-600">
-          {pos.annualRate?.toFixed(2) ?? '-'}% ({pos.category})
+          {isMoneyMarket ? `${gainPct.toFixed(2)}%` : pos.annualRate?.toFixed(2) ?? '-'}% ({pos.category})
         </td>
-        <td className={`px-4 py-2 text-right font-semibold ${Number.isFinite(gainCurrency) ? (gainCurrency >= 0 ? 'text-green-600' : 'text-red-600') : 'text-gray-500'}`}>
-          {isPositionExcluded(pos) ? (
-            <span className="text-orange-600 text-xs">Sin datos suficientes</span>
-          ) : Number.isFinite(gainCurrency) ? formatCurrency(gainCurrency, pos.currency) : '-'}
+        <td className={`px-4 py-2 text-right font-semibold ${isMoneyMarket ? (gainCurrency >= 0 ? 'text-green-600' : 'text-red-600') : (Number.isFinite(gainCurrency) ? (gainCurrency >= 0 ? 'text-green-600' : 'text-red-600') : 'text-gray-500')}`}>
+          {isMoneyMarket ? formatCurrency(gainCurrency, pos.currency) : (
+            isPositionExcluded(pos) ? (
+              <span className="text-orange-600 text-xs">Sin datos suficientes</span>
+            ) : Number.isFinite(gainCurrency) ? formatCurrency(gainCurrency, pos.currency) : '-'
+          )}
         </td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
@@ -409,7 +454,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
           maxShares={modalInfo.maxShares}
           currency={modalInfo.currency}
           assetClass={modalState.asset?.type === 'Stock' ? 'stocks' : modalState.asset?.type === 'Bond' ? 'bonds' : undefined}
-          market={modalState.asset?.type === 'Stock' ? (modalState.asset as any).market : undefined}
+          market={modalState.asset?.type === 'Stock' ? (modalState.asset as StockPosition).market : undefined}
         />
       )}
       
@@ -455,7 +500,6 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
               <th className="px-4 py-2 text-right">Gan/Pérd % / TNA</th>
               <th className="px-4 py-2 text-right">Gan/Pérd ($)</th>
               <th className="px-4 py-2 text-right">P/E / Vencimiento</th>
-              <th className="px-4 py-2 text-right">RSI</th>
               <th className="px-4 py-2 text-center">Acciones</th>
             </tr>
           </thead>

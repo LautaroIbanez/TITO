@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import PortfolioCard from '@/components/PortfolioCard';
 import PortfolioTable from '@/components/PortfolioTable';
 import PortfolioPieChart from '@/components/PortfolioPieChart';
@@ -12,9 +12,11 @@ import { generateInvestmentStrategy } from '@/utils/strategyAdvisor';
 import { InvestmentGoal, InvestorProfile, PortfolioPosition } from '@/types';
 import { getBaseTicker } from '@/utils/tickers';
 import { getSessionData } from '@/utils/sessionStorage';
+import { useBonistasBonds } from '@/hooks/useBonistasBonds';
 
 export default function PortfolioPage() {
   const { portfolioData, loading, refreshPortfolio } = usePortfolio();
+  const { bonds } = useBonistasBonds();
   const [depositAmount, setDepositAmount] = useState('');
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
   const [depositCurrency, setDepositCurrency] = useState<'ARS' | 'USD'>('ARS');
@@ -23,6 +25,17 @@ export default function PortfolioPage() {
   const [depositSuccess, setDepositSuccess] = useState('');
   const [editingDeposit, setEditingDeposit] = useState<DepositTransaction | null>(null);
   const [depositActionError, setDepositActionError] = useState<string | null>(null);
+
+  // Convert bonds list to dictionary for easy lookup
+  const bondPrices = useMemo(() => {
+    const prices: Record<string, number> = {};
+    bonds.forEach(bond => {
+      if (bond.price !== null && bond.price !== undefined) {
+        prices[bond.ticker] = bond.price;
+      }
+    });
+    return prices;
+  }, [bonds]);
 
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +68,7 @@ export default function PortfolioPage() {
   };
 
   // Sugerencias dinámicas
-  let suggestions: any[] = [];
+  let suggestions: Array<{ id: string; action: string; reason: string; priority: string; suggestedAssets?: string[]; symbol?: string; targetSymbol?: string }> = [];
   if (portfolioData && portfolioData.profile && portfolioData.positions && portfolioData.cash) {
     const strategy = generateInvestmentStrategy({
       profile: portfolioData.profile as InvestorProfile,
@@ -109,8 +122,8 @@ export default function PortfolioPage() {
       }
       await refreshPortfolio();
       setEditingDeposit(null);
-    } catch (err: any) {
-      setDepositActionError(err.message);
+    } catch (err: unknown) {
+      setDepositActionError(err instanceof Error ? err.message : 'Unknown error occurred');
     }
   };
 
@@ -132,8 +145,8 @@ export default function PortfolioPage() {
         throw new Error(data.error || 'Failed to delete deposit');
       }
       await refreshPortfolio();
-    } catch (err: any) {
-      setDepositActionError(err.message);
+    } catch (err: unknown) {
+      setDepositActionError(err instanceof Error ? err.message : 'Unknown error occurred');
     }
   };
 
@@ -225,6 +238,7 @@ export default function PortfolioPage() {
         technicals={portfolioData.technicals} 
         cash={cash}
         onPortfolioUpdate={refreshPortfolio}
+        bondPrices={bondPrices}
       />
       
       {/* Stock Cards - Only show stock positions */}
