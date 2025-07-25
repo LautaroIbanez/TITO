@@ -27,7 +27,7 @@ export interface InvestmentGoal {
 }
 
 // -- Portfolio Positions --
-export type AssetType = 'Stock' | 'Bond' | 'FixedTermDeposit' | 'Caucion' | 'Crypto' | 'RealEstate';
+export type AssetType = 'Stock' | 'Bond' | 'FixedTermDeposit' | 'Caucion' | 'Crypto' | 'RealEstate' | 'MutualFund';
 
 export interface StockPosition {
   type: 'Stock';
@@ -87,7 +87,17 @@ export interface RealEstatePosition {
   currency: 'ARS' | 'USD';
 }
 
-export type PortfolioPosition = StockPosition | BondPosition | FixedTermDepositPosition | CaucionPosition | CryptoPosition | RealEstatePosition;
+export interface MutualFundPosition {
+  type: 'MutualFund';
+  id: string;
+  name: string;
+  category: string;
+  amount: number;
+  annualRate: number;
+  currency: 'ARS' | 'USD';
+}
+
+export type PortfolioPosition = StockPosition | BondPosition | FixedTermDepositPosition | CaucionPosition | CryptoPosition | RealEstatePosition | MutualFundPosition;
 
 // -- Portfolio Transactions --
 export interface StockTradeTransaction {
@@ -157,6 +167,18 @@ export interface CaucionCreationTransaction {
   annualRate: number;
   termDays: number;
   maturityDate: string;
+  currency: 'ARS' | 'USD';
+}
+
+export interface MutualFundCreationTransaction {
+  id: string;
+  date: string; // ISO string
+  type: 'Create';
+  assetType: 'MutualFund';
+  name: string;
+  category: string;
+  amount: number;
+  annualRate: number;
   currency: 'ARS' | 'USD';
 }
 
@@ -242,6 +264,7 @@ export type PortfolioTransaction =
   | DepositTransaction
   | FixedTermDepositCreationTransaction
   | CaucionCreationTransaction
+  | MutualFundCreationTransaction
   | WithdrawalTransaction
   | CryptoTradeTransaction
   | RealEstateTransaction

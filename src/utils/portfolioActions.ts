@@ -1,5 +1,5 @@
 import { getUserData, saveUserData } from './userData';
-import { UserData, DepositTransaction, PortfolioTransaction, StockPosition, BondPosition, CryptoPosition, CryptoTradeTransaction, FixedTermDepositPosition, FixedTermDepositCreationTransaction } from '@/types';
+import { UserData, DepositTransaction, PortfolioTransaction, StockPosition, BondPosition, CryptoPosition, CryptoTradeTransaction, FixedTermDepositPosition, FixedTermDepositCreationTransaction, MutualFundPosition, MutualFundCreationTransaction } from '@/types';
 import { DEFAULT_COMMISSION_PCT, DEFAULT_PURCHASE_FEE_PCT } from './constants';
 import { convertCurrency } from './currency';
 import dayjs from 'dayjs';
@@ -177,6 +177,37 @@ export async function buyAsset(username: string, assetType: string, body: any) {
         annualRate,
         termDays,
         maturityDate: maturityDate.toISOString(),
+        currency: validatedCurrency,
+      };
+      user.transactions.push(tx);
+      user.cash[validatedCurrency] -= totalCost;
+      break;
+    }
+    case 'MutualFund': {
+      const { name, category, amount, annualRate, currency } = body;
+      if (!name || !category || !amount || !annualRate || !currency) throw new Error('Missing fields for Mutual Fund purchase');
+      const validatedCurrency = currency as 'ARS' | 'USD';
+      totalCost = amount;
+      if (user.cash[validatedCurrency] < totalCost) throw new Error('Insufficient funds');
+      const newPosition: MutualFundPosition = {
+        type: 'MutualFund',
+        id: `mf-${Date.now()}`,
+        name,
+        category,
+        amount,
+        annualRate,
+        currency: validatedCurrency,
+      };
+      user.positions.push(newPosition);
+      const tx: MutualFundCreationTransaction = {
+        id: Date.now().toString(),
+        date: new Date().toISOString(),
+        type: 'Create',
+        assetType: 'MutualFund',
+        name,
+        category,
+        amount,
+        annualRate,
         currency: validatedCurrency,
       };
       user.transactions.push(tx);

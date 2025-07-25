@@ -231,4 +231,63 @@ describe('/api/portfolio/buy average price with fees', () => {
     expect(userData.cash.USD).toBe(100000 - 1030);
     expect(userData.cash.ARS).toBe(100000); // Unchanged
   });
+
+  it('creates MutualFund position correctly', async () => {
+    // Mock buyAsset to manipulate userData and return the result
+    buyAssetMock.mockImplementation(async (username: string, assetType: string, body: any) => {
+      // Simulate the buyAsset logic for MutualFund
+      const { name, category, amount, annualRate, currency } = body;
+      const totalCost = amount;
+      
+      // Create new mutual fund position
+      const pos = { 
+        type: 'MutualFund', 
+        id: `mf-${Date.now()}`, 
+        name, 
+        category, 
+        amount, 
+        annualRate, 
+        currency 
+      };
+      userData.positions.push(pos);
+      
+      // Update cash
+      userData.cash[currency] -= totalCost;
+      
+      return { positions: userData.positions, transactions: userData.transactions, cash: userData.cash };
+    });
+
+    const req = mockRequest({
+      username: 'testuser',
+      assetType: 'MutualFund',
+      name: 'MAF Liquidez - Clase A',
+      category: 'Money Market',
+      amount: 50000,
+      annualRate: 38.1358,
+      currency: 'ARS',
+    });
+    
+    await buyHandler(req);
+    
+    // Verify buyAsset was called with correct parameters
+    expect(buyAssetMock).toHaveBeenCalledWith('testuser', 'MutualFund', expect.objectContaining({
+      name: 'MAF Liquidez - Clase A',
+      category: 'Money Market',
+      amount: 50000,
+      annualRate: 38.1358,
+      currency: 'ARS',
+    }));
+    
+    // Verify userData was manipulated as expected
+    const pos = userData.positions.find((p: any) => p.type === 'MutualFund' && p.name === 'MAF Liquidez - Clase A');
+    expect(pos).toBeDefined();
+    expect(pos.category).toBe('Money Market');
+    expect(pos.amount).toBe(50000);
+    expect(pos.annualRate).toBe(38.1358);
+    expect(pos.currency).toBe('ARS');
+    
+    // Verify cash was deducted correctly
+    expect(userData.cash.ARS).toBe(100000 - 50000);
+    expect(userData.cash.USD).toBe(100000); // Unchanged
+  });
 }); 

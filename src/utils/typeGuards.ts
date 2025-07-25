@@ -3,7 +3,7 @@ import { PortfolioTransaction, PortfolioPosition } from '@/types';
 /**
  * Type guard to check if a transaction has an assetType property
  */
-export function hasAssetType(tx: PortfolioTransaction): tx is PortfolioTransaction & { assetType: 'Stock' | 'Bond' | 'FixedTermDeposit' | 'Caucion' | 'Crypto' | 'RealEstate' } {
+export function hasAssetType(tx: PortfolioTransaction): tx is PortfolioTransaction & { assetType: 'Stock' | 'Bond' | 'FixedTermDeposit' | 'Caucion' | 'Crypto' | 'RealEstate' | 'MutualFund' } {
   return 'assetType' in tx;
 }
 
@@ -25,7 +25,7 @@ export function isTradeTransaction(tx: PortfolioTransaction): tx is PortfolioTra
  */
 export function isCreationTransaction(tx: PortfolioTransaction): tx is PortfolioTransaction & {
   type: 'Create';
-  assetType: 'FixedTermDeposit' | 'Caucion' | 'RealEstate';
+  assetType: 'FixedTermDeposit' | 'Caucion' | 'RealEstate' | 'MutualFund';
   amount: number;
   currency: 'ARS' | 'USD';
 } {
