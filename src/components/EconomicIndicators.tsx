@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { EconomicIndicators } from '@/types/indicators';
+import type { EconomicIndicators } from '@/types/indicators';
 import LineChart from './LineChart';
 import BarChart from './BarChart';
 import IndicatorCard from './IndicatorCard';
@@ -282,13 +282,13 @@ export default function EconomicIndicators() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <IndicatorCard
                 title="Mejor TNA"
-                value={`${indicators.otherFunds.top10[0]?.tna}%`}
+                value={`${(indicators.otherFunds.top10[0]?.tna * 100).toFixed(2)}%`}
                 subtitle={indicators.otherFunds.top10[0]?.fondo}
                 color="purple"
               />
               <IndicatorCard
                 title="Promedio TNA"
-                value={`${(indicators.otherFunds.data.reduce((sum, item) => sum + item.tna, 0) / indicators.otherFunds.data.length).toFixed(2)}%`}
+                value={`${(indicators.otherFunds.data.reduce((sum, item) => sum + item.tna, 0) / indicators.otherFunds.data.length * 100).toFixed(2)}%`}
                 subtitle="Promedio de todos los fondos"
                 color="purple"
               />
@@ -303,7 +303,7 @@ export default function EconomicIndicators() {
             <BarChart
               data={indicators.otherFunds.top10.map(item => ({
                 label: item.fondo,
-                value: item.tna
+                value: item.tna * 100
               }))}
               title="Top 10 Otros Fondos por TNA"
               xLabel="TNA (%)"

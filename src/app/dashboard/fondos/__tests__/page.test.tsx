@@ -126,6 +126,8 @@ describe('FondosPage', () => {
     expect(screen.getByText('Alpha Latam - Clase A')).toBeInTheDocument();
     expect(screen.getByText('Schroder Retorno Absoluto Dólares - Clase B')).toBeInTheDocument();
     expect(screen.getByText('SUPERVIELLE')).toBeInTheDocument();
+    // Check that the "Otros" fund shows the multiplied TNA value (0.32 * 100 = 32.00%)
+    expect(screen.getByText('32.00%')).toBeInTheDocument();
   });
 
   it('renders category sections correctly', async () => {
@@ -281,6 +283,9 @@ describe('FondosPage', () => {
       // Check that funds with valid data show properly
       expect(screen.getByText('38.14%')).toBeInTheDocument();
       expect(screen.getByText('Rendimiento mensual: 1.78%')).toBeInTheDocument();
+      
+      // Check that "Otros" fund shows the multiplied TNA value (0.32 * 100 = 32.00%)
+      expect(screen.getByText('32.00%')).toBeInTheDocument();
       
       // Check that funds with missing data show N/A
       expect(screen.getByText('N/A')).toBeInTheDocument();

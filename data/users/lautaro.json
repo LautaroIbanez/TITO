@@ -66,6 +66,15 @@
       "currency": "ARS",
       "startDate": "2025-07-24T21:55:50.069Z",
       "maturityDate": "2025-08-23T21:55:50.069Z"
+    },
+    {
+      "type": "MutualFund",
+      "id": "mf-1753445973027",
+      "name": "MAF Liquidez - Clase A",
+      "category": "Money Market",
+      "amount": 50000,
+      "annualRate": 38.1358,
+      "currency": "ARS"
     }
   ],
   "transactions": [
@@ -183,11 +192,22 @@
       "termDays": 30,
       "maturityDate": "2025-08-23T21:55:50.069Z",
       "currency": "ARS"
+    },
+    {
+      "id": "1753445973027",
+      "date": "2025-07-25T12:19:33.027Z",
+      "type": "Create",
+      "assetType": "MutualFund",
+      "name": "MAF Liquidez - Clase A",
+      "category": "Money Market",
+      "amount": 50000,
+      "annualRate": 38.1358,
+      "currency": "ARS"
     }
   ],
   "goals": [],
   "cash": {
-    "ARS": 1128421.3666,
+    "ARS": 1078421.3666,
     "USD": 2000
   },
   "profile": {
@@ -212,8 +232,8 @@
     "initialBalanceUSD": 2000
   },
   "investmentStrategy": {
-    "id": "strategy-a8b8c58e-7912-49f7-b105-d6a03f6fb99a",
-    "createdAt": "2025-07-25T11:37:37.402Z",
+    "id": "strategy-17f1e26c-70d4-4331-927a-cfb2807652e9",
+    "createdAt": "2025-07-25T12:17:43.163Z",
     "targetAllocation": {
       "stocks": 59.4,
       "bonds": 29.7,
@@ -223,7 +243,7 @@
     },
     "recommendations": [
       {
-        "id": "alloc-abb7eb08-19fb-4886-9cd4-191ede1c16aa",
+        "id": "alloc-d4ea2702-9cf2-48a6-aac7-cf89e9906f00",
         "action": "increase",
         "assetClass": "bonds",
         "reason": "Tu portafolio tiene 0.2% en bonos, pero tu estrategia objetivo es 29.7%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
@@ -236,7 +256,7 @@
         ]
       },
       {
-        "id": "cash-invest-78e34bbe-9696-44ef-b889-ba175da7f501",
+        "id": "cash-invest-f9f5f19c-1425-4ac9-b66b-6cc5bdddc8d4",
         "action": "buy",
         "assetClass": "cash",
         "reason": "Tienes un 37.7% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",

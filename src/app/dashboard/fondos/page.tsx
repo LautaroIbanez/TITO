@@ -103,9 +103,13 @@ export default function FondosPage() {
         <p className="text-sm text-gray-600">Categoría: {fund.categoria}</p>
       </div>
              <div className="my-4">
-         <p className="text-3xl font-bold text-green-600">
-           {typeof fund.tna === 'number' ? `${fund.tna.toFixed(2)}%` : 'N/A'}
-         </p>
+                   <p className="text-3xl font-bold text-green-600">
+            {typeof fund.tna === 'number' 
+              ? fund.categoria === 'Otros' 
+                ? `${(fund.tna * 100).toFixed(2)}%`
+                : `${fund.tna.toFixed(2)}%`
+              : 'N/A'}
+          </p>
          <p className="text-sm text-gray-800">TNA</p>
          <p className="text-sm text-gray-600">
            Rendimiento mensual: {typeof fund.rendimiento_mensual === 'number'
