@@ -83,4 +83,39 @@ describe('PortfolioPieChart', () => {
     // Stock: 1 * 2800 * 1000 (converted to ARS) = 2800000, Caucion: 15000, Crypto: 0.1 * 52000 * 1000 (converted to ARS) = 5200000
     expect(chartData.datasets[0].data).toEqual([2800000, 15000, 5200000]);
   });
+
+  it('should use current bond prices from bondPrices when available', () => {
+    const positions: PortfolioPosition[] = [
+      { type: 'Bond', ticker: 'AL30', quantity: 100, averagePrice: 50, currency: 'ARS' } as any,
+    ];
+    const prices = {};
+    const bondPrices = {
+      'AL30': 55.5 // Current price from Bonistas
+    };
+    render(
+      <PortfolioPieChart positions={positions} prices={prices} bondPrices={bondPrices} />
+    );
+    const chart = screen.getByTestId('pie-chart-mock');
+    const chartData = JSON.parse(chart.textContent!);
+    // Should have 1 slice for Bonos
+    expect(chartData.labels).toEqual(['Bonos']);
+    // Bond value: 100 * 55.5 (current price) = 5550
+    expect(chartData.datasets[0].data).toEqual([5550]);
+  });
+
+  it('should fall back to purchase price when bondPrices is not available', () => {
+    const positions: PortfolioPosition[] = [
+      { type: 'Bond', ticker: 'AL30', quantity: 100, averagePrice: 50, currency: 'ARS' } as any,
+    ];
+    const prices = {};
+    render(
+      <PortfolioPieChart positions={positions} prices={prices} />
+    );
+    const chart = screen.getByTestId('pie-chart-mock');
+    const chartData = JSON.parse(chart.textContent!);
+    // Should have 1 slice for Bonos
+    expect(chartData.labels).toEqual(['Bonos']);
+    // Bond value: 100 * 50 (purchase price) = 5000
+    expect(chartData.datasets[0].data).toEqual([5000]);
+  });
 }); 

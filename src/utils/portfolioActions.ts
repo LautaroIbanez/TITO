@@ -197,6 +197,7 @@ export async function buyAsset(username: string, assetType: string, body: any) {
         amount,
         annualRate,
         currency: validatedCurrency,
+        startDate: new Date().toISOString(),
       };
       user.positions.push(newPosition);
       const tx: MutualFundCreationTransaction = {

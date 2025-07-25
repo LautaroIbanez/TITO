@@ -13,26 +13,30 @@ export function isMoneyMarketFund(fund: MutualFundPosition): boolean {
 }
 
 /**
- * Calculates Money Market fund returns based on annual rate and assumed time period
+ * Calculates Money Market fund returns based on annual rate and time elapsed since startDate
  * @param fund MutualFundPosition
- * @param daysElapsed Number of days since investment (defaults to 30)
+ * @param today Date to use as 'now' (defaults to new Date())
  * @returns Object with gainCurrency, currentValue, and gainPct
  */
 export function calculateMoneyMarketReturns(
-  fund: MutualFundPosition, 
-  daysElapsed: number = 30
+  fund: MutualFundPosition,
+  today: Date = new Date()
 ): { gainCurrency: number; currentValue: number; gainPct: number } {
-  if (!fund.annualRate) {
+  if (!fund.annualRate || !fund.startDate) {
     return { gainCurrency: 0, currentValue: fund.amount, gainPct: 0 };
   }
-  
+
+  const startDate = new Date(fund.startDate);
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const daysElapsed = Math.max(0, Math.floor((today.getTime() - startDate.getTime()) / msPerDay));
+
   const annualRate = fund.annualRate / 100;
   const dailyRate = annualRate / 365;
-  
+
   const gainCurrency = fund.amount * dailyRate * daysElapsed;
   const currentValue = fund.amount + gainCurrency;
   const gainPct = (gainCurrency / fund.amount) * 100;
-  
+
   return { gainCurrency, currentValue, gainPct };
 }
 
@@ -70,7 +74,7 @@ export function computePositionGain(
   }
   if (pos.type === 'MutualFund') {
     if (isMoneyMarketFund(pos)) {
-      const { gainCurrency } = calculateMoneyMarketReturns(pos);
+      const { gainCurrency } = calculateMoneyMarketReturns(pos, today);
       return gainCurrency;
     }
     // For non-Money Market funds, return 0 as we don't have price data

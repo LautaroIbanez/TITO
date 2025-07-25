@@ -705,7 +705,8 @@ export async function getDailyPortfolioValue(
 export function calculateCurrentValueByCurrency(
   positions: any[],
   cash: { ARS: number; USD: number },
-  priceHistory: Record<string, PriceData[]>
+  priceHistory: Record<string, PriceData[]>,
+  bondPrices?: Record<string, number>
 ): { ARS: number; USD: number; duplicates?: any } {
   // Detect duplicates first
   const duplicateResult = detectDuplicates(positions);
@@ -731,9 +732,13 @@ export function calculateCurrentValueByCurrency(
           currentPrice = validPriceEntry.close;
         }
       }
-      // Fallback: if bond and no valid price, use bonds.json
+      // For bonds, prioritize bondPrices, then price history, then bonds.json cache
       if (pos.type === 'Bond' && currentPrice === undefined) {
-        currentPrice = getBondPriceFromCache(pos.ticker, pos.currency);
+        if (bondPrices && bondPrices[pos.ticker]) {
+          currentPrice = bondPrices[pos.ticker];
+        } else {
+          currentPrice = getBondPriceFromCache(pos.ticker, pos.currency);
+        }
       }
       if (currentPrice !== undefined) {
         const positionValue = pos.quantity * currentPrice;

@@ -80,8 +80,24 @@ export async function GET(req: NextRequest) {
       technicals[symbol] = tech;
     }));
 
+    // Fetch bond prices for current price calculations
+    const bondPrices: Record<string, number> = {};
+    try {
+      const bondsRes = await fetch(`${req.nextUrl.origin}/api/bonds`);
+      if (bondsRes.ok) {
+        const bondsData = await bondsRes.json();
+        bondsData.forEach((bond: any) => {
+          if (bond.price) {
+            bondPrices[bond.ticker] = bond.price;
+          }
+        });
+      }
+    } catch (error) {
+      console.warn('Failed to fetch bond prices for portfolio calculation:', error);
+    }
+
     // Compute portfolio metrics for daily record with loaded price history
-    const { ARS, USD } = calculateCurrentValueByCurrency(data.positions, data.cash, historicalPrices);
+    const { ARS, USD } = calculateCurrentValueByCurrency(data.positions, data.cash, historicalPrices, bondPrices);
     const investedARS = calculateInvestedCapital(data.transactions, 'ARS');
     const investedUSD = calculateInvestedCapital(data.transactions, 'USD');
     

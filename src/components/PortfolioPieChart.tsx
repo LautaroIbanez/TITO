@@ -12,9 +12,10 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 interface Props {
   positions: PortfolioPosition[];
   prices: Record<string, Array<{ close?: number }>>;
+  bondPrices?: Record<string, number>;
 }
 
-export default function PortfolioPieChart({ positions, prices }: Props) {
+export default function PortfolioPieChart({ positions, prices, bondPrices }: Props) {
   const chartOptions = {};
   
   // Group assets by type and convert all values to ARS
@@ -39,7 +40,12 @@ export default function PortfolioPieChart({ positions, prices }: Props) {
       }
       assetGroups['Acciones'] += value;
     } else if (pos.type === 'Bond') {
-      value = pos.quantity * getPurchasePrice(pos);
+      // Use bondPrices if available, otherwise fall back to purchase price
+      let currentPrice = getPurchasePrice(pos);
+      if (bondPrices && bondPrices[pos.ticker]) {
+        currentPrice = bondPrices[pos.ticker];
+      }
+      value = pos.quantity * currentPrice;
       // Convert to ARS if needed
       if (pos.currency === 'USD') {
         value = convertCurrencySync(value, 'USD', 'ARS');

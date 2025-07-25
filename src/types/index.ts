@@ -95,6 +95,7 @@ export interface MutualFundPosition {
   amount: number;
   annualRate: number;
   currency: 'ARS' | 'USD';
+  startDate: string; // ISO string for when the fund position was created
 }
 
 export type PortfolioPosition = StockPosition | BondPosition | FixedTermDepositPosition | CaucionPosition | CryptoPosition | RealEstatePosition | MutualFundPosition;

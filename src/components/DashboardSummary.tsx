@@ -24,6 +24,7 @@ export default function DashboardSummary() {
   const [portfolioValueUSD, setPortfolioValueUSD] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [, setBonds] = useState<Bond[]>([]);
+  const [bondPrices, setBondPrices] = useState<Record<string, number>>({});
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
   const [inflationData, setInflationData] = useState<InflationData | null>(null);
   
@@ -66,6 +67,15 @@ export default function DashboardSummary() {
       if (bondsRes.ok) {
         const bondsData = await bondsRes.json();
         setBonds(bondsData);
+        
+        // Create bondPrices map for current price calculations
+        const pricesMap: Record<string, number> = {};
+        bondsData.forEach((bond: Bond) => {
+          if (bond.price) {
+            pricesMap[bond.ticker] = bond.price;
+          }
+        });
+        setBondPrices(pricesMap);
       }
     }
     fetchData();
@@ -85,7 +95,8 @@ export default function DashboardSummary() {
         const { ARS, USD } = calculateCurrentValueByCurrency(
           portfolioData.positions || [],
           portfolioData.cash || { ARS: 0, USD: 0 },
-          portfolioData.historicalPrices || {}
+          portfolioData.historicalPrices || {},
+          bondPrices
         );
         if (Number.isFinite(ARS)) {
           setPortfolioValueARS(ARS);

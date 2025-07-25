@@ -204,7 +204,7 @@ export default function PortfolioPage() {
         {/* Gráfico de torta */}
         <div className="bg-white rounded-lg shadow border border-gray-200 p-6 flex flex-col">
           <h3 className="text-lg font-bold text-gray-800 mb-4">Distribución de Activos</h3>
-          <PortfolioPieChart positions={portfolioData.positions} prices={portfolioData.historicalPrices} />
+          <PortfolioPieChart positions={portfolioData.positions} prices={portfolioData.historicalPrices} bondPrices={bondPrices} />
         </div>
         {/* Sugerencias */}
         <div className="bg-white rounded-lg shadow border border-gray-200 p-6 flex flex-col">

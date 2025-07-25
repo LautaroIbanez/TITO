@@ -27,7 +27,7 @@ function getCurrentPrice(prices: PriceData[]): number | undefined {
   return latestPrice === 0 ? undefined : latestPrice;
 }
 
-export default function PortfolioTable({ positions, prices, fundamentals, technicals, cash, onPortfolioUpdate, bondPrices }: Props) {
+export default function PortfolioTable({ positions, prices, fundamentals, cash, onPortfolioUpdate, bondPrices }: Props) {
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     tradeType: TradeType;
@@ -74,7 +74,13 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
         market = modalState.asset.market;
       }
     } else if (assetType === 'Bond' && modalState.asset?.type === 'Bond') {
-      currentPrice = getPurchasePrice(modalState.asset);
+      // Use bondPrices if available, otherwise fall back to validatePositionPrice
+      if (bondPrices && bondPrices[modalState.asset.ticker]) {
+        currentPrice = bondPrices[modalState.asset.ticker];
+      } else {
+        const priceValidation = validatePositionPrice(modalState.asset, prices);
+        currentPrice = priceValidation.currentPrice ?? getPurchasePrice(modalState.asset);
+      }
     } else if (assetType === 'Crypto') {
       const price = getCurrentPrice(prices[identifier]);
       currentPrice = price ?? 0;
@@ -275,7 +281,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(currentValue, pos.currency)}</td>
         <td className="px-4 py-2 text-right text-green-600">
-          {gainPct.toFixed(2)}% ({pos.annualRate?.toFixed(2) ?? '-'}% TNA)
+          {gainPct.toFixed(2)}% ({pos.annualRate?.toFixed(2) ?? '-'}% acumulado)
         </td>
         <td className={`px-4 py-2 text-right font-semibold ${gainCurrency >= 0 ? 'text-green-600' : 'text-red-600'}`}>
           {formatCurrency(gainCurrency, pos.currency)}
@@ -367,11 +373,11 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
     let gainPct = 0;
     
     // For Money Market funds, calculate performance using the helper function
-    if (isMoneyMarket && pos.annualRate) {
-      const { gainCurrency: calculatedGain, currentValue: calculatedValue, gainPct: calculatedPct } = calculateMoneyMarketReturns(pos);
-      gainCurrency = calculatedGain;
-      currentValue = calculatedValue;
-      gainPct = calculatedPct;
+    if (isMoneyMarket && pos.annualRate && pos.startDate) {
+      const returns = calculateMoneyMarketReturns(pos, new Date());
+      gainCurrency = returns.gainCurrency;
+      currentValue = returns.currentValue;
+      gainPct = returns.gainPct;
     }
     
     return (
@@ -384,7 +390,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(currentValue, pos.currency)}</td>
         <td className="px-4 py-2 text-right text-green-600">
-          {isMoneyMarket ? `${gainPct.toFixed(2)}%` : pos.annualRate?.toFixed(2) ?? '-'}% ({pos.category})
+          {isMoneyMarket ? `${gainPct.toFixed(2)}% acumulado` : pos.annualRate?.toFixed(2) ?? '-'}% ({pos.category})
         </td>
         <td className={`px-4 py-2 text-right font-semibold ${isMoneyMarket ? (gainCurrency >= 0 ? 'text-green-600' : 'text-red-600') : (Number.isFinite(gainCurrency) ? (gainCurrency >= 0 ? 'text-green-600' : 'text-red-600') : 'text-gray-500')}`}>
           {isMoneyMarket ? formatCurrency(gainCurrency, pos.currency) : (
@@ -417,7 +423,15 @@ export default function PortfolioTable({ positions, prices, fundamentals, techni
       };
     }
     if (asset.type === 'Bond') {
-      return { assetName: asset.ticker, identifier: asset.ticker, price: getPurchasePrice(asset), maxShares: asset.quantity, assetType: asset.type, currency: asset.currency };
+      // Use bondPrices if available, otherwise fall back to validatePositionPrice
+      let currentPrice = getPurchasePrice(asset);
+      if (bondPrices && bondPrices[asset.ticker]) {
+        currentPrice = bondPrices[asset.ticker];
+      } else {
+        const priceValidation = validatePositionPrice(asset, prices);
+        currentPrice = priceValidation.currentPrice ?? getPurchasePrice(asset);
+      }
+      return { assetName: asset.ticker, identifier: asset.ticker, price: currentPrice, maxShares: asset.quantity, assetType: asset.type, currency: asset.currency };
     }
     if (asset.type === 'Crypto') {
       const priceValidation = validatePositionPrice(asset, prices);
