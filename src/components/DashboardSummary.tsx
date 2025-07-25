@@ -1,16 +1,15 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { InvestmentGoal, StrategyRecommendation } from '@/types';
+import { StrategyRecommendation } from '@/types';
 import { Bond } from '@/types/finance';
 import { calculatePortfolioValueHistory, calculateCurrentValueByCurrency } from '@/utils/calculatePortfolioValue';
 import { calculateInvestedCapital } from '@/utils/investedCapital';
 import { calculatePortfolioPerformance, fetchInflationData, formatPerformance, PerformanceMetrics, InflationData } from '@/utils/portfolioPerformance';
 import { usePortfolio } from '@/contexts/PortfolioContext';
-import GoalProgress from './GoalProgress';
-import { formatCurrency, calculateFixedIncomeGains, calculateFixedIncomeValueHistory } from '@/utils/goalCalculator';
+import { formatCurrency } from '@/utils/goalCalculator';
 import { generatePortfolioHash } from '@/utils/priceDataHash';
 import { getPortfolioNetGains } from '@/utils/positionGains';
-import { getLatestCumulativeNetGains } from '@/utils/netGainsCalculator';
+
 import { getPositionDisplayName } from '@/utils/priceValidation';
 import { getRecommendationLabel } from '@/utils/assetClassLabels';
 import { usePortfolioHistory } from './usePortfolioHistory';
@@ -24,14 +23,14 @@ export default function DashboardSummary() {
   const [portfolioValueARS, setPortfolioValueARS] = useState(0);
   const [portfolioValueUSD, setPortfolioValueUSD] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [bonds, setBonds] = useState<Bond[]>([]);
+  const [, setBonds] = useState<Bond[]>([]);
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
   const [inflationData, setInflationData] = useState<InflationData | null>(null);
   
   const { portfolioData, strategy, loading, error, portfolioVersion } = usePortfolio();
 
   // Get username from session/localStorage
-  const [username, setUsername] = useState<string | null>(null);
+  const [, setUsername] = useState<string | null>(null);
   useEffect(() => {
     const sessionData = getSessionData();
     if (sessionData) {
@@ -39,8 +38,8 @@ export default function DashboardSummary() {
     }
   }, []);
 
-  // Fetch portfolio history after username and portfolioData are loaded
-  const { history: portfolioHistory, loading: historyLoading, error: historyError } = usePortfolioHistory(username || undefined);
+  // Fetch portfolio history
+  const { history: portfolioHistory } = usePortfolioHistory(undefined);
 
   // Get the latest portfolio snapshot from history
   const latestSnapshot = getLatestPortfolioSnapshot(portfolioHistory || []);
@@ -185,8 +184,7 @@ export default function DashboardSummary() {
   const snapshotTotalUSD = latestSnapshot?.total_portfolio_usd ?? portfolioValueUSD;
   const snapshotInvestedARS = latestSnapshot?.capital_invertido_ars ?? calculateInvestedCapital(portfolioData.transactions, 'ARS');
   const snapshotInvestedUSD = latestSnapshot?.capital_invertido_usd ?? calculateInvestedCapital(portfolioData.transactions, 'USD');
-  const snapshotGainsARS = latestSnapshot?.ganancias_netas_ars ?? 0;
-  const snapshotGainsUSD = latestSnapshot?.ganancias_netas_usd ?? 0;
+
   
   // Fallback calculations if snapshot is not available
   const investedCapitalARS = Number.isFinite(snapshotInvestedARS)
@@ -202,16 +200,9 @@ export default function DashboardSummary() {
     portfolioData.historicalPrices || {}
   );
   
-  // Calculate net gains using cumulative approach from portfolio history
-  const { cumulativeARS: historyGainsARS, cumulativeUSD: historyGainsUSD } = getLatestCumulativeNetGains(portfolioHistory || []);
-  
-  // Use history gains if available, otherwise fall back to simple formula
-  const safeNetGainsARS = portfolioHistory && portfolioHistory.length > 0 
-    ? historyGainsARS 
-    : snapshotTotalARS - investedCapitalARS;
-  const safeNetGainsUSD = portfolioHistory && portfolioHistory.length > 0 
-    ? historyGainsUSD 
-    : snapshotTotalUSD - investedCapitalUSD;
+  // Calculate net gains using simple formula
+  const safeNetGainsARS = snapshotTotalARS - investedCapitalARS;
+  const safeNetGainsUSD = snapshotTotalUSD - investedCapitalUSD;
   
   // Calculate total values using the exact formula: capital + gains + cash
   const valorTotalARS = investedCapitalARS + safeNetGainsARS + (portfolioData.cash?.ARS ?? 0);
@@ -450,11 +441,7 @@ export default function DashboardSummary() {
       
       {/* Insert the historical portfolio chart below the main summary */}
       <div className="mt-8">
-        {historyLoading ? (
-          <div className="text-center text-gray-500">Cargando historial del portafolio...</div>
-        ) : historyError ? (
-          <div className="text-center text-red-500">Error al cargar historial: {historyError}</div>
-        ) : portfolioHistory && portfolioHistory.length > 0 ? (
+        {portfolioHistory && portfolioHistory.length > 0 ? (
           <>
             <HistoricalPortfolioChart records={portfolioHistory} />
             <div className="mt-8">

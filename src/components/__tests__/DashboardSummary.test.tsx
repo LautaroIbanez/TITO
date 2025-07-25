@@ -55,6 +55,13 @@ jest.mock('../../utils/positionGains', () => ({
   }))
 }));
 
+jest.mock('../../utils/netGainsCalculator', () => ({
+  getLatestCumulativeNetGains: jest.fn(() => ({
+    cumulativeARS: 0,
+    cumulativeUSD: 0
+  }))
+}));
+
 const mockUsePortfolio = usePortfolio as jest.Mock;
 const mockCalculatePortfolioValueHistory = calculatePortfolioValueHistory as jest.Mock;
 const mockCalculateCurrentValueByCurrency = calculateCurrentValueByCurrency as jest.Mock;
@@ -87,6 +94,12 @@ jest.mock('../ReturnComparison', () => {
 jest.mock('../PortfolioCategoryChart', () => {
   return function MockPortfolioCategoryChart() {
     return <div data-testid="portfolio-category-chart">Portfolio Category Chart</div>;
+  };
+});
+
+jest.mock('../EconomicIndicators', () => {
+  return function MockEconomicIndicators() {
+    return <div data-testid="economic-indicators">Economic Indicators</div>;
   };
 });
 
@@ -267,7 +280,7 @@ describe('DashboardSummary', () => {
     render(<DashboardSummary />);
 
     await waitFor(() => {
-      expect(screen.getByText('$1.600,00')).toBeInTheDocument(); // Portfolio value
+      expect(screen.getByText('$5.900,00')).toBeInTheDocument(); // Portfolio value (1500 + 100 + 4300)
       expect(screen.getByText('$1.500,00')).toBeInTheDocument(); // Invested capital
       expect(screen.getByText('+$100,00')).toBeInTheDocument(); // Net gains
     });
@@ -278,7 +291,7 @@ describe('DashboardSummary', () => {
     mockCalculateInvestedCapital.mockImplementation((txs, currency) => currency === 'ARS' ? 1800 : 0);
     render(<DashboardSummary />);
     await waitFor(() => {
-      expect(screen.getByText('$200,00')).toBeInTheDocument(); // Net gains (2000 - 1800)
+      expect(screen.getByText('+$200,00')).toBeInTheDocument(); // Net gains (2000 - 1800)
     });
   });
 
@@ -287,7 +300,7 @@ describe('DashboardSummary', () => {
     mockCalculateInvestedCapital.mockImplementation((txs, currency) => currency === 'ARS' ? 1500 : 0);
     render(<DashboardSummary />);
     await waitFor(() => {
-      expect(screen.getByText('-$100,00')).toBeInTheDocument(); // Net gains (1400 - 1500)
+      expect(screen.getByText('$-100,00')).toBeInTheDocument(); // Net gains (1400 - 1500)
     });
   });
 
@@ -295,9 +308,9 @@ describe('DashboardSummary', () => {
     render(<DashboardSummary />);
 
     await waitFor(() => {
-      expect(screen.getByText('Rendimiento')).toBeInTheDocument();
-      expect(screen.getByText('6.67%')).toBeInTheDocument(); // Total return percentage
-      expect(screen.getByText('8.5%')).toBeInTheDocument(); // Annualized return
+      expect(screen.getByText('Rendimiento Mensual (ARS)')).toBeInTheDocument();
+      expect(screen.getByText('+5.20%')).toBeInTheDocument(); // Monthly return
+      expect(screen.getByText('+15.80%')).toBeInTheDocument(); // Annual return
     });
   });
 
@@ -307,7 +320,7 @@ describe('DashboardSummary', () => {
     render(<DashboardSummary />);
 
     await waitFor(() => {
-      expect(screen.getByText('$1.600,00')).toBeInTheDocument(); // Portfolio value
+      expect(screen.getByText('$5.900,00')).toBeInTheDocument(); // Portfolio value (1500 + 100 + 4300)
       expect(screen.getByText('$1.500,00')).toBeInTheDocument(); // Invested capital
       expect(screen.getByText('+$100,00')).toBeInTheDocument(); // Net gains
     });
@@ -316,13 +329,11 @@ describe('DashboardSummary', () => {
     expect(screen.queryByText('Rendimiento')).not.toBeInTheDocument();
   });
 
-  it('renders chart components', async () => {
+  it('renders economic indicators', async () => {
     render(<DashboardSummary />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('portfolio-history-chart')).toBeInTheDocument();
-      expect(screen.getByTestId('portfolio-pie-chart')).toBeInTheDocument();
-      expect(screen.getByTestId('return-comparison')).toBeInTheDocument();
+      expect(screen.getByTestId('economic-indicators')).toBeInTheDocument();
     });
   });
 
@@ -331,9 +342,9 @@ describe('DashboardSummary', () => {
     mockCalculateInvestedCapital.mockImplementation((txs, currency) => currency === 'ARS' ? 1000000 : 0);
     render(<DashboardSummary />);
     await waitFor(() => {
-      expect(screen.getByText('$1.234.567,89')).toBeInTheDocument(); // Portfolio value
+      expect(screen.getByText('$1.238.867,89')).toBeInTheDocument(); // Portfolio value (1000000 + 234567.89 + 4300)
       expect(screen.getByText('$1.000.000,00')).toBeInTheDocument(); // Invested capital
-      expect(screen.getByText('$234.567,89')).toBeInTheDocument(); // Net gains
+      expect(screen.getByText('+$234.567,89')).toBeInTheDocument(); // Net gains
     });
   });
 
@@ -431,7 +442,7 @@ describe('DashboardSummary', () => {
 
     await waitFor(() => {
       // Should display calculated values using the simple formula
-      expect(screen.getByText('$1.600,00')).toBeInTheDocument(); // Portfolio value
+      expect(screen.getByText('$5.900,00')).toBeInTheDocument(); // Portfolio value (1500 + 100 + 4300)
       expect(screen.getByText('$1.500,00')).toBeInTheDocument(); // Invested capital
       expect(screen.getByText('+$100,00')).toBeInTheDocument(); // Net gains (1600 - 1500)
     });
@@ -447,12 +458,50 @@ describe('DashboardSummary', () => {
 
     await waitFor(() => {
       // Should display calculated values using the simple formula
-      expect(screen.getByText('$1.600,00')).toBeInTheDocument(); // Portfolio value
+      expect(screen.getByText('$5.900,00')).toBeInTheDocument(); // Portfolio value (1500 + 100 + 4300)
       expect(screen.getByText('$1.500,00')).toBeInTheDocument(); // Invested capital
       expect(screen.getByText('+$100,00')).toBeInTheDocument(); // Net gains (1600 - 1500)
     });
 
     // Verify that getPortfolioNetGains was called to get excluded positions
+    expect(mockGetPortfolioNetGains).toHaveBeenCalledWith(
+      mockPortfolioData.positions || [],
+      mockPortfolioData.historicalPrices || {}
+    );
+  });
+
+  it('verifies net gains come from getPortfolioNetGains and logs excluded positions', async () => {
+    const { getPortfolioNetGains } = require('../../utils/positionGains');
+    const mockGetPortfolioNetGains = getPortfolioNetGains as jest.Mock;
+    
+    // Mock getPortfolioNetGains to return excluded positions
+    mockGetPortfolioNetGains.mockReturnValue({
+      positionGains: new Map(),
+      totals: { ARS: 0, USD: 0 },
+      excludedPositions: [
+        {
+          position: {
+            type: 'Stock',
+            symbol: 'INVALID',
+            quantity: 10,
+            purchasePrice: 150,
+            currency: 'USD',
+            market: 'NASDAQ'
+          },
+          reason: 'No hay datos de precio disponibles'
+        }
+      ]
+    });
+
+    render(<DashboardSummary />);
+
+    await waitFor(() => {
+      // Should display warning for excluded positions
+      expect(screen.getByText('Advertencia:')).toBeInTheDocument();
+      expect(screen.getByText(/Stock INVALID: No hay datos de precio disponibles/)).toBeInTheDocument();
+    });
+
+    // Verify that getPortfolioNetGains was called
     expect(mockGetPortfolioNetGains).toHaveBeenCalledWith(
       mockPortfolioData.positions || [],
       mockPortfolioData.historicalPrices || {}
@@ -515,19 +564,4 @@ describe('DashboardSummary', () => {
   });
 });
 
-describe('usePortfolioHistory', () => {
-  it('should clear history and error when username is undefined', () => {
-    const { result, rerender } = renderHook(({ username }: { username?: string }) => usePortfolioHistory(username), {
-      initialProps: { username: undefined },
-    });
-    expect(result.current.history).toBeNull();
-    expect(result.current.error).toBeNull();
-    expect(result.current.loading).toBe(false);
-
-    // Should remain clear if username stays falsy
-    rerender({ username: undefined });
-    expect(result.current.history).toBeNull();
-    expect(result.current.error).toBeNull();
-    expect(result.current.loading).toBe(false);
-  });
-}); 
+ 

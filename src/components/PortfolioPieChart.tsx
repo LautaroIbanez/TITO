@@ -5,6 +5,7 @@ import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { PortfolioPosition } from '@/types';
 import getPurchasePrice from '../utils/getPurchasePrice';
+import { convertCurrencySync } from '@/utils/currency';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -16,28 +17,65 @@ interface Props {
 export default function PortfolioPieChart({ positions, prices }: Props) {
   const chartOptions = {};
   
-  let cryptoValue = 0;
-  const dataArr = positions.map((pos) => {
+  // Group assets by type and convert all values to ARS
+  const assetGroups: Record<string, number> = {
+    'Acciones': 0,
+    'Bonos': 0,
+    'Plazos Fijos': 0,
+    'Cauciones': 0,
+    'Cripto': 0,
+    'Otros': 0
+  };
+
+  positions.forEach((pos) => {
+    let value = 0;
+    
     if (pos.type === 'Stock') {
       const currPrice = prices[pos.symbol]?.[prices[pos.symbol].length - 1]?.close || 0;
-      return { label: pos.symbol, value: pos.quantity * currPrice };
+      value = pos.quantity * currPrice;
+      // Convert to ARS if needed
+      if (pos.currency === 'USD') {
+        value = convertCurrencySync(value, 'USD', 'ARS');
+      }
+      assetGroups['Acciones'] += value;
     } else if (pos.type === 'Bond') {
-      return { label: pos.ticker, value: pos.quantity * getPurchasePrice(pos) };
+      value = pos.quantity * getPurchasePrice(pos);
+      // Convert to ARS if needed
+      if (pos.currency === 'USD') {
+        value = convertCurrencySync(value, 'USD', 'ARS');
+      }
+      assetGroups['Bonos'] += value;
     } else if (pos.type === 'FixedTermDeposit') {
-      return { label: pos.provider, value: pos.amount };
+      value = pos.amount;
+      // Convert to ARS if needed
+      if (pos.currency === 'USD') {
+        value = convertCurrencySync(value, 'USD', 'ARS');
+      }
+      assetGroups['Plazos Fijos'] += value;
     } else if (pos.type === 'Caucion') {
-      return { label: pos.provider, value: pos.amount };
+      value = pos.amount;
+      // Convert to ARS if needed
+      if (pos.currency === 'USD') {
+        value = convertCurrencySync(value, 'USD', 'ARS');
+      }
+      assetGroups['Cauciones'] += value;
     } else if (pos.type === 'Crypto') {
       const currPrice = prices[pos.symbol]?.[prices[pos.symbol].length - 1]?.close || 0;
-      cryptoValue += pos.quantity * currPrice;
-      return null; // We'll add a single 'Cripto' slice later
+      value = pos.quantity * currPrice;
+      // Convert to ARS if needed
+      if (pos.currency === 'USD') {
+        value = convertCurrencySync(value, 'USD', 'ARS');
+      }
+      assetGroups['Cripto'] += value;
     } else {
-      return { label: 'Otro', value: 0 };
+      assetGroups['Otros'] += 0;
     }
-  }).filter(Boolean) as { label: string; value: number }[];
-  if (cryptoValue > 0) {
-    dataArr.push({ label: 'Cripto', value: cryptoValue });
-  }
+  });
+
+  // Convert to array format for chart
+  const dataArr = Object.entries(assetGroups)
+    .filter(([, value]) => value > 0)
+    .map(([label, value]) => ({ label, value }));
   const total = dataArr.reduce((a, b) => a + b.value, 0);
   const chartData = {
     labels: dataArr.map((d) => d.label),

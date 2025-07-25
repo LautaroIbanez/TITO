@@ -28,10 +28,10 @@ describe('PortfolioPieChart', () => {
     );
     const chart = screen.getByTestId('pie-chart-mock');
     const chartData = JSON.parse(chart.textContent!);
-    // Should have 4 slices: AAPL, BOND1, Bank X, Broker Y
-    expect(chartData.labels).toEqual(['AAPL', 'BOND1', 'Bank X', 'Broker Y']);
-    // Stock: 2 * 200 = 400, Bond: 3 * 1000 = 3000, FTD: 5000, Caucion: 3000
-    expect(chartData.datasets[0].data).toEqual([400, 3000, 5000, 3000]);
+    // Should have 4 slices grouped by asset type: Acciones, Bonos, Plazos Fijos, Cauciones
+    expect(chartData.labels).toEqual(['Acciones', 'Bonos', 'Plazos Fijos', 'Cauciones']);
+    // Stock: 2 * 200 = 400, Bond: 3 * 1000 * 1000 (converted to ARS) = 3000000, FTD: 5000, Caucion: 3000
+    expect(chartData.datasets[0].data).toEqual([400, 3000000, 5000, 3000]);
   });
 
   it('should show 0 value for stocks with no price data', () => {
@@ -46,7 +46,7 @@ describe('PortfolioPieChart', () => {
     expect(screen.getByText('No hay datos disponibles')).toBeInTheDocument();
   });
 
-  it('should include Caucion positions with correct provider labels', () => {
+  it('should include Caucion positions grouped by asset type', () => {
     const positions: PortfolioPosition[] = [
       { type: 'Caucion', id: 'CAU-1', provider: 'Test Broker', amount: 10000, annualRate: 8, startDate: '2024-01-01', maturityDate: '2024-03-01', currency: 'ARS', term: 60 },
       { type: 'Caucion', id: 'CAU-2', provider: 'Another Broker', amount: 5000, annualRate: 6, startDate: '2024-01-15', maturityDate: '2024-02-15', currency: 'USD', term: 30 },
@@ -57,10 +57,10 @@ describe('PortfolioPieChart', () => {
     );
     const chart = screen.getByTestId('pie-chart-mock');
     const chartData = JSON.parse(chart.textContent!);
-    // Should have 2 slices with caucion provider names
-    expect(chartData.labels).toEqual(['Test Broker', 'Another Broker']);
-    // Caucion amounts: 10000, 5000
-    expect(chartData.datasets[0].data).toEqual([10000, 5000]);
+    // Should have 1 slice grouped by asset type
+    expect(chartData.labels).toEqual(['Cauciones']);
+    // Caucion amounts: 10000 + 5000 * 1000 (converted to ARS) = 5010000
+    expect(chartData.datasets[0].data).toEqual([5010000]);
   });
 
   it('should handle mixed portfolio with Caucion and other assets', () => {
@@ -78,9 +78,9 @@ describe('PortfolioPieChart', () => {
     );
     const chart = screen.getByTestId('pie-chart-mock');
     const chartData = JSON.parse(chart.textContent!);
-    // Should have 3 slices: GOOGL, Local Broker, Cripto
-    expect(chartData.labels).toEqual(['GOOGL', 'Local Broker', 'Cripto']);
-    // Stock: 1 * 2800 = 2800, Caucion: 15000, Crypto: 0.1 * 52000 = 5200
-    expect(chartData.datasets[0].data).toEqual([2800, 15000, 5200]);
+    // Should have 3 slices grouped by asset type: Acciones, Cauciones, Cripto
+    expect(chartData.labels).toEqual(['Acciones', 'Cauciones', 'Cripto']);
+    // Stock: 1 * 2800 * 1000 (converted to ARS) = 2800000, Caucion: 15000, Crypto: 0.1 * 52000 * 1000 (converted to ARS) = 5200000
+    expect(chartData.datasets[0].data).toEqual([2800000, 15000, 5200000]);
   });
 }); 
