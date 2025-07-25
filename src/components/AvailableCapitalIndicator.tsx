@@ -3,7 +3,7 @@ import { usePortfolio } from '@/contexts/PortfolioContext';
 import { formatCurrency } from '@/utils/goalCalculator';
 
 interface AvailableCapitalIndicatorProps {
-  assetClass: 'stocks' | 'bonds' | 'deposits';
+  assetClass: 'stocks' | 'bonds' | 'deposits' | 'mutualFunds';
   currency?: 'ARS' | 'USD';
 }
 
@@ -15,7 +15,9 @@ export default function AvailableCapitalIndicator({ assetClass, currency = 'ARS'
   }
 
   const { cash } = portfolioData;
-  const targetAllocation = strategy.targetAllocation[assetClass];
+  // For mutualFunds, use the deposits allocation
+  const allocationKey = assetClass === 'mutualFunds' ? 'deposits' : assetClass;
+  const targetAllocation = strategy.targetAllocation[allocationKey];
   const capital = (cash[currency] || 0) * (targetAllocation / 100);
 
   return (

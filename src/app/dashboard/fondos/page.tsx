@@ -16,6 +16,7 @@ interface MutualFundsData {
   rentaFija: MutualFund[];
   rentaVariable: MutualFund[];
   rentaMixta: MutualFund[];
+  otros: MutualFund[];
 }
 
 export default function FondosPage() {
@@ -23,7 +24,8 @@ export default function FondosPage() {
     moneyMarket: [],
     rentaFija: [],
     rentaVariable: [],
-    rentaMixta: []
+    rentaMixta: [],
+    otros: []
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -160,14 +162,15 @@ export default function FondosPage() {
         {loading && <p>Cargando fondos mutuos...</p>}
         {error && <p className="text-red-500">{error}</p>}
         
-        {!loading && !error && (
-          <div className="space-y-8">
-            {renderCategorySection('Money Market', mutualFunds.moneyMarket, 'moneyMarket')}
-            {renderCategorySection('Renta Fija', mutualFunds.rentaFija, 'rentaFija')}
-            {renderCategorySection('Renta Variable', mutualFunds.rentaVariable, 'rentaVariable')}
-            {renderCategorySection('Renta Mixta', mutualFunds.rentaMixta, 'rentaMixta')}
-          </div>
-        )}
+                 {!loading && !error && (
+           <div className="space-y-8">
+             {renderCategorySection('Money Market', mutualFunds.moneyMarket, 'moneyMarket')}
+             {renderCategorySection('Renta Fija', mutualFunds.rentaFija, 'rentaFija')}
+             {renderCategorySection('Renta Variable', mutualFunds.rentaVariable, 'rentaVariable')}
+             {renderCategorySection('Renta Mixta', mutualFunds.rentaMixta, 'rentaMixta')}
+             {renderCategorySection('Otros', mutualFunds.otros, 'otros')}
+           </div>
+         )}
       </div>
     </>
   );

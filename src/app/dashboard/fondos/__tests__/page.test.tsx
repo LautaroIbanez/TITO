@@ -67,6 +67,14 @@ describe('FondosPage', () => {
         rendimiento_mensual: -4.3686,
         categoria: 'Renta Mixta'
       }
+    ],
+    otros: [
+      {
+        fondo: 'SUPERVIELLE',
+        tna: 0.32,
+        rendimiento_mensual: 0,
+        categoria: 'Otros'
+      }
     ]
   };
 
@@ -105,13 +113,13 @@ describe('FondosPage', () => {
     render(<FondosPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Fondos Mutuos Disponibles')).toBeInTheDocument();
+      expect(screen.getByText('MAF Liquidez - Clase A')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('MAF Liquidez - Clase A')).toBeInTheDocument();
     expect(screen.getByText('MAF Ahorro Plus - Clase C')).toBeInTheDocument();
     expect(screen.getByText('Alpha Latam - Clase A')).toBeInTheDocument();
     expect(screen.getByText('Schroder Retorno Absoluto Dólares - Clase B')).toBeInTheDocument();
+    expect(screen.getByText('SUPERVIELLE')).toBeInTheDocument();
   });
 
   it('renders category sections correctly', async () => {
@@ -127,6 +135,7 @@ describe('FondosPage', () => {
       expect(screen.getByText('Renta Fija')).toBeInTheDocument();
       expect(screen.getByText('Renta Variable')).toBeInTheDocument();
       expect(screen.getByText('Renta Mixta')).toBeInTheDocument();
+      expect(screen.getByText('Otros')).toBeInTheDocument();
     });
   });
 
@@ -140,7 +149,7 @@ describe('FondosPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('38.14%')).toBeInTheDocument();
-      expect(screen.getByText('TNA')).toBeInTheDocument();
+      expect(screen.getAllByText('TNA')).toHaveLength(5); // 5 funds total
       expect(screen.getByText('Rendimiento mensual: 1.78%')).toBeInTheDocument();
     });
   });

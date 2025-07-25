@@ -14,6 +14,7 @@ const navItems = [
   { label: "💎 Criptomonedas", href: "/dashboard/crypto" },
   { label: "⏳ Plazos Fijos", href: "/dashboard/deposits" },
   { label: "🏦 Cauciones", href: "/dashboard/cauciones" },
+  { label: "💰 Fondos", href: "/dashboard/fondos" },
   { label: "🏠 Bienes Raíces", href: "/dashboard/real-estate" },
   { label: "👤 Mi Perfil", href: "/dashboard/user" },
 ];

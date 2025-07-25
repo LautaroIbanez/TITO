@@ -60,6 +60,15 @@ describe('/api/fondos', () => {
             categoria: 'Renta Mixta'
           }
         ]
+      },
+      otherFunds: {
+        data: [
+          {
+            fondo: 'SUPERVIELLE',
+            tna: 0.32,
+            categoria: 'Otros'
+          }
+        ]
       }
     };
 
@@ -106,7 +115,8 @@ describe('/api/fondos', () => {
 
   it('should return empty arrays when categories are missing', async () => {
     const mockData = {
-      mutualFunds: {}
+      mutualFunds: {},
+      otherFunds: {}
     };
 
     mockFs.readFile.mockResolvedValue(JSON.stringify(mockData));

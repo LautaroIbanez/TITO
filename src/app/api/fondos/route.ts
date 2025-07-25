@@ -20,12 +20,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Extract other funds data
+    const { otherFunds } = indicators;
+    
     // Return the mutual funds data with categories
     return NextResponse.json({
       moneyMarket: mutualFunds.moneyMarket || [],
       rentaFija: mutualFunds.rentaFija || [],
       rentaVariable: mutualFunds.rentaVariable || [],
-      rentaMixta: mutualFunds.rentaMixta || []
+      rentaMixta: mutualFunds.rentaMixta || [],
+      otros: otherFunds?.data || []
     });
 
   } catch (error) {
