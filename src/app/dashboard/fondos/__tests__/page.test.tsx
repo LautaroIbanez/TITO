@@ -74,6 +74,12 @@ describe('FondosPage', () => {
         tna: 0.32,
         rendimiento_mensual: 0,
         categoria: 'Otros'
+      },
+      {
+        fondo: 'FUNDO CON DATOS FALTANTES',
+        tna: null,
+        rendimiento_mensual: undefined,
+        categoria: 'Otros'
       }
     ]
   };
@@ -149,7 +155,7 @@ describe('FondosPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('38.14%')).toBeInTheDocument();
-      expect(screen.getAllByText('TNA')).toHaveLength(5); // 5 funds total
+      expect(screen.getAllByText('TNA')).toHaveLength(6); // 6 funds total (including the one with missing data)
       expect(screen.getByText('Rendimiento mensual: 1.78%')).toBeInTheDocument();
     });
   });
@@ -260,6 +266,24 @@ describe('FondosPage', () => {
     await waitFor(() => {
       const buyButtons = screen.getAllByText('Comprar');
       expect(buyButtons[0]).toBeDisabled();
+    });
+  });
+
+  it('handles missing tna and rendimiento_mensual values correctly', async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockMutualFundsData
+    });
+
+    render(<FondosPage />);
+
+    await waitFor(() => {
+      // Check that funds with valid data show properly
+      expect(screen.getByText('38.14%')).toBeInTheDocument();
+      expect(screen.getByText('Rendimiento mensual: 1.78%')).toBeInTheDocument();
+      
+      // Check that funds with missing data show N/A
+      expect(screen.getByText('N/A')).toBeInTheDocument();
     });
   });
 }); 

@@ -102,13 +102,17 @@ export default function FondosPage() {
         <h3 className="font-bold text-lg text-gray-900">{fund.fondo}</h3>
         <p className="text-sm text-gray-600">Categoría: {fund.categoria}</p>
       </div>
-      <div className="my-4">
-        <p className="text-3xl font-bold text-green-600">{fund.tna.toFixed(2)}%</p>
-        <p className="text-sm text-gray-800">TNA</p>
-        <p className="text-sm text-gray-600">
-          Rendimiento mensual: {fund.rendimiento_mensual.toFixed(2)}%
-        </p>
-      </div>
+             <div className="my-4">
+         <p className="text-3xl font-bold text-green-600">
+           {typeof fund.tna === 'number' ? `${fund.tna.toFixed(2)}%` : 'N/A'}
+         </p>
+         <p className="text-sm text-gray-800">TNA</p>
+         <p className="text-sm text-gray-600">
+           Rendimiento mensual: {typeof fund.rendimiento_mensual === 'number'
+             ? `${fund.rendimiento_mensual.toFixed(2)}%`
+             : 'N/A'}
+         </p>
+       </div>
       <button 
         onClick={() => handleOpenModal(fund)}
         className="w-full mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
