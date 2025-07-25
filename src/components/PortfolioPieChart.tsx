@@ -12,6 +12,8 @@ interface Props {
 }
 
 export default function PortfolioPieChart({ positions, prices }: Props) {
+  const chartOptions = {};
+  
   let cryptoValue = 0;
   const dataArr = positions.map((pos) => {
     if (pos.type === 'Stock') {
@@ -50,7 +52,7 @@ export default function PortfolioPieChart({ positions, prices }: Props) {
     <div className="bg-white rounded-lg shadow p-4 mb-8 max-w-md mx-auto">
       <h3 className="text-sm font-bold text-gray-900 mb-2">Distribución de Activos</h3>
       {total > 0 ? (
-        <Pie data={chartData} />
+        <Pie data={chartData} options={chartOptions} />
       ) : (
         <div className="text-gray-700 text-center py-8">No hay datos disponibles</div>
       )}

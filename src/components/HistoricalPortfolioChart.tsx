@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -30,8 +30,7 @@ ChartJS.register(
   Filler,
   TimeScale,
   annotationPlugin,
-  datalabelsPlugin,
-  crosshairPlugin
+  datalabelsPlugin
 );
 
 interface Props {
@@ -83,6 +82,15 @@ function calculateDynamicScaling(values: number[]) {
 }
 
 export default function HistoricalPortfolioChart({ records }: Props) {
+  // Register crosshair plugin on mount and unregister on unmount
+  useEffect(() => {
+    ChartJS.register(crosshairPlugin);
+    
+    return () => {
+      ChartJS.unregister(crosshairPlugin);
+    };
+  }, []);
+
   // Helper functions to calculate total values using the correct formula
   const calcTotalARS = (r: DailyPortfolioRecord) =>
     r.capital_invertido_ars + (r.ganancias_netas_ars || 0) + r.efectivo_disponible_ars;
