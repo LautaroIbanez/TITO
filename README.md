@@ -421,7 +421,7 @@ A continuación se describen los principales endpoints de la API REST del proyec
     -   `GET /api/stocks/{symbol}?type=prices`: Obtiene el historial de precios de los últimos 90 días.
 *   `GET /api/scoop`: Obtiene la lista de acciones que son tendencia en el mercado (EEUU).
 *   `GET /api/bonds`: Obtiene la lista de bonos disponibles.
-*   `GET /api/deposits`: Obtiene la lista de depósitos a plazo fijo disponibles.
+*   `GET /api/deposits`: Obtiene el ranking top-10 de depósitos a plazo fijo basado en los últimos indicadores económicos (TNA más altas). Si los indicadores no están disponibles, fallback a la lista estática de depósitos.
 
 ### Metas Financieras
 *   Las metas se gestionan automáticamente según el perfil de inversión del usuario.

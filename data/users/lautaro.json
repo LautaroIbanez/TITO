@@ -56,6 +56,16 @@
       "quantity": 20,
       "purchasePrice": 144.39034499999997,
       "currency": "ARS"
+    },
+    {
+      "type": "FixedTermDeposit",
+      "id": "ftd-1753394150069",
+      "provider": "BANCO MACRO S.A.",
+      "amount": 50000,
+      "annualRate": 33,
+      "currency": "ARS",
+      "startDate": "2025-07-24T21:55:50.069Z",
+      "maturityDate": "2025-08-23T21:55:50.069Z"
     }
   ],
   "transactions": [
@@ -161,11 +171,23 @@
       "currency": "ARS",
       "commissionPct": 1,
       "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1753394150069",
+      "date": "2025-07-24T21:55:50.069Z",
+      "type": "Create",
+      "assetType": "FixedTermDeposit",
+      "provider": "BANCO MACRO S.A.",
+      "amount": 50000,
+      "annualRate": 33,
+      "termDays": 30,
+      "maturityDate": "2025-08-23T21:55:50.069Z",
+      "currency": "ARS"
     }
   ],
   "goals": [],
   "cash": {
-    "ARS": 1178421.3666,
+    "ARS": 1128421.3666,
     "USD": 2000
   },
   "profile": {
@@ -190,8 +212,8 @@
     "initialBalanceUSD": 2000
   },
   "investmentStrategy": {
-    "id": "strategy-20b76584-773a-45c1-ae8c-c17e4a14e607",
-    "createdAt": "2025-07-24T20:54:54.753Z",
+    "id": "strategy-6afbe6b0-852c-48f7-85c2-af71a20a2f16",
+    "createdAt": "2025-07-25T00:13:53.492Z",
     "targetAllocation": {
       "stocks": 59.4,
       "bonds": 29.7,
@@ -201,7 +223,7 @@
     },
     "recommendations": [
       {
-        "id": "alloc-b5f558d2-fb43-4386-a783-47c6842f955e",
+        "id": "alloc-7c1604ef-8ed1-4789-82b0-816b4d263a29",
         "action": "increase",
         "assetClass": "bonds",
         "reason": "Tu portafolio tiene 0.2% en bonos, pero tu estrategia objetivo es 29.7%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
@@ -214,10 +236,10 @@
         ]
       },
       {
-        "id": "cash-invest-e2f7b16c-3014-4655-a3c1-c901141e9c31",
+        "id": "cash-invest-7a6cf17c-b007-4ac5-8b53-6f7b81df21c1",
         "action": "buy",
         "assetClass": "cash",
-        "reason": "Tienes un 39.3% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
+        "reason": "Tienes un 37.7% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
         "priority": "high",
         "expectedImpact": "positive"
       }
