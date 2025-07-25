@@ -1,0 +1,179 @@
+{
+  "username": "tito",
+  "createdAt": "2025-07-25T22:33:44.646Z",
+  "profileCompleted": true,
+  "positions": [
+    {
+      "type": "Stock",
+      "symbol": "GOOGL.BA",
+      "quantity": 32,
+      "purchasePrice": 4259.2575,
+      "currency": "ARS",
+      "market": "BCBA"
+    },
+    {
+      "type": "Stock",
+      "symbol": "AAPL",
+      "quantity": 4,
+      "purchasePrice": 216.00447999999997,
+      "currency": "USD",
+      "market": "NASDAQ"
+    },
+    {
+      "type": "FixedTermDeposit",
+      "id": "ftd-1753483349480",
+      "provider": "BANCO MACRO S.A.",
+      "amount": 50000,
+      "annualRate": 33,
+      "currency": "ARS",
+      "startDate": "2025-07-25T22:42:29.479Z",
+      "maturityDate": "2025-08-24T22:42:29.479Z"
+    },
+    {
+      "type": "MutualFund",
+      "id": "mf-1753483371108",
+      "name": "Mercado Fondo - Clase A",
+      "category": "Money Market",
+      "amount": 50000,
+      "annualRate": 36.4171,
+      "currency": "ARS",
+      "startDate": "2025-07-25T22:42:51.108Z"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "deposit-ARS-initial",
+      "date": "2025-07-25",
+      "type": "Deposit",
+      "amount": 3000000,
+      "currency": "ARS"
+    },
+    {
+      "id": "deposit-USD-initial",
+      "date": "2025-07-25",
+      "type": "Deposit",
+      "amount": 3000,
+      "currency": "USD"
+    },
+    {
+      "id": "1753483182530",
+      "date": "2025-07-25T22:39:42.530Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "GOOGL.BA",
+      "quantity": 32,
+      "price": 4215,
+      "currency": "ARS",
+      "market": "BCBA",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1753483247157",
+      "date": "2025-07-25T22:40:47.157Z",
+      "type": "Buy",
+      "assetType": "Stock",
+      "symbol": "AAPL",
+      "quantity": 4,
+      "price": 213.76,
+      "currency": "USD",
+      "market": "NASDAQ",
+      "commissionPct": 1,
+      "purchaseFeePct": 0.05
+    },
+    {
+      "id": "1753483349480",
+      "date": "2025-07-25T22:42:29.480Z",
+      "type": "Create",
+      "assetType": "FixedTermDeposit",
+      "provider": "BANCO MACRO S.A.",
+      "amount": 50000,
+      "annualRate": 33,
+      "termDays": 30,
+      "maturityDate": "2025-08-24T22:42:29.479Z",
+      "currency": "ARS"
+    },
+    {
+      "id": "1753483371108",
+      "date": "2025-07-25T22:42:51.108Z",
+      "type": "Create",
+      "assetType": "MutualFund",
+      "name": "Mercado Fondo - Clase A",
+      "category": "Money Market",
+      "amount": 50000,
+      "annualRate": 36.4171,
+      "currency": "ARS"
+    }
+  ],
+  "goals": [],
+  "cash": {
+    "ARS": 2763703.76,
+    "USD": 2135.98208
+  },
+  "profile": {
+    "instrumentsUsed": [
+      "Plazo Fijo",
+      "Acciones",
+      "Fondos Comunes de Inversión",
+      "Futuros"
+    ],
+    "knowledgeLevels": {
+      "Plazo Fijo": "Medio",
+      "Acciones": "Medio",
+      "Fondos Comunes de Inversión": "Bajo",
+      "Futuros": "Bajo"
+    },
+    "holdingPeriod": "1 a 5 años",
+    "ageGroup": "31-40",
+    "riskAppetite": "Balanceado",
+    "investmentAmount": 3003000,
+    "investmentSharePct": 0,
+    "initialBalanceARS": 3000000,
+    "initialBalanceUSD": 3000
+  },
+  "investmentStrategy": {
+    "id": "strategy-281cf287-e599-4112-a295-093bc1b2c9a3",
+    "createdAt": "2025-07-25T23:12:22.246Z",
+    "targetAllocation": {
+      "stocks": 59.4,
+      "bonds": 29.7,
+      "deposits": 4.95,
+      "cash": 4.95,
+      "crypto": 1
+    },
+    "recommendations": [
+      {
+        "id": "alloc-3b911b75-6120-49b7-a3ff-43d62a93cdff",
+        "action": "increase",
+        "assetClass": "stocks",
+        "reason": "Tu portafolio tiene 4.6% en acciones, pero tu estrategia objetivo es 59.4%",
+        "priority": "high",
+        "expectedImpact": "positive"
+      },
+      {
+        "id": "alloc-b22021d3-c1dc-4a98-a21c-a2a538c30051",
+        "action": "increase",
+        "assetClass": "bonds",
+        "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 29.7%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
+        "priority": "high",
+        "expectedImpact": "positive",
+        "suggestedAssets": [
+          "GOV-BOND-2025",
+          "CORP-BOND-2026",
+          "MUNI-BOND-2027"
+        ]
+      },
+      {
+        "id": "cash-invest-a198d786-cd8a-4e4e-a160-8c269310b667",
+        "action": "buy",
+        "assetClass": "cash",
+        "reason": "Tienes un 93.7% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
+        "priority": "high",
+        "expectedImpact": "positive"
+      }
+    ],
+    "riskLevel": "Balanceado",
+    "timeHorizon": "5-10 años",
+    "notes": ""
+  }
+}

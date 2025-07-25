@@ -109,6 +109,10 @@ export function isFeasibleContribution(monthlyAmount: number, estimatedSalary: n
  * @returns A formatted currency string (e.g., "$1,234.56" or "US$1,234.56").
  */
 export function formatCurrency(value: number, currency: 'ARS' | 'USD' = 'ARS'): string {
+  if (!Number.isFinite(value)) {
+    return currency === 'USD' ? 'US$0.00' : '$0.00';
+  }
+  
   const symbolMap = {
     'ARS': '$',
     'USD': 'US$'

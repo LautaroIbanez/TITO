@@ -846,4 +846,12 @@ describe('formatCurrency', () => {
     expect(formatCurrency(1234.56, 'USD')).toBe('US$1,234.56');
     expect(formatCurrency(1000000, 'USD')).toBe('US$1,000,000.00');
   });
+  it('handles non-finite values', () => {
+    expect(formatCurrency(NaN, 'ARS')).toBe('$0.00');
+    expect(formatCurrency(Infinity, 'ARS')).toBe('$0.00');
+    expect(formatCurrency(-Infinity, 'ARS')).toBe('$0.00');
+    expect(formatCurrency(NaN, 'USD')).toBe('US$0.00');
+    expect(formatCurrency(Infinity, 'USD')).toBe('US$0.00');
+    expect(formatCurrency(-Infinity, 'USD')).toBe('US$0.00');
+  });
 }); 
