@@ -99,6 +99,8 @@ export default function LineChart({
           pointHoverRadius: 8,
           pointHoverBorderWidth: 3,
           spanGaps: true, // Connect points even if some data is missing
+          hidden: false,
+          yAxisID: 'y',
         })) :
         // Single series mode
         [{
@@ -122,6 +124,8 @@ export default function LineChart({
           pointRadius: 4,
           pointHoverRadius: 8,
           pointHoverBorderWidth: 3,
+          hidden: false,
+          yAxisID: 'y',
         }],
     };
 
@@ -131,6 +135,19 @@ export default function LineChart({
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: false,
+        animations: {
+          colors: false,
+          x: false,
+          y: false,
+        },
+        transitions: {
+          active: {
+            animation: {
+              duration: 0
+            }
+          }
+        },
         plugins: {
           title: {
             display: true,
@@ -143,7 +160,7 @@ export default function LineChart({
             padding: 20,
           },
           legend: {
-            display: multiSeries,
+            display: true,
             position: 'top' as const,
             labels: {
               usePointStyle: true,
@@ -164,6 +181,34 @@ export default function LineChart({
                   index: index,
                 }));
               },
+            },
+            onClick: (e, legendItem, legend) => {
+              const ci = legend.chart;
+              const index = legendItem.datasetIndex;
+              
+              // Validaciones más robustas
+              if (!ci || !ci.data || !ci.data.datasets || typeof index !== 'number') {
+                console.warn('Invalid chart or dataset index');
+                return;
+              }
+              
+              if (index < 0 || index >= ci.data.datasets.length) {
+                console.warn('Dataset index out of bounds');
+                return;
+              }
+              
+              const meta = ci.getDatasetMeta(index);
+              if (!meta) {
+                console.warn('Dataset meta not found');
+                return;
+              }
+              
+              // Toggle visibility de forma más segura
+              const currentHidden = meta.hidden;
+              meta.hidden = !currentHidden;
+              
+              // Usar update con configuración específica para evitar problemas de animación
+              ci.update('none');
             },
           },
           tooltip: {
