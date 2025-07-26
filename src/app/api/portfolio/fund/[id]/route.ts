@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserData } from '@/utils/userData';
 import { loadUserData, saveUserData } from '@/utils/userData';
+import { DepositTransaction } from '@/types';
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const { searchParams } = new URL(req.url);
@@ -35,20 +36,41 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     // Remove the transaction
     user.transactions.splice(transactionIndex, 1);
 
-    // Also remove the corresponding position if it exists
+    // Also remove the corresponding position if it exists and credit cash
     const positionIndex = user.positions.findIndex(pos => 
       pos.type === 'MutualFund' && 
       pos.id === params.id
     );
 
     if (positionIndex !== -1) {
+      const position = user.positions[positionIndex];
+      
+      // Credit the position amount to cash
+      user.cash[position.currency] += position.amount;
+      
+      // Record a liquidation transaction for traceability
+      const liquidationTx: DepositTransaction = {
+        id: `liq_${Date.now()}`,
+        date: new Date().toISOString(),
+        type: 'Deposit',
+        amount: position.amount,
+        currency: position.currency,
+        source: 'MutualFundLiquidation',
+      };
+      user.transactions.push(liquidationTx);
+      
+      // Remove the position
       user.positions.splice(positionIndex, 1);
     }
 
     // Save updated user data
     await saveUserData(username, user);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true,
+      cash: user.cash,
+      transactions: user.transactions
+    });
   } catch (error) {
     console.error('Error deleting mutual fund transaction:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

@@ -134,7 +134,7 @@ export interface DepositTransaction {
   type: 'Deposit';
   amount: number;
   currency: 'ARS' | 'USD';
-  source?: 'FixedTermPayout';
+  source?: 'FixedTermPayout' | 'MutualFundLiquidation';
 }
 
 export interface WithdrawalTransaction {

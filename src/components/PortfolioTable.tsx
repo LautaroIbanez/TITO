@@ -133,7 +133,16 @@ export default function PortfolioTable({ positions, prices, fundamentals, cash, 
 
   const handleRemove = async (asset: PortfolioPosition) => {
     const assetName = asset.type === 'Stock' ? asset.symbol : asset.type === 'Bond' ? asset.ticker : asset.type === 'Crypto' ? asset.symbol : asset.id;
-    if (!confirm(`¿Estás seguro que quieres eliminar la posición ${assetName}?`)) return;
+    
+    // Show specific confirmation message for fixed-term deposits and mutual funds
+    let confirmMessage = `¿Estás seguro que quieres eliminar la posición ${assetName}?`;
+    if (asset.type === 'FixedTermDeposit') {
+      confirmMessage = `¿Estás seguro que quieres cancelar el plazo fijo ${assetName}? Esto devolverá el capital invertido más los intereses acumulados hasta la fecha.`;
+    } else if (asset.type === 'MutualFund') {
+      confirmMessage = `¿Estás seguro que quieres liquidar el fondo común ${assetName}? Esto devolverá el monto actual del fondo a tu efectivo disponible.`;
+    }
+    
+    if (!confirm(confirmMessage)) return;
     
     const session = localStorage.getItem('session');
     if (!session) return;
@@ -398,6 +407,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, cash, 
             ) : Number.isFinite(gainCurrency) ? formatCurrency(gainCurrency, pos.currency) : '-'
           )}
         </td>
+        <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-center">
           <button onClick={() => handleRemove(pos)} className="text-red-600 hover:text-red-800 text-xs font-semibold">Eliminar</button>
         </td>

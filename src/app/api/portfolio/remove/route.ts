@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { UserData, StockPosition, BondPosition, StockTradeTransaction, BondTradeTransaction, FixedTermDepositPosition, DepositTransaction, WithdrawalTransaction } from '@/types';
+import { UserData, StockPosition, BondPosition, StockTradeTransaction, BondTradeTransaction, FixedTermDepositPosition, MutualFundPosition, DepositTransaction, WithdrawalTransaction } from '@/types';
 import { getUserData, saveUserData } from '@/utils/userData';
 
 
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
   try {
     const { username, assetType, identifier, currency, amount }: {
       username: string;
-      assetType: 'Stock' | 'Bond' | 'FixedTermDeposit' | 'Cash';
+      assetType: 'Stock' | 'Bond' | 'FixedTermDeposit' | 'MutualFund' | 'Cash';
       identifier?: string;
       currency?: 'ARS' | 'USD';
       amount?: number;
@@ -71,6 +71,8 @@ export async function POST(request: NextRequest) {
       positionIndex = user.positions.findIndex((p) => p.type === 'Bond' && p.ticker === identifier);
     } else if (assetType === 'FixedTermDeposit') {
       positionIndex = user.positions.findIndex((p) => p.type === 'FixedTermDeposit' && p.id === identifier);
+    } else if (assetType === 'MutualFund') {
+      positionIndex = user.positions.findIndex((p) => p.type === 'MutualFund' && p.id === identifier);
     }
 
     if (positionIndex === -1) {
@@ -78,7 +80,7 @@ export async function POST(request: NextRequest) {
     }
 
     const position = user.positions[positionIndex];
-    const positionCurrency = (position as StockPosition | BondPosition | FixedTermDepositPosition).currency;
+    const positionCurrency = (position as StockPosition | BondPosition | FixedTermDepositPosition | MutualFundPosition).currency;
 
 
     if (position.type === 'Stock') {
@@ -120,6 +122,20 @@ export async function POST(request: NextRequest) {
         amount: payout,
         currency: positionCurrency,
         source: 'FixedTermPayout',
+      };
+      user.transactions.push(tx);
+    } else if (position.type === 'MutualFund') {
+      // For mutual funds, return the current amount to cash
+      user.cash[positionCurrency] += position.amount;
+      
+      // Register a liquidation transaction for traceability
+      const tx: DepositTransaction = {
+        id: `liq_${Date.now()}`,
+        date: new Date().toISOString(),
+        type: 'Deposit',
+        amount: position.amount,
+        currency: positionCurrency,
+        source: 'MutualFundLiquidation',
       };
       user.transactions.push(tx);
     }
