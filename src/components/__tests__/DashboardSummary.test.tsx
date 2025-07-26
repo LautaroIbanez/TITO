@@ -8,7 +8,7 @@ import { usePortfolio } from '../../contexts/PortfolioContext';
 import { calculatePortfolioValueHistory, calculateCurrentValueByCurrency } from '../../utils/calculatePortfolioValue';
 import { calculatePortfolioPerformance, fetchInflationData, formatPerformance } from '../../utils/portfolioPerformance';
 import { UserData, PortfolioTransaction, FixedTermDepositCreationTransaction } from '@/types';
-import { calculateInvestedCapital } from '../../utils/investedCapital';
+import { calculateInvestedCapitalFromPositions } from '../../utils/calculateInvestedCapitalFromPositions';
 import { formatCurrency } from '../../utils/goalCalculator';
 import { calculatePortfolioSummaryHistory } from '../../utils/portfolioSummaryHistory';
 import { renderHook, act } from '@testing-library/react-hooks';
@@ -26,9 +26,8 @@ jest.mock('../../utils/portfolioPerformance', () => ({
     formatted: `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
   }))
 }));
-jest.mock('../../utils/investedCapital', () => ({
-  calculateInvestedCapital: jest.fn(),
-  calculateDailyInvestedCapital: jest.fn(),
+jest.mock('../../utils/calculateInvestedCapitalFromPositions', () => ({
+  calculateInvestedCapitalFromPositions: jest.fn(),
 }));
 jest.mock('../../utils/currency');
 jest.mock('../../utils/goalCalculator', () => ({
@@ -67,8 +66,7 @@ const mockCalculatePortfolioValueHistory = calculatePortfolioValueHistory as jes
 const mockCalculateCurrentValueByCurrency = calculateCurrentValueByCurrency as jest.Mock;
 const mockCalculatePortfolioPerformance = calculatePortfolioPerformance as jest.Mock;
 const mockFetchInflationData = fetchInflationData as jest.Mock;
-const mockCalculateInvestedCapital = calculateInvestedCapital as jest.Mock;
-const mockCalculateDailyInvestedCapital = require('../../utils/investedCapital').calculateDailyInvestedCapital as jest.Mock;
+const mockCalculateInvestedCapitalFromPositions = calculateInvestedCapitalFromPositions as jest.Mock;
 const mockCalculatePortfolioSummaryHistory = calculatePortfolioSummaryHistory as jest.Mock;
 const mockGetLatestPortfolioSnapshot = getLatestPortfolioSnapshot as jest.Mock;
 
@@ -233,12 +231,7 @@ describe('DashboardSummary', () => {
     });
     
     // Mock invested capital and portfolio value
-    mockCalculateInvestedCapital.mockImplementation((txs, currency) => currency === 'ARS' ? 1500 : 0);
-    mockCalculateDailyInvestedCapital.mockReturnValue([
-      { date: '2023-01-01', investedARS: 3000, investedUSD: 0 },
-      { date: '2023-02-01', investedARS: 3500, investedUSD: 0 },
-      { date: '2023-03-31', investedARS: 4000, investedUSD: 0 }
-    ]);
+    mockCalculateInvestedCapitalFromPositions.mockImplementation(() => ({ ARS: 1500, USD: 0 }));
     mockCalculateCurrentValueByCurrency.mockReturnValue({ ARS: 1600, USD: 0 });
     
     // Mock inflation data fetch
@@ -280,8 +273,8 @@ describe('DashboardSummary', () => {
     render(<DashboardSummary />);
 
     await waitFor(() => {
-      expect(screen.getByText('$14.300,00')).toBeInTheDocument(); // Portfolio value (10000 + 0 + 4300)
-      expect(screen.getByText('$10.000,00')).toBeInTheDocument(); // Invested capital from deposit
+      expect(screen.getByText('$5.800,00')).toBeInTheDocument(); // Portfolio value (1500 + 0 + 4300)
+      expect(screen.getByText('$1.500,00')).toBeInTheDocument(); // Invested capital from positions
       expect(screen.getByText('+$0,00')).toBeInTheDocument(); // Net gains (no gains calculated for deposit)
     });
   });
@@ -304,6 +297,15 @@ describe('DashboardSummary', () => {
         'AAPL': [{ date: '2024-01-01', close: 160, open: 150, high: 165, low: 145, volume: 1000000 }]
       }
     };
+
+    // Mock getPortfolioNetGains to return expected gains
+    const { getPortfolioNetGains } = require('../../utils/positionGains');
+    const mockGetPortfolioNetGains = getPortfolioNetGains as jest.Mock;
+    mockGetPortfolioNetGains.mockReturnValue({
+      positionGains: new Map([['AAPL-USD', 100]]),
+      totals: { ARS: 0, USD: 100 },
+      excludedPositions: []
+    });
 
     mockUsePortfolio.mockReturnValue({
       portfolioData: mockPortfolioDataWithGains,
@@ -343,6 +345,15 @@ describe('DashboardSummary', () => {
       }
     };
 
+    // Mock getPortfolioNetGains to return expected losses
+    const { getPortfolioNetGains } = require('../../utils/positionGains');
+    const mockGetPortfolioNetGains = getPortfolioNetGains as jest.Mock;
+    mockGetPortfolioNetGains.mockReturnValue({
+      positionGains: new Map([['AAPL-USD', -100]]),
+      totals: { ARS: 0, USD: -100 },
+      excludedPositions: []
+    });
+
     mockUsePortfolio.mockReturnValue({
       portfolioData: mockPortfolioDataWithLosses,
       strategy: null,
@@ -358,7 +369,7 @@ describe('DashboardSummary', () => {
 
     render(<DashboardSummary />);
     await waitFor(() => {
-      expect(screen.getByText('US$-100.00')).toBeInTheDocument(); // Net gains (140 - 150) * 10 in USD
+      expect(screen.getAllByText('US$-100.00')).toHaveLength(2); // Net gains appears in both portfolio total and gains
     });
   });
 
@@ -378,8 +389,8 @@ describe('DashboardSummary', () => {
     render(<DashboardSummary />);
 
     await waitFor(() => {
-      expect(screen.getByText('$14.300,00')).toBeInTheDocument(); // Portfolio value (10000 + 0 + 4300)
-      expect(screen.getByText('$10.000,00')).toBeInTheDocument(); // Invested capital from deposit
+      expect(screen.getByText('$5.800,00')).toBeInTheDocument(); // Portfolio value (1500 + 0 + 4300)
+      expect(screen.getByText('$1.500,00')).toBeInTheDocument(); // Invested capital from positions
       expect(screen.getByText('+$0,00')).toBeInTheDocument(); // Net gains (no gains calculated for deposit)
     });
 
@@ -413,6 +424,9 @@ describe('DashboardSummary', () => {
         'AAPL': [{ date: '2024-01-01', close: 1234.57, open: 1000, high: 1250, low: 950, volume: 1000000 }]
       }
     };
+
+    // Mock calculateInvestedCapitalFromPositions to return expected values
+    mockCalculateInvestedCapitalFromPositions.mockImplementation(() => ({ ARS: 1000000, USD: 0 }));
 
     mockUsePortfolio.mockReturnValue({
       portfolioData: mockPortfolioDataWithLargeValues,
@@ -471,7 +485,7 @@ describe('DashboardSummary', () => {
       // Should log warnings for non-finite values
       expect(warnSpy).toHaveBeenCalled();
       // UI should fallback to 0 or not show NaN/Infinity
-      expect(screen.getAllByText('$4.300,00')).toHaveLength(2); // Portfolio total and cash
+      expect(screen.getAllByText('$4.300,00')).toHaveLength(1); // Cash only
     });
     warnSpy.mockRestore();
   });
@@ -546,8 +560,8 @@ describe('DashboardSummary', () => {
 
     await waitFor(() => {
       // Should display calculated values using position-based calculation
-      expect(screen.getByText('$14.300,00')).toBeInTheDocument(); // Portfolio value (10000 + 0 + 4300)
-      expect(screen.getByText('$10.000,00')).toBeInTheDocument(); // Invested capital from deposit
+      expect(screen.getByText('$5.800,00')).toBeInTheDocument(); // Portfolio value (1500 + 0 + 4300)
+      expect(screen.getByText('$1.500,00')).toBeInTheDocument(); // Invested capital from positions
       expect(screen.getByText('+$0,00')).toBeInTheDocument(); // Net gains (no gains calculated for deposit)
     });
   });
@@ -561,8 +575,8 @@ describe('DashboardSummary', () => {
 
     await waitFor(() => {
       // Should display calculated values using position-based calculation
-      expect(screen.getByText('$14.300,00')).toBeInTheDocument(); // Portfolio value (10000 + 0 + 4300)
-      expect(screen.getByText('$10.000,00')).toBeInTheDocument(); // Invested capital from deposit
+      expect(screen.getByText('$5.800,00')).toBeInTheDocument(); // Portfolio value (1500 + 0 + 4300)
+      expect(screen.getByText('$1.500,00')).toBeInTheDocument(); // Invested capital from positions
       expect(screen.getByText('+$0,00')).toBeInTheDocument(); // Net gains (no gains calculated for deposit)
     });
 
@@ -651,9 +665,9 @@ describe('DashboardSummary', () => {
 
     await waitFor(() => {
       // Verify that the portfolio total is calculated correctly
-      // Expected: $10.000,00 (capital) + $0,00 (gains) + $4.300,00 (cash) = $14.300,00
-      expect(screen.getByText('$14.300,00')).toBeInTheDocument(); // Valor Total del Portafolio (ARS)
-      expect(screen.getByText('$10.000,00')).toBeInTheDocument(); // Capital Invertido (ARS)
+      // Expected: $1.500,00 (capital) + $0,00 (gains) + $4.300,00 (cash) = $5.800,00
+      expect(screen.getByText('$5.800,00')).toBeInTheDocument(); // Valor Total del Portafolio (ARS)
+      expect(screen.getByText('$1.500,00')).toBeInTheDocument(); // Capital Invertido (ARS)
       expect(screen.getByText('+$0,00')).toBeInTheDocument(); // Ganancias Netas (ARS)
       expect(screen.getByText('$4.300,00')).toBeInTheDocument(); // Efectivo Disponible (ARS)
     });

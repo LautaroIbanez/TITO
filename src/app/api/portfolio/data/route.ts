@@ -4,8 +4,8 @@ import { getFundamentals, getHistoricalPrices, getTechnicals } from '@/utils/fin
 import { getBaseTicker, ensureBaSuffix } from '@/utils/tickers';
 import { getUserData } from '@/utils/userData';
 import { calculateCurrentValueByCurrency } from '@/utils/calculatePortfolioValue';
-import { calculateInvestedCapital } from '@/utils/investedCapital';
-import { getLatestCumulativeNetGains } from '@/utils/netGainsCalculator';
+import { calculateInvestedCapitalFromPositions } from '@/utils/calculateInvestedCapitalFromPositions';
+import { getPortfolioNetGains } from '@/utils/positionGains';
 import { appendDailyRecord, loadPortfolioHistory } from '@/utils/portfolioHistory';
 import NodeCache from 'node-cache';
 
@@ -98,8 +98,14 @@ export async function GET(req: NextRequest) {
 
     // Compute portfolio metrics for daily record with loaded price history
     const { ARS, USD } = calculateCurrentValueByCurrency(data.positions, data.cash, historicalPrices, bondPrices);
-    const investedARS = calculateInvestedCapital(data.transactions, 'ARS');
-    const investedUSD = calculateInvestedCapital(data.transactions, 'USD');
+    const invested = calculateInvestedCapitalFromPositions(data.positions);
+    const investedARS = invested.ARS;
+    const investedUSD = invested.USD;
+    
+    // Calculate net gains using position-based method
+    const { totals: netGains } = getPortfolioNetGains(data.positions, historicalPrices);
+    const gananciasNetasARS = netGains.ARS;
+    const gananciasNetasUSD = netGains.USD;
     
     // Create today's date in YYYY-MM-DD format
     const today = new Date().toISOString().split('T')[0];
@@ -111,8 +117,8 @@ export async function GET(req: NextRequest) {
       total_portfolio_usd: USD,
       capital_invertido_ars: investedARS,
       capital_invertido_usd: investedUSD,
-      ganancias_netas_ars: 0, // Will be calculated by recalculateNetGains
-      ganancias_netas_usd: 0, // Will be calculated by recalculateNetGains
+      ganancias_netas_ars: gananciasNetasARS,
+      ganancias_netas_usd: gananciasNetasUSD,
       efectivo_disponible_ars: data.cash.ARS,
       efectivo_disponible_usd: data.cash.USD,
     };
@@ -120,11 +126,10 @@ export async function GET(req: NextRequest) {
     // Load existing history to calculate cumulative gains
     const existingHistory = await loadPortfolioHistory(username);
     const updatedHistory = [...existingHistory, dailyRecord];
-    const { cumulativeARS, cumulativeUSD } = getLatestCumulativeNetGains(updatedHistory);
     
-    // Update the record with calculated cumulative gains
-    dailyRecord.ganancias_netas_ars = cumulativeARS;
-    dailyRecord.ganancias_netas_usd = cumulativeUSD;
+    // Update the record with calculated cumulative gains (keeping the position-based calculation)
+    dailyRecord.ganancias_netas_ars = gananciasNetasARS;
+    dailyRecord.ganancias_netas_usd = gananciasNetasUSD;
     
     // Append daily record to user's history
     appendDailyRecord(username, dailyRecord);

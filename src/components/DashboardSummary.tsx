@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { StrategyRecommendation } from '@/types';
 import { Bond } from '@/types/finance';
 import { calculatePortfolioValueHistory, calculateCurrentValueByCurrency } from '@/utils/calculatePortfolioValue';
-import { calculateInvestedCapital } from '@/utils/investedCapital';
 import { calculatePortfolioPerformance, fetchInflationData, formatPerformance, PerformanceMetrics, InflationData } from '@/utils/portfolioPerformance';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import { formatCurrency } from '@/utils/goalCalculator';
@@ -19,6 +18,7 @@ import HistoricalPortfolioChart from './HistoricalPortfolioChart';
 import DailyGainChart from './DailyGainChart';
 import { getSessionData, setSessionData } from '@/utils/sessionStorage';
 import EconomicIndicators from './EconomicIndicators';
+import SummaryCardTooltip from './SummaryCardTooltip';
 
 export default function DashboardSummary() {
   const [portfolioValueARS, setPortfolioValueARS] = useState(0);
@@ -279,18 +279,45 @@ export default function DashboardSummary() {
 
       {/* Portfolio Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-700">Valor Total del Portafolio (ARS)</h3>
-          <p className="text-2xl font-semibold text-gray-900">{formatCurrency(Number.isFinite(valorTotalPortafolioARS) ? valorTotalPortafolioARS : 0, 'ARS')}</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-700">Valor Total del Portafolio (USD)</h3>
-          <p className="text-2xl font-semibold text-gray-900">{formatCurrency(Number.isFinite(valorTotalPortafolioUSD) ? valorTotalPortafolioUSD : 0, 'USD')}</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-700">Capital Invertido (ARS)</h3>
-          <p className="text-2xl font-semibold text-gray-900">{formatCurrency(capitalInvertidoARS, 'ARS')}</p>
-        </div>
+        <SummaryCardTooltip
+          capitalInvertidoARS={capitalInvertidoARS}
+          capitalInvertidoUSD={capitalInvertidoUSD}
+          gananciaNetaARS={gananciaNetaARS}
+          gananciaNetaUSD={gananciaNetaUSD}
+          efectivoDisponibleARS={portfolioData.cash?.ARS ?? 0}
+          efectivoDisponibleUSD={portfolioData.cash?.USD ?? 0}
+        >
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-sm font-medium text-gray-700">Valor Total del Portafolio (ARS)</h3>
+            <p className="text-2xl font-semibold text-gray-900">{formatCurrency(Number.isFinite(valorTotalPortafolioARS) ? valorTotalPortafolioARS : 0, 'ARS')}</p>
+          </div>
+        </SummaryCardTooltip>
+        <SummaryCardTooltip
+          capitalInvertidoARS={capitalInvertidoARS}
+          capitalInvertidoUSD={capitalInvertidoUSD}
+          gananciaNetaARS={gananciaNetaARS}
+          gananciaNetaUSD={gananciaNetaUSD}
+          efectivoDisponibleARS={portfolioData.cash?.ARS ?? 0}
+          efectivoDisponibleUSD={portfolioData.cash?.USD ?? 0}
+        >
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-sm font-medium text-gray-700">Valor Total del Portafolio (USD)</h3>
+            <p className="text-2xl font-semibold text-gray-900">{formatCurrency(Number.isFinite(valorTotalPortafolioUSD) ? valorTotalPortafolioUSD : 0, 'USD')}</p>
+          </div>
+        </SummaryCardTooltip>
+        <SummaryCardTooltip
+          capitalInvertidoARS={capitalInvertidoARS}
+          capitalInvertidoUSD={capitalInvertidoUSD}
+          gananciaNetaARS={gananciaNetaARS}
+          gananciaNetaUSD={gananciaNetaUSD}
+          efectivoDisponibleARS={portfolioData.cash?.ARS ?? 0}
+          efectivoDisponibleUSD={portfolioData.cash?.USD ?? 0}
+        >
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-sm font-medium text-gray-700">Capital Invertido (ARS)</h3>
+            <p className="text-2xl font-semibold text-gray-900">{formatCurrency(capitalInvertidoARS, 'ARS')}</p>
+          </div>
+        </SummaryCardTooltip>
         {/* Net Gains Warning */}
         {excludedPositions.length > 0 && (
           <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-3 rounded mb-4">
@@ -304,27 +331,63 @@ export default function DashboardSummary() {
             </ul>
           </div>
         )}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-700">Ganancias Netas (ARS)</h3>
-          <p className={`text-2xl font-semibold ${gainsColorARS}`}> 
-            {gananciaNetaARS >= 0 ? '+' : ''}{formatCurrency(gananciaNetaARS, 'ARS')}
-          </p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-700">Capital Invertido (USD)</h3>
-          <p className="text-2xl font-semibold text-gray-900">{formatCurrency(capitalInvertidoUSD, 'USD')}</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-700">Ganancias Netas (USD)</h3>
-          <p className={`text-2xl font-semibold ${gainsColorUSD}`}> 
-            {gananciaNetaUSD >= 0 ? '+' : ''}{formatCurrency(gananciaNetaUSD, 'USD')}
-          </p>
-        </div>
-         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-700">Efectivo Disponible</h3>
-          <p className="text-xl font-semibold text-blue-600">{formatCurrency(portfolioData.cash?.ARS ?? 0, 'ARS')}</p>
-          <p className="text-xl font-semibold text-green-600">{formatCurrency(portfolioData.cash?.USD ?? 0, 'USD')}</p>
-        </div>
+        <SummaryCardTooltip
+          capitalInvertidoARS={capitalInvertidoARS}
+          capitalInvertidoUSD={capitalInvertidoUSD}
+          gananciaNetaARS={gananciaNetaARS}
+          gananciaNetaUSD={gananciaNetaUSD}
+          efectivoDisponibleARS={portfolioData.cash?.ARS ?? 0}
+          efectivoDisponibleUSD={portfolioData.cash?.USD ?? 0}
+        >
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-sm font-medium text-gray-700">Ganancias Netas (ARS)</h3>
+            <p className={`text-2xl font-semibold ${gainsColorARS}`}> 
+              {gananciaNetaARS >= 0 ? '+' : ''}{formatCurrency(gananciaNetaARS, 'ARS')}
+            </p>
+          </div>
+        </SummaryCardTooltip>
+        <SummaryCardTooltip
+          capitalInvertidoARS={capitalInvertidoARS}
+          capitalInvertidoUSD={capitalInvertidoUSD}
+          gananciaNetaARS={gananciaNetaARS}
+          gananciaNetaUSD={gananciaNetaUSD}
+          efectivoDisponibleARS={portfolioData.cash?.ARS ?? 0}
+          efectivoDisponibleUSD={portfolioData.cash?.USD ?? 0}
+        >
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-sm font-medium text-gray-700">Capital Invertido (USD)</h3>
+            <p className="text-2xl font-semibold text-gray-900">{formatCurrency(capitalInvertidoUSD, 'USD')}</p>
+          </div>
+        </SummaryCardTooltip>
+        <SummaryCardTooltip
+          capitalInvertidoARS={capitalInvertidoARS}
+          capitalInvertidoUSD={capitalInvertidoUSD}
+          gananciaNetaARS={gananciaNetaARS}
+          gananciaNetaUSD={gananciaNetaUSD}
+          efectivoDisponibleARS={portfolioData.cash?.ARS ?? 0}
+          efectivoDisponibleUSD={portfolioData.cash?.USD ?? 0}
+        >
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-sm font-medium text-gray-700">Ganancias Netas (USD)</h3>
+            <p className={`text-2xl font-semibold ${gainsColorUSD}`}> 
+              {gananciaNetaUSD >= 0 ? '+' : ''}{formatCurrency(gananciaNetaUSD, 'USD')}
+            </p>
+          </div>
+        </SummaryCardTooltip>
+        <SummaryCardTooltip
+          capitalInvertidoARS={capitalInvertidoARS}
+          capitalInvertidoUSD={capitalInvertidoUSD}
+          gananciaNetaARS={gananciaNetaARS}
+          gananciaNetaUSD={gananciaNetaUSD}
+          efectivoDisponibleARS={portfolioData.cash?.ARS ?? 0}
+          efectivoDisponibleUSD={portfolioData.cash?.USD ?? 0}
+        >
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-sm font-medium text-gray-700">Efectivo Disponible</h3>
+            <p className="text-xl font-semibold text-blue-600">{formatCurrency(portfolioData.cash?.ARS ?? 0, 'ARS')}</p>
+            <p className="text-xl font-semibold text-green-600">{formatCurrency(portfolioData.cash?.USD ?? 0, 'USD')}</p>
+          </div>
+        </SummaryCardTooltip>
       </div>
 
       {/* Performance Metrics */}
