@@ -184,7 +184,7 @@ export async function buyAsset(username: string, assetType: string, body: any) {
       break;
     }
     case 'MutualFund': {
-      const { name, category, amount, annualRate, currency } = body;
+      const { name, category, amount, annualRate, currency, monthlyYield } = body;
       if (!name || !category || !amount || !annualRate || !currency) throw new Error('Missing fields for Mutual Fund purchase');
       const validatedCurrency = currency as 'ARS' | 'USD';
       totalCost = amount;
@@ -196,6 +196,7 @@ export async function buyAsset(username: string, assetType: string, body: any) {
         category,
         amount,
         annualRate,
+        monthlyYield,
         currency: validatedCurrency,
         startDate: new Date().toISOString(),
       };
@@ -209,6 +210,7 @@ export async function buyAsset(username: string, assetType: string, body: any) {
         category,
         amount,
         annualRate,
+        monthlyYield,
         currency: validatedCurrency,
       };
       user.transactions.push(tx);

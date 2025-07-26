@@ -94,6 +94,7 @@ export interface MutualFundPosition {
   category: string;
   amount: number;
   annualRate: number;
+  monthlyYield?: number;
   currency: 'ARS' | 'USD';
   startDate: string; // ISO string for when the fund position was created
 }
@@ -180,6 +181,7 @@ export interface MutualFundCreationTransaction {
   category: string;
   amount: number;
   annualRate: number;
+  monthlyYield?: number;
   currency: 'ARS' | 'USD';
 }
 

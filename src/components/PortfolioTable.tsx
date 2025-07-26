@@ -271,12 +271,12 @@ export default function PortfolioTable({ positions, prices, fundamentals, cash, 
       const startDate = new Date(pos.startDate);
       const currentDate = new Date();
       const daysElapsed = Math.max(0, (currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-      const annualRate = pos.annualRate / 100;
-      const dailyRate = annualRate / 365;
+      const term = pos.termDays ?? 30;
+      const pct = Math.min(daysElapsed, term) / term * pos.annualRate;
       
-      gainCurrency = pos.amount * dailyRate * daysElapsed;
+      gainCurrency = (pct / 100) * pos.amount;
       currentValue = pos.amount + gainCurrency;
-      gainPct = (gainCurrency / pos.amount) * 100;
+      gainPct = pct;
     }
     
     return (
@@ -289,7 +289,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, cash, 
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(currentValue, pos.currency)}</td>
         <td className="px-4 py-2 text-right text-green-600">
-          {`${getDailyYield(pos, prices).toFixed(2)}%`}
+          {`${gainPct.toFixed(2)}%`}
         </td>
         <td className={`px-4 py-2 text-right font-semibold ${gainCurrency >= 0 ? 'text-green-600' : 'text-red-600'}`}>
           {Number.isFinite(gainCurrency) ? formatCurrency(gainCurrency, pos.currency) : '-'}
@@ -379,10 +379,15 @@ export default function PortfolioTable({ positions, prices, fundamentals, cash, 
     let currentValue = pos.amount;
     let gainPct = 0;
     
-    // For Money Market funds, calculate performance using getDailyYield
-    if (isMoneyMarket && pos.annualRate) {
-      gainPct = getDailyYield(pos, prices);
+    // For Money Market funds, calculate performance using monthlyYield
+    if (isMoneyMarket && pos.monthlyYield) {
+      gainPct = pos.monthlyYield / 30; // Daily yield from monthly yield
       currentValue = pos.amount; // Keep original amount for Money Market funds
+      gainCurrency = (gainPct / 100) * currentValue;
+    } else if (isMoneyMarket && pos.annualRate) {
+      // Fallback to annual rate if monthlyYield is not available
+      gainPct = getDailyYield(pos, prices);
+      currentValue = pos.amount;
       gainCurrency = (gainPct / 100) * currentValue;
     }
     

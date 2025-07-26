@@ -64,13 +64,17 @@ export function computePositionGain(
   }
   if (pos.type === 'FixedTermDeposit' || pos.type === 'Caucion') {
     const start = new Date(pos.startDate);
-    const end = new Date(pos.maturityDate);
-    // If matured, use full term, else use days so far
-    const days = today > end
-      ? Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
-      : Math.round((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    if (days < 0) return 0;
-    return pos.amount * (pos.annualRate / 100) * (days / 365);
+    const daysElapsed = Math.max(0, (today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    
+    let term: number;
+    if (pos.type === 'FixedTermDeposit') {
+      term = pos.termDays ?? 30;
+    } else {
+      term = pos.term;
+    }
+    
+    const pct = Math.min(daysElapsed, term) / term * pos.annualRate;
+    return (pct / 100) * pos.amount;
   }
   if (pos.type === 'MutualFund') {
     if (isMoneyMarketFund(pos)) {
@@ -199,16 +203,34 @@ export function getDailyYield(
   today: Date = new Date()
 ): number {
   if (position.type === 'FixedTermDeposit' || position.type === 'Caucion') {
-    // For deposits and cauciones, convert annual rate to daily rate
-    if (!position.annualRate) return 0;
-    return (position.annualRate / 365); // Annual rate divided by 365 days
+    // For deposits and cauciones, calculate based on term days
+    if (!position.annualRate || !position.startDate) return 0;
+    
+    const startDate = new Date(position.startDate);
+    const daysElapsed = Math.max(0, (today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    let term: number;
+    if (position.type === 'FixedTermDeposit') {
+      term = position.termDays ?? 30;
+    } else {
+      term = position.term;
+    }
+    
+    const pct = Math.min(daysElapsed, term) / term * position.annualRate;
+    
+    return pct;
   }
   
   if (position.type === 'MutualFund') {
     if (isMoneyMarketFund(position)) {
-      // For Money Market funds, use annual rate converted to daily
-      if (!position.annualRate) return 0;
-      return (position.annualRate / 365);
+      // For Money Market funds, use monthlyYield / 30 if available, otherwise fallback to annualRate / 365
+      if (position.monthlyYield) {
+        return position.monthlyYield / 30;
+      }
+      if (position.annualRate) {
+        return position.annualRate / 365;
+      }
+      return 0;
     }
     // For other mutual funds, return 0 as we don't have price data
     return 0;

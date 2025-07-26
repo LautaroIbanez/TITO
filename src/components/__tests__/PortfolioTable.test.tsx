@@ -63,15 +63,16 @@ describe('PortfolioTable gain/loss column', () => {
         currency: 'ARS',
         startDate: '2024-01-02T00:00:00Z', // 30 days before
         maturityDate: '2024-03-01',
+        termDays: 30,
       },
     ];
     renderWithProvider(positions, {});
-    // Gain: 10000 * 0.365 * (30/365) = 300
-    // Current value: 10000 + 300 = 10300
-    // Gain percentage: (300/10000) * 100 = 3%
-    expect(screen.getByText('$10.300,00')).toBeInTheDocument(); // Current value
-    expect(screen.getByText('0.10%')).toBeInTheDocument(); // Daily yield percentage
-    expect(screen.getByText('$300,00')).toBeInTheDocument(); // Gain currency
+    // New calculation: (30/30) * 36.5 = 36.5%
+    // Gain: (36.5/100) * 10000 = 3650
+    // Current value: 10000 + 3650 = 13650
+    expect(screen.getByText('$13.650,00')).toBeInTheDocument(); // Current value
+    expect(screen.getByText('36.50%')).toBeInTheDocument(); // Percentage
+    expect(screen.getByText('$3.650,00')).toBeInTheDocument(); // Gain currency
     jest.useRealTimers();
   });
 
@@ -110,15 +111,16 @@ describe('PortfolioTable gain/loss column', () => {
         category: 'Money Market',
         amount: 50000,
         annualRate: 36.5,
+        monthlyYield: 3.0, // 3% monthly yield
         currency: 'ARS',
         startDate: '2024-01-01',
       },
     ];
     renderWithProvider(positions, {});
-    // For Money Market funds, we expect calculated gains
+    // For Money Market funds with monthlyYield, we expect calculated gains
     expect(screen.getByText('Money Market')).toBeInTheDocument(); // Fund type
     expect(screen.getByText('$50.000,00')).toBeInTheDocument(); // Original amount
-    expect(screen.getByText('0.10%')).toBeInTheDocument(); // Daily yield percentage
+    expect(screen.getByText('0.10%')).toBeInTheDocument(); // Daily yield: 3.0 / 30 = 0.10%
     expect(screen.getByText('$50,00')).toBeInTheDocument(); // Calculated gain: (0.10% / 100) * 50000 = 50
 
     // Restore Date
