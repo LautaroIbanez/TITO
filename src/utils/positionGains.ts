@@ -182,4 +182,58 @@ export function getPortfolioNetGains(
     totals: { ARS, USD },
     excludedPositions
   };
+}
+
+/**
+ * Calculates daily yield percentage from annual rate or price history.
+ * For deposits/cauciones/mutual funds: converts annual rate to daily rate.
+ * For stocks/crypto: calculates daily return from price history.
+ * @param position PortfolioPosition
+ * @param priceHistory Price data for stocks/crypto
+ * @param today Optional date for calculations (defaults to current date)
+ * @returns Daily yield as percentage (e.g., 0.05 for 0.05%)
+ */
+export function getDailyYield(
+  position: PortfolioPosition,
+  priceHistory: Record<string, any>,
+  today: Date = new Date()
+): number {
+  if (position.type === 'FixedTermDeposit' || position.type === 'Caucion') {
+    // For deposits and cauciones, convert annual rate to daily rate
+    if (!position.annualRate) return 0;
+    return (position.annualRate / 365); // Annual rate divided by 365 days
+  }
+  
+  if (position.type === 'MutualFund') {
+    if (isMoneyMarketFund(position)) {
+      // For Money Market funds, use annual rate converted to daily
+      if (!position.annualRate) return 0;
+      return (position.annualRate / 365);
+    }
+    // For other mutual funds, return 0 as we don't have price data
+    return 0;
+  }
+  
+  if (position.type === 'Stock' || position.type === 'Crypto') {
+    // For stocks and crypto, calculate daily return from price history
+    const prices = priceHistory[position.symbol];
+    if (!prices || prices.length < 2) return 0;
+    
+    const currentPrice = prices[prices.length - 1]?.close;
+    const previousPrice = prices[prices.length - 2]?.close;
+    
+    if (!currentPrice || !previousPrice || currentPrice === 0 || previousPrice === 0) return 0;
+    
+    // Calculate daily return as percentage
+    const dailyReturn = ((currentPrice - previousPrice) / previousPrice) * 100;
+    return dailyReturn;
+  }
+  
+  if (position.type === 'Bond') {
+    // For bonds, we could calculate from bond prices if available
+    // For now, return 0 as bond pricing is complex
+    return 0;
+  }
+  
+  return 0;
 } 

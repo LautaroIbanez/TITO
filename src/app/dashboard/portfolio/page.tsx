@@ -199,6 +199,16 @@ export default function PortfolioPage() {
         {depositSuccess && <div className="text-green-600 text-sm">{depositSuccess}</div>}
       </div>
       
+      <PortfolioTable 
+        positions={portfolioData.positions} 
+        prices={portfolioData.historicalPrices} 
+        fundamentals={portfolioData.fundamentals} 
+        technicals={portfolioData.technicals} 
+        cash={cash}
+        onPortfolioUpdate={refreshPortfolio}
+        bondPrices={bondPrices}
+      />
+      
       {/* Grilla con gráfico de torta y sugerencias */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Gráfico de torta */}
@@ -231,15 +241,6 @@ export default function PortfolioPage() {
       </div>
 
       <PortfolioTransactions transactions={portfolioData.transactions} />
-      <PortfolioTable 
-        positions={portfolioData.positions} 
-        prices={portfolioData.historicalPrices} 
-        fundamentals={portfolioData.fundamentals} 
-        technicals={portfolioData.technicals} 
-        cash={cash}
-        onPortfolioUpdate={refreshPortfolio}
-        bondPrices={bondPrices}
-      />
       
       {/* Stock Cards - Only show stock positions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

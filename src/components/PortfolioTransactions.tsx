@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { PortfolioTransaction, DepositTransaction, FixedTermDepositCreationTransaction, CaucionCreationTransaction, RealEstateTransaction } from '@/types';
+import { PortfolioTransaction, DepositTransaction, FixedTermDepositCreationTransaction, CaucionCreationTransaction, RealEstateTransaction, MutualFundCreationTransaction } from '@/types';
 import EditDepositModal from './EditDepositModal';
 import EditTradeModal from './EditTradeModal';
 import { usePortfolio } from '@/contexts/PortfolioContext';
@@ -20,6 +20,10 @@ function isCaucion(tx: PortfolioTransaction): tx is CaucionCreationTransaction {
 
 function isRealEstate(tx: PortfolioTransaction): tx is RealEstateTransaction {
   return 'assetType' in tx && tx.assetType === 'RealEstate';
+}
+
+function isMutualFund(tx: PortfolioTransaction): tx is MutualFundCreationTransaction {
+  return tx.type === 'Create' && tx.assetType === 'MutualFund';
 }
 
 // Helper function to calculate total cost/proceeds with commissions
@@ -50,8 +54,12 @@ export default function PortfolioTransactions({ transactions }: Props) {
     [transactions]
   );
   
-  const handleDelete = async (transactionId: string) => {
-    if (!window.confirm('Are you sure you want to delete this deposit?')) return;
+  const handleDelete = async (transactionId: string, transactionType: string) => {
+    const confirmMessage = transactionType === 'MutualFund' 
+      ? 'Are you sure you want to delete this mutual fund transaction?' 
+      : 'Are you sure you want to delete this deposit?';
+    
+    if (!window.confirm(confirmMessage)) return;
     
     setError(null);
     const session = localStorage.getItem('session');
@@ -62,12 +70,16 @@ export default function PortfolioTransactions({ transactions }: Props) {
     }
 
     try {
-      const res = await fetch(`/api/portfolio/deposit/${transactionId}?username=${username}`, {
+      const endpoint = transactionType === 'MutualFund' 
+        ? `/api/portfolio/fund/${transactionId}?username=${username}`
+        : `/api/portfolio/deposit/${transactionId}?username=${username}`;
+      
+      const res = await fetch(endpoint, {
         method: 'DELETE',
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to delete deposit');
+        throw new Error(data.error || `Failed to delete ${transactionType.toLowerCase()}`);
       }
       await refreshPortfolio();
     } catch (err: any) {
@@ -186,6 +198,22 @@ export default function PortfolioTransactions({ transactions }: Props) {
         price: null,
         typeLabel: 'Creación Caución',
         typeColor: 'text-blue-600',
+        commissionPct: undefined,
+        purchaseFeePct: undefined
+      };
+    } else if (isMutualFund(tx)) {
+      // Check if the fund's category/name indicates it's a money market fund
+      const isMoneyMarket = tx.category?.toLowerCase().includes('money market') || 
+                           tx.name?.toLowerCase().includes('money market') ||
+                           tx.category?.toLowerCase().includes('mercado monetario') ||
+                           tx.name?.toLowerCase().includes('mercado monetario');
+      
+      return {
+        symbol: tx.name, // Use tx.name for the symbol field
+        quantity: null,
+        price: null,
+        typeLabel: isMoneyMarket ? 'Money Market' : 'Compra Fondo',
+        typeColor: 'text-purple-600',
         commissionPct: undefined,
         purchaseFeePct: undefined
       };
@@ -337,7 +365,11 @@ export default function PortfolioTransactions({ transactions }: Props) {
                     {tx.type === 'Deposit' ? (
                       <div className="flex justify-end items-center space-x-2">
                         <button onClick={() => setEditingDeposit(tx as DepositTransaction)} className="text-blue-600 hover:text-blue-800 text-xs font-semibold">Editar</button>
-                        <button onClick={() => handleDelete(tx.id)} className="text-red-600 hover:text-red-800 text-xs font-semibold">Eliminar</button>
+                        <button onClick={() => handleDelete(tx.id, 'Deposit')} className="text-red-600 hover:text-red-800 text-xs font-semibold">Eliminar</button>
+                      </div>
+                    ) : isMutualFund(tx) ? (
+                      <div className="flex justify-end items-center space-x-2">
+                        <button onClick={() => handleDelete(tx.id, 'MutualFund')} className="text-red-600 hover:text-red-800 text-xs font-semibold">Eliminar</button>
                       </div>
                     ) : isTrade ? (
                       <div className="flex justify-end items-center space-x-2">

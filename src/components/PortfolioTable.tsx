@@ -5,7 +5,7 @@ import TradeModal, { TradeType } from './TradeModal';
 import type { TradeModalProps } from './TradeModal';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import { formatCurrency } from '@/utils/goalCalculator';
-import { getPortfolioNetGains } from '@/utils/positionGains';
+import { getPortfolioNetGains, getDailyYield } from '@/utils/positionGains';
 import { detectDuplicates } from '@/utils/duplicateDetection';
 import { validatePositionPrice } from '@/utils/priceValidation';
 import getPurchasePrice from '../utils/getPurchasePrice';
@@ -281,13 +281,12 @@ export default function PortfolioTable({ positions, prices, fundamentals, cash, 
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(currentValue, pos.currency)}</td>
         <td className="px-4 py-2 text-right text-green-600">
-          {`${gainPct.toFixed(2)}% ${pos.annualRate?.toFixed(2) ?? '-'}% acumulado`}
+          {`${getDailyYield(pos, prices).toFixed(2)}%`}
         </td>
         <td className={`px-4 py-2 text-right font-semibold ${gainCurrency >= 0 ? 'text-green-600' : 'text-red-600'}`}>
           {Number.isFinite(gainCurrency) ? formatCurrency(gainCurrency, pos.currency) : '-'}
         </td>
         <td className="px-4 py-2 text-right text-gray-700">{pos.maturityDate ? new Date(pos.maturityDate).toLocaleDateString() : '-'}</td>
-        <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-center">
           <button onClick={() => handleRemove(pos)} className="text-red-600 hover:text-red-800 text-xs font-semibold">Eliminar</button>
         </td>
@@ -390,9 +389,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, cash, 
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(currentValue, pos.currency)}</td>
         <td className="px-4 py-2 text-right text-green-600">
-          {isMoneyMarket
-            ? `${gainPct.toFixed(2)}% acumulado ${pos.category}`
-            : `${pos.annualRate?.toFixed(2) ?? '-'}% (${pos.category})`}
+          {`${getDailyYield(pos, prices).toFixed(2)}%`}
         </td>
         <td className={`px-4 py-2 text-right font-semibold ${isMoneyMarket ? (gainCurrency >= 0 ? 'text-green-600' : 'text-red-600') : (Number.isFinite(gainCurrency) ? (gainCurrency >= 0 ? 'text-green-600' : 'text-red-600') : 'text-gray-500')}`}>
           {isMoneyMarket ? formatCurrency(gainCurrency, pos.currency) : (
@@ -401,8 +398,6 @@ export default function PortfolioTable({ positions, prices, fundamentals, cash, 
             ) : Number.isFinite(gainCurrency) ? formatCurrency(gainCurrency, pos.currency) : '-'
           )}
         </td>
-        <td className="px-4 py-2 text-right text-gray-700">-</td>
-        <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-center">
           <button onClick={() => handleRemove(pos)} className="text-red-600 hover:text-red-800 text-xs font-semibold">Eliminar</button>
         </td>

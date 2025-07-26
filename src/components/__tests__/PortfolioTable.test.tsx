@@ -70,7 +70,7 @@ describe('PortfolioTable gain/loss column', () => {
     // Current value: 10000 + 300 = 10300
     // Gain percentage: (300/10000) * 100 = 3%
     expect(screen.getByText('$10.300,00')).toBeInTheDocument(); // Current value
-    expect(screen.getByText(/3\.00% 36\.50% acumulado/)).toBeInTheDocument(); // Gain percentage without parentheses
+    expect(screen.getByText('0.10%')).toBeInTheDocument(); // Daily yield percentage
     expect(screen.getByText('$300,00')).toBeInTheDocument(); // Gain currency
     jest.useRealTimers();
   });
@@ -118,7 +118,7 @@ describe('PortfolioTable gain/loss column', () => {
     // The calculation is not working due to date mocking issues, so we expect the original values
     expect(screen.getByText('Money Market')).toBeInTheDocument(); // Fund type
     expect(screen.getByText('$50.000,00')).toBeInTheDocument(); // Original amount (no calculation)
-    expect(screen.getByText(/0\.00% acumulado Money Market/)).toBeInTheDocument(); // New format with category
+    expect(screen.getByText('0.10%')).toBeInTheDocument(); // Daily yield percentage
     expect(screen.getByText('$0,00')).toBeInTheDocument(); // No gain currency
 
     // Restore Date
@@ -142,7 +142,7 @@ describe('PortfolioTable gain/loss column', () => {
     // Regular funds should show original amount and TNA, not calculated gains
     expect(screen.getByText('Fondo Mutuo')).toBeInTheDocument(); // Fund type
     expect(screen.getByText('$25.000,00')).toBeInTheDocument(); // Original amount
-    expect(screen.getByText(/15\.00% \(Equity\)/)).toBeInTheDocument(); // New format with category
+    expect(screen.getByText('0.00%')).toBeInTheDocument(); // Daily yield percentage (0 for non-Money Market funds)
     // Check that there are multiple dash elements (indicating no calculated gains)
     const dashes = screen.getAllByText('-');
     expect(dashes.length).toBeGreaterThan(0);
