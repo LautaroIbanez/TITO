@@ -115,11 +115,11 @@ describe('PortfolioTable gain/loss column', () => {
       },
     ];
     renderWithProvider(positions, {});
-    // The calculation is not working due to date mocking issues, so we expect the original values
+    // For Money Market funds, we expect calculated gains
     expect(screen.getByText('Money Market')).toBeInTheDocument(); // Fund type
-    expect(screen.getByText('$50.000,00')).toBeInTheDocument(); // Original amount (no calculation)
+    expect(screen.getByText('$50.000,00')).toBeInTheDocument(); // Original amount
     expect(screen.getByText('0.10%')).toBeInTheDocument(); // Daily yield percentage
-    expect(screen.getByText('$0,00')).toBeInTheDocument(); // No gain currency
+    expect(screen.getByText('$50,00')).toBeInTheDocument(); // Calculated gain: (0.10% / 100) * 50000 = 50
 
     // Restore Date
     jest.restoreAllMocks();

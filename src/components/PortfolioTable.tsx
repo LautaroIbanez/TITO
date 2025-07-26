@@ -5,11 +5,10 @@ import TradeModal, { TradeType } from './TradeModal';
 import type { TradeModalProps } from './TradeModal';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import { formatCurrency } from '@/utils/goalCalculator';
-import { getPortfolioNetGains, getDailyYield } from '@/utils/positionGains';
+import { getPortfolioNetGains, getDailyYield, isMoneyMarketFund } from '@/utils/positionGains';
 import { detectDuplicates } from '@/utils/duplicateDetection';
 import { validatePositionPrice } from '@/utils/priceValidation';
 import getPurchasePrice from '../utils/getPurchasePrice';
-import { isMoneyMarketFund, calculateMoneyMarketReturns } from '@/utils/positionGains';
 
 interface Props {
   positions: PortfolioPosition[];
@@ -380,12 +379,11 @@ export default function PortfolioTable({ positions, prices, fundamentals, cash, 
     let currentValue = pos.amount;
     let gainPct = 0;
     
-    // For Money Market funds, calculate performance using the helper function
-    if (isMoneyMarket && pos.annualRate && pos.startDate) {
-      const returns = calculateMoneyMarketReturns(pos, new Date());
-      gainCurrency = returns.gainCurrency;
-      currentValue = returns.currentValue;
-      gainPct = returns.gainPct;
+    // For Money Market funds, calculate performance using getDailyYield
+    if (isMoneyMarket && pos.annualRate) {
+      gainPct = getDailyYield(pos, prices);
+      currentValue = pos.amount; // Keep original amount for Money Market funds
+      gainCurrency = (gainPct / 100) * currentValue;
     }
     
     return (
@@ -398,7 +396,7 @@ export default function PortfolioTable({ positions, prices, fundamentals, cash, 
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(currentValue, pos.currency)}</td>
         <td className="px-4 py-2 text-right text-green-600">
-          {`${getDailyYield(pos, prices).toFixed(2)}%`}
+          {`${gainPct.toFixed(2)}%`}
         </td>
         <td className={`px-4 py-2 text-right font-semibold ${isMoneyMarket ? (gainCurrency >= 0 ? 'text-green-600' : 'text-red-600') : (Number.isFinite(gainCurrency) ? (gainCurrency >= 0 ? 'text-green-600' : 'text-red-600') : 'text-gray-500')}`}>
           {isMoneyMarket ? formatCurrency(gainCurrency, pos.currency) : (
