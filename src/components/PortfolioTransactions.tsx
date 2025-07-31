@@ -39,6 +39,9 @@ function calculateTotalWithCommissions(tx: PortfolioTransaction): { totalCost?: 
     } else {
       return { totalProceeds: baseAmount - totalFees };
     }
+  } else if (isMutualFund(tx)) {
+    // For mutual fund creation transactions, the total cost is the invested amount
+    return { totalCost: tx.amount };
   }
   return {};
 }
@@ -210,7 +213,7 @@ export default function PortfolioTransactions({ transactions }: Props) {
       
       return {
         symbol: tx.name, // Use tx.name for the symbol field
-        quantity: null,
+        quantity: tx.amount, // Show the invested amount in the quantity column
         price: null,
         typeLabel: isMoneyMarket ? 'Money Market' : 'Compra Fondo',
         typeColor: 'text-purple-600',
@@ -329,7 +332,8 @@ export default function PortfolioTransactions({ transactions }: Props) {
                   </td>
                   <td className="px-4 py-2 font-mono text-gray-800">{display.symbol}</td>
                   <td className="px-4 py-2 text-right text-gray-800">
-                    {display.quantity !== null ? display.quantity :
+                    {display.quantity !== null ? 
+                     (isMutualFund(tx) ? formatCurrency(Number(display.quantity), tx.currency) : display.quantity) :
                      display.amount !== undefined ? formatCurrency(display.amount, tx.currency) :
                      (tx.type === 'Deposit' || isFixedTerm(tx) || isCaucion(tx) || isRealEstate(tx))
                      ? formatCurrency(tx.amount, tx.currency) : '—'}

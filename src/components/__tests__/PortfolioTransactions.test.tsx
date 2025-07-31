@@ -677,4 +677,35 @@ describe('PortfolioTransactions', () => {
     expect(screen.getByText('AA23')).toBeInTheDocument();
     expect(screen.getByText('$1.000,00')).toBeInTheDocument();
   });
+
+  it('should render mutual fund creation transaction correctly', () => {
+    const transactions: PortfolioTransaction[] = [
+      {
+        id: 'mf-create-1',
+        date: '2024-01-25T00:00:00.000Z',
+        type: 'Create',
+        assetType: 'MutualFund',
+        name: 'Fondo Renta Fija Plus',
+        category: 'Renta Fija',
+        amount: 50000,
+        annualRate: 8.5,
+        currency: 'ARS',
+      }
+    ];
+    renderWithProvider(transactions);
+    
+    // Check that the fund name appears in the Símbolo/Proveedor column
+    expect(screen.getByText('Fondo Renta Fija Plus')).toBeInTheDocument();
+    
+    // Check that both Monto / Cantidad and Costo Final display the same amount
+    const amountElements = screen.getAllByText('$50.000,00');
+    expect(amountElements).toHaveLength(2); // Should appear in both columns
+    
+    // Check that commission and price columns show "—"
+    const dashElements = screen.getAllByText('—');
+    expect(dashElements).toHaveLength(2); // Price and commission columns
+    
+    // Check the transaction type
+    expect(screen.getByText('Compra Fondo')).toBeInTheDocument();
+  });
 }); 
