@@ -112,9 +112,12 @@ export default function FondosPage() {
           </p>
          <p className="text-sm text-gray-800">TNA</p>
          <p className="text-sm text-gray-600">
-           Rendimiento mensual: {typeof fund.rendimiento_mensual === 'number'
-             ? `${fund.rendimiento_mensual.toFixed(2)}%`
-             : 'N/A'}
+           Rendimiento mensual: {(() => {
+             const monthly = typeof fund.rendimiento_mensual === 'number' 
+               ? fund.rendimiento_mensual 
+               : (typeof fund.tna === 'number' ? fund.tna / 12 : undefined);
+             return monthly ? `${monthly.toFixed(2)}%` : 'N/A';
+           })()}
          </p>
        </div>
       <button 

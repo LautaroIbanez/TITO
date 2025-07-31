@@ -127,7 +127,7 @@ describe('PortfolioTable gain/loss column', () => {
     jest.restoreAllMocks();
   });
 
-  it('shows regular mutual fund without Money Market calculations', () => {
+  it('shows regular mutual fund with derived daily yield', () => {
     const positions: PortfolioPosition[] = [
       {
         type: 'MutualFund',
@@ -141,13 +141,34 @@ describe('PortfolioTable gain/loss column', () => {
       },
     ];
     renderWithProvider(positions, {});
-    // Regular funds should show original amount and TNA, not calculated gains
+    // Regular funds should now show calculated gains using annualRate / 12 / 30
     expect(screen.getByText('Fondo Mutuo')).toBeInTheDocument(); // Fund type
     expect(screen.getByText('$25.000,00')).toBeInTheDocument(); // Original amount
-    expect(screen.getByText('0.00%')).toBeInTheDocument(); // Daily yield percentage (0 for non-Money Market funds)
-    // Check that there are multiple dash elements (indicating no calculated gains)
-    const dashes = screen.getAllByText('-');
-    expect(dashes.length).toBeGreaterThan(0);
+    // Daily yield: 15% / 12 / 30 = 0.0417%
+    expect(screen.getByText('0.04%')).toBeInTheDocument(); // Daily yield percentage
+    // Gain currency: (0.0417% / 100) * 25000 = 10.42
+    expect(screen.getByText('$10,42')).toBeInTheDocument(); // Calculated gain
+  });
+
+  it('shows mutual fund with no yield data as zero', () => {
+    const positions: PortfolioPosition[] = [
+      {
+        type: 'MutualFund',
+        id: '5',
+        name: 'No Yield Fund',
+        category: 'Equity',
+        amount: 10000,
+        currency: 'ARS',
+        startDate: '2024-01-01',
+        annualRate: 0, // Zero annual rate to test fallback
+      },
+    ];
+    renderWithProvider(positions, {});
+    // Funds with no yield data should show 0% and $0.00
+    expect(screen.getByText('Fondo Mutuo')).toBeInTheDocument(); // Fund type
+    expect(screen.getByText('$10.000,00')).toBeInTheDocument(); // Original amount
+    expect(screen.getByText('0.00%')).toBeInTheDocument(); // Daily yield percentage
+    expect(screen.getByText('$0,00')).toBeInTheDocument(); // Calculated gain
   });
 
 

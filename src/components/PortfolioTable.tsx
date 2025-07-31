@@ -375,21 +375,10 @@ export default function PortfolioTable({ positions, prices, fundamentals, cash, 
     // Detect Money Market funds and calculate performance
     const isMoneyMarket = isMoneyMarketFund(pos);
     
-    let gainCurrency = NaN;
-    let currentValue = pos.amount;
-    let gainPct = 0;
-    
-    // For Money Market funds, calculate performance using monthlyYield
-    if (isMoneyMarket && pos.monthlyYield) {
-      gainPct = pos.monthlyYield / 30; // Daily yield from monthly yield
-      currentValue = pos.amount; // Keep original amount for Money Market funds
-      gainCurrency = (gainPct / 100) * currentValue;
-    } else if (isMoneyMarket && pos.annualRate) {
-      // Fallback to annual rate if monthlyYield is not available
-      gainPct = getDailyYield(pos, prices);
-      currentValue = pos.amount;
-      gainCurrency = (gainPct / 100) * currentValue;
-    }
+    // Derive monthlyYield using the same logic as in getDailyYield
+    const monthlyYield = pos.monthlyYield ?? (pos.annualRate ? pos.annualRate / 12 : undefined);
+    const gainPct = monthlyYield ? monthlyYield / 30 : 0;
+    const gainCurrency = (gainPct / 100) * pos.amount;
     
     return (
       <tr key={pos.id} className="even:bg-gray-50">
@@ -399,16 +388,12 @@ export default function PortfolioTable({ positions, prices, fundamentals, cash, 
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
-        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(currentValue, pos.currency)}</td>
+        <td className="px-4 py-2 text-right text-gray-900">{formatCurrency(pos.amount, pos.currency)}</td>
         <td className="px-4 py-2 text-right text-green-600">
           {`${gainPct.toFixed(2)}%`}
         </td>
-        <td className={`px-4 py-2 text-right font-semibold ${isMoneyMarket ? (gainCurrency >= 0 ? 'text-green-600' : 'text-red-600') : (Number.isFinite(gainCurrency) ? (gainCurrency >= 0 ? 'text-green-600' : 'text-red-600') : 'text-gray-500')}`}>
-          {isMoneyMarket ? formatCurrency(gainCurrency, pos.currency) : (
-            isPositionExcluded(pos) ? (
-              <span className="text-orange-600 text-xs">Sin datos suficientes</span>
-            ) : Number.isFinite(gainCurrency) ? formatCurrency(gainCurrency, pos.currency) : '-'
-          )}
+        <td className={`px-4 py-2 text-right font-semibold ${gainCurrency >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          {formatCurrency(gainCurrency, pos.currency)}
         </td>
         <td className="px-4 py-2 text-right text-gray-700">-</td>
         <td className="px-4 py-2 text-center">

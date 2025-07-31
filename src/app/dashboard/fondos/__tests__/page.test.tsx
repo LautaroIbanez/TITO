@@ -287,7 +287,8 @@ describe('FondosPage', () => {
       // Check that "Otros" fund shows the multiplied TNA value (0.32 * 100 = 32.00%)
       expect(screen.getByText('32.00%')).toBeInTheDocument();
       
-      // Check that funds with missing data show N/A
+      // Check that funds with missing data show computed monthly yield from TNA
+      // For FUNDO CON DATOS FALTANTES, tna is null, so it should show N/A
       expect(screen.getByText('N/A')).toBeInTheDocument();
     });
   });

@@ -190,7 +190,8 @@ export function getPortfolioNetGains(
 
 /**
  * Calculates daily yield percentage from annual rate or price history.
- * For deposits/cauciones/mutual funds: converts annual rate to daily rate.
+ * For deposits/cauciones: converts annual rate to daily rate.
+ * For mutual funds: uses monthlyYield / 30, or computes from annualRate / 12 / 30 if monthlyYield not available.
  * For stocks/crypto: calculates daily return from price history.
  * @param position PortfolioPosition
  * @param priceHistory Price data for stocks/crypto
@@ -222,18 +223,9 @@ export function getDailyYield(
   }
   
   if (position.type === 'MutualFund') {
-    if (isMoneyMarketFund(position)) {
-      // For Money Market funds, use monthlyYield / 30 if available, otherwise fallback to annualRate / 365
-      if (position.monthlyYield) {
-        return position.monthlyYield / 30;
-      }
-      if (position.annualRate) {
-        return position.annualRate / 365;
-      }
-      return 0;
-    }
-    // For other mutual funds, return 0 as we don't have price data
-    return 0;
+    // For all mutual funds, compute monthlyYield from annualRate if not available
+    const monthlyYield = position.monthlyYield ?? (position.annualRate ? position.annualRate / 12 : undefined);
+    return monthlyYield ? monthlyYield / 30 : 0;
   }
   
   if (position.type === 'Stock' || position.type === 'Crypto') {
