@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server';
 jest.mock('fs', () => ({
   promises: {
     readFile: jest.fn(),
+    writeFile: jest.fn(),
   },
 }));
 
@@ -12,12 +13,18 @@ jest.mock('path', () => ({
   join: jest.fn(),
 }));
 
+// Mock the indicators service
+jest.mock('@/services/indicators', () => ({
+  fetchEconomicIndicators: jest.fn(),
+}));
+
 // Import the route after mocking
 import { GET } from '../route';
 
 // Get the mocked functions
 const mockFs = require('fs').promises;
 const mockPath = require('path');
+const mockFetchEconomicIndicators = require('@/services/indicators').fetchEconomicIndicators;
 
 describe('/api/fondos', () => {
   beforeEach(() => {
@@ -125,5 +132,153 @@ describe('/api/fondos', () => {
     const response = await GET(request);
 
     expect(response.status).toBe(200);
+  });
+
+  it('should fetch fresh data when indicators file is missing', async () => {
+    const mockFreshData = {
+      mutualFunds: {
+        moneyMarket: [
+          {
+            fondo: 'Fresh Fund - Clase A',
+            tna: 45.0,
+            rendimiento_mensual: 2.0,
+            categoria: 'Money Market'
+          }
+        ],
+        rentaFija: [],
+        rentaVariable: [],
+        rentaMixta: []
+      },
+      otherFunds: {
+        data: []
+      }
+    };
+
+    mockFs.readFile.mockRejectedValue(new Error('File not found'));
+    mockFetchEconomicIndicators.mockResolvedValue(mockFreshData);
+    mockFs.writeFile.mockResolvedValue(undefined);
+
+    const request = new NextRequest('http://localhost:3000/api/fondos');
+    const response = await GET(request);
+
+    expect(response.status).toBe(200);
+    expect(mockFetchEconomicIndicators).toHaveBeenCalled();
+    expect(mockFs.writeFile).toHaveBeenCalledWith(
+      '/mock/indicators.json',
+      JSON.stringify(mockFreshData, null, 2)
+    );
+  });
+
+  it('should fetch fresh data when indicators file is empty', async () => {
+    const mockFreshData = {
+      mutualFunds: {
+        moneyMarket: [
+          {
+            fondo: 'Fresh Fund - Clase A',
+            tna: 45.0,
+            rendimiento_mensual: 2.0,
+            categoria: 'Money Market'
+          }
+        ],
+        rentaFija: [],
+        rentaVariable: [],
+        rentaMixta: []
+      },
+      otherFunds: {
+        data: []
+      }
+    };
+
+    mockFs.readFile.mockResolvedValue(JSON.stringify({}));
+    mockFetchEconomicIndicators.mockResolvedValue(mockFreshData);
+    mockFs.writeFile.mockResolvedValue(undefined);
+
+    const request = new NextRequest('http://localhost:3000/api/fondos');
+    const response = await GET(request);
+
+    expect(response.status).toBe(200);
+    expect(mockFetchEconomicIndicators).toHaveBeenCalled();
+    expect(mockFs.writeFile).toHaveBeenCalledWith(
+      '/mock/indicators.json',
+      JSON.stringify(mockFreshData, null, 2)
+    );
+  });
+
+  it('should fetch fresh data when mutualFunds is missing', async () => {
+    const mockFreshData = {
+      mutualFunds: {
+        moneyMarket: [
+          {
+            fondo: 'Fresh Fund - Clase A',
+            tna: 45.0,
+            rendimiento_mensual: 2.0,
+            categoria: 'Money Market'
+          }
+        ],
+        rentaFija: [],
+        rentaVariable: [],
+        rentaMixta: []
+      },
+      otherFunds: {
+        data: []
+      }
+    };
+
+    mockFs.readFile.mockResolvedValue(JSON.stringify({ inflation: {}, dollars: {} }));
+    mockFetchEconomicIndicators.mockResolvedValue(mockFreshData);
+    mockFs.writeFile.mockResolvedValue(undefined);
+
+    const request = new NextRequest('http://localhost:3000/api/fondos');
+    const response = await GET(request);
+
+    expect(response.status).toBe(200);
+    expect(mockFetchEconomicIndicators).toHaveBeenCalled();
+    expect(mockFs.writeFile).toHaveBeenCalledWith(
+      '/mock/indicators.json',
+      JSON.stringify(mockFreshData, null, 2)
+    );
+  });
+
+  it('should continue with fresh data even if writing to file fails', async () => {
+    const mockFreshData = {
+      mutualFunds: {
+        moneyMarket: [
+          {
+            fondo: 'Fresh Fund - Clase A',
+            tna: 45.0,
+            rendimiento_mensual: 2.0,
+            categoria: 'Money Market'
+          }
+        ],
+        rentaFija: [],
+        rentaVariable: [],
+        rentaMixta: []
+      },
+      otherFunds: {
+        data: []
+      }
+    };
+
+    mockFs.readFile.mockRejectedValue(new Error('File not found'));
+    mockFetchEconomicIndicators.mockResolvedValue(mockFreshData);
+    mockFs.writeFile.mockRejectedValue(new Error('Write failed'));
+
+    const request = new NextRequest('http://localhost:3000/api/fondos');
+    const response = await GET(request);
+
+    expect(response.status).toBe(200);
+    expect(mockFetchEconomicIndicators).toHaveBeenCalled();
+    expect(mockFs.writeFile).toHaveBeenCalled();
+  });
+
+  it('should handle errors from fetchEconomicIndicators', async () => {
+    mockFs.readFile.mockRejectedValue(new Error('File not found'));
+    mockFetchEconomicIndicators.mockRejectedValue(new Error('API error'));
+
+    const request = new NextRequest('http://localhost:3000/api/fondos');
+    const response = await GET(request);
+
+    expect(response.status).toBe(500);
+    expect(mockFetchEconomicIndicators).toHaveBeenCalled();
   });
 }); 

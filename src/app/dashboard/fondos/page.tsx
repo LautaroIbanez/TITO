@@ -133,9 +133,13 @@ export default function FondosPage() {
   const renderCategorySection = (title: string, funds: MutualFund[], categoryKey: string) => (
     <div key={categoryKey} className="space-y-4">
       <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {funds.map(renderFundCard)}
-      </div>
+      {funds.length === 0 ? (
+        <p className="text-gray-500 italic">No hay fondos disponibles</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {funds.map(renderFundCard)}
+        </div>
+      )}
     </div>
   );
 

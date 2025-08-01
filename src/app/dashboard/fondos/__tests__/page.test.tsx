@@ -292,4 +292,43 @@ describe('FondosPage', () => {
       expect(screen.getByText('N/A')).toBeInTheDocument();
     });
   });
+
+  it('shows "No hay fondos disponibles" message for empty categories', async () => {
+    const emptyCategoriesData = {
+      moneyMarket: [],
+      rentaFija: [
+        {
+          fondo: 'MAF Ahorro Plus - Clase C',
+          tna: 103.6435,
+          rendimiento_mensual: 43.6277,
+          categoria: 'Renta Fija'
+        }
+      ],
+      rentaVariable: [],
+      rentaMixta: [],
+      otros: []
+    };
+
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => emptyCategoriesData
+    });
+
+    render(<FondosPage />);
+
+    await waitFor(() => {
+      // Check that empty categories show the message
+      expect(screen.getAllByText('No hay fondos disponibles')).toHaveLength(4); // moneyMarket, rentaVariable, rentaMixta, otros
+      
+      // Check that non-empty categories still show funds
+      expect(screen.getByText('MAF Ahorro Plus - Clase C')).toBeInTheDocument();
+      
+      // Check that category titles are still shown
+      expect(screen.getByText('Money Market')).toBeInTheDocument();
+      expect(screen.getByText('Renta Fija')).toBeInTheDocument();
+      expect(screen.getByText('Renta Variable')).toBeInTheDocument();
+      expect(screen.getByText('Renta Mixta')).toBeInTheDocument();
+      expect(screen.getByText('Otros')).toBeInTheDocument();
+    });
+  });
 }); 
