@@ -41,12 +41,62 @@ export function calculateMoneyMarketReturns(
 }
 
 /**
+ * Calculates returns for all mutual funds based on available data
+ * @param fund MutualFundPosition
+ * @param today Date to use as 'now' (defaults to new Date())
+ * @returns Object with gainCurrency, currentValue, and gainPct
+ */
+export function calculateMutualFundReturns(
+  fund: MutualFundPosition,
+  today: Date = new Date()
+): { gainCurrency: number; currentValue: number; gainPct: number } {
+  if (!fund.startDate) {
+    return { gainCurrency: 0, currentValue: fund.amount, gainPct: 0 };
+  }
+
+  const startDate = new Date(fund.startDate);
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const daysElapsed = Math.max(0, Math.floor((today.getTime() - startDate.getTime()) / msPerDay));
+
+  // For Money Market funds, use the existing calculation
+  if (isMoneyMarketFund(fund)) {
+    return calculateMoneyMarketReturns(fund, today);
+  }
+
+  // For other mutual funds, try to use monthly yield if available
+  if (fund.monthlyYield && Number.isFinite(fund.monthlyYield)) {
+    const monthlyRate = fund.monthlyYield / 100;
+    const monthsElapsed = daysElapsed / 30.44; // Average days per month
+    const gainCurrency = fund.amount * monthlyRate * monthsElapsed;
+    const currentValue = fund.amount + gainCurrency;
+    const gainPct = (gainCurrency / fund.amount) * 100;
+    
+    return { gainCurrency, currentValue, gainPct };
+  }
+
+  // Fallback to annual rate calculation if monthly yield is not available
+  if (fund.annualRate && Number.isFinite(fund.annualRate)) {
+    const annualRate = fund.annualRate / 100;
+    const dailyRate = annualRate / 365;
+    const gainCurrency = fund.amount * dailyRate * daysElapsed;
+    const currentValue = fund.amount + gainCurrency;
+    const gainPct = (gainCurrency / fund.amount) * 100;
+    
+    return { gainCurrency, currentValue, gainPct };
+  }
+
+  // If no rate information is available, return 0 gains
+  return { gainCurrency: 0, currentValue: fund.amount, gainPct: 0 };
+}
+
+/**
  * Computes the gain/loss in currency for a portfolio position.
  * - For stocks/crypto: (currentPrice - purchasePrice) * quantity
  * - For fixed-term deposits/cauciones: amount * annualRate * (days/365)
+ * - For mutual funds: calculated based on fund type and available rate data
  * @param pos PortfolioPosition
  * @param currentPrice (for stocks/crypto)
- * @param today (optional, for deposits/cauciones)
+ * @param today (optional, for deposits/cauciones/mutual funds)
  * @returns gain in currency (positive = gain, negative = loss)
  */
 export function computePositionGain(
@@ -77,12 +127,8 @@ export function computePositionGain(
     return (pct / 100) * pos.amount;
   }
   if (pos.type === 'MutualFund') {
-    if (isMoneyMarketFund(pos)) {
-      const { gainCurrency } = calculateMoneyMarketReturns(pos, today);
-      return gainCurrency;
-    }
-    // For non-Money Market funds, return 0 as we don't have price data
-    return 0;
+    const { gainCurrency } = calculateMutualFundReturns(pos, today);
+    return gainCurrency;
   }
   return 0;
 }
@@ -223,9 +269,17 @@ export function getDailyYield(
   }
   
   if (position.type === 'MutualFund') {
-    // For all mutual funds, compute monthlyYield from annualRate if not available
-    const monthlyYield = position.monthlyYield ?? (position.annualRate ? position.annualRate / 12 : undefined);
-    return monthlyYield ? monthlyYield / 30 : 0;
+    // For all mutual funds, prioritize monthlyYield if available
+    if (position.monthlyYield && Number.isFinite(position.monthlyYield)) {
+      return position.monthlyYield / 30; // Convert monthly yield to daily
+    }
+    
+    // Fallback to annual rate calculation
+    if (position.annualRate && Number.isFinite(position.annualRate)) {
+      return position.annualRate / 365; // Convert annual rate to daily
+    }
+    
+    return 0;
   }
   
   if (position.type === 'Stock' || position.type === 'Crypto') {

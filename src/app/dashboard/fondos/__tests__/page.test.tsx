@@ -4,7 +4,7 @@ import FondosPage from '../page';
 // Mock the context
 jest.mock('../../../../contexts/PortfolioContext');
 jest.mock('../../../../components/TradeModal', () => {
-  return function MockTradeModal({ isOpen, onClose, onSubmit, assetName }: any) {
+  return function MockTradeModal({ isOpen, onClose, onSubmit, assetName }: { isOpen: boolean; onClose: () => void; onSubmit: (amount: number, assetType: string, identifier: string, currency: string) => void; assetName: string }) {
     if (!isOpen) return null;
     return (
       <div data-testid="trade-modal">
@@ -26,7 +26,7 @@ jest.mock('../../../../components/AvailableCapitalIndicator', () => {
 // Mock fetch
 global.fetch = jest.fn();
 
-const mockUsePortfolio = require('../../../../contexts/PortfolioContext').usePortfolio;
+const mockUsePortfolio = jest.requireMock('../../../../contexts/PortfolioContext').usePortfolio;
 
 describe('FondosPage', () => {
   const mockPortfolioData = {
@@ -329,6 +329,149 @@ describe('FondosPage', () => {
       expect(screen.getByText('Renta Variable')).toBeInTheDocument();
       expect(screen.getByText('Renta Mixta')).toBeInTheDocument();
       expect(screen.getByText('Otros')).toBeInTheDocument();
+    });
+  });
+
+  it('renders filter controls', async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockMutualFundsData
+    });
+
+    render(<FondosPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Filtros')).toBeInTheDocument();
+      expect(screen.getByLabelText('Categoría')).toBeInTheDocument();
+      expect(screen.getByLabelText('Compañía')).toBeInTheDocument();
+      expect(screen.getByText('Limpiar filtros')).toBeInTheDocument();
+    });
+  });
+
+  it('filters funds by category', async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockMutualFundsData
+    });
+
+    render(<FondosPage />);
+
+    await waitFor(() => {
+      // Initially all funds should be visible
+      expect(screen.getByText('MAF Liquidez - Clase A')).toBeInTheDocument();
+      expect(screen.getByText('MAF Ahorro Plus - Clase C')).toBeInTheDocument();
+    });
+
+    // Select "Renta Fija" category
+    const categorySelect = screen.getByLabelText('Categoría');
+    fireEvent.change(categorySelect, { target: { value: 'Renta Fija' } });
+
+    await waitFor(() => {
+      // Only Renta Fija funds should be visible
+      expect(screen.queryByText('MAF Liquidez - Clase A')).not.toBeInTheDocument(); // Money Market fund
+      expect(screen.getByText('MAF Ahorro Plus - Clase C')).toBeInTheDocument(); // Renta Fija fund
+    });
+  });
+
+  it('filters funds by company', async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockMutualFundsData
+    });
+
+    render(<FondosPage />);
+
+    await waitFor(() => {
+      // Initially all funds should be visible
+      expect(screen.getByText('MAF Liquidez - Clase A')).toBeInTheDocument();
+      expect(screen.getByText('Alpha Latam - Clase A')).toBeInTheDocument();
+    });
+
+    // Select "MAF" company
+    const companySelect = screen.getByLabelText('Compañía');
+    fireEvent.change(companySelect, { target: { value: 'MAF' } });
+
+    await waitFor(() => {
+      // Only MAF funds should be visible
+      expect(screen.getByText('MAF Liquidez - Clase A')).toBeInTheDocument();
+      expect(screen.getByText('MAF Ahorro Plus - Clase C')).toBeInTheDocument();
+      expect(screen.queryByText('Alpha Latam - Clase A')).not.toBeInTheDocument(); // Different company
+    });
+  });
+
+  it('clears filters when clear button is clicked', async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockMutualFundsData
+    });
+
+    render(<FondosPage />);
+
+    await waitFor(() => {
+      // Initially all funds should be visible
+      expect(screen.getByText('MAF Liquidez - Clase A')).toBeInTheDocument();
+      expect(screen.getByText('Alpha Latam - Clase A')).toBeInTheDocument();
+    });
+
+    // Apply filters
+    const categorySelect = screen.getByLabelText('Categoría');
+    const companySelect = screen.getByLabelText('Compañía');
+    fireEvent.change(categorySelect, { target: { value: 'Renta Fija' } });
+    fireEvent.change(companySelect, { target: { value: 'MAF' } });
+
+    await waitFor(() => {
+      // Only filtered funds should be visible
+      expect(screen.getByText('MAF Ahorro Plus - Clase C')).toBeInTheDocument();
+      expect(screen.queryByText('Alpha Latam - Clase A')).not.toBeInTheDocument();
+    });
+
+    // Clear filters
+    const clearButton = screen.getByText('Limpiar filtros');
+    fireEvent.click(clearButton);
+
+    await waitFor(() => {
+      // All funds should be visible again
+      expect(screen.getByText('MAF Liquidez - Clase A')).toBeInTheDocument();
+      expect(screen.getByText('Alpha Latam - Clase A')).toBeInTheDocument();
+    });
+  });
+
+  it('handles non-finite TNA and rendimiento_mensual values correctly', async () => {
+    const fundsWithInvalidData = {
+      moneyMarket: [
+        {
+          fondo: 'Test Fund - Clase A',
+          tna: NaN,
+          rendimiento_mensual: Infinity,
+          categoria: 'Money Market'
+        },
+        {
+          fondo: 'Valid Fund - Clase B',
+          tna: 45.5,
+          rendimiento_mensual: 3.2,
+          categoria: 'Money Market'
+        }
+      ],
+      rentaFija: [],
+      rentaVariable: [],
+      rentaMixta: [],
+      otros: []
+    };
+
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => fundsWithInvalidData
+    });
+
+    render(<FondosPage />);
+
+    await waitFor(() => {
+      // Check that funds with invalid data show N/A
+      expect(screen.getByText('N/A')).toBeInTheDocument();
+      
+      // Check that funds with valid data show properly
+      expect(screen.getByText('45.50%')).toBeInTheDocument();
+      expect(screen.getByText('Rendimiento mensual: 3.20%')).toBeInTheDocument();
     });
   });
 }); 

@@ -23,7 +23,10 @@ export function useBonistasBonds(): UseBonistasBondsReturn {
       
       if (response.ok) {
         const data = await response.json();
-        setBonds(data);
+        const safe = Array.isArray(data)
+          ? data
+          : (data && Array.isArray((data as any).bonds) ? (data as any).bonds : []);
+        setBonds(safe);
         return;
       }
       
@@ -32,7 +35,10 @@ export function useBonistasBonds(): UseBonistasBondsReturn {
       
       if (rawResponse.ok) {
         const rawData = await rawResponse.json();
-        setBonds(rawData.bonds || rawData);
+        const safe = Array.isArray(rawData)
+          ? rawData
+          : (rawData && Array.isArray((rawData as any).bonds) ? (rawData as any).bonds : []);
+        setBonds(safe);
         return;
       }
       
@@ -41,7 +47,10 @@ export function useBonistasBonds(): UseBonistasBondsReturn {
       
       if (fallbackResponse.ok) {
         const fallbackData = await fallbackResponse.json();
-        setBonds(fallbackData.bonds || fallbackData);
+        const safe = Array.isArray(fallbackData)
+          ? fallbackData
+          : (fallbackData && Array.isArray((fallbackData as any).bonds) ? (fallbackData as any).bonds : []);
+        setBonds(safe);
         return;
       }
       
@@ -50,6 +59,7 @@ export function useBonistasBonds(): UseBonistasBondsReturn {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
+      setBonds([]);
       console.error('Error fetching bonds:', err);
     } finally {
       setLoading(false);

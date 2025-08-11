@@ -31,6 +31,8 @@ export default function FondosPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedFund, setSelectedFund] = useState<MutualFund | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [companyFilter, setCompanyFilter] = useState<string>('all');
   const { portfolioData, refreshPortfolio } = usePortfolio();
 
   async function fetchMutualFunds() {
@@ -91,9 +93,38 @@ export default function FondosPage() {
       await refreshPortfolio(); // Refresh portfolio data
       setIsModalOpen(false);
       setSelectedFund(null);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      setError(errorMessage);
     }
+  };
+
+  // Helper function to extract company name from fund name
+  const getCompanyFromFundName = (fundName: string): string => {
+    const parts = fundName.split(' - ');
+    return parts[0] || fundName;
+  };
+
+  // Filter funds based on selected filters
+  const filterFunds = (funds: MutualFund[]): MutualFund[] => {
+    return funds.filter(fund => {
+      const matchesCategory = categoryFilter === 'all' || fund.categoria === categoryFilter;
+      const matchesCompany = companyFilter === 'all' || getCompanyFromFundName(fund.fondo) === companyFilter;
+      return matchesCategory && matchesCompany;
+    });
+  };
+
+  // Get all unique companies from all funds
+  const getAllCompanies = (): string[] => {
+    const allFunds = [
+      ...mutualFunds.moneyMarket,
+      ...mutualFunds.rentaFija,
+      ...mutualFunds.rentaVariable,
+      ...mutualFunds.rentaMixta,
+      ...mutualFunds.otros
+    ];
+    const companies = new Set(allFunds.map(fund => getCompanyFromFundName(fund.fondo)));
+    return Array.from(companies).sort();
   };
 
   const renderFundCard = (fund: MutualFund) => (
@@ -102,24 +133,24 @@ export default function FondosPage() {
         <h3 className="font-bold text-lg text-gray-900">{fund.fondo}</h3>
         <p className="text-sm text-gray-600">Categoría: {fund.categoria}</p>
       </div>
-             <div className="my-4">
-                   <p className="text-3xl font-bold text-green-600">
-            {typeof fund.tna === 'number' 
-              ? fund.categoria === 'Otros' 
-                ? `${(fund.tna * 100).toFixed(2)}%`
-                : `${fund.tna.toFixed(2)}%`
-              : 'N/A'}
-          </p>
-         <p className="text-sm text-gray-800">TNA</p>
-         <p className="text-sm text-gray-600">
-           Rendimiento mensual: {(() => {
-             const monthly = typeof fund.rendimiento_mensual === 'number' 
-               ? fund.rendimiento_mensual 
-               : (typeof fund.tna === 'number' ? fund.tna / 12 : undefined);
-             return monthly ? `${monthly.toFixed(2)}%` : 'N/A';
-           })()}
-         </p>
-       </div>
+      <div className="my-4">
+        <p className="text-3xl font-bold text-green-600">
+          {Number.isFinite(fund.tna) 
+            ? fund.categoria === 'Otros' 
+              ? `${(fund.tna * 100).toFixed(2)}%`
+              : `${fund.tna.toFixed(2)}%`
+            : 'N/A'}
+        </p>
+        <p className="text-sm text-gray-800">TNA</p>
+        <p className="text-sm text-gray-600">
+          Rendimiento mensual: {(() => {
+            const monthly = Number.isFinite(fund.rendimiento_mensual) 
+              ? fund.rendimiento_mensual 
+              : (Number.isFinite(fund.tna) ? fund.tna / 12 : undefined);
+            return Number.isFinite(monthly) ? `${monthly.toFixed(2)}%` : 'N/A';
+          })()}
+        </p>
+      </div>
       <button 
         onClick={() => handleOpenModal(fund)}
         className="w-full mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
@@ -130,16 +161,73 @@ export default function FondosPage() {
     </div>
   );
 
-  const renderCategorySection = (title: string, funds: MutualFund[], categoryKey: string) => (
-    <div key={categoryKey} className="space-y-4">
-      <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-      {funds.length === 0 ? (
-        <p className="text-gray-500 italic">No hay fondos disponibles</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {funds.map(renderFundCard)}
+  const renderCategorySection = (title: string, funds: MutualFund[], categoryKey: string) => {
+    const filteredFunds = filterFunds(funds);
+    
+    return (
+      <div key={categoryKey} className="space-y-4">
+        <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+        {filteredFunds.length === 0 ? (
+          <p className="text-gray-500 italic">No hay fondos disponibles</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredFunds.map(renderFundCard)}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderFilters = () => (
+    <div className="bg-white p-4 rounded-lg shadow mb-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">Filtros</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="categoryFilter" className="block text-sm font-medium text-gray-700 mb-2">
+            Categoría
+          </label>
+          <select
+            id="categoryFilter"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">Todas las categorías</option>
+            <option value="Money Market">Money Market</option>
+            <option value="Renta Fija">Renta Fija</option>
+            <option value="Renta Variable">Renta Variable</option>
+            <option value="Renta Mixta">Renta Mixta</option>
+            <option value="Otros">Otros</option>
+          </select>
         </div>
-      )}
+        <div>
+          <label htmlFor="companyFilter" className="block text-sm font-medium text-gray-700 mb-2">
+            Compañía
+          </label>
+          <select
+            id="companyFilter"
+            value={companyFilter}
+            onChange={(e) => setCompanyFilter(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">Todas las compañías</option>
+            {getAllCompanies().map(company => (
+              <option key={company} value={company}>{company}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className="mt-4 flex gap-2">
+        <button
+          onClick={() => {
+            setCategoryFilter('all');
+            setCompanyFilter('all');
+          }}
+          className="px-4 py-2 text-sm bg-gray-500 text-white rounded hover:bg-gray-600"
+        >
+          Limpiar filtros
+        </button>
+      </div>
     </div>
   );
 
@@ -177,15 +265,18 @@ export default function FondosPage() {
         {loading && <p>Cargando fondos mutuos...</p>}
         {error && <p className="text-red-500">{error}</p>}
         
-                 {!loading && !error && (
-           <div className="space-y-8">
-             {renderCategorySection('Money Market', mutualFunds.moneyMarket, 'moneyMarket')}
-             {renderCategorySection('Renta Fija', mutualFunds.rentaFija, 'rentaFija')}
-             {renderCategorySection('Renta Variable', mutualFunds.rentaVariable, 'rentaVariable')}
-             {renderCategorySection('Renta Mixta', mutualFunds.rentaMixta, 'rentaMixta')}
-             {renderCategorySection('Otros', mutualFunds.otros, 'otros')}
-           </div>
-         )}
+        {!loading && !error && (
+          <>
+            {renderFilters()}
+            <div className="space-y-8">
+              {renderCategorySection('Money Market', mutualFunds.moneyMarket, 'moneyMarket')}
+              {renderCategorySection('Renta Fija', mutualFunds.rentaFija, 'rentaFija')}
+              {renderCategorySection('Renta Variable', mutualFunds.rentaVariable, 'rentaVariable')}
+              {renderCategorySection('Renta Mixta', mutualFunds.rentaMixta, 'rentaMixta')}
+              {renderCategorySection('Otros', mutualFunds.otros, 'otros')}
+            </div>
+          </>
+        )}
       </div>
     </>
   );

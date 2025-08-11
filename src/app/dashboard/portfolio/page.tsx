@@ -29,7 +29,11 @@ export default function PortfolioPage() {
   // Convert bonds list to dictionary for easy lookup
   const bondPrices = useMemo(() => {
     const prices: Record<string, number> = {};
-    bonds.forEach(bond => {
+    const safeBonds = Array.isArray(bonds) ? bonds : [];
+    if (!Array.isArray(bonds)) {
+      console.warn('[PortfolioPage] Expected bonds to be an array, received:', typeof bonds);
+    }
+    safeBonds.forEach(bond => {
       if (bond.price !== null && bond.price !== undefined) {
         prices[bond.ticker] = bond.price;
       }

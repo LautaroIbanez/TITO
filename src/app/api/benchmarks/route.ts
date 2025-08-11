@@ -1,28 +1,31 @@
-import { NextResponse } from 'next/server';
-import { DEFAULT_BENCHMARKS } from '@/utils/returnCalculator';
-import dayjs from 'dayjs';
-import path from 'path';
+import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
+import path from 'path';
 
-export const dynamic = 'force-dynamic';
+const BENCHMARKS_FILE = path.join(process.cwd(), 'data', 'benchmarks.json');
 
-export async function GET() {
-  const benchmarksPath = path.join(process.cwd(), 'data', 'benchmarks.json');
+export async function GET(request: NextRequest) {
   try {
-    const fileContent = await fs.readFile(benchmarksPath, 'utf-8');
-    const data = JSON.parse(fileContent);
-    const fileDate = dayjs(data.timestamp);
-    const oneWeekAgo = dayjs().subtract(1, 'week');
-    if (fileDate.isBefore(oneWeekAgo)) {
-      return NextResponse.json(DEFAULT_BENCHMARKS);
+    const data = await fs.readFile(BENCHMARKS_FILE, 'utf-8');
+    const benchmarks = JSON.parse(data);
+    
+    // Extract query parameters
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type');
+    
+    let filteredBenchmarks = benchmarks;
+    
+    // Filter by type if specified
+    if (type) {
+      filteredBenchmarks = filteredBenchmarks.filter((benchmark: { type: string }) => benchmark.type === type);
     }
-    // Convert to flat Record<string, number>
-    const result: Record<string, number> = {};
-    for (const [name, benchmark] of Object.entries(data.benchmarks)) {
-      result[name] = (benchmark as any).oneYearReturn;
-    }
-    return NextResponse.json(result);
-  } catch (error) {
-    return NextResponse.json(DEFAULT_BENCHMARKS);
+    
+    return NextResponse.json(filteredBenchmarks);
+  } catch {
+    console.error('Error loading benchmarks data');
+    return NextResponse.json(
+      { error: 'Error al cargar datos de benchmarks' },
+      { status: 500 }
+    );
   }
 } 

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fetchEconomicIndicators } from '@/services/indicators';
@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 const INDICATORS_FILE = path.join(process.cwd(), 'data', 'indicators.json');
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     let indicators;
     
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       if (!indicators || !indicators.mutualFunds || Object.keys(indicators.mutualFunds).length === 0) {
         throw new Error('Indicators file is empty or missing mutual funds data');
       }
-    } catch (fileError) {
+    } catch {
       console.log('Indicators file missing or empty, fetching fresh data...');
       
       // Fetch fresh indicators data

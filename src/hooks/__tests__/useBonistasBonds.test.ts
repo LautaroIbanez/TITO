@@ -196,4 +196,61 @@ describe('useBonistasBonds', () => {
       expect(mockFetch).toHaveBeenCalledTimes(2); // Initial + refetch
     });
   });
+
+  it('should accept array directly from API', async () => {
+    const mockBonds = [
+      { id: '1', ticker: 'AL30', price: 100 },
+      { id: '2', ticker: 'GD30', price: 200 }
+    ];
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockBonds
+    });
+
+    const { result } = renderHook(() => useBonistasBonds());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.bonds).toEqual(mockBonds);
+    expect(result.current.error).toBe(null);
+  });
+
+  it('should accept object with bonds array from API', async () => {
+    const mockBonds = [
+      { id: '1', ticker: 'AL30', price: 100 }
+    ];
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ bonds: mockBonds })
+    });
+
+    const { result } = renderHook(() => useBonistasBonds());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.bonds).toEqual(mockBonds);
+    expect(result.current.error).toBe(null);
+  });
+
+  it('should fallback to [] when API returns malformed object', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ foo: 'bar' })
+    });
+
+    const { result } = renderHook(() => useBonistasBonds());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.bonds).toEqual([]);
+    expect(result.current.error).toBe(null);
+  });
 }); 

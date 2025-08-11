@@ -1,31 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
+import { NextResponse } from 'next/server';
+import { promises as fs } from 'fs';
 import path from 'path';
 
-export async function GET(request: NextRequest) {
+const BONDS_FILE = path.join(process.cwd(), 'data', 'bonds.json');
+
+export async function GET() {
   try {
-    const bondsPath = path.join(process.cwd(), 'data', 'bonds.json');
-    
-    if (!fs.existsSync(bondsPath)) {
-      return NextResponse.json(
-        { error: 'Bonds data not found. Run the scraper first.' },
-        { status: 404 }
-      );
-    }
-
-    const bondsData = fs.readFileSync(bondsPath, 'utf-8');
-    const parsedData = JSON.parse(bondsData);
-
-    return NextResponse.json(parsedData, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache',
-      },
-    });
+    const data = await fs.readFile(BONDS_FILE, 'utf-8');
+    const bonds = JSON.parse(data);
+    return NextResponse.json(bonds);
   } catch (error) {
-    console.error('Error reading bonds data:', error);
+    console.error('Error loading bonds data:', error);
     return NextResponse.json(
-      { error: 'Failed to read bonds data' },
+      { error: 'Error al cargar datos de bonos' },
       { status: 500 }
     );
   }
