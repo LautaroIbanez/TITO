@@ -1,6 +1,6 @@
 {
   "peRatio": null,
-  "pbRatio": 20.10337,
+  "pbRatio": 20.879923,
   "evToEbitda": null,
   "roe": 0.43548,
   "roa": 0.15049,
@@ -8,12 +8,12 @@
   "debtToEbitda": 1.3413607224771897,
   "netMargin": 0.24579,
   "freeCashFlow": 22694656000,
-  "priceToFCF": 22.103040462036525,
+  "priceToFCF": 22.956837757047296,
   "ebitda": 12624468992,
   "revenueGrowth": 0.159,
   "epsGrowth": null,
-  "beta": 1.596,
+  "beta": 1.589,
   "sector": "Communication Services",
   "industry": "Entertainment",
-  "updatedAt": "2025-07-25T22:37:08.138Z"
+  "updatedAt": "2025-08-27T11:43:09.197Z"
 }

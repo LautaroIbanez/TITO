@@ -3,48 +3,52 @@ import { useState, useEffect } from 'react';
 import TradeModal, { TradeModalProps } from '@/components/TradeModal';
 import AvailableCapitalIndicator from '@/components/AvailableCapitalIndicator';
 import { usePortfolio } from '@/contexts/PortfolioContext';
-
-interface MutualFund {
-  fondo: string;
-  tna: number;
-  rendimiento_mensual: number;
-  categoria: string;
-}
+import { fetchFondosTNA, groupFundsByCategory, sortFundsByTNA, filterFundsBySearch, type CafciFund } from '@/services/cafciService';
 
 interface MutualFundsData {
-  moneyMarket: MutualFund[];
-  rentaFija: MutualFund[];
-  rentaVariable: MutualFund[];
-  rentaMixta: MutualFund[];
-  otros: MutualFund[];
+  'Money Market': CafciFund[];
+  'Renta Fija': CafciFund[];
+  'Renta Variable': CafciFund[];
+  'Renta Mixta': CafciFund[];
 }
 
 export default function FondosPage() {
   const [mutualFunds, setMutualFunds] = useState<MutualFundsData>({
-    moneyMarket: [],
-    rentaFija: [],
-    rentaVariable: [],
-    rentaMixta: [],
-    otros: []
+    'Money Market': [],
+    'Renta Fija': [],
+    'Renta Variable': [],
+    'Renta Mixta': []
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedFund, setSelectedFund] = useState<MutualFund | null>(null);
+  const [selectedFund, setSelectedFund] = useState<CafciFund | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [companyFilter, setCompanyFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [cacheStats, setCacheStats] = useState<{ lastUpdate: number; isValid: boolean } | null>(null);
   const { portfolioData, refreshPortfolio } = usePortfolio();
 
   async function fetchMutualFunds() {
     setLoading(true);
+    setError(null);
     try {
-      const res = await fetch('/api/fondos');
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || 'Failed to fetch mutual funds data');
-      }
-      const data = await res.json();
-      setMutualFunds(data);
+      const response = await fetchFondosTNA();
+      const groupedFunds = groupFundsByCategory(response.data);
+      
+      // Sort each category by TNA
+      const sortedFunds: MutualFundsData = {
+        'Money Market': sortFundsByTNA(groupedFunds['Money Market'] || []),
+        'Renta Fija': sortFundsByTNA(groupedFunds['Renta Fija'] || []),
+        'Renta Variable': sortFundsByTNA(groupedFunds['Renta Variable'] || []),
+        'Renta Mixta': sortFundsByTNA(groupedFunds['Renta Mixta'] || [])
+      };
+      
+      setMutualFunds(sortedFunds);
+      setCacheStats({
+        lastUpdate: response.stats.lastUpdate,
+        isValid: response.stats.isValid
+      });
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -56,7 +60,7 @@ export default function FondosPage() {
     fetchMutualFunds();
   }, []);
 
-  const handleOpenModal = (fund: MutualFund) => {
+  const handleOpenModal = (fund: CafciFund) => {
     setSelectedFund(fund);
     setIsModalOpen(true);
   };
@@ -74,7 +78,7 @@ export default function FondosPage() {
       name: selectedFund.fondo,
       category: selectedFund.categoria,
       amount,
-      annualRate: selectedFund.tna,
+      annualRate: selectedFund.tna || 0,
       currency: 'ARS', // Mutual funds are typically in ARS
     };
 
@@ -106,28 +110,33 @@ export default function FondosPage() {
   };
 
   // Filter funds based on selected filters
-  const filterFunds = (funds: MutualFund[]): MutualFund[] => {
-    return funds.filter(fund => {
+  const filterFunds = (funds: CafciFund[]): CafciFund[] => {
+    let filtered = funds.filter(fund => {
       const matchesCategory = categoryFilter === 'all' || fund.categoria === categoryFilter;
       const matchesCompany = companyFilter === 'all' || getCompanyFromFundName(fund.fondo) === companyFilter;
       return matchesCategory && matchesCompany;
     });
+
+    if (searchTerm.trim()) {
+      filtered = filterFundsBySearch(filtered, searchTerm);
+    }
+
+    return filtered;
   };
 
   // Get all unique companies from all funds
   const getAllCompanies = (): string[] => {
     const allFunds = [
-      ...mutualFunds.moneyMarket,
-      ...mutualFunds.rentaFija,
-      ...mutualFunds.rentaVariable,
-      ...mutualFunds.rentaMixta,
-      ...mutualFunds.otros
+      ...mutualFunds['Money Market'],
+      ...mutualFunds['Renta Fija'],
+      ...mutualFunds['Renta Variable'],
+      ...mutualFunds['Renta Mixta']
     ];
     const companies = new Set(allFunds.map(fund => getCompanyFromFundName(fund.fondo)));
     return Array.from(companies).sort();
   };
 
-  const renderFundCard = (fund: MutualFund) => (
+  const renderFundCard = (fund: CafciFund) => (
     <div key={fund.fondo} className="bg-white shadow rounded-lg p-6 flex flex-col justify-between">
       <div>
         <h3 className="font-bold text-lg text-gray-900">{fund.fondo}</h3>
@@ -135,20 +144,15 @@ export default function FondosPage() {
       </div>
       <div className="my-4">
         <p className="text-3xl font-bold text-green-600">
-          {Number.isFinite(fund.tna) 
-            ? fund.categoria === 'Otros' 
-              ? `${(fund.tna * 100).toFixed(2)}%`
-              : `${fund.tna.toFixed(2)}%`
+          {fund.tna !== null && Number.isFinite(fund.tna) 
+            ? `${fund.tna.toFixed(2)}%`
             : 'N/A'}
         </p>
         <p className="text-sm text-gray-800">TNA</p>
         <p className="text-sm text-gray-600">
-          Rendimiento mensual: {(() => {
-            const monthly = Number.isFinite(fund.rendimiento_mensual) 
-              ? fund.rendimiento_mensual 
-              : (Number.isFinite(fund.tna) ? fund.tna / 12 : undefined);
-            return Number.isFinite(monthly) ? `${monthly.toFixed(2)}%` : 'N/A';
-          })()}
+          Rendimiento mensual: {fund.rendimiento_mensual !== null && Number.isFinite(fund.rendimiento_mensual) 
+            ? `${fund.rendimiento_mensual.toFixed(2)}%` 
+            : 'N/A'}
         </p>
       </div>
       <button 
@@ -161,7 +165,7 @@ export default function FondosPage() {
     </div>
   );
 
-  const renderCategorySection = (title: string, funds: MutualFund[], categoryKey: string) => {
+  const renderCategorySection = (title: string, funds: CafciFund[], categoryKey: string) => {
     const filteredFunds = filterFunds(funds);
     
     return (
@@ -180,8 +184,30 @@ export default function FondosPage() {
 
   const renderFilters = () => (
     <div className="bg-white p-4 rounded-lg shadow mb-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Filtros</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">Filtros</h3>
+        {cacheStats && (
+          <div className="text-sm text-gray-600">
+            <span className={`inline-block w-2 h-2 rounded-full mr-2 ${cacheStats.isValid ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
+            Última actualización: {new Date(cacheStats.lastUpdate).toLocaleString('es-AR')}
+          </div>
+        )}
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div>
+          <label htmlFor="searchTerm" className="block text-sm font-medium text-gray-700 mb-2">
+            Buscar
+          </label>
+          <input
+            type="text"
+            id="searchTerm"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Buscar por nombre o categoría..."
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
         <div>
           <label htmlFor="categoryFilter" className="block text-sm font-medium text-gray-700 mb-2">
             Categoría
@@ -197,7 +223,6 @@ export default function FondosPage() {
             <option value="Renta Fija">Renta Fija</option>
             <option value="Renta Variable">Renta Variable</option>
             <option value="Renta Mixta">Renta Mixta</option>
-            <option value="Otros">Otros</option>
           </select>
         </div>
         <div>
@@ -217,15 +242,23 @@ export default function FondosPage() {
           </select>
         </div>
       </div>
-      <div className="mt-4 flex gap-2">
+      
+      <div className="flex gap-2">
         <button
           onClick={() => {
             setCategoryFilter('all');
             setCompanyFilter('all');
+            setSearchTerm('');
           }}
           className="px-4 py-2 text-sm bg-gray-500 text-white rounded hover:bg-gray-600"
         >
           Limpiar filtros
+        </button>
+        <button
+          onClick={fetchMutualFunds}
+          className="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Actualizar datos
         </button>
       </div>
     </div>
@@ -269,11 +302,10 @@ export default function FondosPage() {
           <>
             {renderFilters()}
             <div className="space-y-8">
-              {renderCategorySection('Money Market', mutualFunds.moneyMarket, 'moneyMarket')}
-              {renderCategorySection('Renta Fija', mutualFunds.rentaFija, 'rentaFija')}
-              {renderCategorySection('Renta Variable', mutualFunds.rentaVariable, 'rentaVariable')}
-              {renderCategorySection('Renta Mixta', mutualFunds.rentaMixta, 'rentaMixta')}
-              {renderCategorySection('Otros', mutualFunds.otros, 'otros')}
+                                      {renderCategorySection('Money Market', mutualFunds['Money Market'], 'moneyMarket')}
+            {renderCategorySection('Renta Fija', mutualFunds['Renta Fija'], 'rentaFija')}
+            {renderCategorySection('Renta Variable', mutualFunds['Renta Variable'], 'rentaVariable')}
+            {renderCategorySection('Renta Mixta', mutualFunds['Renta Mixta'], 'rentaMixta')}
             </div>
           </>
         )}

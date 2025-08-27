@@ -1,6 +1,6 @@
 {
   "peRatio": null,
-  "pbRatio": 18.773281,
+  "pbRatio": 19.440031,
   "evToEbitda": null,
   "roe": 0.9476,
   "roa": 0.07322,
@@ -8,12 +8,12 @@
   "debtToEbitda": 2.3782571307377687,
   "netMargin": 0.16011,
   "freeCashFlow": -3343749888,
-  "priceToFCF": -24.084833598654612,
+  "priceToFCF": -24.940229098857767,
   "ebitda": 5794999808,
   "revenueGrowth": 0.014,
   "epsGrowth": null,
-  "beta": 1.079,
+  "beta": 1.104,
   "sector": "Industrials",
   "industry": "Conglomerates",
-  "updatedAt": "2025-07-22T23:37:09.420Z"
+  "updatedAt": "2025-08-27T11:43:10.043Z"
 }

@@ -1,19 +1,19 @@
 {
   "peRatio": null,
-  "pbRatio": 1.7573427,
+  "pbRatio": 1.7983962,
   "evToEbitda": null,
   "roe": 0.18454,
-  "roa": 0.05199,
-  "debtToEquity": 162.792,
-  "debtToEbitda": 3.4055848828810498,
+  "roa": 0.05204,
+  "debtToEquity": 167.439,
+  "debtToEbitda": 3.5006308481461206,
   "netMargin": 0.1328,
-  "freeCashFlow": 19833874432,
-  "priceToFCF": 9.132360969461642,
-  "ebitda": 49885999104,
+  "freeCashFlow": 17947250688,
+  "priceToFCF": 10.327454958208694,
+  "ebitda": 49917001728,
   "revenueGrowth": 0.052,
   "epsGrowth": null,
-  "beta": 0.372,
+  "beta": 0.362,
   "sector": "Communication Services",
   "industry": "Telecom Services",
-  "updatedAt": "2025-07-22T23:37:09.410Z"
+  "updatedAt": "2025-08-27T11:43:09.206Z"
 }

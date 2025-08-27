@@ -1,19 +1,19 @@
 {
   "peRatio": null,
-  "pbRatio": 0.003260043,
+  "pbRatio": 0.0027368176,
   "evToEbitda": null,
-  "roe": 0.15621,
-  "roa": 0.03165,
+  "roe": 0.11497,
+  "roa": 0.020130001,
   "debtToEquity": null,
   "debtToEbitda": null,
-  "netMargin": 0.13554,
+  "netMargin": 0.120570004,
   "freeCashFlow": null,
   "priceToFCF": null,
   "ebitda": null,
-  "revenueGrowth": -0.52,
+  "revenueGrowth": -0.382,
   "epsGrowth": null,
-  "beta": 0.404,
+  "beta": 0.297,
   "sector": "Financial Services",
   "industry": "Banks - Regional",
-  "updatedAt": "2025-07-22T23:37:53.410Z"
+  "updatedAt": "2025-08-27T11:44:11.282Z"
 }

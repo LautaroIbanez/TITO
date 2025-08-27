@@ -119,5 +119,49 @@
     "ganancias_netas_usd": 53.38210441406261,
     "efectivo_disponible_ars": 2763703.76,
     "efectivo_disponible_usd": 2135.98208
+  },
+  {
+    "fecha": "2025-08-11",
+    "total_portfolio_ars": 2962152.2531506848,
+    "total_portfolio_usd": 3053.3821044140627,
+    "capital_invertido_ars": 236296.24,
+    "capital_invertido_usd": 864.0179199999999,
+    "ganancias_netas_ars": 20551.176627314824,
+    "ganancias_netas_usd": 53.38210441406261,
+    "efectivo_disponible_ars": 2763703.76,
+    "efectivo_disponible_usd": 2135.98208
+  },
+  {
+    "fecha": "2025-08-12",
+    "total_portfolio_ars": 2960917.4586301367,
+    "total_portfolio_usd": 3044.702050703125,
+    "capital_invertido_ars": 236296.24,
+    "capital_invertido_usd": 864.0179199999999,
+    "ganancias_netas_ars": 19822.728906828714,
+    "ganancias_netas_usd": 44.70205070312511,
+    "efectivo_disponible_ars": 2763703.76,
+    "efectivo_disponible_usd": 2135.98208
+  },
+  {
+    "fecha": "2025-08-19",
+    "total_portfolio_ars": 2960753.896986301,
+    "total_portfolio_usd": 3059.542077558594,
+    "capital_invertido_ars": 236296.24,
+    "capital_invertido_usd": 864.0179199999999,
+    "ganancias_netas_ars": 23120.210795717605,
+    "ganancias_netas_usd": 59.54207755859386,
+    "efectivo_disponible_ars": 2763703.76,
+    "efectivo_disponible_usd": 2135.98208
+  },
+  {
+    "fecha": "2025-08-27",
+    "total_portfolio_ars": 2969459.9243835616,
+    "total_portfolio_usd": 3053.222070234375,
+    "capital_invertido_ars": 186296.24,
+    "capital_invertido_usd": 864.0179199999999,
+    "ganancias_netas_ars": 18103.76000000001,
+    "ganancias_netas_usd": 53.22207023437511,
+    "efectivo_disponible_ars": 2815059.9243835616,
+    "efectivo_disponible_usd": 2135.98208
   }
 ]

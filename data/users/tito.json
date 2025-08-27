@@ -20,16 +20,6 @@
       "market": "NASDAQ"
     },
     {
-      "type": "FixedTermDeposit",
-      "id": "ftd-1753483349480",
-      "provider": "BANCO MACRO S.A.",
-      "amount": 50000,
-      "annualRate": 33,
-      "currency": "ARS",
-      "startDate": "2025-07-25T22:42:29.479Z",
-      "maturityDate": "2025-08-24T22:42:29.479Z"
-    },
-    {
       "type": "MutualFund",
       "id": "mf-1753483371108",
       "name": "Mercado Fondo - Clase A",
@@ -103,11 +93,23 @@
       "amount": 50000,
       "annualRate": 36.4171,
       "currency": "ARS"
+    },
+    {
+      "id": "ftd-credit-ftd-1753483349480",
+      "date": "2025-08-24T22:42:29.479Z",
+      "type": "Acreditación Plazo Fijo",
+      "assetType": "FixedTermDeposit",
+      "provider": "BANCO MACRO S.A.",
+      "amount": 51356.16438356164,
+      "principal": 50000,
+      "interest": 1356.1643835616437,
+      "currency": "ARS",
+      "depositId": "ftd-1753483349480"
     }
   ],
   "goals": [],
   "cash": {
-    "ARS": 2763703.76,
+    "ARS": 2815059.9243835616,
     "USD": 2135.98208
   },
   "profile": {
@@ -132,8 +134,8 @@
     "initialBalanceUSD": 3000
   },
   "investmentStrategy": {
-    "id": "strategy-286dc1ac-3b74-4e6b-a395-1a56a61972d1",
-    "createdAt": "2025-08-09T12:24:51.409Z",
+    "id": "strategy-8a013eec-8733-459f-963e-5c4a8994a98e",
+    "createdAt": "2025-08-27T11:45:44.839Z",
     "targetAllocation": {
       "stocks": 59.4,
       "bonds": 29.7,
@@ -143,7 +145,7 @@
     },
     "recommendations": [
       {
-        "id": "alloc-9176f6a4-9e36-4787-8d19-310fe35d427d",
+        "id": "alloc-c10ed3b2-a318-4d46-b7f2-284084457bfd",
         "action": "increase",
         "assetClass": "stocks",
         "reason": "Tu portafolio tiene 4.6% en acciones, pero tu estrategia objetivo es 59.4%",
@@ -151,7 +153,7 @@
         "expectedImpact": "positive"
       },
       {
-        "id": "alloc-1fd87258-e526-4543-8522-689df7f11cc0",
+        "id": "alloc-431180c4-de3a-48e9-ab4f-532893050613",
         "action": "increase",
         "assetClass": "bonds",
         "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 29.7%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
@@ -164,10 +166,10 @@
         ]
       },
       {
-        "id": "cash-invest-686eca81-70e3-4d12-b57c-e337abcbb760",
+        "id": "cash-invest-7361da88-1a6a-41e9-8968-9e923924ac76",
         "action": "buy",
         "assetClass": "cash",
-        "reason": "Tienes un 93.7% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
+        "reason": "Tienes un 95.4% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
         "priority": "high",
         "expectedImpact": "positive"
       }
