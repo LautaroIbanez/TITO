@@ -96,8 +96,8 @@ export function validatePositionPrice(
     };
   }
   
-  // Fixed-term deposits and cauciones don't need price validation
-  if (position.type === 'FixedTermDeposit' || position.type === 'Caucion') {
+  // Fixed-term deposits, cauciones, and mutual funds don't need price validation
+  if (position.type === 'FixedTermDeposit' || position.type === 'Caucion' || position.type === 'MutualFund') {
     return {
       hasValidPrice: true,
       currentPrice: position.amount // Use the amount as the "price"
@@ -163,6 +163,9 @@ export function getPositionDisplayName(position: PortfolioPosition): string {
   }
   if (position.type === 'Caucion') {
     return `${position.provider} - Caución`;
+  }
+  if (position.type === 'MutualFund') {
+    return position.name;
   }
   return 'Activo desconocido';
 } 

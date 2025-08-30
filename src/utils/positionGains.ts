@@ -1,6 +1,7 @@
 import { PortfolioPosition, StockPosition, CryptoPosition, FixedTermDepositPosition, CaucionPosition, MutualFundPosition } from '@/types';
 import { validatePositionPrice } from './priceValidation';
 import getPurchasePrice from './getPurchasePrice';
+import { getTNAForDate, getLatestTNA } from '@/services/tnaService';
 
 /**
  * Detects if a mutual fund is a Money Market fund based on name and category
@@ -63,6 +64,11 @@ export function calculateMutualFundReturns(
     return calculateMoneyMarketReturns(fund, today);
   }
 
+  // If we have TNA history, calculate compound interest day by day
+  if (fund.tnaHistory && fund.tnaHistory.length > 0) {
+    return calculateCompoundReturnsWithTNA(fund, today);
+  }
+
   // For other mutual funds, try to use monthly yield if available
   if (fund.monthlyYield && Number.isFinite(fund.monthlyYield)) {
     const monthlyRate = fund.monthlyYield / 100;
@@ -87,6 +93,58 @@ export function calculateMutualFundReturns(
 
   // If no rate information is available, return 0 gains
   return { gainCurrency: 0, currentValue: fund.amount, gainPct: 0 };
+}
+
+/**
+ * Calculates compound returns using TNA history day by day
+ * @param fund MutualFundPosition with TNA history
+ * @param today Date to use as 'now'
+ * @returns Object with gainCurrency, currentValue, and gainPct
+ */
+function calculateCompoundReturnsWithTNA(
+  fund: MutualFundPosition,
+  today: Date
+): { gainCurrency: number; currentValue: number; gainPct: number } {
+  const startDate = new Date(fund.startDate);
+  let currentValue = fund.amount;
+  
+  // Sort TNA history by date
+  const sortedHistory = [...fund.tnaHistory!].sort((a, b) => 
+    new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+  
+  // Calculate day by day from startDate to today
+  const currentDate = new Date(startDate);
+  const endDate = new Date(today);
+  
+  while (currentDate <= endDate) {
+    const dateString = currentDate.toISOString().split('T')[0];
+    
+    // Find TNA for this date
+    let tna = getTNAForDate(fund, dateString);
+    
+    // If no TNA for this specific date, use the most recent available
+    if (tna === null) {
+      const availableTNA = sortedHistory.find(entry => 
+        new Date(entry.date) <= currentDate
+      );
+      tna = availableTNA ? availableTNA.tna : fund.annualRate;
+    }
+    
+    // Apply daily compound interest
+    if (tna && Number.isFinite(tna)) {
+      const dailyRate = (tna / 100) / 365;
+      currentValue *= (1 + dailyRate);
+    }
+    
+    // Move to next day
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  
+  const gainCurrency = currentValue - fund.amount;
+  const gainPct = (gainCurrency / fund.amount) * 100;
+  
+  return { gainCurrency, currentValue, gainPct };
 }
 
 /**
@@ -123,8 +181,10 @@ export function computePositionGain(
       term = pos.term;
     }
     
-    const pct = Math.min(daysElapsed, term) / term * pos.annualRate;
-    return (pct / 100) * pos.amount;
+    // Calculate interest based on actual days elapsed, but capped at the term
+    const effectiveDays = Math.min(daysElapsed, term);
+    const interestEarned = (pos.annualRate / 100) * (effectiveDays / 365) * pos.amount;
+    return interestEarned;
   }
   if (pos.type === 'MutualFund') {
     const { gainCurrency } = calculateMutualFundReturns(pos, today);
@@ -269,7 +329,13 @@ export function getDailyYield(
   }
   
   if (position.type === 'MutualFund') {
-    // For all mutual funds, prioritize monthlyYield if available
+    // For mutual funds, prioritize current TNA if available
+    const currentTna = getLatestTNA(position);
+    if (currentTna && Number.isFinite(currentTna)) {
+      return currentTna / 365; // Convert TNA to daily rate
+    }
+    
+    // Fallback to monthlyYield if available
     if (position.monthlyYield && Number.isFinite(position.monthlyYield)) {
       return position.monthlyYield / 30; // Convert monthly yield to daily
     }

@@ -175,7 +175,8 @@ describe('Cash Consistency Tests', () => {
           price: 150,
           commissionPct: 1.5,
           purchaseFeePct: 0.5,
-          currency: 'ARS'
+          currency: 'ARS',
+          market: 'NASDAQ'
         }
       ];
 

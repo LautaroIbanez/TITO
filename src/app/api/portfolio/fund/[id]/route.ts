@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserData } from '@/utils/userData';
-import { loadUserData, saveUserData } from '@/utils/userData';
+import { getUserData, saveUserData } from '@/utils/userData';
 import { DepositTransaction } from '@/types';
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
@@ -45,22 +44,25 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     if (positionIndex !== -1) {
       const position = user.positions[positionIndex];
       
-      // Credit the position amount to cash
-      user.cash[position.currency] += position.amount;
-      
-      // Record a liquidation transaction for traceability
-      const liquidationTx: DepositTransaction = {
-        id: `liq_${Date.now()}`,
-        date: new Date().toISOString(),
-        type: 'Deposit',
-        amount: position.amount,
-        currency: position.currency,
-        source: 'MutualFundLiquidation',
-      };
-      user.transactions.push(liquidationTx);
-      
-      // Remove the position
-      user.positions.splice(positionIndex, 1);
+      // Only handle MutualFund positions
+      if (position.type === 'MutualFund') {
+        // Credit the position amount to cash
+        user.cash[position.currency] += position.amount;
+        
+        // Record a liquidation transaction for traceability
+        const liquidationTx: DepositTransaction = {
+          id: `liq_${Date.now()}`,
+          date: new Date().toISOString(),
+          type: 'Deposit',
+          amount: position.amount,
+          currency: position.currency,
+          source: 'MutualFundLiquidation',
+        };
+        user.transactions.push(liquidationTx);
+        
+        // Remove the position
+        user.positions.splice(positionIndex, 1);
+      }
     }
 
     // Save updated user data

@@ -167,12 +167,21 @@ describe('cryptoData', () => {
       rsi: 65.5,
       macd: 2.5,
       sma200: 150.0,
+      sma40: 145.0,
       ema12: 155.0,
+      ema25: 153.0,
       ema26: 152.0,
       ema50: 148.0,
+      ema150: 140.0,
       adx: 25.0,
       pdi: 30.0,
       mdi: 20.0,
+      koncorde: {
+        bullish: true,
+        bearish: false,
+        neutral: false,
+        strength: 75
+      },
       updatedAt: dayjs().toISOString(),
     };
     beforeEach(() => {

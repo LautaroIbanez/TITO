@@ -9,6 +9,7 @@ const mockDeposit: DepositTransaction = {
   date: '2023-01-01T00:00:00.000Z',
   type: 'Deposit',
   amount: 5000,
+  currency: 'ARS',
 };
 
 const mockOnUpdate = jest.fn();
@@ -202,6 +203,7 @@ describe('EditDepositModal', () => {
       date: '2023-03-01T00:00:00.000Z',
       type: 'Deposit',
       amount: 10000,
+      currency: 'ARS',
     };
 
     rerender(

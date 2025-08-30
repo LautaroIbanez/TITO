@@ -22,7 +22,7 @@ export interface TradeModalProps {
   cash?: { ARS: number; USD: number };
   isAmountBased?: boolean;
   currency: 'ARS' | 'USD';
-  assetClass?: 'stocks' | 'bonds' | 'deposits';
+  assetClass?: 'stocks' | 'bonds' | 'deposits' | 'mutualFunds';
   market?: 'NASDAQ' | 'NYSE' | 'BCBA';
 }
 
@@ -54,7 +54,7 @@ export default function TradeModal({
   // Compute available cash based on assetClass and strategy target allocation
   const computeAvailableCash = () => {
     if (assetClass && strategy?.targetAllocation) {
-      const targetAllocation = strategy.targetAllocation[assetClass];
+      const targetAllocation = strategy.targetAllocation[assetClass as keyof typeof strategy.targetAllocation];
       if (targetAllocation && targetAllocation > 0) {
         return (cash[currency] || 0) * (targetAllocation / 100);
       }
@@ -80,12 +80,13 @@ export default function TradeModal({
   // Get the appropriate label for available cash display
   const getAvailableCashLabel = () => {
     if (assetClass) {
-      const assetClassLabels = {
+      const assetClassLabels: Record<string, string> = {
         stocks: 'Capital Disponible para Acciones',
         bonds: 'Capital Disponible para Bonos',
-        deposits: 'Capital Disponible para Plazos Fijos'
+        deposits: 'Capital Disponible para Plazos Fijos',
+        mutualFunds: 'Capital Disponible para Fondos Comunes'
       };
-      return assetClassLabels[assetClass];
+      return assetClassLabels[assetClass] || 'Efectivo Disponible';
     }
     return 'Efectivo Disponible';
   };

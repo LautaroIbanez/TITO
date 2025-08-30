@@ -17,7 +17,8 @@ export const RATIO_TOOLTIPS: Record<keyof Omit<Fundamentals, 'updatedAt' | 'sect
   freeCashFlow: "Free Cash Flow: Flujo de caja libre en millones. Positivo = mejor.",
   ebitda: "EBITDA: Ganancias antes de intereses, impuestos, depreciación y amortización. Mayor = mejor.",
   revenueGrowth: "Revenue Growth (Y/Y): Crecimiento de los ingresos año contra año. Mayor = mejor.",
-  epsGrowth: "EPS Growth Estimate (Y/Y): Crecimiento estimado de las ganancias por acción. Mayor = mejor."
+  epsGrowth: "EPS Growth Estimate (Y/Y): Crecimiento estimado de las ganancias por acción. Mayor = mejor.",
+  beta: "Beta: Volatilidad relativa al mercado. 1 = mercado, >1 = más volátil, <1 = menos volátil."
 };
 
 // Shared utility functions

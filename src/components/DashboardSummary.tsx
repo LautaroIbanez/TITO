@@ -67,16 +67,28 @@ export default function DashboardSummary() {
 
       if (bondsRes.ok) {
         const bondsData = await bondsRes.json();
-        setBonds(bondsData);
         
-        // Create bondPrices map for current price calculations
-        const pricesMap: Record<string, number> = {};
-        bondsData.forEach((bond: Bond) => {
-          if (bond.price) {
-            pricesMap[bond.ticker] = bond.price;
-          }
-        });
-        setBondPrices(pricesMap);
+        // Ensure bondsData is an array before processing
+        if (Array.isArray(bondsData)) {
+          setBonds(bondsData);
+          
+          // Create bondPrices map for current price calculations
+          const pricesMap: Record<string, number> = {};
+          bondsData.forEach((bond: Bond) => {
+            if (bond.price && bond.ticker) {
+              pricesMap[bond.ticker] = bond.price;
+            }
+          });
+          setBondPrices(pricesMap);
+        } else {
+          console.error('Bonds API returned non-array data:', bondsData);
+          setBonds([]);
+          setBondPrices({});
+        }
+      } else {
+        console.error('Failed to fetch bonds data:', bondsRes.status);
+        setBonds([]);
+        setBondPrices({});
       }
     }
     fetchData();

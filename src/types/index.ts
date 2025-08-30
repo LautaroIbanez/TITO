@@ -97,6 +97,11 @@ export interface MutualFundPosition {
   monthlyYield?: number;
   currency: 'ARS' | 'USD';
   startDate: string; // ISO string for when the fund position was created
+  tnaHistory?: Array<{
+    date: string; // ISO string
+    tna: number; // TNA for that day
+  }>;
+  currentTna?: number; // Current TNA value
 }
 
 export type PortfolioPosition = StockPosition | BondPosition | FixedTermDepositPosition | CaucionPosition | CryptoPosition | RealEstatePosition | MutualFundPosition;

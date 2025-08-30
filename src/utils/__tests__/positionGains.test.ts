@@ -251,6 +251,72 @@ describe('computePositionGain', () => {
       expect(gain).toBe(0);
     });
   });
+
+  describe('Mutual Fund positions', () => {
+    it('should calculate gain for mutual fund with TNA history', () => {
+      const position: PortfolioPosition = {
+        type: 'MutualFund',
+        id: '1',
+        name: 'Fondo Test',
+        category: 'Money Market',
+        amount: 10000,
+        annualRate: 75,
+        currency: 'ARS',
+        startDate: '2024-01-01',
+        tnaHistory: [
+          { date: '2024-01-01', tna: 75.0 },
+          { date: '2024-01-15', tna: 80.0 },
+          { date: '2024-01-30', tna: 85.0 }
+        ],
+        currentTna: 85.0
+      };
+      
+      const today = new Date('2024-02-01'); // 31 days after start
+      const gain = computePositionGain(position, undefined, today);
+      
+      // Should calculate compound interest with varying TNA rates
+      expect(gain).toBeGreaterThan(0);
+      expect(gain).toBeLessThan(10000); // Should not exceed principal
+    });
+
+    it('should calculate gain for mutual fund without TNA history', () => {
+      const position: PortfolioPosition = {
+        type: 'MutualFund',
+        id: '1',
+        name: 'Fondo Test',
+        category: 'Money Market',
+        amount: 10000,
+        annualRate: 75,
+        currency: 'ARS',
+        startDate: '2024-01-01'
+      };
+      
+      const today = new Date('2024-02-01'); // 31 days after start
+      const gain = computePositionGain(position, undefined, today);
+      
+      // Should use annual rate calculation
+      expect(gain).toBeGreaterThan(0);
+    });
+
+    it('should calculate gain for money market fund', () => {
+      const position: PortfolioPosition = {
+        type: 'MutualFund',
+        id: '1',
+        name: 'Money Market Fund',
+        category: 'Money Market',
+        amount: 10000,
+        annualRate: 75,
+        currency: 'ARS',
+        startDate: '2024-01-01'
+      };
+      
+      const today = new Date('2024-02-01'); // 31 days after start
+      const gain = computePositionGain(position, undefined, today);
+      
+      // Should use money market calculation
+      expect(gain).toBeGreaterThan(0);
+    });
+  });
 });
 
 describe('calculateNetGainsByCurrency', () => {
@@ -529,6 +595,37 @@ describe('getPortfolioNetGains', () => {
     // Check individual position gains
     expect(result.positionGains.get('deposit1')).toBeCloseTo(300, 0);
     expect(result.positionGains.get('caucion1')).toBeCloseTo(150, 0);
+  });
+
+  it('should handle mutual fund positions', () => {
+    const positions: PortfolioPosition[] = [
+      {
+        type: 'MutualFund',
+        id: 'fund1',
+        name: 'Fondo Test',
+        category: 'Money Market',
+        amount: 10000,
+        annualRate: 75,
+        currency: 'ARS',
+        startDate: '2024-01-01',
+        tnaHistory: [
+          { date: '2024-01-01', tna: 75.0 },
+          { date: '2024-01-15', tna: 80.0 },
+          { date: '2024-01-30', tna: 85.0 }
+        ],
+        currentTna: 85.0
+      }
+    ];
+
+    const today = new Date('2024-02-01'); // 31 days after start
+    const result = getPortfolioNetGains(positions, mockPriceHistory, today);
+    
+    expect(result.totals.ARS).toBeGreaterThan(0);
+    expect(result.totals.USD).toBe(0);
+    expect(result.excludedPositions).toHaveLength(0);
+    
+    // Check individual position gains
+    expect(result.positionGains.get('fund1')).toBeGreaterThan(0);
   });
 
   it('should handle positions with non-finite purchase prices', () => {

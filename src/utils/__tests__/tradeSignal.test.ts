@@ -3,7 +3,20 @@ import { Technicals } from '@/types/finance';
 
 describe('getTradeSignal', () => {
   const baseTechnicals: Technicals = {
-    rsi: null, macd: null, sma200: null, ema12: null, ema26: null, ema50: null, adx: null, pdi: null, mdi: null, updatedAt: ''
+    rsi: null, 
+    macd: null, 
+    sma200: null, 
+    sma40: null,
+    ema12: null, 
+    ema25: null,
+    ema26: null, 
+    ema50: null, 
+    ema150: null,
+    adx: null, 
+    pdi: null, 
+    mdi: null, 
+    koncorde: null,
+    updatedAt: ''
   };
 
   it('returns hold if technicals or price is missing', () => {

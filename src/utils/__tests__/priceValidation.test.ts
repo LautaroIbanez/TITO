@@ -194,6 +194,25 @@ describe('priceValidation', () => {
       expect(result.hasValidPrice).toBe(true);
       expect(result.currentPrice).toBe(5000);
     });
+
+    it('should validate mutual fund position', () => {
+      const position: PortfolioPosition = {
+        type: 'MutualFund',
+        id: '1',
+        name: 'Fondo Money Market',
+        category: 'Money Market',
+        amount: 10000,
+        annualRate: 75,
+        currency: 'ARS',
+        startDate: '2024-01-01'
+      };
+
+      const priceHistory: Record<string, PriceData[]> = {};
+
+      const result = validatePositionPrice(position, priceHistory);
+      expect(result.hasValidPrice).toBe(true);
+      expect(result.currentPrice).toBe(10000);
+    });
   });
 
   describe('filterPositionsWithValidPrices', () => {
@@ -252,6 +271,29 @@ describe('priceValidation', () => {
       expect(result.validPositions).toHaveLength(0);
       expect(result.excludedPositions).toHaveLength(0);
     });
+
+    it('should include mutual fund positions in valid positions', () => {
+      const positions: PortfolioPosition[] = [
+        {
+          type: 'MutualFund',
+          id: '1',
+          name: 'Fondo Money Market',
+          category: 'Money Market',
+          amount: 10000,
+          annualRate: 75,
+          currency: 'ARS',
+          startDate: '2024-01-01'
+        }
+      ];
+
+      const priceHistory: Record<string, PriceData[]> = {};
+
+      const result = filterPositionsWithValidPrices(positions, priceHistory);
+      
+      expect(result.validPositions).toHaveLength(1);
+      expect(result.excludedPositions).toHaveLength(0);
+      expect(result.validPositions[0].type).toBe('MutualFund');
+    });
   });
 
   describe('getPositionDisplayName', () => {
@@ -309,6 +351,21 @@ describe('priceValidation', () => {
       expect(getPositionDisplayName(cryptoPosition)).toBe('BTCUSDT');
       expect(getPositionDisplayName(depositPosition)).toBe('Banco - Plazo Fijo');
       expect(getPositionDisplayName(caucionPosition)).toBe('Broker - Caución');
+    });
+
+    it('should return correct display name for mutual fund position', () => {
+      const mutualFundPosition: PortfolioPosition = {
+        type: 'MutualFund',
+        id: '1',
+        name: 'Fondo Money Market',
+        category: 'Money Market',
+        amount: 10000,
+        annualRate: 75,
+        currency: 'ARS',
+        startDate: '2024-01-01'
+      };
+
+      expect(getPositionDisplayName(mutualFundPosition)).toBe('Fondo Money Market');
     });
   });
 }); 
