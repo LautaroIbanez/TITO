@@ -8,39 +8,8 @@ const API_URLS = {
   otherFunds: 'https://api.argentinadatos.com/v1/finanzas/fci/otros/ultimo',
 };
 
-// Fondos predefinidos por categoría
-const MUTUAL_FUNDS = {
-  moneyMarket: {
-    "Schroder Liquidez - Clase B": { fondoId: 1343, claseId: 3831 },
-    "MAF Liquidez - Clase A": { fondoId: 1500, claseId: 4486 },
-    "Chaco FCI Money Market - Clase A": { fondoId: 1465, claseId: 4332 },
-    "Delta Pesos - Clase X": { fondoId: 394, claseId: 3919 },
-    "Balanz Capital Money Market - Clase A": { fondoId: 1213, claseId: 3355 },
-    "Mercado Fondo - Clase A": { fondoId: 798, claseId: 1982 },
-    "Cocos Ahorro - Clase A": { fondoId: 1469, claseId: 4337 },
-    "IOL Dólar Ahorro Plus - Clase D": { fondoId: 1570, claseId: 5100 },
-  },
-  rentaFija: {
-    "MAF Ahorro Plus - Clase C": { fondoId: 655, claseId: 1354 },
-    "Compass Opportunity - Clase F": { fondoId: 317, claseId: 1867 },
-    "Compass Renta Fija III - Clase F": { fondoId: 429, claseId: 1879 },
-    "IOL Dólar Ahorro Plus - Clase C": { fondoId: 1570, claseId: 5099 },
-  },
-  rentaVariable: {
-    "Alpha Latam - Clase A": { fondoId: 1235, claseId: 3422 },
-    "Fima Acciones Latinoamerica - Clase A": { fondoId: 851, claseId: 2426 },
-    "Delta Select - Clase G": { fondoId: 419, claseId: 1926 },
-    "Alpha Latam - Clase Q Ley N° 27.743": { fondoId: 1235, claseId: 5036 },
-  },
-  rentaMixta: {
-    "Schroder Retorno Absoluto Dólares - Clase B": { fondoId: 555, claseId: 2199 },
-    "Delta Multimercado I - Clase G": { fondoId: 466, claseId: 1922 },
-    "Gainvest Balanceado - Clase E": { fondoId: 545, claseId: 2638 },
-    "Alpha Renta Balanceada Global - Clase D": { fondoId: 502, claseId: 1838 },
-    "Alpha Retorno Total - Clase I": { fondoId: 184, claseId: 1848 },
-    "Gainvest Balanceado - Clase F": { fondoId: 545, claseId: 2639 },
-  },
-};
+// Note: Mutual funds data is now fetched from CAFCI cache in the indicators API
+// This configuration is kept for reference but not used in the main flow
 
 // Entidades bancarias deseadas para plazo fijo
 const DESIRED_BANKS = [
@@ -131,56 +100,8 @@ async function fetchFixedTermData(): Promise<FixedTermData[]> {
   }
 }
 
-// Función para obtener datos de fondos mutuos desde CAFCI
-async function fetchMutualFundData(fondoId: number, claseId: number): Promise<{ tna: number; rendimiento_mensual: number } | null> {
-  try {
-    const url = `https://api.cafci.org.ar/fondo/${fondoId}/clase/${claseId}/ficha`;
-    const headers = {
-      "User-Agent": "Mozilla/5.0",
-      "Accept": "application/json",
-      "Origin": "https://www.cafci.org.ar",
-      "Referer": `https://www.cafci.org.ar/ficha-fondo.html?q=${fondoId};${claseId}`,
-    };
-
-    const response = await fetch(url, { headers });
-    if (!response.ok) return null;
-
-    const data = await response.json();
-    const rendimientos = data.data.info.diaria.rendimientos;
-    
-    return {
-      tna: parseFloat(rendimientos.monthYear?.tna || '0'),
-      rendimiento_mensual: parseFloat(rendimientos.month?.rendimiento || '0'),
-    };
-  } catch (error) {
-    console.error(`Error fetching mutual fund data for ${fondoId};${claseId}:`, error);
-    return null;
-  }
-}
-
-// Función para procesar fondos por categoría
-async function processMutualFundsCategory(
-  categoryName: string, 
-  funds: Record<string, { fondoId: number; claseId: number }>
-): Promise<MutualFundData[]> {
-  const results: MutualFundData[] = [];
-  
-  for (const [nombreFondo, { fondoId, claseId }] of Object.entries(funds)) {
-    const fundData = await fetchMutualFundData(fondoId, claseId);
-    if (fundData) {
-      results.push({
-        fondo: nombreFondo,
-        tna: fundData.tna,
-        rendimiento_mensual: fundData.rendimiento_mensual,
-        categoria: categoryName,
-      });
-    }
-    // Pequeña pausa para no sobrecargar la API
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  
-  return results.sort((a, b) => b.tna - a.tna);
-}
+// Note: Mutual funds data is now fetched from CAFCI cache in the indicators API
+// These functions are kept for reference but not used in the main flow
 
 // Función para obtener otros fondos
 async function fetchOtherFundsData(): Promise<OtherFundData[]> {
@@ -240,13 +161,8 @@ export async function fetchEconomicIndicators(): Promise<EconomicIndicators> {
       }
     });
 
-    // Procesar fondos mutuos (esto puede tomar tiempo debido a las pausas)
-    const [moneyMarket, rentaFija, rentaVariable, rentaMixta] = await Promise.all([
-      processMutualFundsCategory('Money Market', MUTUAL_FUNDS.moneyMarket),
-      processMutualFundsCategory('Renta Fija', MUTUAL_FUNDS.rentaFija),
-      processMutualFundsCategory('Renta Variable', MUTUAL_FUNDS.rentaVariable),
-      processMutualFundsCategory('Renta Mixta', MUTUAL_FUNDS.rentaMixta),
-    ]);
+    // Note: Mutual funds data is now fetched from CAFCI cache in the indicators API
+    // This section is kept for reference but not used in the main flow
 
     return {
       inflation: {
@@ -264,10 +180,10 @@ export async function fetchEconomicIndicators(): Promise<EconomicIndicators> {
         top10: fixedTermData.slice(0, 10),
       },
       mutualFunds: {
-        moneyMarket,
-        rentaFija,
-        rentaVariable,
-        rentaMixta,
+        moneyMarket: [],
+        rentaFija: [],
+        rentaVariable: [],
+        rentaMixta: [],
       },
       otherFunds: {
         data: otherFundsData,

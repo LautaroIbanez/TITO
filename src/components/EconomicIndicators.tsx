@@ -137,17 +137,30 @@ export default function EconomicIndicators() {
         {activeTab === 'dollars' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {Object.entries(indicators.dollars.lastValues).map(([type, data]) => (
-                <IndicatorCard
-                  key={type}
-                  title={`Dólar ${type.charAt(0).toUpperCase() + type.slice(1)}`}
-                  value={`$${data.venta.toLocaleString('es-AR')}`}
-                  subtitle={`Compra: $${data.compra.toLocaleString('es-AR')}`}
-                  variation={data.variation}
-                  variationLabel="variación"
-                  color="green"
-                />
-              ))}
+              {Object.entries(indicators.dollars.lastValues).map(([type, data]) => {
+                // Calculate percentage variation for dollar indicators
+                const percentageVariation = data.variation > 0 
+                  ? (data.variation / (data.venta - data.variation)) * 100 
+                  : 0;
+                
+                return (
+                  <IndicatorCard
+                    key={type}
+                    title={`Dólar ${type.charAt(0).toUpperCase() + type.slice(1)}`}
+                    value={`$${data.venta.toLocaleString('es-AR')}`}
+                    subtitle={`Compra: $${data.compra.toLocaleString('es-AR')}`}
+                    variation={percentageVariation}
+                    variationLabel="vs anterior"
+                    variationType="percentage"
+                    color="green"
+                    // Alternative: Show absolute variation in pesos
+                    // variation={data.variation}
+                    // variationLabel="variación"
+                    // variationType="absolute"
+                    // variationUnit=" $"
+                  />
+                );
+              })}
             </div>
             
             {indicators.dollars.data.length > 0 && (
@@ -257,18 +270,22 @@ export default function EconomicIndicators() {
                   </h3>
                   
                   <div className="space-y-3">
-                    {funds.slice(0, 5).map((fund, index) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-900">{fund.fondo}</p>
-                          <p className="text-sm text-gray-600">TNA: {fund.tna.toFixed(2)}%</p>
+                    {funds.length > 0 ? (
+                      funds.slice(0, 5).map((fund, index) => (
+                        <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900">{fund.fondo}</p>
+                            <p className="text-sm text-gray-600">TNA: {fund.tna.toFixed(2)}%</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium text-gray-900">{fund.rendimiento_mensual.toFixed(2)}%</p>
+                            <p className="text-sm text-gray-600">Rend. mensual</p>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-medium text-gray-900">{fund.rendimiento_mensual.toFixed(2)}%</p>
-                          <p className="text-sm text-gray-600">Rend. mensual</p>
-                        </div>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <p className="text-gray-500">No hay datos disponibles</p>
+                    )}
                   </div>
                 </div>
               ))}

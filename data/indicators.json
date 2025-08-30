@@ -1,27 +1,1861 @@
 {
   "inflation": {
-    "data": [],
-    "lastValue": 0,
-    "previousValue": 0,
-    "variation": 0
+    "data": [
+      {
+        "fecha": "2024-08-31",
+        "valor": 4.2,
+        "fecha_consulta": "2025-08-30T12:55:06.745Z"
+      },
+      {
+        "fecha": "2024-09-30",
+        "valor": 3.5,
+        "fecha_consulta": "2025-08-30T12:55:06.745Z"
+      },
+      {
+        "fecha": "2024-10-31",
+        "valor": 2.7,
+        "fecha_consulta": "2025-08-30T12:55:06.745Z"
+      },
+      {
+        "fecha": "2024-11-30",
+        "valor": 2.4,
+        "fecha_consulta": "2025-08-30T12:55:06.745Z"
+      },
+      {
+        "fecha": "2024-12-31",
+        "valor": 2.7,
+        "fecha_consulta": "2025-08-30T12:55:06.745Z"
+      },
+      {
+        "fecha": "2025-01-31",
+        "valor": 2.2,
+        "fecha_consulta": "2025-08-30T12:55:06.745Z"
+      },
+      {
+        "fecha": "2025-02-28",
+        "valor": 2.4,
+        "fecha_consulta": "2025-08-30T12:55:06.745Z"
+      },
+      {
+        "fecha": "2025-03-31",
+        "valor": 3.7,
+        "fecha_consulta": "2025-08-30T12:55:06.745Z"
+      },
+      {
+        "fecha": "2025-04-30",
+        "valor": 2.8,
+        "fecha_consulta": "2025-08-30T12:55:06.745Z"
+      },
+      {
+        "fecha": "2025-05-31",
+        "valor": 1.5,
+        "fecha_consulta": "2025-08-30T12:55:06.745Z"
+      },
+      {
+        "fecha": "2025-06-30",
+        "valor": 1.6,
+        "fecha_consulta": "2025-08-30T12:55:06.745Z"
+      },
+      {
+        "fecha": "2025-07-31",
+        "valor": 1.9,
+        "fecha_consulta": "2025-08-30T12:55:06.745Z"
+      }
+    ],
+    "lastValue": 1.9,
+    "previousValue": 1.6,
+    "variation": 0.2999999999999998
   },
   "dollars": {
-    "data": [],
-    "lastValues": {}
+    "data": [
+      {
+        "fecha": "2025-08-01",
+        "casa": "oficial",
+        "compra": 1325,
+        "venta": 1375,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-01",
+        "casa": "blue",
+        "compra": 1315,
+        "venta": 1335,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-01",
+        "casa": "bolsa",
+        "compra": 1361.6,
+        "venta": 1366.2,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-01",
+        "casa": "contadoconliqui",
+        "compra": 1361.8,
+        "venta": 1364.9,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-01",
+        "casa": "mayorista",
+        "compra": 1355,
+        "venta": 1364,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-01",
+        "casa": "cripto",
+        "compra": 1354.31,
+        "venta": 1362.17,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-01",
+        "casa": "tarjeta",
+        "compra": 1722.5,
+        "venta": 1787.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-02",
+        "casa": "oficial",
+        "compra": 1325,
+        "venta": 1375,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-02",
+        "casa": "blue",
+        "compra": 1315,
+        "venta": 1335,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-02",
+        "casa": "bolsa",
+        "compra": 1361.6,
+        "venta": 1366.2,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-02",
+        "casa": "contadoconliqui",
+        "compra": 1361.8,
+        "venta": 1364.9,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-02",
+        "casa": "mayorista",
+        "compra": 1355,
+        "venta": 1364,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-02",
+        "casa": "cripto",
+        "compra": 1370.2,
+        "venta": 1376,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-02",
+        "casa": "tarjeta",
+        "compra": 1722.5,
+        "venta": 1787.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-03",
+        "casa": "oficial",
+        "compra": 1325,
+        "venta": 1375,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-03",
+        "casa": "blue",
+        "compra": 1315,
+        "venta": 1335,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-03",
+        "casa": "bolsa",
+        "compra": 1361.6,
+        "venta": 1366.2,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-03",
+        "casa": "contadoconliqui",
+        "compra": 1361.8,
+        "venta": 1364.9,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-03",
+        "casa": "mayorista",
+        "compra": 1355,
+        "venta": 1364,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-03",
+        "casa": "cripto",
+        "compra": 1367.55,
+        "venta": 1377.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-03",
+        "casa": "tarjeta",
+        "compra": 1722.5,
+        "venta": 1787.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-04",
+        "casa": "oficial",
+        "compra": 1320,
+        "venta": 1370,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-04",
+        "casa": "blue",
+        "compra": 1310,
+        "venta": 1330,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-04",
+        "casa": "bolsa",
+        "compra": 1352.9,
+        "venta": 1355.2,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-04",
+        "casa": "contadoconliqui",
+        "compra": 1355.3,
+        "venta": 1356.7,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-04",
+        "casa": "mayorista",
+        "compra": 1351,
+        "venta": 1360,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-04",
+        "casa": "cripto",
+        "compra": 1342.5,
+        "venta": 1347.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-04",
+        "casa": "tarjeta",
+        "compra": 1716,
+        "venta": 1781,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-05",
+        "casa": "oficial",
+        "compra": 1300,
+        "venta": 1350,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-05",
+        "casa": "blue",
+        "compra": 1305,
+        "venta": 1325,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-05",
+        "casa": "bolsa",
+        "compra": 1342,
+        "venta": 1347.3,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-05",
+        "casa": "contadoconliqui",
+        "compra": 1343.9,
+        "venta": 1346.1,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-05",
+        "casa": "mayorista",
+        "compra": 1331,
+        "venta": 1340,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-05",
+        "casa": "cripto",
+        "compra": 1344.06,
+        "venta": 1348,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-05",
+        "casa": "tarjeta",
+        "compra": 1690,
+        "venta": 1755,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-06",
+        "casa": "oficial",
+        "compra": 1295,
+        "venta": 1345,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-06",
+        "casa": "blue",
+        "compra": 1300,
+        "venta": 1320,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-06",
+        "casa": "bolsa",
+        "compra": 1333.6,
+        "venta": 1337.7,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-06",
+        "casa": "contadoconliqui",
+        "compra": 1330.9,
+        "venta": 1335.6,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-06",
+        "casa": "mayorista",
+        "compra": 1323,
+        "venta": 1332,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-06",
+        "casa": "cripto",
+        "compra": 1340,
+        "venta": 1344,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-06",
+        "casa": "tarjeta",
+        "compra": 1683.5,
+        "venta": 1748.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-07",
+        "casa": "oficial",
+        "compra": 1290,
+        "venta": 1340,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-07",
+        "casa": "blue",
+        "compra": 1305,
+        "venta": 1325,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-07",
+        "casa": "bolsa",
+        "compra": 1326.2,
+        "venta": 1332,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-07",
+        "casa": "contadoconliqui",
+        "compra": 1328.1,
+        "venta": 1331.9,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-07",
+        "casa": "mayorista",
+        "compra": 1317.5,
+        "venta": 1326.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-07",
+        "casa": "cripto",
+        "compra": 1334.97,
+        "venta": 1339,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-07",
+        "casa": "tarjeta",
+        "compra": 1677,
+        "venta": 1742,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-08",
+        "casa": "oficial",
+        "compra": 1285,
+        "venta": 1335,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-08",
+        "casa": "blue",
+        "compra": 1305,
+        "venta": 1325,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-08",
+        "casa": "bolsa",
+        "compra": 1328.2,
+        "venta": 1335.2,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-08",
+        "casa": "contadoconliqui",
+        "compra": 1327.1,
+        "venta": 1329.4,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-08",
+        "casa": "mayorista",
+        "compra": 1319,
+        "venta": 1328,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-08",
+        "casa": "cripto",
+        "compra": 1331.12,
+        "venta": 1338.45,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-08",
+        "casa": "tarjeta",
+        "compra": 1670.5,
+        "venta": 1735.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-09",
+        "casa": "oficial",
+        "compra": 1285,
+        "venta": 1335,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-09",
+        "casa": "blue",
+        "compra": 1305,
+        "venta": 1325,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-09",
+        "casa": "bolsa",
+        "compra": 1328.2,
+        "venta": 1335.2,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-09",
+        "casa": "contadoconliqui",
+        "compra": 1327.1,
+        "venta": 1329.4,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-09",
+        "casa": "mayorista",
+        "compra": 1319,
+        "venta": 1328,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-09",
+        "casa": "cripto",
+        "compra": 1335,
+        "venta": 1339.7,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-09",
+        "casa": "tarjeta",
+        "compra": 1670.5,
+        "venta": 1735.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-10",
+        "casa": "oficial",
+        "compra": 1285,
+        "venta": 1335,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-10",
+        "casa": "blue",
+        "compra": 1305,
+        "venta": 1325,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-10",
+        "casa": "bolsa",
+        "compra": 1328.2,
+        "venta": 1335.2,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-10",
+        "casa": "contadoconliqui",
+        "compra": 1327.1,
+        "venta": 1329.4,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-10",
+        "casa": "mayorista",
+        "compra": 1319,
+        "venta": 1328,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-10",
+        "casa": "cripto",
+        "compra": 1326.1,
+        "venta": 1334,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-10",
+        "casa": "tarjeta",
+        "compra": 1670.5,
+        "venta": 1735.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-11",
+        "casa": "oficial",
+        "compra": 1295,
+        "venta": 1335,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-11",
+        "casa": "blue",
+        "compra": 1315,
+        "venta": 1335,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-11",
+        "casa": "bolsa",
+        "compra": 1321.7,
+        "venta": 1328.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-11",
+        "casa": "contadoconliqui",
+        "compra": 1325.8,
+        "venta": 1327.2,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-11",
+        "casa": "mayorista",
+        "compra": 1313,
+        "venta": 1322,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-11",
+        "casa": "cripto",
+        "compra": 1332.5,
+        "venta": 1338,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-11",
+        "casa": "tarjeta",
+        "compra": 1683.5,
+        "venta": 1735.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-12",
+        "casa": "oficial",
+        "compra": 1290,
+        "venta": 1330,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-12",
+        "casa": "blue",
+        "compra": 1310,
+        "venta": 1330,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-12",
+        "casa": "bolsa",
+        "compra": 1318.6,
+        "venta": 1325.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-12",
+        "casa": "contadoconliqui",
+        "compra": 1321.5,
+        "venta": 1323.2,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-12",
+        "casa": "mayorista",
+        "compra": 1308.5,
+        "venta": 1317.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-12",
+        "casa": "cripto",
+        "compra": 1331,
+        "venta": 1335.01,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-12",
+        "casa": "tarjeta",
+        "compra": 1677,
+        "venta": 1729,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-13",
+        "casa": "oficial",
+        "compra": 1285,
+        "venta": 1325,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-13",
+        "casa": "blue",
+        "compra": 1320,
+        "venta": 1340,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-13",
+        "casa": "bolsa",
+        "compra": 1318.8,
+        "venta": 1322.6,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-13",
+        "casa": "contadoconliqui",
+        "compra": 1317.9,
+        "venta": 1321.7,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-13",
+        "casa": "mayorista",
+        "compra": 1304,
+        "venta": 1313,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-13",
+        "casa": "cripto",
+        "compra": 1329.81,
+        "venta": 1333.65,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-13",
+        "casa": "tarjeta",
+        "compra": 1670.5,
+        "venta": 1722.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-14",
+        "casa": "oficial",
+        "compra": 1270,
+        "venta": 1310,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-14",
+        "casa": "blue",
+        "compra": 1300,
+        "venta": 1320,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-14",
+        "casa": "bolsa",
+        "compra": 1303.7,
+        "venta": 1310.8,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-14",
+        "casa": "contadoconliqui",
+        "compra": 1301.2,
+        "venta": 1301.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-14",
+        "casa": "mayorista",
+        "compra": 1291,
+        "venta": 1300,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-14",
+        "casa": "cripto",
+        "compra": 1312.8,
+        "venta": 1318,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-14",
+        "casa": "tarjeta",
+        "compra": 1651,
+        "venta": 1703,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-15",
+        "casa": "oficial",
+        "compra": 1270,
+        "venta": 1310,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-15",
+        "casa": "blue",
+        "compra": 1300,
+        "venta": 1320,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-15",
+        "casa": "bolsa",
+        "compra": 1303.7,
+        "venta": 1310.8,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-15",
+        "casa": "contadoconliqui",
+        "compra": 1301.2,
+        "venta": 1301.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-15",
+        "casa": "mayorista",
+        "compra": 1291,
+        "venta": 1300,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-15",
+        "casa": "cripto",
+        "compra": 1324,
+        "venta": 1326.25,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-15",
+        "casa": "tarjeta",
+        "compra": 1651,
+        "venta": 1703,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-16",
+        "casa": "oficial",
+        "compra": 1270,
+        "venta": 1310,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-16",
+        "casa": "blue",
+        "compra": 1300,
+        "venta": 1320,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-16",
+        "casa": "bolsa",
+        "compra": 1303.7,
+        "venta": 1310.8,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-16",
+        "casa": "contadoconliqui",
+        "compra": 1301.2,
+        "venta": 1301.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-16",
+        "casa": "mayorista",
+        "compra": 1291,
+        "venta": 1300,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-16",
+        "casa": "cripto",
+        "compra": 1327.95,
+        "venta": 1331.19,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-16",
+        "casa": "tarjeta",
+        "compra": 1651,
+        "venta": 1703,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-17",
+        "casa": "oficial",
+        "compra": 1270,
+        "venta": 1310,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-17",
+        "casa": "blue",
+        "compra": 1300,
+        "venta": 1320,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-17",
+        "casa": "bolsa",
+        "compra": 1303.7,
+        "venta": 1310.8,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-17",
+        "casa": "contadoconliqui",
+        "compra": 1301.2,
+        "venta": 1301.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-17",
+        "casa": "mayorista",
+        "compra": 1291,
+        "venta": 1300,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-17",
+        "casa": "cripto",
+        "compra": 1325.3,
+        "venta": 1331.85,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-17",
+        "casa": "tarjeta",
+        "compra": 1651,
+        "venta": 1703,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-18",
+        "casa": "oficial",
+        "compra": 1275,
+        "venta": 1315,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-18",
+        "casa": "blue",
+        "compra": 1320,
+        "venta": 1340,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-18",
+        "casa": "bolsa",
+        "compra": 1295.5,
+        "venta": 1303.9,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-18",
+        "casa": "contadoconliqui",
+        "compra": 1300.1,
+        "venta": 1303.7,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-18",
+        "casa": "mayorista",
+        "compra": 1284,
+        "venta": 1293,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-18",
+        "casa": "cripto",
+        "compra": 1312.5,
+        "venta": 1316.84,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-18",
+        "casa": "tarjeta",
+        "compra": 1657.5,
+        "venta": 1709.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-19",
+        "casa": "oficial",
+        "compra": 1270,
+        "venta": 1310,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-19",
+        "casa": "blue",
+        "compra": 1320,
+        "venta": 1340,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-19",
+        "casa": "bolsa",
+        "compra": 1295.3,
+        "venta": 1299.9,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-19",
+        "casa": "contadoconliqui",
+        "compra": 1300.9,
+        "venta": 1302.4,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-19",
+        "casa": "mayorista",
+        "compra": 1283.5,
+        "venta": 1292.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-19",
+        "casa": "cripto",
+        "compra": 1315,
+        "venta": 1317.98,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-19",
+        "casa": "tarjeta",
+        "compra": 1651,
+        "venta": 1703,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-20",
+        "casa": "oficial",
+        "compra": 1275,
+        "venta": 1315,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-20",
+        "casa": "blue",
+        "compra": 1320,
+        "venta": 1340,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-20",
+        "casa": "bolsa",
+        "compra": 1304.8,
+        "venta": 1315,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-20",
+        "casa": "contadoconliqui",
+        "compra": 1305.9,
+        "venta": 1308.1,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-20",
+        "casa": "mayorista",
+        "compra": 1283.5,
+        "venta": 1292.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-20",
+        "casa": "cripto",
+        "compra": 1320,
+        "venta": 1321.8,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-20",
+        "casa": "tarjeta",
+        "compra": 1657.5,
+        "venta": 1709.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-21",
+        "casa": "oficial",
+        "compra": 1285,
+        "venta": 1325,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-21",
+        "casa": "blue",
+        "compra": 1320,
+        "venta": 1340,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-21",
+        "casa": "bolsa",
+        "compra": 1313.2,
+        "venta": 1322.3,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-21",
+        "casa": "contadoconliqui",
+        "compra": 1318.7,
+        "venta": 1321.2,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-21",
+        "casa": "mayorista",
+        "compra": 1306,
+        "venta": 1315,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-21",
+        "casa": "cripto",
+        "compra": 1329,
+        "venta": 1330,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-21",
+        "casa": "tarjeta",
+        "compra": 1670.5,
+        "venta": 1722.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-22",
+        "casa": "oficial",
+        "compra": 1295,
+        "venta": 1335,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-22",
+        "casa": "blue",
+        "compra": 1325,
+        "venta": 1345,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-22",
+        "casa": "bolsa",
+        "compra": 1326.5,
+        "venta": 1331.2,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-22",
+        "casa": "contadoconliqui",
+        "compra": 1325,
+        "venta": 1326,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-22",
+        "casa": "mayorista",
+        "compra": 1312,
+        "venta": 1321,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-22",
+        "casa": "cripto",
+        "compra": 1336,
+        "venta": 1338.3,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-22",
+        "casa": "tarjeta",
+        "compra": 1683.5,
+        "venta": 1735.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-23",
+        "casa": "oficial",
+        "compra": 1295,
+        "venta": 1335,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-23",
+        "casa": "blue",
+        "compra": 1300,
+        "venta": 1320,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-23",
+        "casa": "bolsa",
+        "compra": 1326.5,
+        "venta": 1331.2,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-23",
+        "casa": "contadoconliqui",
+        "compra": 1325,
+        "venta": 1326,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-23",
+        "casa": "mayorista",
+        "compra": 1312,
+        "venta": 1321,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-23",
+        "casa": "cripto",
+        "compra": 1342.05,
+        "venta": 1345.99,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-23",
+        "casa": "tarjeta",
+        "compra": 1683.5,
+        "venta": 1735.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-24",
+        "casa": "oficial",
+        "compra": 1295,
+        "venta": 1335,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-24",
+        "casa": "blue",
+        "compra": 1300,
+        "venta": 1320,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-24",
+        "casa": "bolsa",
+        "compra": 1326.5,
+        "venta": 1331.2,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-24",
+        "casa": "contadoconliqui",
+        "compra": 1325,
+        "venta": 1326,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-24",
+        "casa": "mayorista",
+        "compra": 1312,
+        "venta": 1321,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-24",
+        "casa": "cripto",
+        "compra": 1337.52,
+        "venta": 1342.89,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-24",
+        "casa": "tarjeta",
+        "compra": 1683.5,
+        "venta": 1735.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-25",
+        "casa": "oficial",
+        "compra": 1330,
+        "venta": 1370,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-25",
+        "casa": "blue",
+        "compra": 1345,
+        "venta": 1365,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-25",
+        "casa": "bolsa",
+        "compra": 1358.5,
+        "venta": 1362,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-25",
+        "casa": "contadoconliqui",
+        "compra": 1358.7,
+        "venta": 1360.3,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-25",
+        "casa": "mayorista",
+        "compra": 1353,
+        "venta": 1362,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-25",
+        "casa": "cripto",
+        "compra": 1370.63,
+        "venta": 1375,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-25",
+        "casa": "tarjeta",
+        "compra": 1729,
+        "venta": 1781,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-26",
+        "casa": "oficial",
+        "compra": 1330,
+        "venta": 1370,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-26",
+        "casa": "blue",
+        "compra": 1340,
+        "venta": 1360,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-26",
+        "casa": "bolsa",
+        "compra": 1351.8,
+        "venta": 1354.9,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-26",
+        "casa": "contadoconliqui",
+        "compra": 1353.6,
+        "venta": 1355,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-26",
+        "casa": "mayorista",
+        "compra": 1347.5,
+        "venta": 1356.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-26",
+        "casa": "cripto",
+        "compra": 1368.53,
+        "venta": 1372,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-26",
+        "casa": "tarjeta",
+        "compra": 1729,
+        "venta": 1781,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-27",
+        "casa": "oficial",
+        "compra": 1320,
+        "venta": 1360,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-27",
+        "casa": "blue",
+        "compra": 1335,
+        "venta": 1355,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-27",
+        "casa": "bolsa",
+        "compra": 1351.3,
+        "venta": 1355.2,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-27",
+        "casa": "contadoconliqui",
+        "compra": 1353.4,
+        "venta": 1355.4,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-27",
+        "casa": "mayorista",
+        "compra": 1340.5,
+        "venta": 1349.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-27",
+        "casa": "cripto",
+        "compra": 1365.01,
+        "venta": 1369.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-27",
+        "casa": "tarjeta",
+        "compra": 1716,
+        "venta": 1768,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-28",
+        "casa": "oficial",
+        "compra": 1305,
+        "venta": 1345,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-28",
+        "casa": "blue",
+        "compra": 1330,
+        "venta": 1350,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-28",
+        "casa": "bolsa",
+        "compra": 1339.3,
+        "venta": 1343.4,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-28",
+        "casa": "contadoconliqui",
+        "compra": 1344.5,
+        "venta": 1346.7,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-28",
+        "casa": "mayorista",
+        "compra": 1324,
+        "venta": 1333,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-28",
+        "casa": "cripto",
+        "compra": 1353.16,
+        "venta": 1357.8,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-28",
+        "casa": "tarjeta",
+        "compra": 1696.5,
+        "venta": 1748.5,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-29",
+        "casa": "oficial",
+        "compra": 1320,
+        "venta": 1360,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-29",
+        "casa": "blue",
+        "compra": 1325,
+        "venta": 1345,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-29",
+        "casa": "bolsa",
+        "compra": 1344.8,
+        "venta": 1371.9,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-29",
+        "casa": "contadoconliqui",
+        "compra": 1349.2,
+        "venta": 1353.8,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-29",
+        "casa": "mayorista",
+        "compra": 1333,
+        "venta": 1342,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-29",
+        "casa": "cripto",
+        "compra": 1361.14,
+        "venta": 1365.99,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      },
+      {
+        "fecha": "2025-08-29",
+        "casa": "tarjeta",
+        "compra": 1716,
+        "venta": 1768,
+        "fecha_consulta": "2025-08-30T12:55:06.855Z"
+      }
+    ],
+    "lastValues": {
+      "oficial": {
+        "venta": 1360,
+        "compra": 1320,
+        "variation": 15
+      },
+      "blue": {
+        "venta": 1345,
+        "compra": 1325,
+        "variation": -5
+      },
+      "bolsa": {
+        "venta": 1371.9,
+        "compra": 1344.8,
+        "variation": 28.5
+      },
+      "contadoconliqui": {
+        "venta": 1353.8,
+        "compra": 1349.2,
+        "variation": 7.099999999999909
+      }
+    }
   },
   "fixedTerm": {
-    "data": [],
-    "top10": []
+    "data": [
+      {
+        "entidad": "BANCO CMF S.A.",
+        "tnaClientes": 0.55,
+        "tnaNoClientes": 0.55,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "BANCO BBVA ARGENTINA S.A.",
+        "tnaClientes": 0.51,
+        "tnaNoClientes": null,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "BANCO HIPOTECARIO S.A.",
+        "tnaClientes": 0.495,
+        "tnaNoClientes": 0.525,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "BANCO MACRO S.A.",
+        "tnaClientes": 0.48,
+        "tnaNoClientes": null,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "INDUSTRIAL AND COMMERCIAL BANK OF CHINA (ARGENTINA) S.A.U.",
+        "tnaClientes": 0.477,
+        "tnaNoClientes": null,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "BANCO DE LA NACION ARGENTINA",
+        "tnaClientes": 0.47,
+        "tnaNoClientes": null,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "BANCO CREDICOOP COOPERATIVO LIMITADO",
+        "tnaClientes": 0.47,
+        "tnaNoClientes": 0.47,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "BANCO COMAFI SOCIEDAD ANONIMA",
+        "tnaClientes": 0.47,
+        "tnaNoClientes": 0.47,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "BANCO DE LA PROVINCIA DE BUENOS AIRES",
+        "tnaClientes": 0.45,
+        "tnaNoClientes": null,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "BANCO DE GALICIA Y BUENOS AIRES S.A.",
+        "tnaClientes": 0.44,
+        "tnaNoClientes": null,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "BIBANK S.A.",
+        "tnaClientes": 0.42,
+        "tnaNoClientes": 0.42,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "BANCO SANTANDER ARGENTINA S.A.",
+        "tnaClientes": 0.38,
+        "tnaNoClientes": null,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "BANCO DE LA CIUDAD DE BUENOS AIRES",
+        "tnaClientes": 0.35,
+        "tnaNoClientes": null,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "BANCO DE GALICIA Y BUENOS AIRES S.A.U.",
+        "tnaClientes": 0.3025,
+        "tnaNoClientes": null,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "HSBC BANK ARGENTINA S.A.",
+        "tnaClientes": 0.28,
+        "tnaNoClientes": null,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      }
+    ],
+    "top10": [
+      {
+        "entidad": "BANCO CMF S.A.",
+        "tnaClientes": 0.55,
+        "tnaNoClientes": 0.55,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "BANCO BBVA ARGENTINA S.A.",
+        "tnaClientes": 0.51,
+        "tnaNoClientes": null,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "BANCO HIPOTECARIO S.A.",
+        "tnaClientes": 0.495,
+        "tnaNoClientes": 0.525,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "BANCO MACRO S.A.",
+        "tnaClientes": 0.48,
+        "tnaNoClientes": null,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "INDUSTRIAL AND COMMERCIAL BANK OF CHINA (ARGENTINA) S.A.U.",
+        "tnaClientes": 0.477,
+        "tnaNoClientes": null,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "BANCO DE LA NACION ARGENTINA",
+        "tnaClientes": 0.47,
+        "tnaNoClientes": null,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "BANCO CREDICOOP COOPERATIVO LIMITADO",
+        "tnaClientes": 0.47,
+        "tnaNoClientes": 0.47,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "BANCO COMAFI SOCIEDAD ANONIMA",
+        "tnaClientes": 0.47,
+        "tnaNoClientes": 0.47,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "BANCO DE LA PROVINCIA DE BUENOS AIRES",
+        "tnaClientes": 0.45,
+        "tnaNoClientes": null,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      },
+      {
+        "entidad": "BANCO DE GALICIA Y BUENOS AIRES S.A.",
+        "tnaClientes": 0.44,
+        "tnaNoClientes": null,
+        "fecha_consulta": "2025-08-30T12:55:06.758Z"
+      }
+    ]
   },
   "mutualFunds": {
-    "moneyMarket": [],
-    "rentaFija": [],
-    "rentaVariable": [],
-    "rentaMixta": []
+    "moneyMarket": [
+      {
+        "fondo": "MAF Liquidez - Clase A",
+        "tna": 38.5154,
+        "rendimiento_mensual": 41.5755,
+        "categoria": "Money Market"
+      },
+      {
+        "fondo": "Chaco FCI Money Market - Clase A",
+        "tna": 37.3536,
+        "rendimiento_mensual": 40.3214,
+        "categoria": "Money Market"
+      },
+      {
+        "fondo": "Delta Pesos - Clase X",
+        "tna": 37.2597,
+        "rendimiento_mensual": 40.22,
+        "categoria": "Money Market"
+      },
+      {
+        "fondo": "Schroder Liquidez - Clase B",
+        "tna": 37.043,
+        "rendimiento_mensual": 39.9862,
+        "categoria": "Money Market"
+      },
+      {
+        "fondo": "Mercado Fondo - Clase A",
+        "tna": 36.6319,
+        "rendimiento_mensual": 39.5423,
+        "categoria": "Money Market"
+      },
+      {
+        "fondo": "Balanz Capital Money Market - Clase A",
+        "tna": 35.9493,
+        "rendimiento_mensual": 38.8056,
+        "categoria": "Money Market"
+      },
+      {
+        "fondo": "Cocos Ahorro - Clase A",
+        "tna": 34.2767,
+        "rendimiento_mensual": 37,
+        "categoria": "Money Market"
+      },
+      {
+        "fondo": "IOL Dólar Ahorro Plus - Clase D",
+        "tna": 3.4275,
+        "rendimiento_mensual": 19.68,
+        "categoria": "Money Market"
+      }
+    ],
+    "rentaFija": [
+      {
+        "fondo": "MAF Ahorro Plus - Clase C",
+        "tna": 140.0439,
+        "rendimiento_mensual": 151.1707,
+        "categoria": "Renta Fija"
+      },
+      {
+        "fondo": "Compass Opportunity - Clase F",
+        "tna": 25.9291,
+        "rendimiento_mensual": 27.9893,
+        "categoria": "Renta Fija"
+      },
+      {
+        "fondo": "Compass Renta Fija III - Clase F",
+        "tna": 24.3963,
+        "rendimiento_mensual": 26.3347,
+        "categoria": "Renta Fija"
+      },
+      {
+        "fondo": "IOL Dólar Ahorro Plus - Clase C",
+        "tna": 4.2141,
+        "rendimiento_mensual": 20.5,
+        "categoria": "Renta Fija"
+      }
+    ],
+    "rentaVariable": [
+      {
+        "fondo": "Alpha Latam - Clase A",
+        "tna": 29.778,
+        "rendimiento_mensual": 32.144,
+        "categoria": "Renta Variable"
+      },
+      {
+        "fondo": "Alpha Latam - Clase Q Ley N° 27.743",
+        "tna": 18.8189,
+        "rendimiento_mensual": 5.7092,
+        "categoria": "Renta Variable"
+      },
+      {
+        "fondo": "Fima Acciones Latinoamerica - Clase A",
+        "tna": 15.6671,
+        "rendimiento_mensual": 16.9119,
+        "categoria": "Renta Variable"
+      },
+      {
+        "fondo": "Delta Select - Clase G",
+        "tna": -498.82,
+        "rendimiento_mensual": -538.45,
+        "categoria": "Renta Variable"
+      }
+    ],
+    "rentaMixta": [
+      {
+        "fondo": "Alpha Renta Balanceada Global - Clase D",
+        "tna": -342.32,
+        "rendimiento_mensual": -369.52,
+        "categoria": "Renta Mixta"
+      },
+      {
+        "fondo": "Alpha Retorno Total - Clase I",
+        "tna": -342.72999999999996,
+        "rendimiento_mensual": -369.97,
+        "categoria": "Renta Mixta"
+      },
+      {
+        "fondo": "Schroder Retorno Absoluto Dólares - Clase B",
+        "tna": -498.94999999999993,
+        "rendimiento_mensual": -538.6,
+        "categoria": "Renta Mixta"
+      },
+      {
+        "fondo": "Delta Multimercado I - Clase G",
+        "tna": -499.03000000000003,
+        "rendimiento_mensual": -538.6700000000001,
+        "categoria": "Renta Mixta"
+      },
+      {
+        "fondo": "Gainvest Balanceado - Clase F",
+        "tna": -2837.1099999999997,
+        "rendimiento_mensual": -3062.52,
+        "categoria": "Renta Mixta"
+      },
+      {
+        "fondo": "Gainvest Balanceado - Clase E",
+        "tna": -2837.28,
+        "rendimiento_mensual": -3062.71,
+        "categoria": "Renta Mixta"
+      }
+    ]
   },
   "otherFunds": {
-    "data": [],
-    "top10": []
+    "data": [
+      {
+        "fondo": "NARANJA X",
+        "tna": 0.43,
+        "categoria": "Otros"
+      },
+      {
+        "fondo": "UALA",
+        "tna": 0.35,
+        "categoria": "Otros"
+      },
+      {
+        "fondo": "SUPERVIELLE",
+        "tna": 0.32,
+        "categoria": "Otros"
+      },
+      {
+        "fondo": "BRUBANK",
+        "tna": 0.27,
+        "categoria": "Otros"
+      }
+    ],
+    "top10": [
+      {
+        "fondo": "NARANJA X",
+        "tna": 0.43,
+        "categoria": "Otros"
+      },
+      {
+        "fondo": "UALA",
+        "tna": 0.35,
+        "categoria": "Otros"
+      },
+      {
+        "fondo": "SUPERVIELLE",
+        "tna": 0.32,
+        "categoria": "Otros"
+      },
+      {
+        "fondo": "BRUBANK",
+        "tna": 0.27,
+        "categoria": "Otros"
+      }
+    ]
   },
-  "lastUpdated": "2025-08-27T11:25:04.028Z"
+  "lastUpdated": "2025-08-30T12:55:52.008Z"
 }

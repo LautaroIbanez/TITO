@@ -98,3 +98,6 @@ export function filterFundsBySearch(funds: CafciFund[], searchTerm: string): Caf
 }
 
 
+
+
+

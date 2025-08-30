@@ -21,13 +21,13 @@
     },
     {
       "type": "MutualFund",
-      "id": "mf-1753483371108",
-      "name": "Mercado Fondo - Clase A",
+      "id": "mf-1756468691591",
+      "name": "MAF Liquidez - Clase A",
       "category": "Money Market",
-      "amount": 50000,
-      "annualRate": 36.4171,
+      "amount": 100000,
+      "annualRate": 38.4637,
       "currency": "ARS",
-      "startDate": "2025-07-25T22:42:51.108Z"
+      "startDate": "2025-08-29T11:58:11.591Z"
     }
   ],
   "transactions": [
@@ -105,11 +105,30 @@
       "interest": 1356.1643835616437,
       "currency": "ARS",
       "depositId": "ftd-1753483349480"
+    },
+    {
+      "id": "liq_1756468599652",
+      "date": "2025-08-29T11:56:39.653Z",
+      "type": "Deposit",
+      "amount": 50000,
+      "currency": "ARS",
+      "source": "MutualFundLiquidation"
+    },
+    {
+      "id": "1756468691591",
+      "date": "2025-08-29T11:58:11.591Z",
+      "type": "Create",
+      "assetType": "MutualFund",
+      "name": "MAF Liquidez - Clase A",
+      "category": "Money Market",
+      "amount": 100000,
+      "annualRate": 38.4637,
+      "currency": "ARS"
     }
   ],
   "goals": [],
   "cash": {
-    "ARS": 2815059.9243835616,
+    "ARS": 2765059.9243835616,
     "USD": 2135.98208
   },
   "profile": {
@@ -134,8 +153,8 @@
     "initialBalanceUSD": 3000
   },
   "investmentStrategy": {
-    "id": "strategy-8a013eec-8733-459f-963e-5c4a8994a98e",
-    "createdAt": "2025-08-27T11:45:44.839Z",
+    "id": "strategy-3b18ae5f-3b25-4694-b64d-d6010bf16eef",
+    "createdAt": "2025-08-30T19:37:10.285Z",
     "targetAllocation": {
       "stocks": 59.4,
       "bonds": 29.7,
@@ -145,15 +164,15 @@
     },
     "recommendations": [
       {
-        "id": "alloc-c10ed3b2-a318-4d46-b7f2-284084457bfd",
+        "id": "alloc-313b27bc-b460-4642-97f8-d5860cacadfb",
         "action": "increase",
         "assetClass": "stocks",
-        "reason": "Tu portafolio tiene 4.6% en acciones, pero tu estrategia objetivo es 59.4%",
+        "reason": "Tu portafolio tiene 4.7% en acciones, pero tu estrategia objetivo es 59.4%",
         "priority": "high",
         "expectedImpact": "positive"
       },
       {
-        "id": "alloc-431180c4-de3a-48e9-ab4f-532893050613",
+        "id": "alloc-2be300c9-3d83-4c7b-8059-3d3620399ae7",
         "action": "increase",
         "assetClass": "bonds",
         "reason": "Tu portafolio tiene 0.0% en bonos, pero tu estrategia objetivo es 29.7%. Considera alternativas como: GOV-BOND-2025, CORP-BOND-2026, MUNI-BOND-2027",
@@ -166,10 +185,10 @@
         ]
       },
       {
-        "id": "cash-invest-7361da88-1a6a-41e9-8968-9e923924ac76",
+        "id": "cash-invest-c8d6945c-2b05-425a-9c83-9e040b1efcdb",
         "action": "buy",
         "assetClass": "cash",
-        "reason": "Tienes un 95.4% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
+        "reason": "Tienes un 95.3% de tu portafolio en efectivo. Considera invertirlo para alcanzar tus metas más rápido",
         "priority": "high",
         "expectedImpact": "positive"
       }

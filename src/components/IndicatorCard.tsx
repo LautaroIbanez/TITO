@@ -7,6 +7,8 @@ interface IndicatorCardProps {
   subtitle?: string;
   variation?: number;
   variationLabel?: string;
+  variationType?: 'percentage' | 'absolute';
+  variationUnit?: string;
   icon?: ReactNode;
   color?: 'red' | 'green' | 'blue' | 'orange' | 'purple' | 'gray';
   children?: ReactNode;
@@ -18,6 +20,8 @@ export default function IndicatorCard({
   subtitle, 
   variation, 
   variationLabel,
+  variationType = 'percentage',
+  variationUnit,
   icon,
   color = 'blue',
   children 
@@ -34,6 +38,20 @@ export default function IndicatorCard({
   const variationColor = variation !== undefined 
     ? (variation >= 0 ? 'text-green-600' : 'text-red-600')
     : 'text-gray-600';
+
+  const formatVariation = () => {
+    if (variation === undefined) return null;
+    
+    const sign = variation >= 0 ? '+' : '-';
+    const formattedValue = Math.abs(variation).toFixed(2);
+    
+    if (variationType === 'percentage') {
+      return `${sign}${formattedValue}%`;
+    } else {
+      const unit = variationUnit || '';
+      return `${sign}${formattedValue}${unit}`;
+    }
+  };
 
   return (
     <div className={`bg-white p-6 rounded-lg shadow border-l-4 ${colorClasses[color]}`}>
@@ -56,7 +74,7 @@ export default function IndicatorCard({
             {variation !== undefined && (
               <div className="flex items-center gap-1">
                 <span className={`text-sm font-medium ${variationColor}`}>
-                  {variation >= 0 ? '+' : ''}{variation.toFixed(2)}%
+                  {formatVariation()}
                 </span>
                 {variationLabel && (
                   <span className="text-xs text-gray-500">({variationLabel})</span>
