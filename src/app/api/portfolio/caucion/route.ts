@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getUserData, saveUserData } from '@/utils/userData';
 import dayjs from 'dayjs';
 import { CaucionCreationTransaction, CaucionPosition } from '@/types';

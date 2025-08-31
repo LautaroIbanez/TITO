@@ -128,4 +128,8 @@ export interface FixedTermDeposit {
   termDays: number;
   annualRate: number; // TNA in percentage
   currency: 'ARS' | 'USD';
+}
+
+export interface BonistasResponse {
+  bonds: Bond[];
 } 

@@ -9,27 +9,7 @@ import {
   EMA,
   ADX,
 } from 'technicalindicators';
-
-// KONCORDE indicator calculation (placeholder for manual configuration)
-function calculateKoncordeIndicator(prices: number[], currentPrice: number) {
-  if (prices.length < 20) return null;
-  
-  // Simple placeholder implementation - can be replaced with actual KONCORDE logic
-  const recentPrices = prices.slice(-20);
-  const avgPrice = recentPrices.reduce((sum, price) => sum + price, 0) / recentPrices.length;
-  const volatility = Math.sqrt(recentPrices.reduce((sum, price) => sum + Math.pow(price - avgPrice, 2), 0) / recentPrices.length);
-  
-  // Determine trend based on price vs average and volatility
-  const priceVsAvg = currentPrice / avgPrice;
-  const strength = Math.min(100, Math.abs(priceVsAvg - 1) * 100);
-  
-  return {
-    bullish: priceVsAvg > 1.02,
-    bearish: priceVsAvg < 0.98,
-    neutral: priceVsAvg >= 0.98 && priceVsAvg <= 1.02,
-    strength: Math.round(strength)
-  };
-}
+import { calculateKoncordeIndicator } from './indicators';
 
 // Helper: Read JSON file safely
 async function readJsonSafe<T = unknown>(filePath: string): Promise<T | null> {

@@ -6,7 +6,7 @@ import AvailableCapitalIndicator from '@/components/AvailableCapitalIndicator';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 
 import { useBonistasBonds } from '@/hooks/useBonistasBonds';
-import { formatNumericValue, formatPercentage, formatVolume, logMissingMetrics } from '@/utils/bondUtils';
+import { formatNumericValue, formatPercentage, formatVolume } from '@/utils/bondUtils';
 import { sortBonds, toggleSortDirection, getSortIndicator, SortDirection } from '@/utils/bondSort';
 import { suggestBondsByProfile, getProfileDisplayName, RiskProfile, mapRiskAppetiteToProfile } from '@/utils/bondAdvisor';
 
@@ -56,7 +56,7 @@ export default function BondsPage() {
       commissionPct: commissionPct || 0,
       purchaseFeePct: purchaseFeePct || 0,
     };
-    console.log('Payload enviado al backend:', payload);
+
     const res = await fetch('/api/portfolio/buy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -252,9 +252,6 @@ export default function BondsPage() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {sortedBonds.map((bond, index) => {
-                  // Log missing metrics for debugging
-                  logMissingMetrics(bond as unknown as Record<string, unknown>);
-                  
                   const isRecommended = recommendedTickers.has(bond.ticker);
                   
                   return (

@@ -31,20 +31,20 @@ export default function DashboardSummary() {
   
   const { portfolioData, strategy, loading, error, portfolioVersion } = usePortfolio();
 
-  // Get username from session/localStorage
-  const [, setUsername] = useState<string | null>(null);
-  useEffect(() => {
-    const sessionData = getSessionData();
-    if (sessionData) {
-      setUsername(sessionData.username);
-    }
-  }, []);
+  // Get username from session/localStorage (for potential future use)
+  // const [, setUsername] = useState<string | null>(null);
+  // useEffect(() => {
+  //   const sessionData = getSessionData();
+  //   if (sessionData) {
+  //     setUsername(sessionData.username);
+  //   }
+  // }, []);
 
   // Fetch portfolio history
   const { history: portfolioHistory } = usePortfolioHistory(undefined);
 
-  // Get the latest portfolio snapshot from history
-  const latestSnapshot = getLatestPortfolioSnapshot(portfolioHistory || []);
+  // Get the latest portfolio snapshot from history (for potential future use)
+  // const latestSnapshot = getLatestPortfolioSnapshot(portfolioHistory || []);
 
   // Generate portfolio hash for dependency tracking
   const portfolioHash = generatePortfolioHash(

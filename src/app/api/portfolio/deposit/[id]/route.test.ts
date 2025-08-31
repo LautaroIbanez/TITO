@@ -54,7 +54,6 @@ describe('Deposit API - Dynamic Route', () => {
       });
 
       const response = await PUT(request, { params: { id: 'dep1' } });
-      const body = await response.json();
 
       expect(response.status).toBe(200);
       

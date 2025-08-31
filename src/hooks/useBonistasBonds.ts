@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Bond } from '@/types/finance';
+import { Bond, BonistasResponse } from '@/types/finance';
+
+// Type guard for BonistasResponse
+function isBonistasResponse(data: unknown): data is BonistasResponse {
+  return typeof data === 'object' && data !== null && 'bonds' in data && Array.isArray((data as BonistasResponse).bonds);
+}
 
 interface UseBonistasBondsReturn {
   bonds: Bond[];
@@ -13,43 +18,37 @@ export function useBonistasBonds(): UseBonistasBondsReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchBonds = async () => {
+  const fetchBonds = async (signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
     
     try {
       // Try API first
-      const response = await fetch('/api/bonds');
+      const response = await fetch('/api/bonds', { signal });
       
       if (response.ok) {
         const data = await response.json();
-        const safe = Array.isArray(data)
-          ? data
-          : (data && Array.isArray((data as any).bonds) ? (data as any).bonds : []);
+        const safe = isBonistasResponse(data) ? data.bonds : Array.isArray(data) ? data : [];
         setBonds(safe);
         return;
       }
       
       // Fallback to raw API endpoint
-      const rawResponse = await fetch('/api/bonds/raw');
+      const rawResponse = await fetch('/api/bonds/raw', { signal });
       
       if (rawResponse.ok) {
         const rawData = await rawResponse.json();
-        const safe = Array.isArray(rawData)
-          ? rawData
-          : (rawData && Array.isArray((rawData as any).bonds) ? (rawData as any).bonds : []);
+        const safe = isBonistasResponse(rawData) ? rawData.bonds : Array.isArray(rawData) ? rawData : [];
         setBonds(safe);
         return;
       }
       
       // Final fallback to public JSON file
-      const fallbackResponse = await fetch('/data/bonistas_bonds.json');
+      const fallbackResponse = await fetch('/data/bonistas_bonds.json', { signal });
       
       if (fallbackResponse.ok) {
         const fallbackData = await fallbackResponse.json();
-        const safe = Array.isArray(fallbackData)
-          ? fallbackData
-          : (fallbackData && Array.isArray((fallbackData as any).bonds) ? (fallbackData as any).bonds : []);
+        const safe = isBonistasResponse(fallbackData) ? fallbackData.bonds : Array.isArray(fallbackData) ? fallbackData : [];
         setBonds(safe);
         return;
       }
@@ -67,13 +66,18 @@ export function useBonistasBonds(): UseBonistasBondsReturn {
   };
 
   useEffect(() => {
-    fetchBonds();
+    const abortController = new AbortController();
+    fetchBonds(abortController.signal);
+    
+    return () => {
+      abortController.abort();
+    };
   }, []);
 
   return {
     bonds,
     loading,
     error,
-    refetch: fetchBonds,
+    refetch: () => fetchBonds(),
   };
 } 

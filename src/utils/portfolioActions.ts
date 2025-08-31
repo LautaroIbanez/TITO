@@ -34,8 +34,13 @@ export async function buyAsset(username: string, assetType: string, body: any) {
 
   switch (assetType) {
     case 'Stock': {
-      let { symbol, quantity, price, currency, market, commissionPct = DEFAULT_COMMISSION_PCT, purchaseFeePct = DEFAULT_PURCHASE_FEE_PCT } = body;
-      if (!symbol || !quantity || !price || !currency || !market) throw new Error('Missing fields for Stock purchase');
+      const { symbol: symbolInput, quantity, price, currency, market, commissionPct = DEFAULT_COMMISSION_PCT, purchaseFeePct = DEFAULT_PURCHASE_FEE_PCT } = body;
+      let symbol = symbolInput;
+      if (!symbol || typeof symbol !== 'string') throw new Error('Valid symbol is required for Stock purchase');
+      if (typeof quantity !== 'number' || quantity <= 0) throw new Error('Valid quantity is required for Stock purchase');
+      if (typeof price !== 'number' || price <= 0) throw new Error('Valid price is required for Stock purchase');
+      if (!currency || !['ARS', 'USD'].includes(currency)) throw new Error('Valid currency is required for Stock purchase');
+      if (!market || !['NASDAQ', 'NYSE', 'BCBA'].includes(market)) throw new Error('Valid market is required for Stock purchase');
       // Normalize symbol
       symbol = getBaseTicker(symbol);
       if (market === 'BCBA') symbol = ensureBaSuffix(symbol);
@@ -77,7 +82,10 @@ export async function buyAsset(username: string, assetType: string, body: any) {
     }
     case 'Bond': {
       const { ticker, quantity, price, currency, commissionPct = DEFAULT_COMMISSION_PCT, purchaseFeePct = DEFAULT_PURCHASE_FEE_PCT } = body;
-      if (!ticker || !quantity || !price || !currency) throw new Error('Missing fields for Bond purchase');
+      if (!ticker || typeof ticker !== 'string') throw new Error('Valid ticker is required for Bond purchase');
+      if (typeof quantity !== 'number' || quantity <= 0) throw new Error('Valid quantity is required for Bond purchase');
+      if (typeof price !== 'number' || price <= 0) throw new Error('Valid price is required for Bond purchase');
+      if (!currency || !['ARS', 'USD'].includes(currency)) throw new Error('Valid currency is required for Bond purchase');
       const validatedCurrency = currency as 'ARS' | 'USD';
       const baseCost = quantity * price;
       totalCost = baseCost * (1 + commissionPct / 100 + purchaseFeePct / 100);
@@ -109,7 +117,10 @@ export async function buyAsset(username: string, assetType: string, body: any) {
     }
     case 'Crypto': {
       const { symbol, quantity, price, currency = 'USD', commissionPct = DEFAULT_COMMISSION_PCT, purchaseFeePct = DEFAULT_PURCHASE_FEE_PCT } = body;
-      if (!symbol || !quantity || !price) throw new Error('Missing fields for Crypto purchase');
+      if (!symbol || typeof symbol !== 'string') throw new Error('Valid symbol is required for Crypto purchase');
+      if (typeof quantity !== 'number' || quantity <= 0) throw new Error('Valid quantity is required for Crypto purchase');
+      if (typeof price !== 'number' || price <= 0) throw new Error('Valid price is required for Crypto purchase');
+      if (currency && !['ARS', 'USD'].includes(currency)) throw new Error('Valid currency is required for Crypto purchase');
       const validatedCurrency = currency as 'ARS' | 'USD';
       const baseCost = quantity * price;
       totalCost = baseCost * (1 + commissionPct / 100 + purchaseFeePct / 100);
@@ -150,7 +161,11 @@ export async function buyAsset(username: string, assetType: string, body: any) {
     }
     case 'FixedTermDeposit': {
       const { provider, amount, annualRate, termDays, currency } = body;
-      if (!provider || !amount || !annualRate || !termDays || !currency) throw new Error('Missing fields for Fixed Term Deposit');
+      if (!provider || typeof provider !== 'string') throw new Error('Valid provider is required for Fixed Term Deposit');
+      if (typeof amount !== 'number' || amount <= 0) throw new Error('Valid amount is required for Fixed Term Deposit');
+      if (typeof annualRate !== 'number' || annualRate <= 0) throw new Error('Valid annual rate is required for Fixed Term Deposit');
+      if (typeof termDays !== 'number' || termDays <= 0) throw new Error('Valid term days is required for Fixed Term Deposit');
+      if (!currency || !['ARS', 'USD'].includes(currency)) throw new Error('Valid currency is required for Fixed Term Deposit');
       const validatedCurrency = currency as 'ARS' | 'USD';
       totalCost = amount;
       if (user.cash[validatedCurrency] < totalCost) throw new Error('Insufficient funds');
@@ -185,7 +200,11 @@ export async function buyAsset(username: string, assetType: string, body: any) {
     }
     case 'MutualFund': {
       const { name, category, amount, annualRate, currency, monthlyYield } = body;
-      if (!name || !category || !amount || !annualRate || !currency) throw new Error('Missing fields for Mutual Fund purchase');
+      if (!name || typeof name !== 'string') throw new Error('Valid name is required for Mutual Fund purchase');
+      if (!category || typeof category !== 'string') throw new Error('Valid category is required for Mutual Fund purchase');
+      if (typeof amount !== 'number' || amount <= 0) throw new Error('Valid amount is required for Mutual Fund purchase');
+      if (typeof annualRate !== 'number' || annualRate <= 0) throw new Error('Valid annual rate is required for Mutual Fund purchase');
+      if (!currency || !['ARS', 'USD'].includes(currency)) throw new Error('Valid currency is required for Mutual Fund purchase');
       const validatedCurrency = currency as 'ARS' | 'USD';
       totalCost = amount;
       if (user.cash[validatedCurrency] < totalCost) throw new Error('Insufficient funds');
@@ -235,10 +254,10 @@ export async function sellAsset(username: string, assetType: string, body: any) 
   const commissionPct = body.commissionPct ?? DEFAULT_COMMISSION_PCT;
   switch (assetType) {
     case 'Stock': {
-      let { symbol, quantity, price, currency, market } = body;
-      if (!symbol) throw new Error('Symbol is required for stock sell');
+      const { symbol: symbolInput, quantity, price, currency, market } = body;
+      if (!symbolInput) throw new Error('Symbol is required for stock sell');
       // Normalize symbol
-      symbol = getBaseTicker(symbol);
+      let symbol = getBaseTicker(symbolInput);
       if (market === 'BCBA') symbol = ensureBaSuffix(symbol);
       const posIndex = user.positions.findIndex(p => p.type === 'Stock' && p.symbol === symbol && p.currency === currency && p.market === market);
       if (posIndex === -1) throw new Error('Position not found');
