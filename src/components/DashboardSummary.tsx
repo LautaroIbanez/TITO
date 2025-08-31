@@ -21,30 +21,31 @@ import EconomicIndicators from './EconomicIndicators';
 import SummaryCardTooltip from './SummaryCardTooltip';
 
 export default function DashboardSummary() {
-  const [portfolioValueARS, setPortfolioValueARS] = useState(0);
-  const [portfolioValueUSD, setPortfolioValueUSD] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [, setBonds] = useState<Bond[]>([]);
   const [bondPrices, setBondPrices] = useState<Record<string, number>>({});
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
   const [inflationData, setInflationData] = useState<InflationData | null>(null);
   
+  // Error states for API calls
+  const [bondsError, setBondsError] = useState<string | null>(null);
+  const [inflationError, setInflationError] = useState<string | null>(null);
+  const [isLoadingBonds, setIsLoadingBonds] = useState(false);
+  const [isLoadingInflation, setIsLoadingInflation] = useState(false);
+  
   const { portfolioData, strategy, loading, error, portfolioVersion } = usePortfolio();
 
-  // Get username from session/localStorage (for potential future use)
-  // const [, setUsername] = useState<string | null>(null);
-  // useEffect(() => {
-  //   const sessionData = getSessionData();
-  //   if (sessionData) {
-  //     setUsername(sessionData.username);
-  //   }
-  // }, []);
+  // Get username from session
+  const [username, setUsername] = useState<string | null>(null);
+  useEffect(() => {
+    const sessionData = getSessionData();
+    if (sessionData?.username) {
+      setUsername(sessionData.username);
+    }
+  }, []);
 
-  // Fetch portfolio history
-  const { history: portfolioHistory } = usePortfolioHistory(undefined);
-
-  // Get the latest portfolio snapshot from history (for potential future use)
-  // const latestSnapshot = getLatestPortfolioSnapshot(portfolioHistory || []);
+  // Fetch portfolio history with username
+  const { history: portfolioHistory, loading: historyLoading, error: historyError } = usePortfolioHistory(username);
 
   // Generate portfolio hash for dependency tracking
   const portfolioHash = generatePortfolioHash(
@@ -57,38 +58,51 @@ export default function DashboardSummary() {
     async function fetchData() {
       const sessionData = getSessionData();
       if (!sessionData) return;
-      const username = sessionData.username;
       
       if (sessionData.firstTime) {
         setShowOnboarding(true);
       }
 
-      const bondsRes = await fetch('/api/bonds');
+      setIsLoadingBonds(true);
+      setBondsError(null);
+      
+      try {
+        const bondsRes = await fetch('/api/bonds');
 
-      if (bondsRes.ok) {
-        const bondsData = await bondsRes.json();
-        
-        // Ensure bondsData is an array before processing
-        if (Array.isArray(bondsData)) {
-          setBonds(bondsData);
+        if (bondsRes.ok) {
+          const bondsData = await bondsRes.json();
           
-          // Create bondPrices map for current price calculations
-          const pricesMap: Record<string, number> = {};
-          bondsData.forEach((bond: Bond) => {
-            if (bond.price && bond.ticker) {
-              pricesMap[bond.ticker] = bond.price;
-            }
-          });
-          setBondPrices(pricesMap);
+          // Ensure bondsData is an array before processing
+          if (Array.isArray(bondsData)) {
+            setBonds(bondsData);
+            
+            // Create bondPrices map for current price calculations
+            const pricesMap: Record<string, number> = {};
+            bondsData.forEach((bond: Bond) => {
+              if (bond.price && bond.ticker) {
+                pricesMap[bond.ticker] = bond.price;
+              }
+            });
+            setBondPrices(pricesMap);
+          } else {
+            console.error('Bonds API returned non-array data:', bondsData);
+            setBonds([]);
+            setBondPrices({});
+            setBondsError('Formato de datos de bonos inválido');
+          }
         } else {
-          console.error('Bonds API returned non-array data:', bondsData);
+          console.error('Failed to fetch bonds data:', bondsRes.status);
           setBonds([]);
           setBondPrices({});
+          setBondsError(`Error al cargar bonos: ${bondsRes.status}`);
         }
-      } else {
-        console.error('Failed to fetch bonds data:', bondsRes.status);
+      } catch (error) {
+        console.error('Error fetching bonds:', error);
         setBonds([]);
         setBondPrices({});
+        setBondsError('Error de conexión al cargar bonos');
+      } finally {
+        setIsLoadingBonds(false);
       }
     }
     fetchData();
@@ -96,9 +110,25 @@ export default function DashboardSummary() {
 
   // 2. Fetch inflation data only on mount
   useEffect(() => {
-    fetchInflationData().then((inflationRes) => {
-      if (inflationRes) setInflationData(inflationRes);
-    });
+    async function fetchInflation() {
+      setIsLoadingInflation(true);
+      setInflationError(null);
+      
+      try {
+        const inflationRes = await fetchInflationData();
+        if (inflationRes) {
+          setInflationData(inflationRes);
+        } else {
+          setInflationError('No se pudieron cargar los datos de inflación');
+        }
+      } catch (error) {
+        console.error('Error fetching inflation data:', error);
+        setInflationError('Error al cargar datos de inflación');
+      } finally {
+        setIsLoadingInflation(false);
+      }
+    }
+    fetchInflation();
   }, []);
 
   // 3. Calculate values and performance when portfolioData, portfolioVersion, or price data changes
@@ -111,16 +141,6 @@ export default function DashboardSummary() {
           portfolioData.historicalPrices || {},
           bondPrices
         );
-        if (Number.isFinite(ARS)) {
-          setPortfolioValueARS(ARS);
-        } else {
-          console.warn('portfolioValueARS is not finite:', ARS);
-        }
-        if (Number.isFinite(USD)) {
-          setPortfolioValueUSD(USD);
-        } else {
-          console.warn('portfolioValueUSD is not finite:', USD);
-        }
 
         const valueHistory = await calculatePortfolioValueHistory(
           portfolioData.transactions || [],
@@ -158,8 +178,6 @@ export default function DashboardSummary() {
     }
     calculateValues();
   }, [portfolioData, portfolioVersion, portfolioHash, inflationData]);
-
-
 
   const handleDismissOnboarding = () => {
     setShowOnboarding(false);
@@ -235,6 +253,73 @@ export default function DashboardSummary() {
 
   return (
     <div>
+      {/* Error Alerts */}
+      {(bondsError || inflationError || historyError) && (
+        <div className="mb-6 space-y-3">
+          {bondsError && (
+            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded">
+              <div className="flex justify-between items-center">
+                <div>
+                  <strong>Error al cargar bonos:</strong> {bondsError}
+                </div>
+                <button 
+                  onClick={() => window.location.reload()}
+                  className="text-red-600 hover:text-red-800 underline text-sm"
+                >
+                  Reintentar
+                </button>
+              </div>
+            </div>
+          )}
+          {inflationError && (
+            <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded">
+              <div className="flex justify-between items-center">
+                <div>
+                  <strong>Error al cargar inflación:</strong> {inflationError}
+                </div>
+                <button 
+                  onClick={() => window.location.reload()}
+                  className="text-yellow-600 hover:text-yellow-800 underline text-sm"
+                >
+                  Reintentar
+                </button>
+              </div>
+            </div>
+          )}
+          {historyError && (
+            <div className="bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4 rounded">
+              <div className="flex justify-between items-center">
+                <div>
+                  <strong>Error al cargar historial:</strong> {historyError}
+                </div>
+                <button 
+                  onClick={() => window.location.reload()}
+                  className="text-orange-600 hover:text-orange-800 underline text-sm"
+                >
+                  Reintentar
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Loading Indicators */}
+      {(isLoadingBonds || isLoadingInflation || historyLoading) && (
+        <div className="mb-6">
+          <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded">
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 mr-3"></div>
+              <span>
+                {isLoadingBonds && 'Cargando datos de bonos...'}
+                {isLoadingInflation && 'Cargando datos de inflación...'}
+                {historyLoading && 'Cargando historial del portafolio...'}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Onboarding Modal */}
       {showOnboarding && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -464,13 +549,18 @@ export default function DashboardSummary() {
         </div>
       )}
 
-
-
-
-      
       {/* Insert the historical portfolio chart below the main summary */}
       <div className="mt-8">
-        {portfolioHistory && portfolioHistory.length > 0 ? (
+        {historyLoading ? (
+          <div className="text-center text-gray-500">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-700 mx-auto mb-2"></div>
+            Cargando historial del portafolio...
+          </div>
+        ) : historyError ? (
+          <div className="text-center text-red-500">
+            Error al cargar el historial: {historyError}
+          </div>
+        ) : portfolioHistory && portfolioHistory.length > 0 ? (
           <>
             <HistoricalPortfolioChart records={portfolioHistory} />
             <div className="mt-8">
